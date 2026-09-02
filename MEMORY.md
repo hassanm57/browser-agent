@@ -28,7 +28,8 @@ browser-agent/
 ### File Specifics
 - **`main.py`**:
   - Loads environment settings via `python-dotenv`.
-  - Parses terminal CLI arguments into `task_words_list` (or defaults to Hacker News top story scrape).
+  - Defines `PRESET_TASKS_DICTIONARY` for quick command line shortcuts (`x`, `followers`, `news`, `linkedin`, `quotes`).
+  - Automatically runs the selected preset if a shortcut name is provided as an argument (e.g. `python main.py quotes`).
   - Uses official `Browser.from_system_chrome()` to auto-detect your real Chrome installation and active logins.
   - Falls back to isolated `Browser()` when `USE_REAL_CHROME=false`.
   - Uses `browser_use.llm.ChatOpenAI` pointed at `VLLM_BASE_URL` with `VLLM_API_KEY` and `max_completion_tokens=8192`.

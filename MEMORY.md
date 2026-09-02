@@ -32,8 +32,8 @@ browser-agent/
   - Automatically runs the selected preset if a shortcut name is provided as an argument (e.g. `python main.py quotes`).
   - Uses official `Browser.from_system_chrome()` to auto-detect your real Chrome installation and active logins.
   - Falls back to isolated `Browser()` when `USE_REAL_CHROME=false`.
-  - Uses `browser_use.llm.ChatOpenAI` pointed at `VLLM_BASE_URL` with `VLLM_API_KEY` and `max_completion_tokens=8192`.
-  - Configures `Agent` with `max_history_items=5` (to keep prompt within local 16k context), `use_vision=False`, and `max_clickable_elements_length=8000`.
+  - Uses `browser_use.llm.ChatOpenAI` pointed at `VLLM_BASE_URL` with `VLLM_API_KEY`, `max_completion_tokens=8192`, and `timeout=180`.
+  - Configures `Agent` with `llm_timeout=180`, `use_thinking=False` (to keep local generation fast), `max_history_items=6` (to keep prompt within local 16k context), `use_vision=False`, and `max_clickable_elements_length=8000`.
 - **`.env`**:
   - `VLLM_BASE_URL`: Local vLLM API endpoint (e.g. `http://10.13.12.121:8000/v1`).
   - `VLLM_API_KEY`: API key token (e.g. `EMPTY`).

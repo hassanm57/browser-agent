@@ -65,11 +65,13 @@ async def run_browser_task():
 
     # Initialize the local LLM client using ChatOpenAI
     # Max completion tokens is set to 8192 to prevent structured output truncation
+    # Timeout is set to 180 seconds to allow local GPUs sufficient generation time
     language_model_client = ChatOpenAI(
         model=llm_model_name_string,
         base_url=vllm_base_url_string,
         api_key=vllm_api_key_string,
         max_completion_tokens=8192,
+        timeout=180,
     )
 
     # Initialize the browser
@@ -90,8 +92,13 @@ async def run_browser_task():
         task=browser_task_description,
         browser=browser_instance,
         llm=language_model_client,
-        # Prune conversation history to the last 5 steps so the local model context (16k) never overflows
-        max_history_items=None,
+        # Allow up to 180 seconds for local model responses instead of the default 75s
+        llm_timeout=180,
+        step_timeout=240,
+        # Turn off verbose chain-of-thought to drastically speed up response time on local GPUs
+        use_thinking=False,
+        # Prune conversation history to the last 6 steps so the local model context (16k) never overflows
+        max_history_items=6,
         # Vision is disabled so the agent operates on textual DOM elements for local hardware efficiency
         use_vision=False,
         # Limit DOM elements size so web pages do not exceed context window limits

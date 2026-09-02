@@ -22,3 +22,7 @@ BASICALLY: DO NOT ALWAYS choose the path of least resistance for the sake of fun
 - Include simple, brief comments explaining *why* a step is necessary, not *what* the code does.
 
 Input Task: Automate web browsing tasks using the browser-use Python library connected to a local vLLM instance running the Qwen3-VL vision language model.
+
+4. Session Memory & Context
+- On initial session startup or new conversation, check [MEMORY.md](file:///Users/hassanmansoor57/Documents/browser-agent/MEMORY.md) once to load project memory, commands, and architecture context.
+- Do NOT re-read MEMORY.md on every single prompt or turn once context is already loaded.

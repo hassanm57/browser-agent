@@ -8,14 +8,14 @@ from browser_use.llm import ChatOpenAI
 # Load variables from the .env file so we do not hardcode credentials in code
 load_dotenv()
 
-# Read the connection details for our local LLM server
-vllm_base_url_string = os.getenv("VLLM_BASE_URL", "http://10.13.12.121:8000/v1")
-vllm_api_key_string = os.getenv("VLLM_API_KEY", "EMPTY")
-llm_model_name_string = os.getenv("LLM_MODEL", "qwen3-vl")
+# Read the connection details directly from the .env file
+vllm_base_url_string = os.getenv("VLLM_BASE_URL")
+vllm_api_key_string = os.getenv("VLLM_API_KEY")
+llm_model_name_string = os.getenv("LLM_MODEL")
 
 # Check whether the user wants to see the browser window or run in the background
-headless_environment_setting = os.getenv("HEADLESS", "false")
-if headless_environment_setting.lower() == "true":
+headless_environment_setting = os.getenv("HEADLESS")
+if headless_environment_setting == "true":
     is_headless_mode_enabled = True
 else:
     is_headless_mode_enabled = False
@@ -45,9 +45,12 @@ async def run_browser_task():
         api_key=vllm_api_key_string,
     )
 
-    # Configure the browser profile so we can control visibility
-    browser_configuration_profile = BrowserProfile(
+    # Standardize the browser window size and device scale - DISABLED CURRENTLY.
+    # This prevents Mac Retina displays from producing gigantic screenshots that exceed the model context
+    browser_configuration_profile = BrowserProfile( 
         headless=is_headless_mode_enabled,
+        viewport={"width": 1280, "height": 720},
+        device_scale_factor=1.0,
     )
 
     # Create the agent that will look at web pages and decide what to click and type
@@ -55,8 +58,11 @@ async def run_browser_task():
         task=browser_task_description,
         llm=language_model_client,
         browser_profile=browser_configuration_profile,
-        # Qwen3-VL is a vision model, so enabling vision allows it to see page screenshots
-        use_vision=True,
+        # Vision is disabled so the agent operates purely on textual DOM elements
+        # This drastically reduces token consumption and speeds up inference on local hardware
+        use_vision=False,
+        # Limit the DOM elements text size so large web pages do not blow past the token limit
+        max_clickable_elements_length=12000,
     )
 
     # Let the agent execute the steps until it finishes the task

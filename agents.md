@@ -8,6 +8,8 @@ Follow these strict constraints:
 - Avoid functional programming patterns. Do not use map, filter, reduce, lambda expressions, or currying.
 - Use traditional 'for' and 'while' loops instead of complex array methods.
 
+BASICALLY: DO NOT ALWAYS choose the path of least resistance for the sake of functionality. The GOAL is code readability, and human-element. DO NOT always try to go for the most abstract, least-amount-of-lines method. Take your time and write it fully.
+
 2. Structure & Abstraction
 - Keep code concrete. Avoid deep abstractions, design patterns, or unnecessary helper classes.
 - Write clear, linear logic inside standard functions.

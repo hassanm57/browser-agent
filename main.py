@@ -27,19 +27,37 @@ if use_real_chrome_setting == "false":
 else:
     is_real_chrome_enabled = True
 
+# Pre-saved tasks dictionary for easy command line shortcuts
+PRESET_TASKS_DICTIONARY = {
+    "x": "Go to https://x.com/home, click on Profile, and check my notifications",
+    "followers": "Go to https://x.com/real_hM_/followers and list my recent followers",
+    "news": "Go to https://news.ycombinator.com and find the top story",
+    "linkedin": "Go to https://www.linkedin.com/feed/ and find the top post",
+    "quotes": """1. Go to https://quotes.toscrape.com/
+2. Use extract action with the query "first 3 quotes with their authors"
+3. Save results to quotes.csv using write_file action
+4. Search DuckDuckGo for the first quote and find when it was written""",
+}
+
 
 async def run_browser_task():
     # Read the task description passed from terminal arguments
     terminal_arguments_list = sys.argv
     if len(terminal_arguments_list) > 1:
-        # Assemble task description from terminal arguments
-        task_words_list = []
-        for argument_index in range(1, len(terminal_arguments_list)):
-            task_words_list.append(terminal_arguments_list[argument_index])
-        browser_task_description = " ".join(task_words_list)
+        # Check if the user passed a single word matching one of our preset shortcuts
+        first_argument_word = terminal_arguments_list[1].lower()
+        if len(terminal_arguments_list) == 2 and first_argument_word in PRESET_TASKS_DICTIONARY:
+            print(f"Using pre-saved task preset: '{first_argument_word}'")
+            browser_task_description = PRESET_TASKS_DICTIONARY[first_argument_word]
+        else:
+            # Otherwise, combine all words into a custom task description
+            task_words_list = []
+            for argument_index in range(1, len(terminal_arguments_list)):
+                task_words_list.append(terminal_arguments_list[argument_index])
+            browser_task_description = " ".join(task_words_list)
     else:
         # Default test task when no arguments are provided
-        browser_task_description = "Go to https://news.ycombinator.com and find the title of the top story."
+        browser_task_description = PRESET_TASKS_DICTIONARY["quotes"]
 
     print("Starting browser agent with task:")
     print(browser_task_description)

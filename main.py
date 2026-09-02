@@ -29,7 +29,7 @@ else:
 
 # Pre-saved tasks dictionary for easy command line shortcuts
 PRESET_TASKS_DICTIONARY = {
-    "x": "Go to https://x.com/home, click on Profile, and check my notifications",
+    "x": "Go to https://x.com/home, click on Profile, and check my notifications and return them.",
     "followers": "Go to https://x.com/real_hM_/followers and list my recent followers",
     "news": "Go to https://news.ycombinator.com and find the top story",
     "linkedin": "Go to https://www.linkedin.com/feed/ and find the top post",

@@ -29,14 +29,16 @@ browser-agent/
 - **`main.py`**:
   - Loads environment settings via `python-dotenv`.
   - Parses terminal CLI arguments into `task_words_list` (or defaults to Hacker News top story scrape).
-  - Uses `browser_use.llm.ChatOpenAI` pointed at `VLLM_BASE_URL` with `VLLM_API_KEY`.
-  - Configures `BrowserProfile` with explicit viewport `1920x1080` and `device_scale_factor=1.0` (prevents Mac Retina scaling issues).
-  - Configures `Agent` with `use_vision=False` and `max_clickable_elements_length=12000` to prevent context length overflows.
+  - Uses official `Browser.from_system_chrome()` to auto-detect your real Chrome installation and active logins.
+  - Falls back to isolated `Browser()` when `USE_REAL_CHROME=false`.
+  - Uses `browser_use.llm.ChatOpenAI` pointed at `VLLM_BASE_URL` with `VLLM_API_KEY` and `max_completion_tokens=8192`.
+  - Configures `Agent` with `max_history_items=5` (to keep prompt within local 16k context), `use_vision=False`, and `max_clickable_elements_length=8000`.
 - **`.env`**:
   - `VLLM_BASE_URL`: Local vLLM API endpoint (e.g. `http://10.13.12.121:8000/v1`).
   - `VLLM_API_KEY`: API key token (e.g. `EMPTY`).
   - `LLM_MODEL`: Model identifier string (e.g. `qwen3-vl`).
   - `HEADLESS`: `true` or `false` to toggle the visible browser window.
+  - `USE_REAL_CHROME`: `true` (default) to use `Browser.from_system_chrome()`.
   - `ANONYMIZED_TELEMETRY`: Set to `false`.
 
 ---
@@ -98,4 +100,7 @@ When adding features or modifying code in this repository, strictly adhere to th
   - When running locally, Qwen-VL or local LLMs can run out of context if massive HTML trees are passed.
   - `max_clickable_elements_length` must remain capped unless verified.
   - Vision (`use_vision=True`) requires additional GPU memory; if enabled in future tasks, monitor local VRAM closely.
+- **Authentication Walls & Bot Detection (LinkedIn / Google)**:
+  - Fresh automated browser instances lack cookies and trigger bot checks (LinkedIn full-screen login modals, Google CAPTCHA).
+  - To bypass this on sites requiring login, run Chrome with remote debugging (`--remote-debugging-port=9222`) and set `CHROME_CDP_URL=http://localhost:9222`, or persist cookies using `CHROME_USER_DATA_DIR=./chrome_profile`.
 - **Async Execution**: `browser-use` relies on `asyncio`; top-level script execution requires `asyncio.run()`.

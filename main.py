@@ -92,6 +92,8 @@ async def run_browser_task():
         task=browser_task_description,
         browser=browser_instance,
         llm=language_model_client,
+        # Save output files (like CSVs) directly in the current workspace directory
+        file_system_path=os.getcwd(),
         # Allow up to 180 seconds for local model responses instead of the default 75s
         llm_timeout=180,
         step_timeout=240,

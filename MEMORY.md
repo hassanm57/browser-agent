@@ -37,7 +37,7 @@ browser-agent/
 - **`.env`**:
   - `VLLM_BASE_URL`: Local vLLM API endpoint (e.g. `http://10.13.12.121:8000/v1`).
   - `VLLM_API_KEY`: API key token (e.g. `EMPTY`).
-  - `LLM_MODEL`: Model identifier string (e.g. `qwen3-vl`).
+  - `LLM_MODEL`: Model identifier string (`qwen3-14b`, 32k context).
   - `HEADLESS`: `true` or `false` to toggle the visible browser window.
   - `USE_REAL_CHROME`: `true` (default) to use `Browser.from_system_chrome()`.
   - `ANONYMIZED_TELEMETRY`: Set to `false`.

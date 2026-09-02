@@ -45,11 +45,12 @@ async def run_browser_task():
         api_key=vllm_api_key_string,
     )
 
-    # Standardize the browser window size and device scale - DISABLED CURRENTLY.
+    # Standardize the browser window size and device scale - resoulution and stuff.
+    
     # This prevents Mac Retina displays from producing gigantic screenshots that exceed the model context
     browser_configuration_profile = BrowserProfile( 
         headless=is_headless_mode_enabled,
-        viewport={"width": 1280, "height": 720},
+        viewport={"width": 1920, "height": 1080},
         device_scale_factor=1.0,
     )
 

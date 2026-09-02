@@ -13,7 +13,8 @@ BASICALLY: DO NOT ALWAYS choose the path of least resistance for the sake of fun
 2. Structure & Abstraction
 - Keep code concrete. Avoid deep abstractions, design patterns, or unnecessary helper classes.
 - Write clear, linear logic inside standard functions.
-- Do not over-engineer. Solve only the immediate problem described.
+- Do not over-engineer. Solve only the immediate problem described. 
+- Make sure you dont uneccesarily create many files.
 
 3. Naming & Readability
 - Use long, descriptive variable and function names. 

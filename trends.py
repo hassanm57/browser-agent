@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import json
 import os
+import re
 import sys
 import urllib.parse
 import xml.etree.ElementTree as ElementTree
@@ -294,15 +295,131 @@ def fetch_international_wire_headlines():
         return []
 
 
+def clean_dom_tags_and_markdown(text_string):
+    # Remove [123]<div /> and similar DOM annotations injected by browser-use state serializer
+    cleaned_string = re.sub(r'\[\d+\]<[^>]*>', '', text_string)
+    cleaned_string = re.sub(r'\|\w+\([^)]*\)\|', '', cleaned_string)
+    cleaned_string = re.sub(r'\*\s*', '', cleaned_string)
+    return ' '.join(cleaned_string.split())
+
+
+def parse_genuine_tweets_from_text(raw_page_state_text):
+    # A genuine tweet on X always begins with an author display name and an '@' handle (e.g. @haniya_445, @creativesameeer).
+    # We explicitly extract the full multi-line tweet body and filter out right-sidebar noise (e.g. GTA 6, DLSS, Entertainment).
+    raw_lines_list = raw_page_state_text.split("\n")
+    cleaned_lines_list = []
+    for line_index in range(len(raw_lines_list)):
+        cleaned_line = clean_dom_tags_and_markdown(raw_lines_list[line_index].strip())
+        if len(cleaned_line) > 0:
+            cleaned_lines_list.append(cleaned_line)
+
+    extracted_tweets_list = []
+    sidebar_noise_words = [
+        "trending now", "what's happening", "gta 6", "dlss", "nvidia",
+        "who to follow", "entertainment", "keyboard shortcuts", "view keyboard",
+        "subscribe to premium", "terms of service", "privacy policy"
+    ]
+
+    current_line_pointer = 0
+    total_lines_count = len(cleaned_lines_list)
+
+    while current_line_pointer < total_lines_count:
+        current_line_text = cleaned_lines_list[current_line_pointer]
+
+        # Detect a valid Twitter handle starting with '@'
+        is_user_handle = False
+        if current_line_text.startswith("@") and len(current_line_text) > 2 and " " not in current_line_text:
+            is_user_handle = True
+
+        if is_user_handle:
+            user_handle_string = current_line_text
+
+            # The author's display name usually sits directly above the handle
+            author_display_name = ""
+            if current_line_pointer > 0:
+                previous_line_text = cleaned_lines_list[current_line_pointer - 1]
+                if not previous_line_text.startswith("@") and not previous_line_text.startswith("[") and len(previous_line_text) < 40:
+                    author_display_name = previous_line_text
+
+            # Advance past handle and timestamp indicators ('·', '20m', '1h', 'Replying to')
+            tweet_body_pointer = current_line_pointer + 1
+            while tweet_body_pointer < total_lines_count:
+                peek_line = cleaned_lines_list[tweet_body_pointer]
+                if peek_line == "·" or peek_line.endswith("m") or peek_line.endswith("h") or peek_line.endswith("s") or peek_line.isdigit() or "replying to" in peek_line.lower():
+                    tweet_body_pointer = tweet_body_pointer + 1
+                else:
+                    break
+
+            # Collect the full multi-line tweet text paragraphs
+            tweet_body_lines_list = []
+            while tweet_body_pointer < total_lines_count:
+                candidate_line = cleaned_lines_list[tweet_body_pointer]
+
+                # If this line is the next user's handle, stop
+                if candidate_line.startswith("@") and " " not in candidate_line:
+                    break
+
+                # If the subsequent line is a handle, this current line is the next author's name, so stop
+                if tweet_body_pointer + 1 < total_lines_count:
+                    next_peek_line = cleaned_lines_list[tweet_body_pointer + 1]
+                    if next_peek_line.startswith("@") and " " not in next_peek_line:
+                        break
+
+                # Stop if we hit any sidebar widgets or ads
+                lower_candidate = candidate_line.lower()
+                is_sidebar_noise = False
+                for noise_index in range(len(sidebar_noise_words)):
+                    if sidebar_noise_words[noise_index] in lower_candidate:
+                        is_sidebar_noise = True
+                        break
+                if is_sidebar_noise:
+                    break
+
+                # Skip UI action buttons and metric counters
+                if candidate_line in ["Reply", "Repost", "Like", "Bookmark", "Share"] or candidate_line.isdigit():
+                    tweet_body_pointer = tweet_body_pointer + 1
+                    continue
+
+                tweet_body_lines_list.append(candidate_line)
+                tweet_body_pointer = tweet_body_pointer + 1
+
+                if len(tweet_body_lines_list) >= 10:
+                    break
+
+            # Join all lines into a clean full tweet body
+            full_tweet_body_text = " ".join(tweet_body_lines_list).strip()
+
+            if len(full_tweet_body_text) > 20:
+                contains_noise = False
+                lower_tweet = full_tweet_body_text.lower()
+                for noise_index in range(len(sidebar_noise_words)):
+                    if sidebar_noise_words[noise_index] in lower_tweet:
+                        contains_noise = True
+                        break
+
+                if not contains_noise and full_tweet_body_text not in extracted_tweets_list:
+                    if len(author_display_name) > 0:
+                        formatted_tweet_string = f"[{author_display_name} | {user_handle_string}] {full_tweet_body_text}"
+                    else:
+                        formatted_tweet_string = f"[{user_handle_string}] {full_tweet_body_text}"
+                    extracted_tweets_list.append(formatted_tweet_string)
+
+            current_line_pointer = tweet_body_pointer
+        else:
+            current_line_pointer = current_line_pointer + 1
+
+    return extracted_tweets_list
+
+
 async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_enabled):
-    # This function uses the authenticated browser session to:
-    # 1. Open https://x.com/explore/tabs/trending and extract active live trends
-    # 2. Identify top defense/military/geopolitical trends (e.g. #VisionaryFieldMarshal, Makkah Defence Pact)
-    # 3. Open https://x.com/search?q={trend}&f=top for each trend
-    # 4. Extract the first 10 to 15 tweets for each trend so authentic phrasing and hashtags are captured
+    # This function uses an active headful browser session so you can see Chrome on screen
+    # 1. Opens https://x.com/explore/tabs/trending and extracts active live trends
+    # 2. Selects top defense/geopolitical trends
+    # 3. Navigates to search results and scrolls down to load full genuine tweets
+    # 4. Uses parse_genuine_tweets_from_text to filter out sidebar noise and capture full tweet bodies
     print("")
     print("==================================================")
-    print("[8/8] Mining Live Trends and Tweets Directly on X.com")
+    print("[8/8] Mining Live Trends and Tweets Directly on X.com (Headful Browser)")
     print("==================================================")
 
     x_native_intel_dictionary = {
@@ -311,18 +428,18 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         "sample_tweets_by_trend": {}
     }
 
-    # Initialize the browser with real system Chrome profile
+    # Open in headful mode (visible window) as requested so you can see exactly what is loaded
     if is_real_chrome_enabled:
         browser_instance = Browser.from_system_chrome(
-            headless=is_headless_enabled,
+            headless=False,
         )
     else:
         browser_instance = Browser(
-            headless=is_headless_enabled,
+            headless=False,
         )
 
     try:
-        print("Launching browser and navigating to https://x.com/explore/tabs/trending...")
+        print("Launching visible Chrome window and navigating to https://x.com/explore/tabs/trending...")
         await browser_instance.start()
         await browser_instance.navigate_to("https://x.com/explore/tabs/trending")
         await asyncio.sleep(5)
@@ -334,7 +451,6 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         raw_state_lines_list = trending_page_state_text.split("\n")
         for line_index in range(len(raw_state_lines_list)):
             current_raw_line = raw_state_lines_list[line_index].strip()
-            # Capture hashtag lines or trending terms
             if current_raw_line.startswith("#") and len(current_raw_line) > 2:
                 if current_raw_line not in extracted_trend_names_list:
                     extracted_trend_names_list.append(current_raw_line)
@@ -344,7 +460,7 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                     if len(next_line_text) > 3 and not next_line_text.startswith("[") and next_line_text not in extracted_trend_names_list:
                         extracted_trend_names_list.append(next_line_text)
 
-        # Fallback to ensure we always have the top national security trends if page text was sparse
+        # Ensure our primary national security trends are included
         seed_priority_trends = [
             "#VisionaryFieldMarshal",
             "#GreatManCDF",
@@ -363,7 +479,7 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         print("Sample trends: " + ", ".join(extracted_trend_names_list[:6]))
         print("")
 
-        # Select top 3 to 5 trends to click/search and extract 10-15 tweets each
+        # Select top 5 trends to search and extract genuine tweets
         selected_trends_to_mine_list = extracted_trend_names_list[:5]
 
         for trend_index in range(len(selected_trends_to_mine_list)):
@@ -372,30 +488,35 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
             search_url_string = "https://x.com/search?q=" + encoded_query_string + "&f=top"
 
             print(f"Mining tweets for trend [{trend_index + 1}/5]: {current_trend_query}")
-            await browser_instance.navigate_to(search_url_string)
-            await asyncio.sleep(5)
+            try:
+                await browser_instance.navigate_to(search_url_string)
+                await asyncio.sleep(4)
 
-            search_state_text = await browser_instance.get_state_as_text()
-            extracted_tweets_for_trend_list = []
+                # Scroll down twice to trigger dynamic tweet loading in the timeline
+                print("      Scrolling down timeline to load fresh tweets...")
+                try:
+                    await browser_instance.scroll_down(800)
+                    await asyncio.sleep(2)
+                    await browser_instance.scroll_down(800)
+                    await asyncio.sleep(2)
+                except Exception:
+                    pass
 
-            search_lines_list = search_state_text.split("\n")
-            for line_idx in range(len(search_lines_list)):
-                line_string = search_lines_list[line_idx].strip()
-                # A tweet text line is typically longer than 25 characters, doesn't start with UI tags,
-                # and contains actual readable words or hashtags
-                if len(line_string) > 25 and not line_string.startswith("[") and not line_string.startswith("|"):
-                    lower_line = line_string.lower()
-                    if not any(skip_word in lower_line for skip_word in ["keyboard shortcuts", "view keyboard", "aria-label", "embedded video", "notifications", "search query"]):
-                        if line_string not in extracted_tweets_for_trend_list:
-                            extracted_tweets_for_trend_list.append(line_string)
-                            if len(extracted_tweets_for_trend_list) >= 12:
-                                break
+                search_state_text = await browser_instance.get_state_as_text()
+                genuine_tweets_list = parse_genuine_tweets_from_text(search_state_text)
 
-            print(f"      Extracted {len(extracted_tweets_for_trend_list)} tweets for: {current_trend_query}")
-            x_native_intel_dictionary["sample_tweets_by_trend"][current_trend_query] = extracted_tweets_for_trend_list
+                print(f"      Extracted {len(genuine_tweets_list)} genuine tweets for: {current_trend_query}")
+                for t_preview in genuine_tweets_list[:2]:
+                    print(f"        -> {t_preview[:120]}...")
+
+                x_native_intel_dictionary["sample_tweets_by_trend"][current_trend_query] = genuine_tweets_list[:15]
+            except Exception as trend_error:
+                print(f"      Notice: Skipping trend due to network timeout: {trend_error}")
+
+            await asyncio.sleep(2)
 
         await browser_instance.stop()
-        print("Successfully completed X.com trend and tweet extraction!")
+        print("Successfully completed headful X.com trend and tweet extraction!")
     except Exception as browser_error:
         print("Notice: X.com browser inspection encountered: " + str(browser_error))
         try:
@@ -479,6 +600,7 @@ TASK:
 2. Discard purely domestic party politics, sports, celebrities, crypto, local crime, and gossip.
 3. Pay HEAVY attention to the authentic tweets extracted from X.com:
    - Notice hidden keywords, specific military terms, pact names (like "Makkah Defence Pact"), military leadership titles, and related hashtags.
+   - IMPORTANT: Notice and look for abbreviations and nicknames (e.g., "Visionary Field Marshal", "Great Man CDF", "امہ کی شان عاصم منیر", "مرد آہن فیلڈ مارشل"). They MUST be included in our keywords, in both lowercase as well as uppercase.
 4. FOR EACH TOPIC, GENERATE APPROXIMATELY 20 HIGH-PRECISION KEYWORDS / SEARCH TERMS.
    - Do not stop at 3 or 4 terms. Provide a comprehensive list of ~20 terms per topic so downstream Twitter scrapers will not miss anything.
    - Include: full official names, common abbreviations, nicknames, key leaders, related organizations, weapons systems, and relevant hashtags (in English and Urdu/local where applicable).

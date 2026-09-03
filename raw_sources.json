@@ -1,7 +1,7 @@
 {
   "country": "Pakistan",
   "slug": "pakistan",
-  "collected_at": "2026-09-03T11:12:33.774633",
+  "collected_at": "2026-09-03T11:29:04.486944",
   "x_trends24_topics": [
     "#GreatManCDF",
     "#VisionaryFieldMarshal",
@@ -44,6 +44,7 @@
     "US President Trump suggests renaming Strait of Hormuz as ‘Trump Strait’",
     "Iran terms US strike on wedding a ‘war crime’",
     "Fresh strikes rock Iran after Pezeshkian offers olive branch",
+    "Trump weighs ending Iran war as Pentagon extends deployments: report",
     "Israel launches fresh attacks in southern Lebanon despite framework agreement",
     "‘Horrific, appalling’: Iran urges UNSC to condemn deadly US attack on wedding ceremony",
     "READ: What are Iran's options to retaliate as open warfare resumes with the US?",
@@ -51,13 +52,12 @@
     "Iran claims new naval mines laid in Strait of Hormuz",
     "US forces escort 18m barrels of oil through Strait of Hormuz: CNN",
     "Iraq boosts oil exports in August as low prices draw buyers",
-    "Kuwait army says intercepting missile, drone attack from Iran",
     "How to effectively address Pakistan's nutrition crisis",
     "Nutrition crisis stunts Pakistan’s development dreams",
     "Pakistan raises $3bn through dual-tranche Eurobond sale",
+    "LHC's Justice Raheel Kamran resigns as judge",
     "Ex-captain Azhar Ali says instability, lack of vision hurting Pakistan cricket",
     "US Pentagon issues clinical guidelines on troop testosterone screening to start immediately",
-    "Pakistan pushes ADB for more funding for ML-1, public-private partnerships",
     "Pakistan’s EV Revolution: Are Electric Bikes the Future?",
     "How Pakistan Can Finance Climate Disasters Before They Strike"
   ],
@@ -122,17 +122,17 @@
     "AI Needs a Ten Commandments"
   ],
   "wire_news_headlines": [
-    "UN warns of 'supersized' El Nino as countries prepare for impact",
+    "UN warns of 'supersized' El Niño as countries prepare for impact",
     "Channel smuggling gangs resort to 'mega-dinghies' as crackdown limits small boat supply",
     "Iranian attack on Saudi tanker killed two Filipino sailors, Saudi Arabia says",
-    "Will the Lindsay Clancy trial end in a mistrial? Here are the jury's options",
+    "Could Lindsay Clancy trial end in a mistrial? Here are the jury's options",
     "Trump $1 coin makes him first living president on US currency in a century",
     "Maltese tycoon acquitted of orchestrating murder of renowned journalist",
     "'Below the dignity of the office': Canadian officials condemn Pete Hegseth cadet post",
     "Protests in Spain against government's handling of Ceuta migrant crisis",
     "EU and Nato vow to step up pressure on Russia after 'new escalation' in Germany",
     "Iran says US strike killed four at wedding in 'war crime' as US denies targeting civilians",
-    "LA Clippers fined $30m by NBA over Leonard scandal",
+    "LA Clippers fined $30m over Leonard pay scandal",
     "Why Nepal floods should worry India",
     "'The crowd shouted that we'd stolen someone's genitals' - deadly rumours spread on social media",
     "Rosenberg: Putin's veiled threat to UK part of Russia's campaign against West",
@@ -144,80 +144,22 @@
       "#GreatManCDF",
       "#VisionaryFieldMarshal",
       "#امہ_کی_شان_عاصم_منیر",
-      "#عاصم_منیر_ہمارا_فخر",
       "#مرد_آہن_فیلڈ_مارشل",
+      "#عاصم_منیر_ہمارا_فخر",
       "Makkah Defence Pact",
       "Pakistan Navy Sea Spark"
     ],
     "sample_tweets_by_trend": {
       "#GreatManCDF": [
-        "لال خان نواز بولان میڈیکل کالج میں ایم بی بی ایس کا طالب علم تھا اور اسکالرشپ پر ڈاکٹر بننے کا خواب دیکھ رہا تھا، مگر انتہا پسندانہ اثرات نے اسے تعلیم اور خدمت کے راستے سے ہٹا دیا۔ دہشت گردی صرف جان نہیں لیتی، نوجوانوں کے خواب اور خاندانوں کی امیدیں بھی چھین لیتی ہے۔",
-        "یہ حال ہے بلاول کے سندھ کا، اس مادروچود کی پارٹی نے پورے سندھ کو تباہ اور برباد کر دیا... ابھی بھی اس کا پیچھا نہیں چھوڑ رہا... بتاؤ اس خاتون کو لے جانے کے لیے ایک ایمبولینس تک نہیں ہے.",
-        "ایک نوجوان جس کے ہاتھ میں کتاب اور قلم ہونا چاہیے تھا، وہ انتہا پسندی کی نذر ہو گیا۔ لال خان نواز کا انجام یاد دلاتا ہے کہ نوجوانوں کو دہشت گردی اور فکری گمراہی سے بچانا قومی ذمہ داری ہے۔ بلوچستان کے نوجوانوں کا مستقبل تعلیم، ترقی اور خدمت میں ہے—تباہی میں نہیں۔",
-        "🐕‍🦺 PREPARING FOR WAR 🚁 | @CDNThe3rd [+] WARDOGS",
-        "GTA 6 Limits Character Switching in Key Missions for Story Focus",
-        "Trending now · Entertainment · 52 posts",
-        "NVIDIA DLSS 5 Launches with Modders Pushing Boundaries Across Games",
-        "Trending now · Entertainment · 152 posts",
-        "Harry Potter Side-by-Side Clips Highlight Visual Shift from 2001 Film to HBO Series",
-        "Trending now · Entertainment · 2,179 posts",
-        "... (more content below viewport - scroll to reveal)"
+        "[@real_hM_] [2326]<div aria-label=Home timeline /> [2002]<button aria-label=Back /> [2339]<div /> [2340]<span /> [2351]<div /> [2352]<div /> [2353]<svg /> <!-- SVG content collapsed --> |SHADOW(open)|[1921]<input autocomplete=list placeholder=Search aria-autocomplete=list aria-label=Search query role=combobox type=text value=#GreatManCDF /> Open Shadow |scroll element[3922]<div />",
+        "[@FjwuNailaafzal] [2477]<div /> [2478]<span /> [2480]<div /> [2021]<a aria-label=1 hour ago role=link /> 1h [1958]<div /> [1959]<div /> [1960]<div /> [1961]<button aria-label=Grok actions /> [2022]<div />",
+        "[@PakDhobee] [2601]<div /> [2602]<span /> [2604]<div /> [2044]<a aria-label=35 minutes ago role=link /> 35m [2607]<div /> [2608]<div /> [2609]<div /> [2045]<button aria-label=Grok actions /> [2046]<div />",
+        "[@FjwuNailaafzal] [2777]<div /> [2778]<span /> [2780]<div /> [2781]<a aria-label=1 hour ago role=link /> 1h [2784]<div /> [2785]<div /> [2786]<div /> [2787]<button aria-label=Grok actions /> [2790]<div />",
+        "[@TGGonYT] [3713]<button aria-label=Follow @TGGonYT /> Follow [3721]<li role=listitem level=1 /> [3722]<div /> [3723]<div /> [3731]<div /> [3732]<a role=link /> [3746]<div /> [3747]<div /> [3748]<div />",
+        "[@lladergasmo] [3771]<button aria-label=Follow @lladergasmo /> Follow [3779]<li role=listitem level=1 /> [3780]<div /> [3781]<div /> [3789]<div /> [3790]<a role=link /> [3804]<div /> [3805]<div /> [3806]<div />",
+        "[@petermcottle] [3826]<button aria-label=Follow @petermcottle /> Follow [3834]<a role=link /> Show more [3840]<a role=link /> [3841]<span /> Terms [3843]<div /> [3849]<a role=link /> [3850]<span />"
       ],
-      "#VisionaryFieldMarshal": [
-        "Modern security challenges require modern defence cooperation, including stronger cyber, air, and maritime capabilities.",
-        "In an evolving security environment, closer defence cooperation can contribute to greater regional resilience.",
-        "“Pakistanis are leaving Pakistan.”",
-        "Meanwhile, Westerners are leaving the West to LIVE in Pakistan. 👀",
-        "So who’s escaping and who’s choosing Pakistan?",
-        "🐕‍🦺 PREPARING FOR WAR 🚁 | @CDNThe3rd [+] WARDOGS",
-        "GTA 6 Limits Character Switching in Key Missions for Story Focus",
-        "Trending now · Entertainment · 52 posts",
-        "NVIDIA DLSS 5 Launches with Modders Pushing Boundaries Across Games",
-        "Trending now · Entertainment · 152 posts",
-        "Harry Potter Side-by-Side Clips Highlight Visual Shift from 2001 Film to HBO Series",
-        "Trending now · Entertainment · 2,179 posts"
-      ],
-      "#امہ_کی_شان_عاصم_منیر": [
-        "Saraiki and pashto Grammar | Pronoun in Saraiki and pashto | سرائیکی   میں اسم ضمیر | Saraiki aur pashto sikhainy ky lie nichy link per click kren",
-        "Saraiki Grammar | Pronoun in Saraiki and pashto | سرائیکی میں اسم...",
-        "Assalam O Alaikum! #saraikivspashto#punjabi#saraiki Saraiki Tu...",
-        "The Mecca Joint Defense Agreement is no longer just a declaration, but has become an impregnable and strong fortress of joint defense of Muslim countries.",
-        "Chief of Defense Forces Asim Munir ushered in an era of self-defense and security self-reliance for regional countries.",
-        "Thanks to the tireless efforts of Field Marshal Asim Munir, Pakistan is the most important and strongest pillar of security in the region.",
-        "مکہ معاہدے کے تحت مشترکہ فوجی مشقوں اور انٹیلیجنس شیئرنگ کے مربوط نظام کا عملی آغاز خطے کے دفاعی تعاون میں ایک اہم پیش رفت ہے۔ سپہ سالار عاصم منیر کی یہ حکمتِ عملی علاقائی امن و استحکام کے لیے مضبوط بنیاد فراہم کر رہی ہے۔",
-        "🐕‍🦺 PREPARING FOR WAR 🚁 | @CDNThe3rd [+] WARDOGS",
-        "GTA 6 Limits Character Switching in Key Missions for Story Focus",
-        "Trending now · Entertainment · 52 posts",
-        "NVIDIA DLSS 5 Launches with Modders Pushing Boundaries Across Games",
-        "Trending now · Entertainment · 152 posts"
-      ],
-      "#عاصم_منیر_ہمارا_فخر": [
-        "Even in this savagery, the voices of women's rights advocates are silenced too. Aren't the women of Palestine women as well? Now this oppression has become so routine that no one even speaks out against this barbarity anymore.",
-        "لاہور کے نواحی علاقے ٹورنٹو میں معمولی سی بارش کی صورتحال، پنجاب حکومت نکاسی آب میں بری طرح ناکام😉",
-        "Public voices rise together demanding justice, accountability and freedom from oppression today.",
-        "King Charles Binance Pakistans Hartal To Hogi Beginners Attock Architect Jalal Sherazi Sherazi and Bangash Architects stop targeting zayb Buckingham Palace Secure",
-        "🐕‍🦺 PREPARING FOR WAR 🚁 | @CDNThe3rd [+] WARDOGS",
-        "GTA 6 Limits Character Switching in Key Missions for Story Focus",
-        "Trending now · Entertainment · 52 posts",
-        "NVIDIA DLSS 5 Launches with Modders Pushing Boundaries Across Games",
-        "Trending now · Entertainment · 152 posts",
-        "Harry Potter Side-by-Side Clips Highlight Visual Shift from 2001 Film to HBO Series",
-        "Trending now · Entertainment · 2,179 posts",
-        "... (more content below viewport - scroll to reveal)"
-      ],
-      "#مرد_آہن_فیلڈ_مارشل": [
-        "ایک آدمی اٹھ کر کہتا ہے سسٹم ناکارہ ہو گیا، اگر ناکارہ ہو گیا ہے تو تم وزیر کیوں ہو؟ تمہں PCB کی چئیرمین شپ دی تم سے ایک ٹیم نہیں بن رہی، جدھر جاتی ہے منہ کالا کرا آتی ہے‘‘  MPA پیپلز پارٹی سردار خان چانڈیو",
-        "Collective security requires shared vision and practical cooperation. Stronger defence coordination among Muslim nations can help address emerging challenges while supporting regional peace",
-        "In an era of evolving security threats, cooperation in cyber defence, air security, and maritime protection is becoming increasingly important for collective preparedness.",
-        "🐕‍🦺 PREPARING FOR WAR 🚁 | @CDNThe3rd [+] WARDOGS",
-        "GTA 6 Limits Character Switching in Key Missions for Story Focus",
-        "Trending now · Entertainment · 52 posts",
-        "NVIDIA DLSS 5 Launches with Modders Pushing Boundaries Across Games",
-        "Trending now · Entertainment · 152 posts",
-        "Harry Potter Side-by-Side Clips Highlight Visual Shift from 2001 Film to HBO Series",
-        "Trending now · Entertainment · 2,179 posts",
-        "... (more content below viewport - scroll to reveal)"
-      ]
+      "#VisionaryFieldMarshal": []
     }
   }
 }

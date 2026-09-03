@@ -9,8 +9,7 @@ import {
   Globe,
   History,
   Settings,
-  Terminal,
-  PanelLeftClose
+  Terminal
 } from "lucide-react";
 
 interface SidebarProps {
@@ -18,8 +17,6 @@ interface SidebarProps {
   onSelectTab: (selectedTab: NavigationTabType) => void;
   isLogPanelOpen: boolean;
   onToggleLogPanel: () => void;
-  isOpen: boolean;
-  onToggleSidebar: () => void;
   activeSourcesCount: number;
 }
 
@@ -113,31 +110,16 @@ export function Sidebar(props: SidebarProps) {
   }
 
   return (
-    <aside
-      className={
-        "h-screen shrink-0 overflow-hidden bg-zinc-950/80 backdrop-blur-md border-r border-zinc-850 flex flex-col justify-between select-none transition-all duration-300 ease-in-out " +
-        (props.isOpen ? "w-60 opacity-100" : "w-0 opacity-0 pointer-events-none border-r-0")
-      }
-    >
+    <aside className="w-60 h-screen shrink-0 overflow-hidden bg-zinc-950/80 backdrop-blur-md border-r border-zinc-850 flex flex-col justify-between select-none">
       {/* Top Header / Clean Brand Indicator */}
       <div>
-        <div className="h-14 px-3.5 border-b border-zinc-850/80 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-sm">
-              B
-            </div>
-            <span className="text-sm font-semibold text-zinc-100 tracking-tight">
-              Browser Agent
-            </span>
+        <div className="h-14 px-4 border-b border-zinc-850/80 flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-sm">
+            B
           </div>
-
-          <button
-            onClick={props.onToggleSidebar}
-            title="Collapse Sidebar"
-            className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors"
-          >
-            <PanelLeftClose className="w-4 h-4" strokeWidth={1.5} />
-          </button>
+          <span className="text-sm font-semibold text-zinc-100 tracking-tight">
+            Browser Agent
+          </span>
         </div>
 
         {/* Grouped Nav Items */}

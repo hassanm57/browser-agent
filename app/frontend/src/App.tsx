@@ -1,5 +1,22 @@
 import { useState, useEffect, useRef } from "react";
-import { PanelLeftOpen, PanelLeftClose, Terminal, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import {
+  Terminal,
+  CheckCircle2,
+  Loader2,
+  AlertCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  X,
+  LayoutDashboard,
+  PlayCircle,
+  Flame,
+  Globe,
+  MessageSquare,
+  Tags,
+  History,
+  Settings
+} from "lucide-react";
 import type {
   NavigationTabType,
   CountryItem,
@@ -10,7 +27,7 @@ import type {
   LogMessageItem,
   ApplicationSettings
 } from "./types";
-import { Sidebar } from "./components/Sidebar";
+import { SidebarNav, type NavGroupData, type NavItemData } from "./components/ui/dashboard-sidebar";
 import { LogPanel } from "./components/LogPanel";
 import { DashboardPage } from "./pages/DashboardPage";
 import { PipelinePage } from "./pages/PipelinePage";
@@ -26,10 +43,28 @@ const BACKEND_API_BASE_URL = "http://localhost:8000";
 const BACKEND_WEBSOCKET_URL = "ws://localhost:8000/ws/pipeline";
 
 export default function App() {
-  // Navigation State - starts collapsed as requested
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // Navigation & Shell State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activeWorkspace, setActiveWorkspace] = useState("Browser Agent");
   const [currentActiveTab, setCurrentActiveTab] = useState<NavigationTabType>("dashboard");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLogPanelOpen, setIsLogPanelOpen] = useState(false);
+
+  // Global ⌘K shortcut listener
+  useEffect(() => {
+    function handleGlobalKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+      if (event.key === "Escape") {
+        setIsSearchOpen(false);
+      }
+    }
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   // Data States
   const [availableCountries, setAvailableCountries] = useState<CountryItem[]>([]);
@@ -415,71 +450,154 @@ export default function App() {
 
   const isPipelineActive = pipelineStatus === "running";
 
-  return (
-    <div className="flex h-screen w-screen overflow-hidden bg-zinc-950 text-zinc-100 font-sans">
-      {/* Collapsible Left Sidebar (starts collapsed) */}
-      <Sidebar
-        currentActiveTab={currentActiveTab}
-        onSelectTab={function (tab) {
-          setCurrentActiveTab(tab);
-        }}
-        isLogPanelOpen={isLogPanelOpen}
-        onToggleLogPanel={function () {
-          setIsLogPanelOpen(!isLogPanelOpen);
-        }}
-        isOpen={isSidebarOpen}
-        onToggleSidebar={function () {
-          setIsSidebarOpen(!isSidebarOpen);
-        }}
-        activeSourcesCount={activeSourcesCount}
-      />
+  // Group navigation definitions matching the user's dashboard-sidebar component
+  const browserAgentNavGroups: NavGroupData[] = [
+    {
+      items: [
+        { id: "search", title: "Search", icon: Search, shortcut: "⌘K" },
+        { id: "dashboard", title: "Dashboard", icon: LayoutDashboard },
+        {
+          id: "pipeline",
+          title: "Run Pipeline",
+          icon: PlayCircle,
+          badge: pipelineStatus === "running" ? "RUNNING" : undefined
+        },
+      ]
+    },
+    {
+      heading: "Intelligence",
+      items: [
+        { id: "trends", title: "Trending Topics", icon: Flame },
+        { id: "headlines", title: "News Headlines", icon: Globe },
+        { id: "tweets", title: "Extracted Tweets", icon: MessageSquare },
+        { id: "keywords", title: "Keywords", icon: Tags },
+      ]
+    },
+    {
+      heading: "Management",
+      items: [
+        {
+          id: "sources",
+          title: "Sources",
+          icon: Globe,
+          badge: activeSourcesCount > 0 ? String(activeSourcesCount) : undefined
+        },
+        { id: "history", title: "Run History", icon: History },
+      ]
+    }
+  ];
 
-      {/* Main Content Area + Collapsible Bottom Log Panel */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-zinc-950">
-        {/* Top Header Bar with Breadcrumb and Controls */}
-        <header className="h-14 border-b border-zinc-850/80 px-4 flex items-center justify-between bg-zinc-950/70 backdrop-blur-md shrink-0 select-none">
+  const browserAgentBottomItems: NavItemData[] = [
+    { id: "settings", title: "Settings", icon: Settings, shortcut: "⌘," },
+  ];
+
+  // Search items list for ⌘K quick jumps
+  const searchablePages = [
+    { id: "dashboard", label: "Dashboard", desc: "Overview stats and recent pipeline runs" },
+    { id: "pipeline", label: "Run Pipeline", desc: "Select countries and trigger autonomous scraping" },
+    { id: "trends", label: "Trending Topics", desc: "Top hashtags from trends24 and X.com explore" },
+    { id: "headlines", label: "News Headlines", desc: "Ingested news headlines across all configured sources" },
+    { id: "tweets", label: "Extracted Tweets", desc: "Live tweets mined directly from X.com search timelines" },
+    { id: "keywords", label: "Synthesized Keywords", desc: "High-precision keywords generated via Qwen3-14B" },
+    { id: "sources", label: "Sources Management", desc: "Configure, toggle, and add news sites & RSS feeds" },
+    { id: "history", label: "Run History", desc: "Inspect and export past intelligence pipeline runs" },
+    { id: "settings", label: "Application Settings", desc: "vLLM endpoint, Chrome options, and scraping thresholds" },
+  ];
+
+  const filteredSearchPages = [];
+  for (let pageIndex = 0; pageIndex < searchablePages.length; pageIndex++) {
+    const pageItem = searchablePages[pageIndex];
+    if (
+      searchQuery.trim() === "" ||
+      pageItem.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pageItem.desc.toLowerCase().includes(searchQuery.toLowerCase())
+    ) {
+      filteredSearchPages.push(pageItem);
+    }
+  }
+
+  return (
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground font-sans">
+      {/* shadcn Collapsible Sidebar Container */}
+      <div
+        className={
+          "h-full transition-all duration-300 ease-in-out shrink-0 overflow-hidden bg-card/50 border-r border-border/50 " +
+          (isSidebarOpen ? "w-[260px] opacity-100" : "w-0 opacity-0 border-none")
+        }
+      >
+        <SidebarNav
+          className="w-[260px] border-none bg-transparent"
+          activeId={currentActiveTab}
+          onSelect={function (tabId) {
+            if (tabId === "search") {
+              setIsSearchOpen(true);
+              return;
+            }
+            setCurrentActiveTab(tabId as NavigationTabType);
+          }}
+          activeWorkspace={activeWorkspace}
+          onWorkspaceSelect={setActiveWorkspace}
+          navGroups={browserAgentNavGroups}
+          bottomItems={browserAgentBottomItems}
+        />
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 bg-black/[0.02] dark:bg-white/[0.02] flex flex-col min-w-0 transition-all duration-300 h-screen overflow-hidden">
+        {/* Top Header Bar */}
+        <div className="h-14 border-b border-border/50 flex items-center px-4 justify-between bg-card shrink-0 select-none">
           <div className="flex items-center gap-3">
             <button
               onClick={function () {
                 setIsSidebarOpen(!isSidebarOpen);
               }}
-              className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors"
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-colors"
               title={isSidebarOpen ? "Collapse Sidebar" : "Open Sidebar"}
             >
               {isSidebarOpen ? (
-                <PanelLeftClose className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                <PanelLeftClose className="w-[18px] h-[18px]" strokeWidth={1.5} />
               ) : (
-                <PanelLeftOpen className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                <PanelLeftOpen className="w-[18px] h-[18px]" strokeWidth={1.5} />
               )}
             </button>
-
-            <div className="flex items-center gap-2 text-[13px] text-zinc-400">
-              <span className="font-semibold text-zinc-200 tracking-tight">
-                Browser Agent
-              </span>
-              <span className="text-zinc-600">/</span>
-              <span className="text-zinc-100 font-medium tracking-tight">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="truncate font-semibold text-foreground/90">{activeWorkspace}</span>
+              <span>/</span>
+              <span className="font-medium text-foreground truncate">
                 {tabTitlesDictionary[currentActiveTab]}
               </span>
             </div>
           </div>
 
-          {/* Right Header Controls: Status Badge & Telemetry Button */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={function () {
+                setIsSearchOpen(true);
+              }}
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-xs text-muted-foreground transition-colors border border-border/40 cursor-pointer"
+            >
+              <Search className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <span>Search intelligence or tabs...</span>
+              <kbd className="h-4 px-1 text-[10px] font-mono text-muted-foreground/60 bg-background/50 border border-border/50 rounded">
+                ⌘K
+              </kbd>
+            </button>
+
+            {/* Run status badge */}
             <div
               className={
                 "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium tracking-wide " +
                 (isPipelineActive
-                  ? "bg-blue-500/10 text-blue-400"
+                  ? "bg-primary/10 text-primary"
                   : pipelineStatus === "completed"
                   ? "bg-emerald-500/10 text-emerald-400"
                   : pipelineStatus === "cancelled"
                   ? "bg-amber-500/10 text-amber-400"
-                  : "bg-white/5 text-zinc-400")
+                  : "bg-black/5 dark:bg-white/5 text-muted-foreground")
               }
             >
               {isPipelineActive ? (
-                <Loader2 className="w-3 h-3 animate-spin text-blue-400" />
+                <Loader2 className="w-3 h-3 animate-spin text-primary" />
               ) : pipelineStatus === "completed" ? (
                 <CheckCircle2 className="w-3 h-3 text-emerald-400" />
               ) : pipelineStatus === "cancelled" ? (
@@ -490,28 +608,29 @@ export default function App() {
               <span>{pipelineStatus.toUpperCase()}</span>
             </div>
 
+            {/* Live Logs Toggle */}
             <button
               onClick={function () {
                 setIsLogPanelOpen(!isLogPanelOpen);
               }}
               className={
-                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 " +
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer " +
                 (isLogPanelOpen
-                  ? "bg-blue-500/15 text-blue-400"
-                  : "text-zinc-400 hover:text-zinc-100 hover:bg-white/5")
+                  ? "bg-primary/15 text-primary font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5")
               }
               title="Toggle Live Telemetry"
             >
-              <Terminal className="w-3.5 h-3.5" strokeWidth={1.75} />
+              <Terminal className="w-3.5 h-3.5" strokeWidth={1.5} />
               <span className="hidden sm:inline">Logs</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5"></span>
             </button>
           </div>
-        </header>
+        </div>
 
         {/* Main View Port */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-zinc-950">
-          <div className="animate-in fade-in-50 duration-200">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-black/[0.02] dark:bg-white/[0.02]">
+          <div className="max-w-7xl mx-auto">
             {currentActiveTab === "dashboard" && (
               <DashboardPage
                 rawSourcesData={rawSourcesData}
@@ -598,6 +717,67 @@ export default function App() {
           }}
         />
       </div>
+
+      {/* ⌘K Command Search Modal */}
+      {isSearchOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-background/80 backdrop-blur-sm px-4">
+          <div className="fixed inset-0" onClick={() => setIsSearchOpen(false)} />
+          <div className="relative w-full max-w-xl bg-card border border-border/60 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center px-4 border-b border-border/50">
+              <Search className="w-[18px] h-[18px] text-muted-foreground/70 mr-3 shrink-0" strokeWidth={1.5} />
+              <input
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent py-4 outline-none text-[14px] text-foreground placeholder:text-muted-foreground/50"
+                placeholder="Search projects, docs, or actions..."
+              />
+              <kbd
+                onClick={() => setIsSearchOpen(false)}
+                className="hidden sm:inline-flex items-center justify-center h-5 px-1.5 ml-2 text-[10px] font-medium font-mono text-muted-foreground/70 bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/10 rounded-[4px] cursor-pointer hover:text-foreground hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
+              >
+                ESC
+              </kbd>
+              <button
+                onClick={() => setIsSearchOpen(false)}
+                className="ml-3 p-1 rounded-md text-muted-foreground/70 hover:bg-black/5 dark:hover:bg-white/10 hover:text-foreground transition-colors"
+              >
+                <X className="w-[18px] h-[18px]" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            <div className="p-2 max-h-72 overflow-y-auto">
+              {filteredSearchPages.length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted-foreground">
+                  No matching tabs or commands found for "{searchQuery}".
+                </div>
+              ) : (
+                filteredSearchPages.map((pageItem) => (
+                  <button
+                    key={pageItem.id}
+                    onClick={() => {
+                      setCurrentActiveTab(pageItem.id as NavigationTabType);
+                      setIsSearchOpen(false);
+                      setSearchQuery("");
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                  >
+                    <div>
+                      <div className="text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                        {pageItem.label}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {pageItem.desc}
+                      </div>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground/60 font-mono">Jump →</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

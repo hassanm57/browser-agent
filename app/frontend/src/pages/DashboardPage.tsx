@@ -107,44 +107,44 @@ export function DashboardPage(props: DashboardPageProps) {
 
       {/* 4 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="p-4 rounded-xl bg-zinc-900/40 hover:bg-zinc-900/70 border border-zinc-850 transition-all duration-200 flex items-center justify-between shadow-xs">
+        <div className="p-4 rounded-xl bg-card border border-border/50 hover:border-border/80 transition-all duration-200 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-xs font-medium text-zinc-400">Active Sources</span>
-            <div className="text-2xl font-bold text-zinc-100 mt-1">{props.activeSourcesCount}</div>
-            <span className="text-[10px] text-zinc-500">News & RSS feeds</span>
+            <span className="text-xs font-medium text-muted-foreground">Active Sources</span>
+            <div className="text-2xl font-bold text-foreground mt-1">{props.activeSourcesCount}</div>
+            <span className="text-[10px] text-muted-foreground/70">News & RSS feeds</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
             <Globe className="w-5 h-5" strokeWidth={1.75} />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-zinc-900/40 hover:bg-zinc-900/70 border border-zinc-850 transition-all duration-200 flex items-center justify-between shadow-xs">
+        <div className="p-4 rounded-xl bg-card border border-border/50 hover:border-border/80 transition-all duration-200 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-xs font-medium text-zinc-400">Trends Ingested</span>
-            <div className="text-2xl font-bold text-zinc-100 mt-1">{totalTrendsCount}</div>
-            <span className="text-[10px] text-zinc-500">trends24 & X.com</span>
+            <span className="text-xs font-medium text-muted-foreground">Trends Ingested</span>
+            <div className="text-2xl font-bold text-foreground mt-1">{totalTrendsCount}</div>
+            <span className="text-[10px] text-muted-foreground/70">trends24 & X.com</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
             <Flame className="w-5 h-5" strokeWidth={1.75} />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-zinc-900/40 hover:bg-zinc-900/70 border border-zinc-850 transition-all duration-200 flex items-center justify-between shadow-xs">
+        <div className="p-4 rounded-xl bg-card border border-border/50 hover:border-border/80 transition-all duration-200 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-xs font-medium text-zinc-400">Tweets Mined</span>
-            <div className="text-2xl font-bold text-zinc-100 mt-1">{totalTweetsCount}</div>
-            <span className="text-[10px] text-zinc-500">Clean timeline posts</span>
+            <span className="text-xs font-medium text-muted-foreground">Tweets Mined</span>
+            <div className="text-2xl font-bold text-foreground mt-1">{totalTweetsCount}</div>
+            <span className="text-[10px] text-muted-foreground/70">Clean timeline posts</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
             <MessageSquare className="w-5 h-5" strokeWidth={1.75} />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-zinc-900/40 hover:bg-zinc-900/70 border border-zinc-850 transition-all duration-200 flex items-center justify-between shadow-xs">
+        <div className="p-4 rounded-xl bg-card border border-border/50 hover:border-border/80 transition-all duration-200 flex items-center justify-between shadow-sm">
           <div>
-            <span className="text-xs font-medium text-zinc-400">Synthesized Topics</span>
-            <div className="text-2xl font-bold text-zinc-100 mt-1">{totalKeywordsTopicsCount}</div>
-            <span className="text-[10px] text-zinc-500">20+ terms per topic</span>
+            <span className="text-xs font-medium text-muted-foreground">Synthesized Topics</span>
+            <div className="text-2xl font-bold text-foreground mt-1">{totalKeywordsTopicsCount}</div>
+            <span className="text-[10px] text-muted-foreground/70">20+ terms per topic</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
             <Tags className="w-5 h-5" strokeWidth={1.75} />
@@ -157,24 +157,6 @@ export function DashboardPage(props: DashboardPageProps) {
         <div
           onClick={function () {
             props.onNavigateTab("trends");
-          }}
-          className="p-4 rounded-lg bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 cursor-pointer transition-all flex flex-col justify-between group"
-        >
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-200">Hot Trending Topics</span>
-              <ArrowRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
-            </div>
-            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
-              Explore the ranked list of national trends and X native explore topics.
-            </p>
-          </div>
-          <div className="mt-3 text-[11px] text-blue-400 font-medium">View Trends &rarr;</div>
-        </div>
-
-        <div
-          onClick={function () {
-            props.onNavigateTab("tweets");
           }}
           className="p-4 rounded-lg bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 cursor-pointer transition-all flex flex-col justify-between group"
         >
@@ -210,26 +192,26 @@ export function DashboardPage(props: DashboardPageProps) {
       </div>
 
       {/* Recent Pipeline Executions Table */}
-      <div className="rounded-lg bg-zinc-900/50 border border-zinc-800/80 overflow-hidden">
-        <div className="p-3.5 border-b border-zinc-800/80 flex items-center justify-between">
+      <div className="rounded-xl bg-card border border-border/50 shadow-sm overflow-hidden">
+        <div className="p-3.5 border-b border-border/50 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-zinc-400" />
-            <h3 className="text-xs font-semibold text-zinc-200">Recent Pipeline Executions</h3>
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-xs font-semibold text-foreground">Recent Pipeline Executions</h3>
           </div>
           <button
             onClick={function () {
               props.onNavigateTab("history");
             }}
-            className="text-[11px] text-blue-400 hover:text-blue-300 font-medium"
+            className="text-[11px] text-primary hover:text-primary/80 font-medium"
           >
-            View all runs
+            View all runs →
           </button>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-zinc-800/80 bg-zinc-950/40 text-[11px] font-semibold text-zinc-400">
+              <tr className="border-b border-border/50 bg-muted/20 text-[11px] font-semibold text-muted-foreground">
                 <th className="py-2.5 px-3">Run ID</th>
                 <th className="py-2.5 px-3">Country</th>
                 <th className="py-2.5 px-3">Status</th>
@@ -241,7 +223,7 @@ export function DashboardPage(props: DashboardPageProps) {
                 renderedRecentRunRows
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-xs text-zinc-500">
+                  <td colSpan={4} className="py-6 text-center text-xs text-muted-foreground">
                     No pipeline runs recorded in SQLite yet.
                   </td>
                 </tr>

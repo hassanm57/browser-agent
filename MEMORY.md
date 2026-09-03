@@ -17,6 +17,9 @@
 ```text
 browser-agent/
 ├── main.py              # Main entry point; initializes BrowserProfile, LLM, and Agent
+├── trends.py            # Country-specific hot news trend fetcher & keyword generator
+├── countries.json       # Country list configuration (slugs, tiers, home country)
+├── KEYWORDS.md          # Architecture & plan for the Hot News Keyword Engine
 ├── requirements.txt     # Locked Python package dependencies
 ├── .env                 # Environment variables (model endpoints, headless settings)
 ├── .venv/               # Python 3.12 virtual environment

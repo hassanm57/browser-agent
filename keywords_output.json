@@ -1,0 +1,117 @@
+{
+  "generated_at": "2026-09-03T09:50:28.914947",
+  "country": "Pakistan",
+  "total_topics_extracted": 13,
+  "keywords": [
+    {
+      "label": "Pakistan Navy Sea Spark",
+      "terms": [
+        "Pakistan Navy Sea Spark",
+        "PN Sea Spark",
+        "Pakistan Navy"
+      ],
+      "category": "defense"
+    },
+    {
+      "label": "Iran Relations",
+      "terms": [
+        "Iran",
+        "Iran-Pakistan relations"
+      ],
+      "category": "diplomacy"
+    },
+    {
+      "label": "Kuwait Relations",
+      "terms": [
+        "Kuwait",
+        "Pakistan-Kuwait relations"
+      ],
+      "category": "diplomacy"
+    },
+    {
+      "label": "Bahrain Relations",
+      "terms": [
+        "Bahrain",
+        "Pakistan-Bahrain relations"
+      ],
+      "category": "diplomacy"
+    },
+    {
+      "label": "Makkah Defence Pact",
+      "terms": [
+        "the makkah defence pact",
+        "makkah defence pact",
+        "saudi pakistan defence pact"
+      ],
+      "category": "defense"
+    },
+    {
+      "label": "North Waziristan",
+      "terms": [
+        "north waziristan",
+        "NWFP",
+        "FATA"
+      ],
+      "category": "defense"
+    },
+    {
+      "label": "USS Abraham Lincoln",
+      "terms": [
+        "USS Abraham Lincoln",
+        "US Navy aircraft carrier"
+      ],
+      "category": "defense"
+    },
+    {
+      "label": "TTS-2",
+      "terms": [
+        "TTS-2",
+        "Tactical Training System-2"
+      ],
+      "category": "defense"
+    },
+    {
+      "label": "Security Forces",
+      "terms": [
+        "Security Forces",
+        "Pakistan Armed Forces",
+        "PASPA"
+      ],
+      "category": "defense"
+    },
+    {
+      "label": "Trump Strait",
+      "terms": [
+        "Trump Strait",
+        "Strait of Hormuz"
+      ],
+      "category": "politics"
+    },
+    {
+      "label": "Kyrgyzstan Relations",
+      "terms": [
+        "Kyrgyzstan",
+        "Pakistan-Kyrgyzstan relations",
+        "Bishkek"
+      ],
+      "category": "diplomacy"
+    },
+    {
+      "label": "Thailand Relations",
+      "terms": [
+        "Thailand",
+        "Pakistan-Thailand relations"
+      ],
+      "category": "diplomacy"
+    },
+    {
+      "label": "Saudi Arabia Relations",
+      "terms": [
+        "Saudi Arabia",
+        "Makkah Defence Pact",
+        "Saudi-Pakistan relations"
+      ],
+      "category": "diplomacy"
+    }
+  ]
+}

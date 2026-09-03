@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import asyncio
+from datetime import datetime
 from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -330,60 +331,136 @@ def export_keywords(run_identifier: int, format: str = Query("json", enum=["json
         headers={"Content-Disposition": f"attachment; filename=keywords_run_{run_identifier}.csv"}
     )
 
-# ----------------- WEBSOCKET PIPELINE CONTROL -----------------
+from app.backend.pipeline_runner import run_multi_country_pipeline_orchestrator
 
-# Global pipeline control flag
-current_running_task: Optional[asyncio.Task] = None
+# ----------------- WEBSOCKET & PIPELINE EXECUTION -----------------
+
+# Global pipeline execution handles
+current_running_pipeline_task: Optional[asyncio.Task] = None
+pipeline_cancellation_event: Optional[asyncio.Event] = None
+
+class PipelineStartRequest(BaseModel):
+    countries: List[str] = ["Pakistan"]
+
+async def send_log_to_websockets(level_name: str, message_text: str):
+    timestamp_string = datetime.now().strftime("%H:%M:%S")
+    await broadcast_websocket_message({
+        "type": "log",
+        "level": level_name,
+        "timestamp": timestamp_string,
+        "message": message_text
+    })
+
+async def send_progress_to_websockets(phase_name: str, current_step_number: int, total_steps_count: int, detail_text: str):
+    await broadcast_websocket_message({
+        "type": "progress",
+        "phase": phase_name,
+        "current_step": current_step_number,
+        "total_steps": total_steps_count,
+        "detail": detail_text
+    })
+
+async def send_status_to_websockets(status_string: str):
+    await broadcast_websocket_message({
+        "type": "status",
+        "status": status_string
+    })
+
+async def send_result_to_websockets(result_dictionary: Dict[str, Any]):
+    await broadcast_websocket_message({
+        "type": "result",
+        "data": result_dictionary
+    })
+
+async def trigger_pipeline_job(countries_list: List[str]):
+    global current_running_pipeline_task, pipeline_cancellation_event
+
+    if current_running_pipeline_task is not None and not current_running_pipeline_task.done():
+        await send_log_to_websockets("WARN", "A pipeline execution is already in progress.")
+        return {"status": "already_running"}
+
+    pipeline_cancellation_event = asyncio.Event()
+
+    async def execute_task_wrapper():
+        global current_running_pipeline_task
+        try:
+            await run_multi_country_pipeline_orchestrator(
+                selected_countries_list=countries_list,
+                log_callback_function=send_log_to_websockets,
+                progress_callback_function=send_progress_to_websockets,
+                status_callback_function=send_status_to_websockets,
+                result_callback_function=send_result_to_websockets,
+                cancellation_event=pipeline_cancellation_event
+            )
+        except asyncio.CancelledError:
+            await send_log_to_websockets("WARN", "Pipeline task was successfully aborted.")
+            await send_status_to_websockets("cancelled")
+        except Exception as unhandled_error:
+            await send_log_to_websockets("ERROR", f"Unhandled pipeline exception: {str(unhandled_error)}")
+            await send_status_to_websockets("error")
+        finally:
+            current_running_pipeline_task = None
+
+    current_running_pipeline_task = asyncio.create_task(execute_task_wrapper())
+    return {"status": "started", "countries": countries_list}
+
+async def abort_pipeline_job():
+    global current_running_pipeline_task, pipeline_cancellation_event
+
+    if pipeline_cancellation_event is not None:
+        pipeline_cancellation_event.set()
+
+    if current_running_pipeline_task is not None and not current_running_pipeline_task.done():
+        current_running_pipeline_task.cancel()
+        current_running_pipeline_task = None
+
+    await send_log_to_websockets("WARN", "Pipeline cancellation request processed.")
+    await send_status_to_websockets("cancelled")
+    return {"status": "cancelled"}
+
+@app.post("/api/pipeline/start")
+async def api_start_pipeline(request_payload: PipelineStartRequest):
+    result = await trigger_pipeline_job(request_payload.countries)
+    return result
+
+@app.post("/api/pipeline/cancel")
+async def api_cancel_pipeline():
+    result = await abort_pipeline_job()
+    return result
 
 @app.websocket("/ws/pipeline")
 async def pipeline_websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     active_websocket_connections.append(websocket)
-    
-    # Send an initial welcome log
+
+    # Send initial welcome log
+    current_time_string = datetime.now().strftime("%H:%M:%S")
     await websocket.send_text(json.dumps({
         "type": "log",
         "level": "INFO",
-        "timestamp": "",
+        "timestamp": current_time_string,
         "message": "Connected to Browser Agent live telemetry stream."
     }))
-    
+
     try:
         while True:
             raw_text = await websocket.receive_text()
             try:
                 command_payload = json.loads(raw_text)
                 command_action = command_payload.get("action")
-                
+
                 if command_action == "start":
                     selected_countries = command_payload.get("countries", ["Pakistan"])
-                    await broadcast_websocket_message({
-                        "type": "log",
-                        "level": "INFO",
-                        "timestamp": "",
-                        "message": f"Pipeline start command received for countries: {', '.join(selected_countries)}"
-                    })
-                    await broadcast_websocket_message({
-                        "type": "status",
-                        "status": "running"
-                    })
-                    
+                    await trigger_pipeline_job(selected_countries)
+
                 elif command_action == "cancel":
-                    await broadcast_websocket_message({
-                        "type": "log",
-                        "level": "WARN",
-                        "timestamp": "",
-                        "message": "Pipeline cancellation requested by user."
-                    })
-                    await broadcast_websocket_message({
-                        "type": "status",
-                        "status": "cancelled"
-                    })
+                    await abort_pipeline_job()
+
             except Exception as parse_error:
                 await websocket.send_text(json.dumps({
                     "type": "log",
                     "level": "ERROR",
-                    "timestamp": "",
+                    "timestamp": datetime.now().strftime("%H:%M:%S"),
                     "message": f"Invalid command message: {str(parse_error)}"
                 }))
     except WebSocketDisconnect:

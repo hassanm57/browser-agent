@@ -199,10 +199,71 @@ def fetch_headlines_from_configured_sources(sources_list):
         except Exception as fetch_error:
             print(f"        -> Notice: Failed to fetch {source_name}: {fetch_error}")
 
+        # Fallback to headless browser agent if HTTP or RSS returned 0 headlines
+        if len(extracted_headlines_list) == 0:
+            print(f"        -> Zero headlines from {source_name}. Activating browser-agent fallback...")
+            fallback_web_url = derive_web_homepage_url(source_url)
+            try:
+                browser_fallback_headlines = asyncio.run(
+                    scrape_source_via_browser_fallback(fallback_web_url, source_name)
+                )
+                if len(browser_fallback_headlines) > 0:
+                    extracted_headlines_list = browser_fallback_headlines[:20]
+                    print(f"        -> [Browser Fallback SUCCESS] Harvested {len(extracted_headlines_list)} headlines for {source_name}.")
+            except Exception as browser_fallback_error:
+                print(f"        -> [Browser Fallback Notice] Could not fetch via browser: {browser_fallback_error}")
+
         aggregated_sources_intel_dictionary[source_name] = extracted_headlines_list
         source_number = source_number + 1
 
     return aggregated_sources_intel_dictionary
+
+
+def derive_web_homepage_url(source_url):
+    # Map RSS feed URLs to their actual website homepages
+    if "breakingdefense.com" in source_url:
+        return "https://breakingdefense.com/"
+    elif "defensenews.com" in source_url:
+        return "https://www.defensenews.com/"
+    elif "bbci.co.uk" in source_url or "bbc.co.uk" in source_url:
+        return "https://www.bbc.com/news/world"
+    return source_url
+
+
+async def scrape_source_via_browser_fallback(target_web_url, source_name):
+    # Launches a headless browser to visit dynamic websites when HTTP/RSS feeds fail or return 0 items
+    extracted_headlines = []
+    browser_instance = Browser(headless=True)
+    try:
+        await browser_instance.start()
+        await browser_instance.navigate_to(target_web_url)
+        await asyncio.sleep(4)
+
+        page_state_text = await browser_instance.get_state_as_text()
+        raw_lines = page_state_text.split("\n")
+        for line_index in range(len(raw_lines)):
+            raw_line = raw_lines[line_index].strip()
+            cleaned_line = clean_dom_tags_and_markdown(raw_line)
+
+            # Filter out navigation noise, buttons, and short labels
+            if len(cleaned_line) < 25 or len(cleaned_line) > 180:
+                continue
+            lower_line = cleaned_line.lower()
+            if lower_line.startswith("cookie") or lower_line.startswith("accept"):
+                continue
+            if "sign in" in lower_line or "subscribe" in lower_line:
+                continue
+            if cleaned_line in extracted_headlines:
+                continue
+
+            extracted_headlines.append(cleaned_line)
+    finally:
+        try:
+            await browser_instance.close()
+        except Exception:
+            pass
+
+    return extracted_headlines
 
 
 def clean_dom_tags_and_markdown(text_string):

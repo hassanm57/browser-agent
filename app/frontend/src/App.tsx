@@ -384,7 +384,7 @@ export default function App() {
   // Save Keywords Handler
   function handleSaveKeywords(updatedKeywords: KeywordsData) {
     setKeywordsData(updatedKeywords);
-    const targetRunId = activeRunId || 1;
+    const targetRunId = activeRunId || (recentRunsList.length > 0 ? recentRunsList[0].id : 1);
     fetch(BACKEND_API_BASE_URL + "/api/runs/" + targetRunId + "/keywords", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -435,6 +435,50 @@ export default function App() {
     }
   }
 
+  // Count trends discovered
+  let totalTrendsCount = 0;
+  if (rawSourcesData && rawSourcesData.x_trends24_topics) {
+    totalTrendsCount = rawSourcesData.x_trends24_topics.length;
+  }
+
+  // Count news headlines ingested across all outlets
+  let totalHeadlinesCount = 0;
+  if (rawSourcesData && rawSourcesData.news_sources_intel) {
+    for (const sourceKey in rawSourcesData.news_sources_intel) {
+      if (Object.prototype.hasOwnProperty.call(rawSourcesData.news_sources_intel, sourceKey)) {
+        totalHeadlinesCount += rawSourcesData.news_sources_intel[sourceKey].length;
+      }
+    }
+  }
+
+  // Count tweets extracted across all trends
+  let totalTweetsCount = 0;
+  if (
+    rawSourcesData &&
+    rawSourcesData.x_native_explore &&
+    rawSourcesData.x_native_explore.sample_tweets_by_trend
+  ) {
+    const sampleTweetsMap = rawSourcesData.x_native_explore.sample_tweets_by_trend;
+    for (const trendKey in sampleTweetsMap) {
+      if (Object.prototype.hasOwnProperty.call(sampleTweetsMap, trendKey)) {
+        totalTweetsCount += sampleTweetsMap[trendKey].length;
+      }
+    }
+  }
+
+  // Count total keywords
+  let totalKeywordsCount = 0;
+  if (keywordsData && keywordsData.topics) {
+    for (let i = 0; i < keywordsData.topics.length; i++) {
+      if (keywordsData.topics[i].terms) {
+        totalKeywordsCount += keywordsData.topics[i].terms.length;
+      }
+    }
+  }
+
+  // Count total past runs
+  const totalRunsCount = recentRunsList.length;
+
   // Title dictionary for clean breadcrumb
   const tabTitlesDictionary: Record<NavigationTabType, string> = {
     dashboard: "Dashboard",
@@ -467,10 +511,30 @@ export default function App() {
     {
       heading: "Intelligence",
       items: [
-        { id: "trends", title: "Trending Topics", icon: Flame },
-        { id: "headlines", title: "News Headlines", icon: Globe },
-        { id: "tweets", title: "Extracted Tweets", icon: MessageSquare },
-        { id: "keywords", title: "Keywords", icon: Tags },
+        {
+          id: "trends",
+          title: "Trending Topics",
+          icon: Flame,
+          badge: totalTrendsCount > 0 ? String(totalTrendsCount) : undefined
+        },
+        {
+          id: "headlines",
+          title: "News Headlines",
+          icon: Globe,
+          badge: totalHeadlinesCount > 0 ? String(totalHeadlinesCount) : undefined
+        },
+        {
+          id: "tweets",
+          title: "Extracted Tweets",
+          icon: MessageSquare,
+          badge: totalTweetsCount > 0 ? String(totalTweetsCount) : undefined
+        },
+        {
+          id: "keywords",
+          title: "Keywords",
+          icon: Tags,
+          badge: totalKeywordsCount > 0 ? String(totalKeywordsCount) : undefined
+        },
       ]
     },
     {
@@ -482,7 +546,12 @@ export default function App() {
           icon: Globe,
           badge: activeSourcesCount > 0 ? String(activeSourcesCount) : undefined
         },
-        { id: "history", title: "Run History", icon: History },
+        {
+          id: "history",
+          title: "Run History",
+          icon: History,
+          badge: totalRunsCount > 0 ? String(totalRunsCount) : undefined
+        },
       ]
     }
   ];

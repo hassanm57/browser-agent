@@ -67,14 +67,16 @@ export function DashboardPage(props: DashboardPageProps) {
     }
   }
 
-  // Count synthesized topics and extract sample terms
-  let totalKeywordsTopicsCount = 0;
+  // Count synthesized topics and total keywords count
+  let totalTopicsCount = 0;
+  let totalKeywordsCount = 0;
   let sampleKeywordTerms: string[] = [];
   if (props.keywordsData && props.keywordsData.topics) {
-    totalKeywordsTopicsCount = props.keywordsData.topics.length;
+    totalTopicsCount = props.keywordsData.topics.length;
     for (let i = 0; i < props.keywordsData.topics.length; i++) {
       const topic = props.keywordsData.topics[i];
       if (topic.terms && topic.terms.length > 0) {
+        totalKeywordsCount += topic.terms.length;
         for (let j = 0; j < Math.min(topic.terms.length, 3); j++) {
           if (sampleKeywordTerms.length < 8 && !sampleKeywordTerms.includes(topic.terms[j])) {
             sampleKeywordTerms.push(topic.terms[j]);
@@ -132,9 +134,9 @@ export function DashboardPage(props: DashboardPageProps) {
           >
             <Tags className="w-3.5 h-3.5 text-emerald-400 transition-transform group-hover:scale-110" />
             <span>View Keywords</span>
-            {totalKeywordsTopicsCount > 0 && (
+            {totalKeywordsCount > 0 && (
               <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400">
-                {totalKeywordsTopicsCount}
+                {totalKeywordsCount}
               </span>
             )}
           </button>
@@ -209,22 +211,22 @@ export function DashboardPage(props: DashboardPageProps) {
           </div>
         </div>
 
-        {/* Synthesized Topics */}
+        {/* Synthesized Keywords */}
         <div className="uiverse-card hover:-translate-y-0.5 transition-all">
           <div className="title">
             <span style={{ backgroundColor: "#10B981" }}>
               <Tags />
             </span>
-            <p className="title-text">Synthesized Topics</p>
+            <p className="title-text">Synthesized Keywords</p>
             <p className="percent" style={{ color: "#10B981" }}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1792 1792" fill="currentColor" height="14" width="14">
                 <path d="M1408 1216q0 26-19 45t-45 19h-896q-26 0-45-19t-19-45 19-45l448-448q19-19 45-19t45 19l448 448q19 19 19 45z" />
               </svg>
-              Ready
+              {totalTopicsCount} Topics
             </p>
           </div>
           <div className="data">
-            <p>{totalKeywordsTopicsCount}</p>
+            <p>{totalKeywordsCount}</p>
             <div className="range">
               <div className="fill" style={{ width: "100%", backgroundColor: "#10B981" }}></div>
             </div>

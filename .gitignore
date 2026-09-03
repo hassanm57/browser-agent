@@ -1,5 +1,44 @@
+# Python virtual environments & bytecode
 .venv/
-.env
+venv/
+env/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Environment & credentials
+.env
+.env.local
+.env.*.local
+
+# Node & Frontend dependencies and builds
+node_modules/
+dist/
+dist-ssr/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# SQLite databases & runtime storage
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.log
+
+# Browser agent temporary storage
+browseruse_agent_data/
+chrome_profile/
+
+# Operating System & IDE metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.idea/
+.vscode/
+
+# Planning document
 UI_PLAN.md

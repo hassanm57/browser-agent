@@ -630,7 +630,7 @@ export default function App() {
 
         {/* Main View Port */}
         <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-black/[0.02] dark:bg-white/[0.02]">
-          <div className="max-w-7xl mx-auto">
+          <div key={currentActiveTab} className="max-w-7xl mx-auto animate-in fade-in-50 slide-in-from-bottom-2 duration-200">
             {currentActiveTab === "dashboard" && (
               <DashboardPage
                 rawSourcesData={rawSourcesData}

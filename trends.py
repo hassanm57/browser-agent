@@ -397,8 +397,16 @@ def parse_genuine_tweets_from_text(raw_page_state_text):
                         contains_noise = True
                         break
 
+                # Reject footer widgets, follow prompts, and search filter controls
+                if lower_tweet.startswith("follow ") or "search filters" in lower_tweet or "svg content collapsed" in lower_tweet or "search timeline" in lower_tweet:
+                    contains_noise = True
+
+                # Skip the logged-in user header element
+                if user_handle_string.lower() in ["@real_hm_", "@twitter", "@x"]:
+                    contains_noise = True
+
                 if not contains_noise and full_tweet_body_text not in extracted_tweets_list:
-                    if len(author_display_name) > 0:
+                    if len(author_display_name) > 0 and "svg content collapsed" not in author_display_name.lower():
                         formatted_tweet_string = f"[{author_display_name} | {user_handle_string}] {full_tweet_body_text}"
                     else:
                         formatted_tweet_string = f"[{user_handle_string}] {full_tweet_body_text}"
@@ -761,22 +769,16 @@ def run_country_hot_news_pipeline():
         "topics": synthesized_topics_list
     }
 
-    country_output_filename = "keywords_" + target_country_slug + ".json"
-    country_file_handle = open(country_output_filename, "w", encoding="utf-8")
-    country_file_handle.write(json.dumps(final_output_structure, indent=2, ensure_ascii=False))
-    country_file_handle.close()
-
-    master_output_filename = "keywords_output.json"
-    master_file_handle = open(master_output_filename, "w", encoding="utf-8")
-    master_file_handle.write(json.dumps(final_output_structure, indent=2, ensure_ascii=False))
-    master_file_handle.close()
+    keywords_output_filename = "keywords.json"
+    keywords_file_handle = open(keywords_output_filename, "w", encoding="utf-8")
+    keywords_file_handle.write(json.dumps(final_output_structure, indent=2, ensure_ascii=False))
+    keywords_file_handle.close()
 
     print("")
     print("==================================================")
     print("SUCCESS: Keyword Synthesis Finished")
     print("==================================================")
-    print("Saved country output to: " + country_output_filename)
-    print("Saved master output to:  " + master_output_filename)
+    print("Saved output to: " + keywords_output_filename)
     print("Total high-precision topics generated: " + str(len(synthesized_topics_list)))
     print("==================================================")
     print("")

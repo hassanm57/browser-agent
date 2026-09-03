@@ -20,7 +20,7 @@ browser-agent/
 ├── trends.py            # Multi-source hot news & 20-keyword extraction engine
 ├── countries.json       # Country list configuration (slugs, tiers, home country)
 ├── raw_sources.json     # Intermediate raw intelligence digest (Dawn, Tribune, X tweets, Defense News)
-├── keywords_output.json # Final master keyword output matching schema
+├── keywords.json        # Final single keyword output matching schema
 ├── KEYWORDS.md          # Architecture & plan for the Hot News Keyword Engine
 ├── requirements.txt     # Locked Python package dependencies
 ├── .env                 # Environment variables (model endpoints, headless settings)

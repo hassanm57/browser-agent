@@ -166,7 +166,7 @@ Call the done action with a short confirmation message.
 
 ## 6. Output Schema
 
-The final output is saved to `keywords_{country_slug}.json` and `keywords_output.json`:
+The final output is saved to `keywords.json`:
 
 ```json
 {
@@ -232,4 +232,4 @@ The final output is saved to `keywords_{country_slug}.json` and `keywords_output
 1. **Build the Parallel Extractor**: Update `trends.py` to fetch from all 6 sources in parallel using lightweight headers, parsing out clean headline titles.
 2. **Store Raw Intermediary Intel**: Write all headlines to `raw_intel_{country_slug}.json`.
 3. **Execute Single LLM Synthesis**: Feed the combined digest to `Qwen3-14B` to produce the final filtered keyword list and Twitter boolean queries.
-4. **Save & Verify**: Verify output against `keywords_output.json`.
+4. **Save & Verify**: Verify output against `keywords.json`.

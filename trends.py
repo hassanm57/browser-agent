@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import requests
 from browser_use import Browser
+from browser_use.browser.events import ScrollEvent
 from browser_use.llm import ChatOpenAI, UserMessage
 
 # Load environment configuration values from .env file
@@ -76,10 +77,28 @@ def find_target_country_by_name(country_search_query, available_countries_list):
     return None
 
 
+def load_sources_configuration_file():
+    # We dynamically load all news and intelligence sources from sources.json
+    # If the user adds or removes sources in sources.json, this code automatically adapts.
+    current_script_directory = os.path.dirname(os.path.abspath(__file__))
+    sources_file_path = os.path.join(current_script_directory, "sources.json")
+
+    if not os.path.exists(sources_file_path):
+        print("Warning: sources.json file was not found. Using default fallback sources.")
+        return []
+
+    opened_file_handle = open(sources_file_path, "r", encoding="utf-8")
+    file_text_contents = opened_file_handle.read()
+    opened_file_handle.close()
+
+    parsed_sources_list = json.loads(file_text_contents)
+    return parsed_sources_list
+
+
 def fetch_trends24_topics(target_country_slug):
     # We fetch country trending hashtags from trends24 without heavy browser overhead
     target_webpage_url = "https://trends24.in/" + target_country_slug + "/"
-    print("[1/8] Fetching X trends from trends24: " + target_webpage_url)
+    print("[1] Fetching X trends from trends24: " + target_webpage_url)
 
     request_headers_dictionary = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -103,196 +122,87 @@ def fetch_trends24_topics(target_country_slug):
                 if len(cleaned_topic_text) > 0 and len(extracted_trending_topics_list) < 35:
                     extracted_trending_topics_list.append(cleaned_topic_text)
 
-        print("      Fetched " + str(len(extracted_trending_topics_list)) + " trending topics from trends24.")
+        print("    Fetched " + str(len(extracted_trending_topics_list)) + " trending topics from trends24.")
         return extracted_trending_topics_list
     except Exception as error_message:
-        print("      Warning: Could not fetch trends24: " + str(error_message))
+        print("    Warning: Could not fetch trends24: " + str(error_message))
         return []
 
 
-def fetch_dawn_news_headlines():
-    # Dawn is the primary English news source for Pakistan national security, defense, and foreign affairs
-    print("[2/8] Fetching breaking headlines from Dawn (https://www.dawn.com/)...")
+def fetch_headlines_from_configured_sources(sources_list):
+    # This function processes each source defined in sources.json dynamically
+    # It supports both 'rss' feed parsing and 'web' HTML scraping
+    print("[2] Ingesting Headlines Dynamically from sources.json...")
+    aggregated_sources_intel_dictionary = {}
+
     request_headers_dictionary = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
     }
 
-    extracted_headlines_list = []
-    try:
-        http_response_object = requests.get("https://www.dawn.com/", headers=request_headers_dictionary, timeout=15)
-        http_response_object.encoding = "utf-8"
-        html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
+    source_number = 1
+    for source_index in range(len(sources_list)):
+        source_item = sources_list[source_index]
+        source_name = source_item.get("name", "Unknown Source")
+        source_type = source_item.get("type", "web")
+        source_url = source_item.get("url", "")
+        is_source_enabled = source_item.get("enabled", True)
 
-        all_headings_collection = html_soup_parser.find_all(["h2", "h3", "a"])
-        for item_index in range(len(all_headings_collection)):
-            current_heading_item = all_headings_collection[item_index]
-            heading_text_string = current_heading_item.get_text(strip=True)
-            # Filter for foreign affairs and national security relevance
-            if len(heading_text_string) > 25 and len(heading_text_string) < 150:
-                if heading_text_string not in extracted_headlines_list:
-                    lower_heading = heading_text_string.lower()
-                    if any(keyword in lower_heading for keyword in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "court", "forces", "lebanon", "saudi", "treaty"]):
-                        if len(extracted_headlines_list) < 20:
-                            extracted_headlines_list.append(heading_text_string)
+        if not is_source_enabled or len(source_url) == 0:
+            continue
 
-        print("      Fetched " + str(len(extracted_headlines_list)) + " national & global headlines from Dawn.")
-        return extracted_headlines_list
-    except Exception as error_message:
-        print("      Warning: Could not fetch Dawn news: " + str(error_message))
-        return []
+        print(f"    ({source_number}/{len(sources_list)}) Fetching: {source_name} ({source_url})")
+        extracted_headlines_list = []
 
-
-def fetch_tribune_news_headlines():
-    # The Express Tribune provides in-depth coverage of regional diplomacy, economy, and military pacts
-    print("[3/8] Fetching breaking headlines from Express Tribune (https://tribune.com.pk/)...")
-    request_headers_dictionary = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-    }
-
-    extracted_headlines_list = []
-    try:
-        http_response_object = requests.get("https://tribune.com.pk/", headers=request_headers_dictionary, timeout=15)
-        http_response_object.encoding = "utf-8"
-        html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
-
-        all_headings_collection = html_soup_parser.find_all(["h2", "h3", "a"])
-        for item_index in range(len(all_headings_collection)):
-            current_heading_item = all_headings_collection[item_index]
-            heading_text_string = current_heading_item.get_text(strip=True)
-            if len(heading_text_string) > 25 and len(heading_text_string) < 150:
-                if heading_text_string not in extracted_headlines_list:
-                    lower_heading = heading_text_string.lower()
-                    if any(keyword in lower_heading for keyword in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "forces", "iwt", "saudi", "pact"]):
-                        if len(extracted_headlines_list) < 20:
-                            extracted_headlines_list.append(heading_text_string)
-
-        print("      Fetched " + str(len(extracted_headlines_list)) + " headlines from Express Tribune.")
-        return extracted_headlines_list
-    except Exception as error_message:
-        print("      Warning: Could not fetch Tribune news: " + str(error_message))
-        return []
-
-
-def fetch_defense_news_headlines():
-    # We parse the official Defense News RSS feed for breaking military procurement and defense posture
-    print("[4/8] Fetching breaking headlines from Defense News...")
-    defense_news_feed_url = "https://www.defensenews.com/arc/outboundfeeds/rss/"
-    request_headers_dictionary = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-    }
-
-    extracted_headlines_list = []
-    try:
-        http_response_object = requests.get(defense_news_feed_url, headers=request_headers_dictionary, timeout=12)
-        xml_root_element = ElementTree.fromstring(http_response_object.content)
-        channel_element = xml_root_element.find("channel")
-        feed_items_list = channel_element.findall("item")
-
-        for item_index in range(len(feed_items_list)):
-            current_feed_item = feed_items_list[item_index]
-            title_element = current_feed_item.find("title")
-            if title_element is not None and title_element.text is not None:
-                cleaned_headline_text = title_element.text.strip()
-                if len(cleaned_headline_text) > 10 and len(extracted_headlines_list) < 15:
-                    extracted_headlines_list.append(cleaned_headline_text)
-
-        print("      Fetched " + str(len(extracted_headlines_list)) + " headlines from Defense News.")
-        return extracted_headlines_list
-    except Exception as error_message:
-        print("      Warning: Could not fetch Defense News RSS: " + str(error_message))
-        return []
-
-
-def fetch_breaking_defense_headlines():
-    # We parse Breaking Defense RSS for breaking weapons systems, aerospace, and defense strategy
-    print("[5/8] Fetching breaking headlines from Breaking Defense...")
-    breaking_defense_feed_url = "https://breakingdefense.com/feed/"
-    request_headers_dictionary = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-    }
-
-    extracted_headlines_list = []
-    try:
-        http_response_object = requests.get(breaking_defense_feed_url, headers=request_headers_dictionary, timeout=12)
-        xml_root_element = ElementTree.fromstring(http_response_object.content)
-        channel_element = xml_root_element.find("channel")
-        feed_items_list = channel_element.findall("item")
-
-        for item_index in range(len(feed_items_list)):
-            current_feed_item = feed_items_list[item_index]
-            title_element = current_feed_item.find("title")
-            if title_element is not None and title_element.text is not None:
-                cleaned_headline_text = title_element.text.strip()
-                if len(cleaned_headline_text) > 10 and len(extracted_headlines_list) < 15:
-                    extracted_headlines_list.append(cleaned_headline_text)
-
-        print("      Fetched " + str(len(extracted_headlines_list)) + " headlines from Breaking Defense.")
-        return extracted_headlines_list
-    except Exception as error_message:
-        print("      Warning: Could not fetch Breaking Defense RSS: " + str(error_message))
-        return []
-
-
-def fetch_foreign_affairs_specialized_topics():
-    # We parse Foreign Affairs topic pages for defense, nuclear proliferation, and war strategy
-    print("[6/8] Fetching specialized analysis from Foreign Affairs...")
-    topic_urls_list = [
-        "https://www.foreignaffairs.com/topics/defense-military",
-        "https://www.foreignaffairs.com/topics/nuclear-weapons-proliferation",
-        "https://www.foreignaffairs.com/topics/war-military-strategy"
-    ]
-    request_headers_dictionary = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-    }
-
-    extracted_topics_list = []
-    for url_index in range(len(topic_urls_list)):
-        current_topic_url = topic_urls_list[url_index]
         try:
-            http_response_object = requests.get(current_topic_url, headers=request_headers_dictionary, timeout=12)
-            html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
-            article_links_collection = html_soup_parser.find_all("a", href=lambda href_val: href_val and "/articles/" in href_val)
+            if source_type == "rss":
+                # Parse RSS XML feed
+                http_response_object = requests.get(source_url, headers=request_headers_dictionary, timeout=12)
+                xml_root_element = ElementTree.fromstring(http_response_object.content)
+                channel_element = xml_root_element.find("channel")
+                if channel_element is not None:
+                    feed_items_list = channel_element.findall("item")
+                    for item_index in range(len(feed_items_list)):
+                        current_feed_item = feed_items_list[item_index]
+                        title_element = current_feed_item.find("title")
+                        if title_element is not None and title_element.text is not None:
+                            cleaned_headline = title_element.text.strip()
+                            if len(cleaned_headline) > 10 and len(extracted_headlines_list) < 20:
+                                extracted_headlines_list.append(cleaned_headline)
+            else:
+                # Parse HTML web page
+                http_response_object = requests.get(source_url, headers=request_headers_dictionary, timeout=12)
+                http_response_object.encoding = "utf-8"
+                html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
 
-            for link_index in range(len(article_links_collection)):
-                current_link = article_links_collection[link_index]
-                cleaned_title = current_link.get_text(strip=True)
-                if len(cleaned_title) > 20 and cleaned_title not in extracted_topics_list:
-                    extracted_topics_list.append(cleaned_title)
-        except Exception:
-            pass
+                # Look for headings and article links
+                headings_collection = html_soup_parser.find_all(["h1", "h2", "h3", "a"])
+                for heading_index in range(len(headings_collection)):
+                    heading_item = headings_collection[heading_index]
+                    heading_text = heading_item.get_text(strip=True)
 
-    print("      Fetched " + str(len(extracted_topics_list)) + " specialized strategic essays from Foreign Affairs.")
-    return extracted_topics_list
+                    if len(heading_text) > 25 and len(heading_text) < 160:
+                        if heading_text not in extracted_headlines_list:
+                            # If it's a general landing page, prioritize defense/geopolitical keywords
+                            lower_text = heading_text.lower()
+                            is_relevant = True
+                            if "foreignaffairs.com" in source_url:
+                                is_relevant = True
+                            elif any(k in lower_text for k in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "court", "forces", "treaty", "pact", "russia", "border", "missile"]):
+                                is_relevant = True
+                            else:
+                                is_relevant = False
 
+                            if is_relevant and len(extracted_headlines_list) < 20:
+                                extracted_headlines_list.append(heading_text)
 
-def fetch_international_wire_headlines():
-    # We parse BBC World News wire RSS for breaking international diplomacy and regional conflicts
-    print("[7/8] Fetching international wire headlines...")
-    wire_feed_url = "https://feeds.bbci.co.uk/news/world/rss.xml"
-    request_headers_dictionary = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-    }
+            print(f"        -> Extracted {len(extracted_headlines_list)} headlines.")
+        except Exception as fetch_error:
+            print(f"        -> Notice: Failed to fetch {source_name}: {fetch_error}")
 
-    extracted_headlines_list = []
-    try:
-        http_response_object = requests.get(wire_feed_url, headers=request_headers_dictionary, timeout=12)
-        xml_root_element = ElementTree.fromstring(http_response_object.content)
-        channel_element = xml_root_element.find("channel")
-        feed_items_list = channel_element.findall("item")
+        aggregated_sources_intel_dictionary[source_name] = extracted_headlines_list
+        source_number = source_number + 1
 
-        for item_index in range(len(feed_items_list)):
-            current_feed_item = feed_items_list[item_index]
-            title_element = current_feed_item.find("title")
-            if title_element is not None and title_element.text is not None:
-                cleaned_headline_text = title_element.text.strip()
-                if len(cleaned_headline_text) > 10 and len(extracted_headlines_list) < 15:
-                    extracted_headlines_list.append(cleaned_headline_text)
-
-        print("      Fetched " + str(len(extracted_headlines_list)) + " international wire headlines.")
-        return extracted_headlines_list
-    except Exception as error_message:
-        print("      Warning: Could not fetch wire headlines: " + str(error_message))
-        return []
+    return aggregated_sources_intel_dictionary
 
 
 def clean_dom_tags_and_markdown(text_string):
@@ -303,131 +213,99 @@ def clean_dom_tags_and_markdown(text_string):
     return ' '.join(cleaned_string.split())
 
 
-def parse_genuine_tweets_from_text(raw_page_state_text):
-    # A genuine tweet on X always begins with an author display name and an '@' handle (e.g. @haniya_445, @creativesameeer).
-    # We explicitly extract the full multi-line tweet body and filter out right-sidebar noise (e.g. GTA 6, DLSS, Entertainment).
-    raw_lines_list = raw_page_state_text.split("\n")
-    cleaned_lines_list = []
-    for line_index in range(len(raw_lines_list)):
-        cleaned_line = clean_dom_tags_and_markdown(raw_lines_list[line_index].strip())
-        if len(cleaned_line) > 0:
-            cleaned_lines_list.append(cleaned_line)
+def extract_tweets_from_article_chunks(page_state_text):
+    # In browser-use state text, each tweet is rendered inside an [ID]<article role=article /> container.
+    # Splitting by article containers guarantees we only extract content belonging to individual tweets,
+    # completely separating each tweet from other tweets and completely isolating from the right sidebar.
+    article_chunks = re.split(r'\[\d+\]<article\s+role=article\s*/>', page_state_text)
+    parsed_tweets = []
 
-    extracted_tweets_list = []
-    sidebar_noise_words = [
-        "trending now", "what's happening", "gta 6", "dlss", "nvidia",
-        "who to follow", "entertainment", "keyboard shortcuts", "view keyboard",
-        "subscribe to premium", "terms of service", "privacy policy"
+    sidebar_and_action_stop_signals = [
+        "replies,", "reposts,", "likes,", "views", "reply", "repost", "like", "bookmark", "share post",
+        "play video", "search timeline", "who to follow", "what's happening", "people from anyone",
+        "search filters", "trending now", "trending in", "live on x", "show more", "terms privacy"
     ]
 
-    current_line_pointer = 0
-    total_lines_count = len(cleaned_lines_list)
+    # Skip chunk index 0 as it represents the header/navigation before the first tweet article
+    for chunk_index in range(1, len(article_chunks)):
+        current_chunk_text = article_chunks[chunk_index]
+        raw_lines = current_chunk_text.split("\n")
+        cleaned_lines = []
+        for line_index in range(len(raw_lines)):
+            cleaned_line = clean_dom_tags_and_markdown(raw_lines[line_index].strip())
+            if len(cleaned_line) > 0:
+                cleaned_lines.append(cleaned_line)
 
-    while current_line_pointer < total_lines_count:
-        current_line_text = cleaned_lines_list[current_line_pointer]
+        user_handle_string = ""
+        author_display_name = ""
+        handle_line_index = -1
 
-        # Detect a valid Twitter handle starting with '@'
-        is_user_handle = False
-        if current_line_text.startswith("@") and len(current_line_text) > 2 and " " not in current_line_text:
-            is_user_handle = True
+        for line_index in range(len(cleaned_lines)):
+            line_candidate = cleaned_lines[line_index]
+            if line_candidate.startswith("@") and " " not in line_candidate:
+                user_handle_string = line_candidate
+                handle_line_index = line_index
+                if line_index > 0:
+                    potential_author_line = cleaned_lines[line_index - 1]
+                    if not potential_author_line.startswith("@") and len(potential_author_line) < 40:
+                        author_display_name = potential_author_line
+                break
 
-        if is_user_handle:
-            user_handle_string = current_line_text
+        # Ignore our own user header or Twitter system accounts
+        if handle_line_index != -1 and user_handle_string.lower() not in ["@real_hm_", "@twitter", "@x"]:
+            body_text_lines = []
+            for body_index in range(handle_line_index + 1, len(cleaned_lines)):
+                current_body_line = cleaned_lines[body_index]
+                lower_body_line = current_body_line.lower()
 
-            # The author's display name usually sits directly above the handle
-            author_display_name = ""
-            if current_line_pointer > 0:
-                previous_line_text = cleaned_lines_list[current_line_pointer - 1]
-                if not previous_line_text.startswith("@") and not previous_line_text.startswith("[") and len(previous_line_text) < 40:
-                    author_display_name = previous_line_text
-
-            # Advance past handle and timestamp indicators ('·', '20m', '1h', 'Replying to')
-            tweet_body_pointer = current_line_pointer + 1
-            while tweet_body_pointer < total_lines_count:
-                peek_line = cleaned_lines_list[tweet_body_pointer]
-                if peek_line == "·" or peek_line.endswith("m") or peek_line.endswith("h") or peek_line.endswith("s") or peek_line.isdigit() or "replying to" in peek_line.lower():
-                    tweet_body_pointer = tweet_body_pointer + 1
-                else:
-                    break
-
-            # Collect the full multi-line tweet text paragraphs
-            tweet_body_lines_list = []
-            while tweet_body_pointer < total_lines_count:
-                candidate_line = cleaned_lines_list[tweet_body_pointer]
-
-                # If this line is the next user's handle, stop
-                if candidate_line.startswith("@") and " " not in candidate_line:
-                    break
-
-                # If the subsequent line is a handle, this current line is the next author's name, so stop
-                if tweet_body_pointer + 1 < total_lines_count:
-                    next_peek_line = cleaned_lines_list[tweet_body_pointer + 1]
-                    if next_peek_line.startswith("@") and " " not in next_peek_line:
+                # Stop collecting if we hit metrics groups, action buttons, or sidebar widgets
+                has_stop_signal = False
+                for stop_signal in sidebar_and_action_stop_signals:
+                    if stop_signal in lower_body_line:
+                        has_stop_signal = True
                         break
-
-                # Stop if we hit any sidebar widgets or ads
-                lower_candidate = candidate_line.lower()
-                is_sidebar_noise = False
-                for noise_index in range(len(sidebar_noise_words)):
-                    if sidebar_noise_words[noise_index] in lower_candidate:
-                        is_sidebar_noise = True
-                        break
-                if is_sidebar_noise:
+                if has_stop_signal:
                     break
 
-                # Skip UI action buttons and metric counters
-                if candidate_line in ["Reply", "Repost", "Like", "Bookmark", "Share"] or candidate_line.isdigit():
-                    tweet_body_pointer = tweet_body_pointer + 1
+                # Stop if another handle appears
+                if current_body_line.startswith("@") and " " not in current_body_line:
+                    break
+
+                # Skip raw timestamps or dots
+                if current_body_line == "·" or current_body_line.endswith("m") or current_body_line.endswith("h") or current_body_line.endswith("s") or current_body_line.isdigit():
                     continue
 
-                tweet_body_lines_list.append(candidate_line)
-                tweet_body_pointer = tweet_body_pointer + 1
+                body_text_lines.append(current_body_line)
 
-                if len(tweet_body_lines_list) >= 10:
-                    break
+            combined_body_text = " ".join(body_text_lines).strip()
+            combined_body_text = combined_body_text.replace("<!-- SVG content collapsed -->", "").strip()
 
-            # Join all lines into a clean full tweet body
-            full_tweet_body_text = " ".join(tweet_body_lines_list).strip()
+            # Ensure tweet has substantial content and no sidebar follow widgets
+            lower_body = combined_body_text.lower()
+            if lower_body.startswith("follow ") or ("follow " in lower_body and len(combined_body_text) < 40):
+                continue
 
-            if len(full_tweet_body_text) > 20:
-                contains_noise = False
-                lower_tweet = full_tweet_body_text.lower()
-                for noise_index in range(len(sidebar_noise_words)):
-                    if sidebar_noise_words[noise_index] in lower_tweet:
-                        contains_noise = True
-                        break
+            if len(combined_body_text) > 15:
+                if len(author_display_name) > 0 and "svg" not in author_display_name.lower():
+                    formatted_tweet = f"[{author_display_name} | {user_handle_string}] {combined_body_text}"
+                else:
+                    formatted_tweet = f"[{user_handle_string}] {combined_body_text}"
 
-                # Reject footer widgets, follow prompts, and search filter controls
-                if lower_tweet.startswith("follow ") or "search filters" in lower_tweet or "svg content collapsed" in lower_tweet or "search timeline" in lower_tweet:
-                    contains_noise = True
+                if formatted_tweet not in parsed_tweets:
+                    parsed_tweets.append(formatted_tweet)
 
-                # Skip the logged-in user header element
-                if user_handle_string.lower() in ["@real_hm_", "@twitter", "@x"]:
-                    contains_noise = True
-
-                if not contains_noise and full_tweet_body_text not in extracted_tweets_list:
-                    if len(author_display_name) > 0 and "svg content collapsed" not in author_display_name.lower():
-                        formatted_tweet_string = f"[{author_display_name} | {user_handle_string}] {full_tweet_body_text}"
-                    else:
-                        formatted_tweet_string = f"[{user_handle_string}] {full_tweet_body_text}"
-                    extracted_tweets_list.append(formatted_tweet_string)
-
-            current_line_pointer = tweet_body_pointer
-        else:
-            current_line_pointer = current_line_pointer + 1
-
-    return extracted_tweets_list
+    return parsed_tweets
 
 
 async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_enabled):
     # This function uses an active headful browser session so you can see Chrome on screen
     # 1. Opens https://x.com/explore/tabs/trending and extracts active live trends
     # 2. Selects top defense/geopolitical trends
-    # 3. Navigates to search results and scrolls down to load full genuine tweets
-    # 4. Uses parse_genuine_tweets_from_text to filter out sidebar noise and capture full tweet bodies
+    # 3. Navigates to search results and progressively scrolls down until AT LEAST 20 genuine tweets are collected
+    # 4. Uses extract_tweets_from_article_chunks to isolate tweets and filter out sidebar noise
     print("")
     print("==================================================")
-    print("[8/8] Mining Live Trends and Tweets Directly on X.com (Headful Browser)")
+    print("[3] Mining Live Trends and Tweets Directly on X.com (Headful Browser)")
     print("==================================================")
 
     x_native_intel_dictionary = {
@@ -436,7 +314,6 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         "sample_tweets_by_trend": {}
     }
 
-    # Open in headful mode (visible window) as requested so you can see exactly what is loaded
     if is_real_chrome_enabled:
         browser_instance = Browser.from_system_chrome(
             headless=False,
@@ -500,24 +377,35 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                 await browser_instance.navigate_to(search_url_string)
                 await asyncio.sleep(4)
 
-                # Scroll down twice to trigger dynamic tweet loading in the timeline
-                print("      Scrolling down timeline to load fresh tweets...")
-                try:
-                    await browser_instance.scroll_down(800)
-                    await asyncio.sleep(2)
-                    await browser_instance.scroll_down(800)
-                    await asyncio.sleep(2)
-                except Exception:
-                    pass
+                collected_tweets_for_trend = []
+                # Progressively scroll down to dynamically load tweets until at least 20 tweets are captured
+                for scroll_round in range(12):
+                    page_state_text = await browser_instance.get_state_as_text()
+                    fresh_batch_tweets = extract_tweets_from_article_chunks(page_state_text)
 
-                search_state_text = await browser_instance.get_state_as_text()
-                genuine_tweets_list = parse_genuine_tweets_from_text(search_state_text)
+                    for tweet_item in fresh_batch_tweets:
+                        if tweet_item not in collected_tweets_for_trend:
+                            collected_tweets_for_trend.append(tweet_item)
 
-                print(f"      Extracted {len(genuine_tweets_list)} genuine tweets for: {current_trend_query}")
-                for t_preview in genuine_tweets_list[:2]:
-                    print(f"        -> {t_preview[:120]}...")
+                    print(f"      Scroll round {scroll_round + 1}: {len(collected_tweets_for_trend)} unique tweets collected so far...")
 
-                x_native_intel_dictionary["sample_tweets_by_trend"][current_trend_query] = genuine_tweets_list[:15]
+                    if len(collected_tweets_for_trend) >= 20:
+                        break
+
+                    try:
+                        scroll_action_event = browser_instance.event_bus.dispatch(
+                            ScrollEvent(direction="down", amount=1200)
+                        )
+                        await scroll_action_event
+                        await asyncio.sleep(2)
+                    except Exception:
+                        break
+
+                print(f"      -> Successfully extracted {len(collected_tweets_for_trend)} genuine tweets for: {current_trend_query}")
+                for preview_index in range(min(2, len(collected_tweets_for_trend))):
+                    print(f"         {preview_index + 1}. {collected_tweets_for_trend[preview_index][:120]}...")
+
+                x_native_intel_dictionary["sample_tweets_by_trend"][current_trend_query] = collected_tweets_for_trend[:25]
             except Exception as trend_error:
                 print(f"      Notice: Skipping trend due to network timeout: {trend_error}")
 
@@ -540,49 +428,29 @@ def synthesize_keywords_with_llm(target_country_name, consolidated_intel_diction
     # analyze tweets and headlines, and generate 20 comprehensive search keywords for each topic.
     print("")
     print("==================================================")
-    print("Synthesizing 20 Keywords per Topic with Qwen3-14B")
+    print("[4] Synthesizing 20 Keywords per Topic with Qwen3-14B")
     print("==================================================")
-
-    defense_news_list = consolidated_intel_dictionary.get("defense_news_headlines", [])
-    breaking_defense_list = consolidated_intel_dictionary.get("breaking_defense_headlines", [])
-    dawn_news_list = consolidated_intel_dictionary.get("dawn_news_headlines", [])
-    tribune_news_list = consolidated_intel_dictionary.get("tribune_news_headlines", [])
-    foreign_affairs_list = consolidated_intel_dictionary.get("foreign_affairs_headlines", [])
-    wire_news_list = consolidated_intel_dictionary.get("wire_news_headlines", [])
-    trends24_list = consolidated_intel_dictionary.get("x_trends24_topics", [])
-    x_native_data = consolidated_intel_dictionary.get("x_native_explore", {})
 
     digest_sections_list = []
 
-    digest_sections_list.append("--- DAWN NEWS (NATIONAL SECURITY & WORLD) ---")
-    for idx in range(len(dawn_news_list)):
-        digest_sections_list.append("• " + dawn_news_list[idx])
+    # Ingest all news headlines from sources.json
+    configured_news_sources_dictionary = consolidated_intel_dictionary.get("news_sources_intel", {})
+    for source_name_key in configured_news_sources_dictionary:
+        headlines_list = configured_news_sources_dictionary[source_name_key]
+        if len(headlines_list) > 0:
+            digest_sections_list.append(f"\n--- {source_name_key.upper()} ---")
+            for idx in range(len(headlines_list)):
+                digest_sections_list.append("• " + headlines_list[idx])
 
-    digest_sections_list.append("\n--- EXPRESS TRIBUNE HEADLINES ---")
-    for idx in range(len(tribune_news_list)):
-        digest_sections_list.append("• " + tribune_news_list[idx])
+    # Ingest trends24 topics
+    trends24_list = consolidated_intel_dictionary.get("x_trends24_topics", [])
+    if len(trends24_list) > 0:
+        digest_sections_list.append(f"\n--- X.COM CHATTER & TRENDS ({target_country_name.upper()}) ---")
+        for idx in range(len(trends24_list)):
+            digest_sections_list.append("• " + trends24_list[idx])
 
-    digest_sections_list.append("\n--- DEFENSE NEWS HEADLINES ---")
-    for idx in range(len(defense_news_list)):
-        digest_sections_list.append("• " + defense_news_list[idx])
-
-    digest_sections_list.append("\n--- BREAKING DEFENSE HEADLINES ---")
-    for idx in range(len(breaking_defense_list)):
-        digest_sections_list.append("• " + breaking_defense_list[idx])
-
-    digest_sections_list.append("\n--- FOREIGN AFFAIRS SPECIALIZED TOPICS ---")
-    for idx in range(len(foreign_affairs_list)):
-        digest_sections_list.append("• " + foreign_affairs_list[idx])
-
-    digest_sections_list.append("\n--- INTERNATIONAL WIRE NEWS HEADLINES ---")
-    for idx in range(len(wire_news_list)):
-        digest_sections_list.append("• " + wire_news_list[idx])
-
-    digest_sections_list.append(f"\n--- X.COM CHATTER & TRENDS ({target_country_name.upper()}) ---")
-    for idx in range(len(trends24_list)):
-        digest_sections_list.append("• " + trends24_list[idx])
-
-    # Include sample tweets heavily in the prompt
+    # Ingest extracted authentic tweets from X.com
+    x_native_data = consolidated_intel_dictionary.get("x_native_explore", {})
     sample_tweets_map = x_native_data.get("sample_tweets_by_trend", {})
     if len(sample_tweets_map) > 0:
         digest_sections_list.append("\n--- AUTHENTIC TWEETS EXTRACTED FROM X.COM ---")
@@ -608,7 +476,6 @@ TASK:
 2. Discard purely domestic party politics, sports, celebrities, crypto, local crime, and gossip.
 3. Pay HEAVY attention to the authentic tweets extracted from X.com:
    - Notice hidden keywords, specific military terms, pact names (like "Makkah Defence Pact"), military leadership titles, and related hashtags.
-   - IMPORTANT: Notice and look for abbreviations and nicknames (e.g., "Visionary Field Marshal", "Great Man CDF", "امہ کی شان عاصم منیر", "مرد آہن فیلڈ مارشل"). They MUST be included in our keywords, in both lowercase as well as uppercase.
 4. FOR EACH TOPIC, GENERATE APPROXIMATELY 20 HIGH-PRECISION KEYWORDS / SEARCH TERMS.
    - Do not stop at 3 or 4 terms. Provide a comprehensive list of ~20 terms per topic so downstream Twitter scrapers will not miss anything.
    - Include: full official names, common abbreviations, nicknames, key leaders, related organizations, weapons systems, and relevant hashtags (in English and Urdu/local where applicable).
@@ -711,14 +578,12 @@ def run_country_hot_news_pipeline():
 
     # PHASE 1: Gather raw news and trends from all sources
     trends24_topics_list = fetch_trends24_topics(target_country_slug)
-    dawn_news_headlines_list = fetch_dawn_news_headlines()
-    tribune_news_headlines_list = fetch_tribune_news_headlines()
-    defense_news_headlines_list = fetch_defense_news_headlines()
-    breaking_defense_headlines_list = fetch_breaking_defense_headlines()
-    foreign_affairs_topics_list = fetch_foreign_affairs_specialized_topics()
-    wire_news_headlines_list = fetch_international_wire_headlines()
 
-    # PHASE 2: Run X.com browser agent to inspect explore tabs and mine sample tweets
+    # Load and ingest all configured sources from sources.json
+    configured_sources_list = load_sources_configuration_file()
+    news_sources_intel_dictionary = fetch_headlines_from_configured_sources(configured_sources_list)
+
+    # PHASE 2: Run X.com browser agent to inspect explore tabs and mine at least 20 sample tweets per trend
     x_native_intel_dictionary = asyncio.run(
         run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_mode_enabled)
     )
@@ -730,12 +595,7 @@ def run_country_hot_news_pipeline():
         "slug": target_country_slug,
         "collected_at": current_iso_timestamp,
         "x_trends24_topics": trends24_topics_list,
-        "dawn_news_headlines": dawn_news_headlines_list,
-        "tribune_news_headlines": tribune_news_headlines_list,
-        "defense_news_headlines": defense_news_headlines_list,
-        "breaking_defense_headlines": breaking_defense_headlines_list,
-        "foreign_affairs_headlines": foreign_affairs_topics_list,
-        "wire_news_headlines": wire_news_headlines_list,
+        "news_sources_intel": news_sources_intel_dictionary,
         "x_native_explore": x_native_intel_dictionary
     }
 
@@ -751,20 +611,14 @@ def run_country_hot_news_pipeline():
         target_country_name, consolidated_raw_sources_data
     )
 
-    # PHASE 5: Format and save the final structured keywords
+    # PHASE 5: Format and save the final structured keywords strictly into keywords.json
     final_output_structure = {
         "generated_at": current_iso_timestamp,
         "country": target_country_name,
         "sources_consulted": [
             "trends24",
-            "x.com_native_explore_and_tweets",
-            "dawn_news",
-            "express_tribune",
-            "defense_news",
-            "breaking_defense",
-            "foreign_affairs_specialized",
-            "bbc_world_wire"
-        ],
+            "x.com_native_explore_and_tweets"
+        ] + [s.get("name") for s in configured_sources_list if s.get("enabled")],
         "total_topics": len(synthesized_topics_list),
         "topics": synthesized_topics_list
     }

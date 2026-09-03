@@ -1,0 +1,65 @@
+[
+  {
+    "name": "Dawn News",
+    "category": "national_regional",
+    "type": "web",
+    "url": "https://www.dawn.com/",
+    "enabled": true
+  },
+  {
+    "name": "The Express Tribune",
+    "category": "national_regional",
+    "type": "web",
+    "url": "https://tribune.com.pk/",
+    "enabled": true
+  },
+  {
+    "name": "The News International World",
+    "category": "national_regional",
+    "type": "web",
+    "url": "https://www.thenews.com.pk/latest/category/world",
+    "enabled": true
+  },
+  {
+    "name": "Defense News RSS",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://www.defensenews.com/arc/outboundfeeds/rss/",
+    "enabled": true
+  },
+  {
+    "name": "Breaking Defense RSS",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://breakingdefense.com/feed/",
+    "enabled": true
+  },
+  {
+    "name": "Foreign Affairs Defense & Military",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.foreignaffairs.com/topics/defense-military",
+    "enabled": true
+  },
+  {
+    "name": "Foreign Affairs Nuclear Proliferation",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.foreignaffairs.com/topics/nuclear-weapons-proliferation",
+    "enabled": true
+  },
+  {
+    "name": "Foreign Affairs War & Strategy",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.foreignaffairs.com/topics/war-military-strategy",
+    "enabled": true
+  },
+  {
+    "name": "BBC World News Wire RSS",
+    "category": "wire_services",
+    "type": "rss",
+    "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "enabled": true
+  }
+]

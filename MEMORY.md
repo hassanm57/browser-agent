@@ -19,6 +19,7 @@ browser-agent/
 ├── main.py              # Main entry point; initializes BrowserProfile, LLM, and Agent
 ├── trends.py            # Multi-source hot news & 20-keyword extraction engine
 ├── countries.json       # Country list configuration (slugs, tiers, home country)
+├── sources.json         # Centralized list of all news feeds, topics, and RSS URLs
 ├── raw_sources.json     # Intermediate raw intelligence digest (Dawn, Tribune, X tweets, Defense News)
 ├── keywords.json        # Final single keyword output matching schema
 ├── KEYWORDS.md          # Architecture & plan for the Hot News Keyword Engine

@@ -1,117 +1,125 @@
 {
-  "generated_at": "2026-09-03T09:50:28.914947",
+  "generated_at": "2026-09-03T10:48:17.962733",
   "country": "Pakistan",
-  "total_topics_extracted": 13,
-  "keywords": [
+  "sources_consulted": [
+    "trends24",
+    "x.com_native_explore",
+    "defense_news",
+    "breaking_defense",
+    "foreign_affairs",
+    "bbc_world_wire"
+  ],
+  "total_topics": 10,
+  "topics": [
     {
-      "label": "Pakistan Navy Sea Spark",
+      "label": "Iran-US Strait of Hormuz Escalation",
+      "category": "defense",
       "terms": [
-        "Pakistan Navy Sea Spark",
-        "PN Sea Spark",
-        "Pakistan Navy"
-      ],
-      "category": "defense"
+        "strait of hormuz",
+        "iran us military strikes",
+        "hormuz naval operations",
+        "us strikes on iran",
+        "iranian military response"
+      ]
     },
     {
-      "label": "Iran Relations",
+      "label": "Pakistan Navy Sea Spark Exercises",
+      "category": "defense",
       "terms": [
-        "Iran",
-        "Iran-Pakistan relations"
-      ],
-      "category": "diplomacy"
+        "pakistan navy sea spark",
+        "pn sea spark",
+        "pakistan navy exercises",
+        "sea spark 2024",
+        "naval drills pakistan"
+      ]
     },
     {
-      "label": "Kuwait Relations",
+      "label": "US Military Aid to Iraq",
+      "category": "diplomacy",
       "terms": [
-        "Kuwait",
-        "Pakistan-Kuwait relations"
-      ],
-      "category": "diplomacy"
+        "us military aid to iraq",
+        "$800 million helicopter sale",
+        "iraq us defense pact",
+        "us iraq arms deal",
+        "iraq military modernization"
+      ]
     },
     {
-      "label": "Bahrain Relations",
+      "label": "Russia-Germany Drone Incident",
+      "category": "politics",
       "terms": [
-        "Bahrain",
-        "Pakistan-Bahrain relations"
-      ],
-      "category": "diplomacy"
+        "german airport drone attack",
+        "russia blamed for drone attack",
+        "leipzig airport incident",
+        "germany russia tensions",
+        "drone warfare europe"
+      ]
     },
     {
-      "label": "Makkah Defence Pact",
+      "label": "US-China Naval Tensions",
+      "category": "defense",
       "terms": [
-        "the makkah defence pact",
-        "makkah defence pact",
-        "saudi pakistan defence pact"
-      ],
-      "category": "defense"
+        "chinese guided missile frigate",
+        "us china naval standoff",
+        "japan taiwan us security concerns",
+        "china naval modernization",
+        "us naval response china"
+      ]
     },
     {
-      "label": "North Waziristan",
+      "label": "NATO-EU Pressure on Russia",
+      "category": "diplomacy",
       "terms": [
-        "north waziristan",
-        "NWFP",
-        "FATA"
-      ],
-      "category": "defense"
+        "nato eu sanctions russia",
+        "russia escalation germany",
+        "nato military pressure",
+        "eu russia diplomatic standoff",
+        "nato east expansion"
+      ]
     },
     {
-      "label": "USS Abraham Lincoln",
+      "label": "Iran-Saudi Tanker Attack",
+      "category": "politics",
       "terms": [
-        "USS Abraham Lincoln",
-        "US Navy aircraft carrier"
-      ],
-      "category": "defense"
+        "iranian attack on saudi tanker",
+        "filipino sailors killed",
+        "iran saudi maritime conflict",
+        "iranian naval aggression",
+        "saudi iran tensions"
+      ]
     },
     {
-      "label": "TTS-2",
+      "label": "US-Israel Military Coordination",
+      "category": "diplomacy",
       "terms": [
-        "TTS-2",
-        "Tactical Training System-2"
-      ],
-      "category": "defense"
+        "us israel military talks",
+        "us air force chief israel",
+        "us israel defense cooperation",
+        "israel us regional security",
+        "us israel joint exercises"
+      ]
     },
     {
-      "label": "Security Forces",
+      "label": "Pakistan-China Defense Cooperation",
+      "category": "diplomacy",
       "terms": [
-        "Security Forces",
-        "Pakistan Armed Forces",
-        "PASPA"
-      ],
-      "category": "defense"
+        "pakistan china military pact",
+        "cpec defense corridor",
+        "china pakistan joint exercises",
+        "pakistan china naval cooperation",
+        "gulf of aden joint patrols"
+      ]
     },
     {
-      "label": "Trump Strait",
+      "label": "US Military AI Integration",
+      "category": "defense",
       "terms": [
-        "Trump Strait",
-        "Strait of Hormuz"
-      ],
-      "category": "politics"
-    },
-    {
-      "label": "Kyrgyzstan Relations",
-      "terms": [
-        "Kyrgyzstan",
-        "Pakistan-Kyrgyzstan relations",
-        "Bishkek"
-      ],
-      "category": "diplomacy"
-    },
-    {
-      "label": "Thailand Relations",
-      "terms": [
-        "Thailand",
-        "Pakistan-Thailand relations"
-      ],
-      "category": "diplomacy"
-    },
-    {
-      "label": "Saudi Arabia Relations",
-      "terms": [
-        "Saudi Arabia",
-        "Makkah Defence Pact",
-        "Saudi-Pakistan relations"
-      ],
-      "category": "diplomacy"
+        "us military ai systems",
+        "palantir titan system",
+        "anduril titan production",
+        "us ai warfare",
+        "ai in defense procurement"
+      ]
     }
   ]
 }

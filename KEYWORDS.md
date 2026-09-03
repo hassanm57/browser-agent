@@ -1,273 +1,230 @@
-# KEYWORDS.md — Country-Specific Hot News Keyword Engine
+# KEYWORDS.md — Country-Specific Hot News & Twitter Boolean Query Engine
 
-## 1. Overview
+## 1. Executive Summary
 
-A modular engine that monitors "hot news" chatter on X (Twitter) for a defined set of countries and automatically generates high-precision, low-noise search keywords for those topics. The initial focus is **foreign affairs** — defense, diplomacy, international politics, and economic news with cross-border relevance — rather than domestic-only stories.
+A multi-source intelligence engine that monitors breaking foreign affairs, defense, military, and geopolitical developments across multiple sources in parallel, cross-references international news with country-specific X (Twitter) trends, and generates **high-precision, low-noise search keywords and Twitter boolean search queries**.
 
-This engine is a **standalone module** within the `browser-agent` repo. Its only output (for now) is a structured keyword list saved as JSON locally. Downstream systems (Twitter scraper, data pipeline) will consume this output in a later phase.
-
----
-
-## 2. Goals
-
-1. Given a country, surface what is currently "hot" in foreign-affairs-relevant news and chatter.
-2. Convert those trends into **precise search keywords** (10–15 per country per run).
-3. Correctly expand well-known abbreviations and event names (e.g., "MIC 2026" should appear alongside "Makkah International Conference") so relevant content is not missed.
-4. Minimize noise — irrelevant or off-topic keywords should be the exception, not the norm.
-5. Be modular enough to run per-country independently, with no country's configuration hard-coded into another's logic.
-6. Later phase: transform these keywords into Twitter boolean search queries (`x AND y OR z`). For now, output is a flat keyword list per topic.
+The initial home country is **Pakistan**, but the engine is designed to run modularly for any country configured in `countries.json` (US, China, Russia, Iran, Israel, Saudi Arabia, etc.).
 
 ---
 
-## 3. Scope
+## 2. Information Sources Architecture
 
-### 3.1 Countries
+Rather than relying on a single platform, the engine ingests signal from 6 targeted sources:
 
-Pakistan is the "home" country for relevance purposes, but its presence should not bias or filter what counts as relevant for other countries — each country's news is evaluated on its own terms.
+### A. Real-Time X/Twitter Chatter & Tweet Mining
+1. **trends24.in (`https://trends24.in/{country_slug}/`)**: Fast hourly snapshot of country-specific hashtags.
+2. **Native X.com Explore Tabs (`https://x.com/explore/tabs/trending` & `https://x.com/explore/tabs/news`)**:
+   - Uses the authenticated Chrome browser to access live local and global trending topics directly on X.
+   - For the top 5 to 10 foreign-affairs and defense trends, clicks into each trend and extracts **5 to 10 top tweets**.
+   - **Why this is critical**: Real tweets reveal rich, organic search phrasing, emerging slang, secondary hashtags, and specific breaking details that aren't captured by headlines alone.
+   - **Context Budget**: Only plain tweet text is kept (strip user IDs, metrics, emojis). ~50 tokens per tweet × 40 tweets = ~2,000 tokens total.
 
-**Initial country list** (expandable):
+### B. Specialized Defense & Military News Sources
+3. **Defense News (`https://www.defensenews.com/`)**: Main landing page for breaking defense procurement, armed forces modernization, and international military posture.
+4. **Breaking Defense (`https://breakingdefense.com/`)**: Main landing page for cutting-edge weapons systems, aerospace, intelligence, and defense strategy.
 
-| Tier | Countries |
-|------|-----------|
-| Home | Pakistan |
-| UN P5 | United States, Russia, China, United Kingdom, France |
-| Strategic | Iran, Israel, India, North Korea |
-| Gulf | Saudi Arabia, UAE (others as relevant) |
-| Dynamic | Any country central to an ongoing major world event |
+### C. Major International Wire Services
+5. **Reuters (`https://www.reuters.com/world/` or main page)**: Fast, neutral international wire reporting on global crises, conflicts, and diplomatic talks.
+6. **AP News (`https://apnews.com/world-news` or main page)**: Broad international wire coverage of foreign policy and cross-border developments.
 
-The list is intentionally not fixed by rigid rule — countries can be added based on relevance to current events.
-
-### 3.2 Topics
-
-Foreign affairs broadly:
-
-- Defense and military
-- Diplomacy and foreign policy
-- International politics and geopolitics
-- Economic news with international/foreign-policy relevance (trade, sanctions, agreements)
-
-**Out of scope**: purely domestic politics or news with no foreign-affairs angle.
+### D. Strategic & Geopolitical Analysis
+7. **Foreign Affairs (`https://www.foreignaffairs.com/topics/defense-military`)**: High-level strategic foreign policy themes, grand strategy, defense treaties, and sanction regimes.
 
 ---
 
-## 4. Approach
+## 3. Parallel Extraction & Context Management (The 32k Limit Strategy)
 
-### 4.1 Trend Ingestion
+To respect the **32,768 context window** of the local model (`Qwen3-14B`) and avoid out-of-memory errors:
 
-The browser-use agent scrapes current trending topics as raw input signal. Sources (in priority order):
-
-1. **trends24.com** — country-specific trending topic pages (e.g., `trends24.com/pakistan`, `trends24.com/united-states`).
-2. **X/Twitter search** — the agent can also browse X directly, searching for latest news chatter per country if trends24 data is sparse or insufficient.
-3. **Google News or other news aggregators** — as a supplementary signal if the above sources lack coverage for a specific country.
-
-The agent decides which source(s) to use per country. If trends24 has good data, use it. If a country has sparse trend data (e.g., North Korea), the agent falls back to searching X or news sites directly.
-
-### 4.2 Keyword Generation
-
-The local LLM (**Qwen3-14B**, running on vLLM at `http://10.13.12.121:8000/v1`) processes the scraped trends and context to generate candidate keywords.
-
-**Rules for keyword generation:**
-
-- **Abbreviation/alias expansion** is limited to well-known, commonly-searched abbreviations — the kind a real person would type into X search (e.g., "UN" not "United Nations"). The engine should not invent abbreviations for terms that do not already have a recognized short form.
-- Each keyword entry should include the full term and its known short form(s) so neither is missed (e.g., both "Makkah International Conference" and "MIC 2026").
-- Output should be filtered for relevance before being finalized — **favor precision over recall**. When in doubt, leave a noisy candidate out.
-- Target: **10–15 keywords per country per run**.
-
-### 4.3 Output Construction
-
-For this phase, the output is a **JSON file saved locally** with keyword entries grouped per country and per topic/event.
-
-**Later phase**: these keywords will be transformed into Twitter boolean search queries (e.g., `("Pakistan Navy" AND "joint exercise") OR "PN Sea Spark"`). That transformation is not part of the current scope.
+1. **Parallel Lightweight Workers**:
+   - The 5 news websites and trends24 are processed independently in parallel.
+   - Workers extract **only headline text and article titles** (10–20 clean strings per source).
+   - **Zero raw HTML, ads, or scripts** are sent to the LLM.
+2. **Native X.com Tweet Mining**:
+   - The browser agent opens `https://x.com/explore/tabs/trending` and `https://x.com/explore/tabs/news`.
+   - Filters for the top defense, military, and geopolitical trends.
+   - Extracts 5 to 10 top tweets per relevant trend as plain text strings (stripping metrics, URLs, and noisy UI).
+3. **Token Budgeting**:
+   - 6 sources × ~20 headlines each = ~120 clean strings (~1,800 tokens).
+   - Top X trends × 5 sample tweets = ~25 clean tweets (~1,500 tokens).
+   - System prompt & schema instructions = ~800 tokens.
+   - Output buffer for boolean queries & keywords = ~3,000 tokens.
+   - **Total run context: ~7,100 tokens** (leaving over 25,000 tokens of headroom below the 32k limit).
+4. **Intermediate Persistence**:
+   - All extracted raw headlines and sample tweets are stored into an intermediate JSON file (`raw_intel_{country_slug}.json`) for full auditability and debugging.
 
 ---
 
-## 5. Output Format
+## 4. Synthesis & Reasoning Layer (Qwen3-14B)
 
-A JSON file saved to the workspace root (e.g., `keywords_output.json`), structured as follows:
+Once all 6 sources have been scraped and aggregated into `raw_intel_{country_slug}.json`, the consolidated digest is fed into the local LLM with strict instructions:
+
+### A. Foreign Affairs Filtering
+- Filter strictly for:
+  - Defense, military operations, naval/air exercises, weapons tests
+  - Bilateral diplomacy, treaties, high-level foreign delegations
+  - Cross-border economic policy (sanctions, oil corridors, trade agreements, IMF/bilateral financial aid)
+  - Regional conflicts and border tensions
+- Discard: domestic political mudslinging, local crime, sports, celebrity gossip, and spam.
+
+### B. Abbreviation & Alias Expansion
+- Expand recognized real-world military/diplomatic acronyms (e.g., `PN` $\rightarrow$ `Pakistan Navy`, `IAEA` $\rightarrow$ `International Atomic Energy Agency`, `CENTCOM` $\rightarrow$ `US Central Command`, `IRGC` $\rightarrow$ `Islamic Revolutionary Guard Corps`).
+- Include weapons designations where relevant (e.g., `J-10C`, `F-16`, `Shaheen-III`, `Patriot`, `S-400`, `Hypersonic`).
+
+### C. Twitter Boolean Search Query Construction
+- For each approved topic, generate a production-ready Twitter boolean query combining:
+  - Required event/topic names and their abbreviations using `OR` in parentheses.
+  - Required context or country qualifiers using `AND` in parentheses.
+- Example:
+  `("Makkah Defence Pact" OR "Makkah Defense Pact" OR "Saudi Pak defence") AND (Pakistan OR Saudi OR military)`
+  `("Sea Spark" OR "PN Sea Spark" OR "Sea Spark 2026") AND ("Pakistan Navy" OR exercise)`
+
+---
+
+## 5. Detailed Step-by-Step Agent Prompts
+
+### A. Native X.com Explore & Tweet Mining Agent Prompt
+```text
+Task: Extract Top Defense, Military, and Geopolitical Trends and Sample Tweets from X.com for {target_country_name}.
+
+STEP 1: Navigate to the X Explore Trending tab
+Navigate to https://x.com/explore/tabs/trending.
+Wait 3 seconds for the trending topics list to render on screen.
+
+STEP 2: Observe and select foreign affairs & defense trends
+Look at the visible trending items under Trending.
+Specifically select topics that relate to:
+- Defense, armed forces, naval or air exercises, weapons systems (missiles, fighter jets, naval vessels)
+- International diplomacy, foreign delegations, state visits, bilateral relations
+- Geopolitics, international conflicts, border tensions, sanctions, cross-border energy or trade
+Ignore sports, entertainment, celebrities, crypto tokens, and purely local domestic political arguments.
+Pick the top 3 to 5 most relevant foreign-affairs and defense trends.
+
+STEP 3: Also inspect the X Explore News tab
+Navigate to https://x.com/explore/tabs/news.
+Observe if there are additional breaking international or defense stories.
+Select any high-priority international defense or conflict trend you observe.
+
+STEP 4: Collect sample tweets for each selected trend
+For each selected trend (up to 3 to 5 trends):
+1. Navigate directly to https://x.com/search?q={trend_query}&f=top
+2. Look at the top 5 to 7 visible tweets on the search results page.
+3. Read the clean text content of each tweet. Extract only the actual text message written by the user. Do not include user profile handles, follower counts, timestamp strings, or image URLs.
+
+STEP 5: Save your findings to a file
+Using the write_file action, save all collected data into a JSON file named x_intel_{target_country_slug}.json with this exact structure:
+{
+  "country": "{target_country_name}",
+  "trends_observed": ["trend 1", "trend 2"],
+  "sample_tweets_by_trend": {
+    "trend_name": ["tweet text 1", "tweet text 2", "tweet text 3"]
+  }
+}
+
+STEP 6: Complete the task
+After successfully writing x_intel_{target_country_slug}.json, call the done action.
+```
+
+### B. News Wire & Defense Extraction Agent Prompt
+```text
+Task: Extract top breaking defense, military, and international headlines from {source_name}.
+
+STEP 1: Navigate to the website
+Navigate to {source_url}.
+Wait 3 seconds for the headlines to load on the screen.
+
+STEP 2: Identify top breaking headlines
+Look at the main news headlines visible on the homepage or top stories section.
+Focus on:
+- Military, defense, armed forces, weapons systems, and procurement
+- Wars, regional conflicts, missile strikes, military deployments
+- International diplomacy, sanctions, geopolitical summits, and treaties
+Ignore local domestic lifestyle, entertainment, local crime, or weather news.
+
+STEP 3: Collect top 10 to 15 clean headline strings
+Read the text of the top 10 to 15 relevant headline titles. Keep each headline clean and concise.
+Do NOT use the extract tool (to avoid dumping full HTML pages into context).
+
+STEP 4: Save headlines to a JSON file
+Using the write_file action, save the list of clean headline strings into a JSON file named news_{source_slug}.json with this structure:
+{
+  "source": "{source_name}",
+  "headlines": ["Headline 1", "Headline 2", "Headline 3"]
+}
+
+STEP 5: Complete the task
+Call the done action with a short confirmation message.
+```
+
+---
+
+## 6. Output Schema
+
+The final output is saved to `keywords_{country_slug}.json` and `keywords_output.json`:
 
 ```json
 {
-  "generated_at": "2026-09-02T16:00:00+05:00",
-  "countries": [
+  "generated_at": "2026-09-03T10:30:00+05:00",
+  "country": "Pakistan",
+  "sources_consulted": [
+    "trends24",
+    "defensenews",
+    "breakingdefense",
+    "reuters",
+    "apnews",
+    "foreignaffairs"
+  ],
+  "total_topics": 12,
+  "topics": [
     {
-      "country": "Pakistan",
-      "keywords": [
-        {
-          "label": "Makkah International Conference 2026",
-          "terms": ["Makkah International Conference", "MIC 2026"],
-          "category": "diplomacy"
-        },
-        {
-          "label": "Pakistan Navy Sea Spark Exercise",
-          "terms": ["Pakistan Navy Sea Spark", "PN Sea Spark", "Sea Spark 2026"],
-          "category": "defense"
-        }
-      ]
+      "label": "Makkah Defence Pact",
+      "category": "defense",
+      "terms": [
+        "the makkah defence pact",
+        "makkah defence pact",
+        "saudi pakistan defence pact"
+      ],
+      "twitter_query": "(\"Makkah Defence Pact\" OR \"Makkah defense pact\" OR \"Saudi Pakistan defence\") AND (Pakistan OR Saudi OR military)"
     },
     {
-      "country": "United States",
-      "keywords": [
-        {
-          "label": "US-China Tariff Escalation",
-          "terms": ["US China tariffs", "trade war 2026", "US tariff escalation"],
-          "category": "economic"
-        }
-      ]
+      "label": "Pakistan Navy Sea Spark Exercise",
+      "category": "defense",
+      "terms": [
+        "Pakistan Navy Sea Spark",
+        "PN Sea Spark",
+        "Sea Spark 2026"
+      ],
+      "twitter_query": "(\"Sea Spark\" OR \"PN Sea Spark\" OR \"Pakistan Navy Sea Spark\") AND (Navy OR exercise OR \"Arabian Sea\")"
+    },
+    {
+      "label": "US-Iran Naval Posture & USS Abraham Lincoln",
+      "category": "defense",
+      "terms": [
+        "USS Abraham Lincoln",
+        "Strait of Hormuz",
+        "CENTCOM deployment"
+      ],
+      "twitter_query": "(\"USS Abraham Lincoln\" OR \"Lincoln carrier\") AND (Iran OR \"Strait of Hormuz\" OR CENTCOM)"
     }
   ]
 }
 ```
 
-**Field definitions:**
+---
 
-| Field | Description |
-|-------|-------------|
-| `generated_at` | ISO 8601 timestamp of when the run completed |
-| `country` | Country name (human-readable) |
-| `label` | Short human-readable description of the topic or event |
-| `terms` | List of keyword strings (full names + known abbreviations) |
-| `category` | One of: `defense`, `diplomacy`, `politics`, `economic` |
+## 6. Code Style & Rules (AGENTS.md Compliance)
 
-Exact field names and schema may evolve during implementation but should stay consistent across countries.
+- **Extreme Readability**: Explicit, step-by-step procedural logic written like a junior engineer.
+- **No Functional Shorthand**: Zero `map`, `filter`, `reduce`, or `lambda`. Standard `for` and `while` loops with descriptive index counters.
+- **Descriptive Naming**: Full English words (`extracted_headlines_list`, `target_country_slug`, `current_source_item`).
+- **Clean File Footprint**: All logic consolidated cleanly in [trends.py](file:///Users/hassanmansoor57/Documents/browser-agent/trends.py) and [countries.json](file:///Users/hassanmansoor57/Documents/browser-agent/countries.json).
 
 ---
 
-## 6. Architecture
+## 7. Next Step: Implementation Plan
 
-### 6.1 Project Structure
-
-All code lives in the existing `browser-agent` repo. New files are added alongside `main.py`:
-
-```
-browser-agent/
-├── main.py                  # Existing browser-use agent (unchanged)
-├── keywords_engine.py       # Main entry point for the keyword engine
-├── countries.json           # Country list configuration (name, trends24 slug, etc.)
-├── keywords_output.json     # Generated output (overwritten each run)
-├── dashboard.py             # Basic web dashboard to trigger runs and view logs
-├── .env                     # Shared environment config (LLM endpoint, etc.)
-├── MEMORY.md                # Project memory
-├── KEYWORDS.md              # This plan document
-└── requirements.txt         # Updated with any new dependencies
-```
-
-### 6.2 Tooling
-
-| Component | Tool |
-|-----------|------|
-| Trend scraping | `browser-use` agent (connects to real Chrome via `Browser.from_system_chrome()`) |
-| Keyword generation | Local Qwen3-14B via ChatOpenAI (same LLM setup as `main.py`) |
-| Output storage | JSON file on disk |
-| Dashboard | Basic Python web app (Flask or Streamlit — TBD) |
-| Orchestration | Manual trigger via dashboard or CLI |
-
-### 6.3 Execution Flow
-
-```
-[User triggers run via dashboard or CLI]
-        │
-        ▼
-[For each country in countries.json]
-        │
-        ├── 1. Browser-use agent scrapes trends24.com/{country_slug}
-        │      (falls back to X search or news sites if data is sparse)
-        │
-        ├── 2. Scraped trends are passed to the local LLM
-        │      with a prompt asking for 10-15 foreign-affairs keywords
-        │
-        ├── 3. LLM returns structured keyword entries
-        │      (label, terms with abbreviation expansion, category)
-        │
-        ├── 4. Results are validated and filtered for relevance
-        │
-        └── 5. Country results are appended to the output JSON
-        │
-        ▼
-[keywords_output.json is written to disk]
-[Dashboard displays results + logs]
-```
-
-### 6.4 Logging and Transparency
-
-The dashboard must show **what the engine is doing at each step**. As little black-box behavior as possible:
-
-- Which country is currently being processed
-- What source the agent is scraping (trends24 URL, X search query, etc.)
-- What raw trends were found
-- What keywords the LLM generated
-- What was filtered out and why (if applicable)
-- Final keyword list per country
-
-Logs are displayed in the dashboard in real-time and also saved to a log file for review.
-
-### 6.5 Country Configuration
-
-Countries are defined in `countries.json`, not hard-coded in logic:
-
-```json
-[
-  {
-    "name": "Pakistan",
-    "trends24_slug": "pakistan",
-    "is_home": true
-  },
-  {
-    "name": "United States",
-    "trends24_slug": "united-states",
-    "is_home": false
-  },
-  {
-    "name": "Iran",
-    "trends24_slug": "iran",
-    "is_home": false
-  }
-]
-```
-
-Adding a new country requires only adding a new entry to this file — no code changes.
-
----
-
-## 7. Milestones (Phase 1 — MVP)
-
-| # | Milestone | Description |
-|---|-----------|-------------|
-| 1 | **Validate trends24 scraping** | Confirm browser-use can reliably pull trends24 data for 2-3 pilot countries (Pakistan, US, one other). |
-| 2 | **Build keyword generation step** | LLM prompt that takes raw trends and outputs structured keyword entries. Test on pilot countries. |
-| 3 | **Produce JSON output** | End-to-end run: scrape → generate → save `keywords_output.json` matching the target schema. |
-| 4 | **Extend to full country list** | Run across all countries in `countries.json`. Handle sparse-data countries gracefully. |
-| 5 | **Basic web dashboard** | Trigger runs, view logs in real-time, inspect generated keywords per country. |
-
----
-
-## 8. Success Criteria
-
-No formal quantitative metric yet — evaluated **qualitatively**:
-
-- Do the generated keyword sets look precise and relevant to current foreign-affairs events?
-- Are well-known abbreviations correctly expanded?
-- Is obvious noise or off-topic content absent from the output?
-- Can a human spot-check the output against actual trending events and confirm coverage?
-
----
-
-## 9. Open Questions
-
-| # | Question | Status |
-|---|----------|--------|
-| 1 | Final locked country list beyond the named examples | Open |
-| 2 | Exact JSON schema field names for downstream consumption | Draft in Section 5, to be finalized |
-| 3 | Whether/when this module gets wired into the Twitter/X data collection pipeline | Future phase |
-| 4 | Formal noise/precision metric, if one becomes needed later | Open |
-| 5 | Dashboard framework choice (Flask vs Streamlit vs other) | TBD during implementation |
-| 6 | Twitter boolean query transformation logic | Future phase (after keyword generation is validated) |
-| 7 | How to handle countries with very sparse trends24 data | Agent falls back to X search / news sites (see Section 4.1) |
-
----
-
-## 10. Constraints
-
-- All code must follow the style rules in `AGENTS.md`: explicit, procedural, "boring" code with long descriptive variable names. No map/filter/reduce. No clever abstractions.
-- The local Qwen3-14B model has a 32k context window. Prompts must stay well within this limit.
-- No X API access (no paid tier). All Twitter data comes via browser-use scraping.
-- The engine runs manually for now. No cron, no scheduler, no background service.
+1. **Build the Parallel Extractor**: Update `trends.py` to fetch from all 6 sources in parallel using lightweight headers, parsing out clean headline titles.
+2. **Store Raw Intermediary Intel**: Write all headlines to `raw_intel_{country_slug}.json`.
+3. **Execute Single LLM Synthesis**: Feed the combined digest to `Qwen3-14B` to produce the final filtered keyword list and Twitter boolean queries.
+4. **Save & Verify**: Verify output against `keywords_output.json`.

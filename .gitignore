@@ -13,8 +13,9 @@ __pycache__/
 
 # Node & Frontend dependencies and builds
 node_modules/
+**/node_modules/**
 dist/
-/Users/hassanmansoor57/Documents/browser-agent/app/frontend/node_modules
+**/dist/**
 dist-ssr/
 .vite/
 npm-debug.log*

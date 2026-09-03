@@ -15,6 +15,7 @@ import {
   Globe,
   Terminal,
   Blocks,
+  Radar,
   PanelLeftClose,
   PanelLeftOpen,
   Command,
@@ -95,18 +96,13 @@ export const mockBottomItems: NavItemData[] = [
 
 export function BrandHeader({ title = 'Browser Agent' }: { title?: string }) {
   return (
-    <div className="flex items-center gap-3 px-2 py-2 mb-4 select-none">
-      <div className="w-8 h-8 rounded-[6px] bg-primary text-primary-foreground flex items-center justify-center font-semibold text-[13px] shadow-sm">
-        {title.charAt(0)}
+    <div className="flex items-center gap-2.5 px-2 py-2 mb-4 select-none">
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-md shadow-blue-500/20 text-white shrink-0">
+        <Radar className="w-4 h-4 text-white" strokeWidth={2} />
       </div>
-      <div className="flex flex-col overflow-hidden">
-        <span className="text-[13px] font-semibold leading-none mb-1 text-foreground tracking-tight truncate max-w-[150px]">
-          {title}
-        </span>
-        <span className="text-[11px] text-muted-foreground leading-none">
-          OSINT Platform
-        </span>
-      </div>
+      <span className="text-[14px] font-semibold text-foreground tracking-tight truncate">
+        {title}
+      </span>
     </div>
   );
 }

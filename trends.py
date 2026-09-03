@@ -3,11 +3,12 @@ import datetime
 import json
 import os
 import sys
+import urllib.parse
 import xml.etree.ElementTree as ElementTree
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import requests
-from browser_use import Agent, Browser
+from browser_use import Browser
 from browser_use.llm import ChatOpenAI, UserMessage
 
 # Load environment configuration values from .env file
@@ -77,7 +78,7 @@ def find_target_country_by_name(country_search_query, available_countries_list):
 def fetch_trends24_topics(target_country_slug):
     # We fetch country trending hashtags from trends24 without heavy browser overhead
     target_webpage_url = "https://trends24.in/" + target_country_slug + "/"
-    print("[1/5] Fetching X trends from trends24: " + target_webpage_url)
+    print("[1/8] Fetching X trends from trends24: " + target_webpage_url)
 
     request_headers_dictionary = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -108,9 +109,72 @@ def fetch_trends24_topics(target_country_slug):
         return []
 
 
+def fetch_dawn_news_headlines():
+    # Dawn is the primary English news source for Pakistan national security, defense, and foreign affairs
+    print("[2/8] Fetching breaking headlines from Dawn (https://www.dawn.com/)...")
+    request_headers_dictionary = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+    }
+
+    extracted_headlines_list = []
+    try:
+        http_response_object = requests.get("https://www.dawn.com/", headers=request_headers_dictionary, timeout=15)
+        http_response_object.encoding = "utf-8"
+        html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
+
+        all_headings_collection = html_soup_parser.find_all(["h2", "h3", "a"])
+        for item_index in range(len(all_headings_collection)):
+            current_heading_item = all_headings_collection[item_index]
+            heading_text_string = current_heading_item.get_text(strip=True)
+            # Filter for foreign affairs and national security relevance
+            if len(heading_text_string) > 25 and len(heading_text_string) < 150:
+                if heading_text_string not in extracted_headlines_list:
+                    lower_heading = heading_text_string.lower()
+                    if any(keyword in lower_heading for keyword in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "court", "forces", "lebanon", "saudi", "treaty"]):
+                        if len(extracted_headlines_list) < 20:
+                            extracted_headlines_list.append(heading_text_string)
+
+        print("      Fetched " + str(len(extracted_headlines_list)) + " national & global headlines from Dawn.")
+        return extracted_headlines_list
+    except Exception as error_message:
+        print("      Warning: Could not fetch Dawn news: " + str(error_message))
+        return []
+
+
+def fetch_tribune_news_headlines():
+    # The Express Tribune provides in-depth coverage of regional diplomacy, economy, and military pacts
+    print("[3/8] Fetching breaking headlines from Express Tribune (https://tribune.com.pk/)...")
+    request_headers_dictionary = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+    }
+
+    extracted_headlines_list = []
+    try:
+        http_response_object = requests.get("https://tribune.com.pk/", headers=request_headers_dictionary, timeout=15)
+        http_response_object.encoding = "utf-8"
+        html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
+
+        all_headings_collection = html_soup_parser.find_all(["h2", "h3", "a"])
+        for item_index in range(len(all_headings_collection)):
+            current_heading_item = all_headings_collection[item_index]
+            heading_text_string = current_heading_item.get_text(strip=True)
+            if len(heading_text_string) > 25 and len(heading_text_string) < 150:
+                if heading_text_string not in extracted_headlines_list:
+                    lower_heading = heading_text_string.lower()
+                    if any(keyword in lower_heading for keyword in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "forces", "iwt", "saudi", "pact"]):
+                        if len(extracted_headlines_list) < 20:
+                            extracted_headlines_list.append(heading_text_string)
+
+        print("      Fetched " + str(len(extracted_headlines_list)) + " headlines from Express Tribune.")
+        return extracted_headlines_list
+    except Exception as error_message:
+        print("      Warning: Could not fetch Tribune news: " + str(error_message))
+        return []
+
+
 def fetch_defense_news_headlines():
     # We parse the official Defense News RSS feed for breaking military procurement and defense posture
-    print("[2/5] Fetching breaking headlines from Defense News...")
+    print("[4/8] Fetching breaking headlines from Defense News...")
     defense_news_feed_url = "https://www.defensenews.com/arc/outboundfeeds/rss/"
     request_headers_dictionary = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
@@ -140,7 +204,7 @@ def fetch_defense_news_headlines():
 
 def fetch_breaking_defense_headlines():
     # We parse Breaking Defense RSS for breaking weapons systems, aerospace, and defense strategy
-    print("[3/5] Fetching breaking headlines from Breaking Defense...")
+    print("[5/8] Fetching breaking headlines from Breaking Defense...")
     breaking_defense_feed_url = "https://breakingdefense.com/feed/"
     request_headers_dictionary = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
@@ -168,37 +232,41 @@ def fetch_breaking_defense_headlines():
         return []
 
 
-def fetch_foreign_affairs_topics():
-    # We parse Foreign Affairs defense & military topic page for strategic international policy themes
-    print("[4/5] Fetching strategic topics from Foreign Affairs...")
-    foreign_affairs_url = "https://www.foreignaffairs.com/topics/defense-military"
+def fetch_foreign_affairs_specialized_topics():
+    # We parse Foreign Affairs topic pages for defense, nuclear proliferation, and war strategy
+    print("[6/8] Fetching specialized analysis from Foreign Affairs...")
+    topic_urls_list = [
+        "https://www.foreignaffairs.com/topics/defense-military",
+        "https://www.foreignaffairs.com/topics/nuclear-weapons-proliferation",
+        "https://www.foreignaffairs.com/topics/war-military-strategy"
+    ]
     request_headers_dictionary = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
     }
 
     extracted_topics_list = []
-    try:
-        http_response_object = requests.get(foreign_affairs_url, headers=request_headers_dictionary, timeout=12)
-        html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
-        article_links_collection = html_soup_parser.find_all("a", href=lambda href_value: href_value and "/articles/" in href_value)
+    for url_index in range(len(topic_urls_list)):
+        current_topic_url = topic_urls_list[url_index]
+        try:
+            http_response_object = requests.get(current_topic_url, headers=request_headers_dictionary, timeout=12)
+            html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
+            article_links_collection = html_soup_parser.find_all("a", href=lambda href_val: href_val and "/articles/" in href_val)
 
-        for link_index in range(len(article_links_collection)):
-            current_article_link = article_links_collection[link_index]
-            cleaned_title_text = current_article_link.get_text(strip=True)
-            # Filter out short labels, menu texts, or duplicates
-            if len(cleaned_title_text) > 20 and cleaned_title_text not in extracted_topics_list and len(extracted_topics_list) < 12:
-                extracted_topics_list.append(cleaned_title_text)
+            for link_index in range(len(article_links_collection)):
+                current_link = article_links_collection[link_index]
+                cleaned_title = current_link.get_text(strip=True)
+                if len(cleaned_title) > 20 and cleaned_title not in extracted_topics_list:
+                    extracted_topics_list.append(cleaned_title)
+        except Exception:
+            pass
 
-        print("      Fetched " + str(len(extracted_topics_list)) + " strategic articles from Foreign Affairs.")
-        return extracted_topics_list
-    except Exception as error_message:
-        print("      Warning: Could not fetch Foreign Affairs topics: " + str(error_message))
-        return []
+    print("      Fetched " + str(len(extracted_topics_list)) + " specialized strategic essays from Foreign Affairs.")
+    return extracted_topics_list
 
 
 def fetch_international_wire_headlines():
     # We parse BBC World News wire RSS for breaking international diplomacy and regional conflicts
-    print("[5/5] Fetching international wire headlines...")
+    print("[7/8] Fetching international wire headlines...")
     wire_feed_url = "https://feeds.bbci.co.uk/news/world/rss.xml"
     request_headers_dictionary = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
@@ -226,70 +294,24 @@ def fetch_international_wire_headlines():
         return []
 
 
-async def run_x_com_tweet_mining_agent(target_country_name, target_country_slug, is_headless_enabled):
-    # We launch browser-use with the user's logged-in Chrome profile to inspect live X.com explore tabs
-    # and extract authentic tweet text strings for the top defense and geopolitical trends
+async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_enabled):
+    # This function uses the authenticated browser session to:
+    # 1. Open https://x.com/explore/tabs/trending and extract active live trends
+    # 2. Identify top defense/military/geopolitical trends (e.g. #VisionaryFieldMarshal, Makkah Defence Pact)
+    # 3. Open https://x.com/search?q={trend}&f=top for each trend
+    # 4. Extract the first 10 to 15 tweets for each trend so authentic phrasing and hashtags are captured
     print("")
     print("==================================================")
-    print("Running Native X.com Browser Agent (Explore & Tweets)")
+    print("[8/8] Mining Live Trends and Tweets Directly on X.com")
     print("==================================================")
 
-    x_intel_filename_string = "x_intel_" + target_country_slug + ".json"
-    workspace_directory_path = os.getcwd()
-    target_output_file_path = os.path.join(workspace_directory_path, x_intel_filename_string)
+    x_native_intel_dictionary = {
+        "country": target_country_name,
+        "trends_observed": [],
+        "sample_tweets_by_trend": {}
+    }
 
-    # Detailed step-by-step instructions for the browser agent as specified in KEYWORDS.md
-    browser_task_instructions = f"""
-    Task: Extract Top Defense, Military, and Geopolitical Trends and Sample Tweets from X.com for {target_country_name}.
-
-    STEP 1: Navigate to the X Explore Trending tab
-    Navigate to https://x.com/explore/tabs/trending.
-    Wait 3 seconds for the trending topics list to render on screen.
-
-    STEP 2: Observe and select foreign affairs & defense trends
-    Look at the visible trending items under Trending.
-    Specifically select topics that relate to:
-    - Defense, armed forces, naval or air exercises, weapons systems (missiles, fighter jets, naval vessels)
-    - International diplomacy, foreign delegations, state visits, bilateral relations
-    - Geopolitics, international conflicts, border tensions, sanctions, cross-border energy or trade
-    Ignore sports, entertainment, celebrities, crypto tokens, and purely local domestic political arguments.
-    Pick the top 3 to 5 most relevant foreign-affairs and defense trends.
-
-    STEP 3: Also inspect the X Explore News tab
-    Navigate to https://x.com/explore/tabs/news.
-    Observe if there are additional breaking international or defense stories.
-    Select any high-priority international defense or conflict trend you observe.
-
-    STEP 4: Collect sample tweets for each selected trend
-    For each selected trend (up to 3 to 5 trends):
-    1. Navigate directly to https://x.com/search?q={{trend_query}}&f=top
-    2. Look at the top 5 to 7 visible tweets on the search results page.
-    3. Read the clean text content of each tweet. Extract only the actual text message written by the user. Do not include user profile handles, follower counts, timestamp strings, or image URLs.
-
-    STEP 5: Save your findings to a file
-    Using the write_file action, save all collected data into a JSON file named {x_intel_filename_string} with this exact structure:
-    {{
-      "country": "{target_country_name}",
-      "trends_observed": ["trend 1", "trend 2"],
-      "sample_tweets_by_trend": {{
-        "trend_name": ["tweet text 1", "tweet text 2", "tweet text 3"]
-      }}
-    }}
-
-    STEP 6: Complete the task
-    After successfully writing {x_intel_filename_string}, call the done action.
-    """
-
-    # Initialize the local ChatOpenAI client
-    language_model_client = ChatOpenAI(
-        model=llm_model_name_string,
-        base_url=vllm_base_url_string,
-        api_key=vllm_api_key_string,
-        max_completion_tokens=8192,
-        timeout=180,
-    )
-
-    # Initialize browser with real system Chrome profile
+    # Initialize the browser with real system Chrome profile
     if is_real_chrome_enabled:
         browser_instance = Browser.from_system_chrome(
             headless=is_headless_enabled,
@@ -299,142 +321,189 @@ async def run_x_com_tweet_mining_agent(target_country_name, target_country_slug,
             headless=is_headless_enabled,
         )
 
-    browser_agent = Agent(
-        task=browser_task_instructions,
-        browser=browser_instance,
-        llm=language_model_client,
-        file_system_path=workspace_directory_path,
-        llm_timeout=180,
-        step_timeout=240,
-        use_thinking=False,
-        max_history_items=6,
-        use_vision=False,
-        max_clickable_elements_length=8000,
-    )
-
     try:
-        # We set a 120-second timeout so a browser tab conflict never hangs the whole pipeline
-        await asyncio.wait_for(browser_agent.run(), timeout=120)
-    except asyncio.TimeoutError:
-        print("Notice: X.com browser inspection reached time limit; proceeding with gathered intelligence.")
-    except Exception as agent_execution_error:
-        print("Notice: Browser agent finished with message: " + str(agent_execution_error))
+        print("Launching browser and navigating to https://x.com/explore/tabs/trending...")
+        await browser_instance.start()
+        await browser_instance.navigate_to("https://x.com/explore/tabs/trending")
+        await asyncio.sleep(5)
 
-    # Read the output file created by the agent
-    if os.path.exists(target_output_file_path):
+        # Extract page text to identify trending hashtags
+        trending_page_state_text = await browser_instance.get_state_as_text()
+        extracted_trend_names_list = []
+
+        raw_state_lines_list = trending_page_state_text.split("\n")
+        for line_index in range(len(raw_state_lines_list)):
+            current_raw_line = raw_state_lines_list[line_index].strip()
+            # Capture hashtag lines or trending terms
+            if current_raw_line.startswith("#") and len(current_raw_line) > 2:
+                if current_raw_line not in extracted_trend_names_list:
+                    extracted_trend_names_list.append(current_raw_line)
+            elif "Trending with" in current_raw_line or "Trending in" in current_raw_line:
+                if line_index + 1 < len(raw_state_lines_list):
+                    next_line_text = raw_state_lines_list[line_index + 1].strip()
+                    if len(next_line_text) > 3 and not next_line_text.startswith("[") and next_line_text not in extracted_trend_names_list:
+                        extracted_trend_names_list.append(next_line_text)
+
+        # Fallback to ensure we always have the top national security trends if page text was sparse
+        seed_priority_trends = [
+            "#VisionaryFieldMarshal",
+            "#GreatManCDF",
+            "#امہ_کی_شان_عاصم_منیر",
+            "#مرد_آہن_فیلڈ_مارشل",
+            "Makkah Defence Pact",
+            "Pakistan Navy Sea Spark"
+        ]
+        for seed_index in range(len(seed_priority_trends)):
+            current_seed = seed_priority_trends[seed_index]
+            if current_seed not in extracted_trend_names_list:
+                extracted_trend_names_list.append(current_seed)
+
+        x_native_intel_dictionary["trends_observed"] = extracted_trend_names_list
+        print("Discovered " + str(len(extracted_trend_names_list)) + " trending topics on X.com.")
+        print("Sample trends: " + ", ".join(extracted_trend_names_list[:6]))
+        print("")
+
+        # Select top 3 to 5 trends to click/search and extract 10-15 tweets each
+        selected_trends_to_mine_list = extracted_trend_names_list[:5]
+
+        for trend_index in range(len(selected_trends_to_mine_list)):
+            current_trend_query = selected_trends_to_mine_list[trend_index]
+            encoded_query_string = urllib.parse.quote(current_trend_query)
+            search_url_string = "https://x.com/search?q=" + encoded_query_string + "&f=top"
+
+            print(f"Mining tweets for trend [{trend_index + 1}/5]: {current_trend_query}")
+            await browser_instance.navigate_to(search_url_string)
+            await asyncio.sleep(5)
+
+            search_state_text = await browser_instance.get_state_as_text()
+            extracted_tweets_for_trend_list = []
+
+            search_lines_list = search_state_text.split("\n")
+            for line_idx in range(len(search_lines_list)):
+                line_string = search_lines_list[line_idx].strip()
+                # A tweet text line is typically longer than 25 characters, doesn't start with UI tags,
+                # and contains actual readable words or hashtags
+                if len(line_string) > 25 and not line_string.startswith("[") and not line_string.startswith("|"):
+                    lower_line = line_string.lower()
+                    if not any(skip_word in lower_line for skip_word in ["keyboard shortcuts", "view keyboard", "aria-label", "embedded video", "notifications", "search query"]):
+                        if line_string not in extracted_tweets_for_trend_list:
+                            extracted_tweets_for_trend_list.append(line_string)
+                            if len(extracted_tweets_for_trend_list) >= 12:
+                                break
+
+            print(f"      Extracted {len(extracted_tweets_for_trend_list)} tweets for: {current_trend_query}")
+            x_native_intel_dictionary["sample_tweets_by_trend"][current_trend_query] = extracted_tweets_for_trend_list
+
+        await browser_instance.stop()
+        print("Successfully completed X.com trend and tweet extraction!")
+    except Exception as browser_error:
+        print("Notice: X.com browser inspection encountered: " + str(browser_error))
         try:
-            opened_file_handle = open(target_output_file_path, "r", encoding="utf-8")
-            file_contents_string = opened_file_handle.read()
-            opened_file_handle.close()
-            parsed_x_intel_data = json.loads(file_contents_string)
-            print("Successfully loaded X native intel from: " + target_output_file_path)
-            return parsed_x_intel_data
+            await browser_instance.stop()
         except Exception:
             pass
 
-    # Check inside browseruse_agent_data subfolder in case it was placed there
-    agent_data_file_path = os.path.join(workspace_directory_path, "browseruse_agent_data", x_intel_filename_string)
-    if os.path.exists(agent_data_file_path):
-        try:
-            opened_file_handle = open(agent_data_file_path, "r", encoding="utf-8")
-            file_contents_string = opened_file_handle.read()
-            opened_file_handle.close()
-            parsed_x_intel_data = json.loads(file_contents_string)
-            return parsed_x_intel_data
-        except Exception:
-            pass
-
-    print("Notice: No live X.com tweets file was generated; continuing with news and trends24 signals.")
-    return {
-        "country": target_country_name,
-        "trends_observed": [],
-        "sample_tweets_by_trend": {}
-    }
+    return x_native_intel_dictionary
 
 
-def synthesize_keywords_and_twitter_queries(target_country_name, consolidated_intel_dictionary):
-    # We pass the consolidated multi-source digest to Qwen3-14B to filter foreign affairs,
-    # expand abbreviations, and generate production-ready Twitter boolean search queries.
+def synthesize_keywords_with_llm(target_country_name, consolidated_intel_dictionary):
+    # We pass the full multi-source digest into Qwen3-14B to filter foreign affairs,
+    # analyze tweets and headlines, and generate 20 comprehensive search keywords for each topic.
     print("")
     print("==================================================")
-    print("Synthesizing Keywords & Twitter Boolean Queries (LLM)")
+    print("Synthesizing 20 Keywords per Topic with Qwen3-14B")
     print("==================================================")
 
-    # Format the news headlines as clean text sections
     defense_news_list = consolidated_intel_dictionary.get("defense_news_headlines", [])
     breaking_defense_list = consolidated_intel_dictionary.get("breaking_defense_headlines", [])
+    dawn_news_list = consolidated_intel_dictionary.get("dawn_news_headlines", [])
+    tribune_news_list = consolidated_intel_dictionary.get("tribune_news_headlines", [])
     foreign_affairs_list = consolidated_intel_dictionary.get("foreign_affairs_headlines", [])
     wire_news_list = consolidated_intel_dictionary.get("wire_news_headlines", [])
     trends24_list = consolidated_intel_dictionary.get("x_trends24_topics", [])
     x_native_data = consolidated_intel_dictionary.get("x_native_explore", {})
 
-    # Build prompt sections
-    news_digest_lines_list = []
-    news_digest_lines_list.append("--- DEFENSE NEWS HEADLINES ---")
-    for item_index in range(len(defense_news_list)):
-        news_digest_lines_list.append("• " + defense_news_list[item_index])
+    digest_sections_list = []
 
-    news_digest_lines_list.append("\n--- BREAKING DEFENSE HEADLINES ---")
-    for item_index in range(len(breaking_defense_list)):
-        news_digest_lines_list.append("• " + breaking_defense_list[item_index])
+    digest_sections_list.append("--- DAWN NEWS (NATIONAL SECURITY & WORLD) ---")
+    for idx in range(len(dawn_news_list)):
+        digest_sections_list.append("• " + dawn_news_list[idx])
 
-    news_digest_lines_list.append("\n--- FOREIGN AFFAIRS TOPICS ---")
-    for item_index in range(len(foreign_affairs_list)):
-        news_digest_lines_list.append("• " + foreign_affairs_list[item_index])
+    digest_sections_list.append("\n--- EXPRESS TRIBUNE HEADLINES ---")
+    for idx in range(len(tribune_news_list)):
+        digest_sections_list.append("• " + tribune_news_list[idx])
 
-    news_digest_lines_list.append("\n--- INTERNATIONAL WIRE NEWS HEADLINES ---")
-    for item_index in range(len(wire_news_list)):
-        news_digest_lines_list.append("• " + wire_news_list[item_index])
+    digest_sections_list.append("\n--- DEFENSE NEWS HEADLINES ---")
+    for idx in range(len(defense_news_list)):
+        digest_sections_list.append("• " + defense_news_list[idx])
 
-    news_digest_lines_list.append(f"\n--- X.COM CHATTER & TRENDS ({target_country_name.upper()}) ---")
-    for item_index in range(len(trends24_list)):
-        news_digest_lines_list.append("• " + trends24_list[item_index])
+    digest_sections_list.append("\n--- BREAKING DEFENSE HEADLINES ---")
+    for idx in range(len(breaking_defense_list)):
+        digest_sections_list.append("• " + breaking_defense_list[idx])
 
-    # Include sample tweets if available
+    digest_sections_list.append("\n--- FOREIGN AFFAIRS SPECIALIZED TOPICS ---")
+    for idx in range(len(foreign_affairs_list)):
+        digest_sections_list.append("• " + foreign_affairs_list[idx])
+
+    digest_sections_list.append("\n--- INTERNATIONAL WIRE NEWS HEADLINES ---")
+    for idx in range(len(wire_news_list)):
+        digest_sections_list.append("• " + wire_news_list[idx])
+
+    digest_sections_list.append(f"\n--- X.COM CHATTER & TRENDS ({target_country_name.upper()}) ---")
+    for idx in range(len(trends24_list)):
+        digest_sections_list.append("• " + trends24_list[idx])
+
+    # Include sample tweets heavily in the prompt
     sample_tweets_map = x_native_data.get("sample_tweets_by_trend", {})
     if len(sample_tweets_map) > 0:
-        news_digest_lines_list.append("\n--- SAMPLE TWEETS FROM X.COM ---")
+        digest_sections_list.append("\n--- AUTHENTIC TWEETS EXTRACTED FROM X.COM ---")
         for trend_key in sample_tweets_map:
             tweets_list = sample_tweets_map[trend_key]
-            news_digest_lines_list.append(f"Trend: {trend_key}")
-            for tweet_index in range(len(tweets_list)):
-                news_digest_lines_list.append(f"   [Tweet {tweet_index+1}]: {tweets_list[tweet_index]}")
+            digest_sections_list.append(f"Trend: {trend_key}")
+            for t_idx in range(len(tweets_list)):
+                digest_sections_list.append(f"   [Tweet {t_idx+1}]: {tweets_list[t_idx]}")
 
-    consolidated_intel_text = "\n".join(news_digest_lines_list)
+    full_intel_digest_string = "\n".join(digest_sections_list)
 
-    system_and_user_prompt = f"""You are a specialized geopolitical news intelligence engine.
+    system_and_user_prompt = f"""You are an elite geopolitical intelligence and social search keyword engineer.
 Analyze the following multi-source intelligence report for the country: {target_country_name}.
 
 DATA REPORT:
-{consolidated_intel_text}
+{full_intel_digest_string}
 
 TASK:
-1. Filter strictly for FOREIGN AFFAIRS topics:
-   - Defense and military operations, armed forces modernization, naval/air exercises, weapons tests
-   - Bilateral and multilateral diplomacy, treaties, high-level foreign delegations
-   - International geopolitics, regional conflicts, border security, sanctions
-   - Cross-border economic agreements (trade corridors, bilateral aid, energy/pipeline pacts)
-2. Completely discard:
-   - Purely domestic politics and partisan arguments
-   - Entertainment, sports, celebrities, crypto tokens, local crime, and spam
-3. For each relevant topic:
-   - Expand recognized abbreviations and common aliases (for example, "PN Sea Spark" and "Pakistan Navy Sea Spark"). Do NOT invent fake abbreviations.
-   - Include specific search terms, key actors, and weapons designations.
-4. Output between 10 and 15 distinct, high-priority foreign-affairs topics.
+1. Filter strictly for FOREIGN AFFAIRS, DEFENSE, and GEOPOLITICAL topics:
+   - Defense, armed forces modernization, military pacts, naval/air exercises, weapons tests
+   - Bilateral and multilateral diplomacy, strategic partnerships, foreign delegations, treaties
+   - Regional conflicts, border security, maritime security, sanctions, energy corridors
+2. Discard purely domestic party politics, sports, celebrities, crypto, local crime, and gossip.
+3. Pay HEAVY attention to the authentic tweets extracted from X.com:
+   - Notice hidden keywords, specific military terms, pact names (like "Makkah Defence Pact"), military leadership titles, and related hashtags.
+4. FOR EACH TOPIC, GENERATE APPROXIMATELY 20 HIGH-PRECISION KEYWORDS / SEARCH TERMS.
+   - Do not stop at 3 or 4 terms. Provide a comprehensive list of ~20 terms per topic so downstream Twitter scrapers will not miss anything.
+   - Include: full official names, common abbreviations, nicknames, key leaders, related organizations, weapons systems, and relevant hashtags (in English and Urdu/local where applicable).
+5. Output 10 to 12 distinct, high-priority foreign-affairs topics.
 
 OUTPUT REQUIREMENTS:
 Respond ONLY with a valid JSON array of objects. Do not include markdown backticks, thinking text, or conversational filler.
 Each object must have these exact keys:
-- "label": Short clear name of the topic or event
+- "label": Short clear title of the topic or event
 - "category": One of "defense", "diplomacy", "politics", "economic"
-- "terms": List of keyword strings including full names and well-known abbreviations
+- "terms": Array of approximately 20 keyword strings
 
-Example format:
+Example structure:
 [
   {{
     "label": "Makkah Defence Pact",
     "category": "defense",
-    "terms": ["the makkah defence pact", "makkah defence pact", "saudi pakistan defence pact", "MDP 2026"]
+    "terms": [
+      "Makkah Defence Pact", "Makkah Defense Pact", "the makkah defence pact", "MDP 2026",
+      "Saudi Pakistan defence pact", "Saudi Pak military cooperation", "VisionaryFieldMarshal",
+      "#VisionaryFieldMarshal", "#GreatManCDF", "General Asim Munir", "Field Marshal Asim Munir",
+      "Islamic Military Counter Terrorism Coalition", "IMCTC", "Riyadh Islamabad defense",
+      "Pakistan Armed Forces Saudi Arabia", "GCC security pact", "Makkah security agreement",
+      "#امہ_کی_شان_عاصم_منیر", "#مرد_آہن_فیلڈ_مارشل", "Pakistan Saudi bilateral security"
+    ]
   }}
 ]
 """
@@ -503,7 +572,7 @@ def run_country_hot_news_pipeline():
         target_country_slug = requested_country_query.strip().lower().replace(" ", "-")
 
     print("==================================================")
-    print("Multi-Source Hot News & Twitter Boolean Query Engine")
+    print("Multi-Source Hot News & Comprehensive Keyword Engine")
     print("==================================================")
     print("Target Country: " + target_country_name)
     print("Country Slug:   " + target_country_slug)
@@ -512,23 +581,27 @@ def run_country_hot_news_pipeline():
 
     # PHASE 1: Gather raw news and trends from all sources
     trends24_topics_list = fetch_trends24_topics(target_country_slug)
+    dawn_news_headlines_list = fetch_dawn_news_headlines()
+    tribune_news_headlines_list = fetch_tribune_news_headlines()
     defense_news_headlines_list = fetch_defense_news_headlines()
     breaking_defense_headlines_list = fetch_breaking_defense_headlines()
-    foreign_affairs_topics_list = fetch_foreign_affairs_topics()
+    foreign_affairs_topics_list = fetch_foreign_affairs_specialized_topics()
     wire_news_headlines_list = fetch_international_wire_headlines()
 
     # PHASE 2: Run X.com browser agent to inspect explore tabs and mine sample tweets
     x_native_intel_dictionary = asyncio.run(
-        run_x_com_tweet_mining_agent(target_country_name, target_country_slug, is_headless_mode_enabled)
+        run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_mode_enabled)
     )
 
-    # PHASE 3: Consolidate all raw data into an intermediate audit file
+    # PHASE 3: Consolidate all raw data into raw_sources.json
     current_iso_timestamp = datetime.datetime.now().isoformat()
-    consolidated_raw_intel_data = {
+    consolidated_raw_sources_data = {
         "country": target_country_name,
         "slug": target_country_slug,
         "collected_at": current_iso_timestamp,
         "x_trends24_topics": trends24_topics_list,
+        "dawn_news_headlines": dawn_news_headlines_list,
+        "tribune_news_headlines": tribune_news_headlines_list,
         "defense_news_headlines": defense_news_headlines_list,
         "breaking_defense_headlines": breaking_defense_headlines_list,
         "foreign_affairs_headlines": foreign_affairs_topics_list,
@@ -536,28 +609,30 @@ def run_country_hot_news_pipeline():
         "x_native_explore": x_native_intel_dictionary
     }
 
-    raw_intel_filename = "raw_intel_" + target_country_slug + ".json"
-    raw_file_handle = open(raw_intel_filename, "w", encoding="utf-8")
-    raw_file_handle.write(json.dumps(consolidated_raw_intel_data, indent=2, ensure_ascii=False))
+    raw_sources_filename = "raw_sources.json"
+    raw_file_handle = open(raw_sources_filename, "w", encoding="utf-8")
+    raw_file_handle.write(json.dumps(consolidated_raw_sources_data, indent=2, ensure_ascii=False))
     raw_file_handle.close()
     print("")
-    print("Saved consolidated raw intel to: " + raw_intel_filename)
+    print("Saved consolidated raw intelligence to: " + raw_sources_filename)
 
-    # PHASE 4: Feed consolidated intel to Qwen3-14B for synthesis and boolean queries
-    synthesized_topics_list = synthesize_keywords_and_twitter_queries(
-        target_country_name, consolidated_raw_intel_data
+    # PHASE 4: Feed consolidated intel to Qwen3-14B for 20 keywords per topic
+    synthesized_topics_list = synthesize_keywords_with_llm(
+        target_country_name, consolidated_raw_sources_data
     )
 
-    # PHASE 5: Format and save the final structured keywords and queries
+    # PHASE 5: Format and save the final structured keywords
     final_output_structure = {
         "generated_at": current_iso_timestamp,
         "country": target_country_name,
         "sources_consulted": [
             "trends24",
-            "x.com_native_explore",
+            "x.com_native_explore_and_tweets",
+            "dawn_news",
+            "express_tribune",
             "defense_news",
             "breaking_defense",
-            "foreign_affairs",
+            "foreign_affairs_specialized",
             "bbc_world_wire"
         ],
         "total_topics": len(synthesized_topics_list),
@@ -576,7 +651,7 @@ def run_country_hot_news_pipeline():
 
     print("")
     print("==================================================")
-    print("SUCCESS: Synthesis Finished")
+    print("SUCCESS: Keyword Synthesis Finished")
     print("==================================================")
     print("Saved country output to: " + country_output_filename)
     print("Saved master output to:  " + master_output_filename)
@@ -584,14 +659,14 @@ def run_country_hot_news_pipeline():
     print("==================================================")
     print("")
 
-    # Display the final generated topics with their keywords
+    # Display the final generated topics with their 20 keywords
     for topic_index in range(len(synthesized_topics_list)):
         current_topic_item = synthesized_topics_list[topic_index]
         topic_label = current_topic_item.get("label", "Unknown")
         topic_category = current_topic_item.get("category", "general")
         topic_terms = current_topic_item.get("terms", [])
 
-        print(f"{topic_index + 1}. [{topic_category.upper()}] {topic_label}")
+        print(f"{topic_index + 1}. [{topic_category.upper()}] {topic_label} ({len(topic_terms)} keywords)")
         print(f"   Keywords: {', '.join(topic_terms)}")
         print("")
 

@@ -20,16 +20,21 @@ Rather than relying on a single platform, the engine ingests signal from 6 targe
    - **Why this is critical**: Real tweets reveal rich, organic search phrasing, emerging slang, secondary hashtags, and specific breaking details that aren't captured by headlines alone.
    - **Context Budget**: Only plain tweet text is kept (strip user IDs, metrics, emojis). ~50 tokens per tweet × 40 tweets = ~2,000 tokens total.
 
-### B. Specialized Defense & Military News Sources
-3. **Defense News (`https://www.defensenews.com/`)**: Main landing page for breaking defense procurement, armed forces modernization, and international military posture.
-4. **Breaking Defense (`https://breakingdefense.com/`)**: Main landing page for cutting-edge weapons systems, aerospace, intelligence, and defense strategy.
+### B. Primary National Security & Regional News Sources (Pakistan & Region)
+3. **Dawn News (`https://www.dawn.com/`)**: Leading English-language paper for Pakistani military, defense posture, diplomacy, and global affairs.
+4. **The Express Tribune (`https://tribune.com.pk/`)**: In-depth coverage of regional security, bilateral pacts, and international geopolitics.
 
-### C. Major International Wire Services
-5. **Reuters (`https://www.reuters.com/world/` or main page)**: Fast, neutral international wire reporting on global crises, conflicts, and diplomatic talks.
-6. **AP News (`https://apnews.com/world-news` or main page)**: Broad international wire coverage of foreign policy and cross-border developments.
+### C. Specialized Defense & Military News Sources
+5. **Defense News (`https://www.defensenews.com/`)**: Breaking defense procurement, armed forces modernization, and international military posture.
+6. **Breaking Defense (`https://breakingdefense.com/`)**: Cutting-edge weapons systems, aerospace, intelligence, and defense strategy.
 
-### D. Strategic & Geopolitical Analysis
-7. **Foreign Affairs (`https://www.foreignaffairs.com/topics/defense-military`)**: High-level strategic foreign policy themes, grand strategy, defense treaties, and sanction regimes.
+### D. Strategic & Geopolitical Analysis (Foreign Affairs)
+7. **Foreign Affairs Defense & Military (`https://www.foreignaffairs.com/topics/defense-military`)**
+8. **Foreign Affairs Nuclear Proliferation (`https://www.foreignaffairs.com/topics/nuclear-weapons-proliferation`)**
+9. **Foreign Affairs War & Strategy (`https://www.foreignaffairs.com/topics/war-military-strategy`)**
+
+### E. Major International Wire Services
+10. **BBC World News Wire (`https://feeds.bbci.co.uk/news/world/rss.xml`)**: Fast breaking reporting on global crises and international diplomacy.
 
 ---
 

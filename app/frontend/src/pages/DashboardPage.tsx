@@ -3,12 +3,7 @@ import {
   Globe,
   Flame,
   MessageSquare,
-  Tags,
-  Play,
-  ArrowRight,
-  Clock,
-  CheckCircle2,
-  AlertCircle
+  Tags
 } from "lucide-react";
 
 interface DashboardPageProps {
@@ -28,7 +23,11 @@ export function DashboardPage(props: DashboardPageProps) {
 
   // Count tweets extracted across all trends
   let totalTweetsCount = 0;
-  if (props.rawSourcesData && props.rawSourcesData.x_native_explore && props.rawSourcesData.x_native_explore.sample_tweets_by_trend) {
+  if (
+    props.rawSourcesData &&
+    props.rawSourcesData.x_native_explore &&
+    props.rawSourcesData.x_native_explore.sample_tweets_by_trend
+  ) {
     const sampleTweetsMap = props.rawSourcesData.x_native_explore.sample_tweets_by_trend;
     for (const trendKey in sampleTweetsMap) {
       if (Object.prototype.hasOwnProperty.call(sampleTweetsMap, trendKey)) {
@@ -44,192 +43,107 @@ export function DashboardPage(props: DashboardPageProps) {
     totalKeywordsTopicsCount = props.keywordsData.topics.length;
   }
 
-  // Render recent runs table rows using a traditional for loop
-  const renderedRecentRunRows = [];
-  const maximumRunsToDisplay = Math.min(props.recentRunsList.length, 5);
-
-  for (let runIndex = 0; runIndex < maximumRunsToDisplay; runIndex++) {
-    const runItem = props.recentRunsList[runIndex];
-    const isSuccess = runItem.status === "completed";
-
-    renderedRecentRunRows.push(
-      <tr key={runItem.id} className="border-b border-zinc-800/60 hover:bg-zinc-900/40 text-xs">
-        <td className="py-2.5 px-3 font-mono text-zinc-400">#{runItem.id}</td>
-        <td className="py-2.5 px-3 font-medium text-zinc-200">{runItem.country_name}</td>
-        <td className="py-2.5 px-3">
-          <span
-            className={
-              "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium " +
-              (isSuccess
-                ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800/40"
-                : "bg-red-950/60 text-red-400 border border-red-800/40")
-            }
-          >
-            {isSuccess ? (
-              <CheckCircle2 className="w-3 h-3" />
-            ) : (
-              <AlertCircle className="w-3 h-3" />
-            )}
-            {runItem.status}
-          </span>
-        </td>
-        <td className="py-2.5 px-3 text-zinc-400 font-mono text-[11px]">
-          {runItem.started_at ? runItem.started_at.replace("T", " ").slice(0, 19) : "—"}
-        </td>
-      </tr>
-    );
-  }
-
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-zinc-800/80">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-zinc-100">
-            Intelligence Overview
-          </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
-            Autonomous OSINT collection and deep topic keyword synthesis.
-          </p>
-        </div>
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={function () {
-              props.onNavigateTab("pipeline");
-            }}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition-all"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            <span>Launch Pipeline</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="p-4 rounded-xl bg-card border border-border/50 hover:border-border/80 transition-all duration-200 flex items-center justify-between shadow-sm">
+    <div className="space-y-10 max-w-6xl py-2">
+      {/* 4 Prominent Stat Displays (Icon first on left, bigger icons, bigger stats, no border outline) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 select-none">
+        {/* Active Sources */}
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-card/40 hover:bg-card/70 transition-all">
+          <div className="w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0 shadow-inner">
+            <Globe className="w-8 h-8" strokeWidth={1.75} />
+          </div>
           <div>
-            <span className="text-xs font-medium text-muted-foreground">Active Sources</span>
-            <div className="text-2xl font-bold text-foreground mt-1">{props.activeSourcesCount}</div>
-            <span className="text-[10px] text-muted-foreground/70">News & RSS feeds</span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-            <Globe className="w-5 h-5" strokeWidth={1.75} />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl bg-card border border-border/50 hover:border-border/80 transition-all duration-200 flex items-center justify-between shadow-sm">
-          <div>
-            <span className="text-xs font-medium text-muted-foreground">Trends Ingested</span>
-            <div className="text-2xl font-bold text-foreground mt-1">{totalTrendsCount}</div>
-            <span className="text-[10px] text-muted-foreground/70">trends24 & X.com</span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
-            <Flame className="w-5 h-5" strokeWidth={1.75} />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl bg-card border border-border/50 hover:border-border/80 transition-all duration-200 flex items-center justify-between shadow-sm">
-          <div>
-            <span className="text-xs font-medium text-muted-foreground">Tweets Mined</span>
-            <div className="text-2xl font-bold text-foreground mt-1">{totalTweetsCount}</div>
-            <span className="text-[10px] text-muted-foreground/70">Clean timeline posts</span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
-            <MessageSquare className="w-5 h-5" strokeWidth={1.75} />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl bg-card border border-border/50 hover:border-border/80 transition-all duration-200 flex items-center justify-between shadow-sm">
-          <div>
-            <span className="text-xs font-medium text-muted-foreground">Synthesized Topics</span>
-            <div className="text-2xl font-bold text-foreground mt-1">{totalKeywordsTopicsCount}</div>
-            <span className="text-[10px] text-muted-foreground/70">20+ terms per topic</span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-            <Tags className="w-5 h-5" strokeWidth={1.75} />
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Access Tiles */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-        <div
-          onClick={function () {
-            props.onNavigateTab("trends");
-          }}
-          className="p-4 rounded-lg bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 cursor-pointer transition-all flex flex-col justify-between group"
-        >
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-200">Mined Tweets</span>
-              <ArrowRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
+            <div className="text-4xl font-extrabold text-foreground tracking-tight">
+              {props.activeSourcesCount}
             </div>
-            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
-              Browse extracted real tweets with authors, timestamps, and hashtags.
-            </p>
+            <div className="text-sm font-semibold text-foreground/90 mt-0.5">
+              Active Sources
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              News & RSS feeds
+            </div>
           </div>
-          <div className="mt-3 text-[11px] text-blue-400 font-medium">View Tweets &rarr;</div>
         </div>
 
-        <div
-          onClick={function () {
-            props.onNavigateTab("keywords");
-          }}
-          className="p-4 rounded-lg bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 cursor-pointer transition-all flex flex-col justify-between group"
-        >
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-200">Synthesized Keywords</span>
-              <ArrowRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
-            </div>
-            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
-              Interactively edit topic chips, add terms, and export to CSV or JSON.
-            </p>
+        {/* Trends Ingested */}
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-card/40 hover:bg-card/70 transition-all">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0 shadow-inner">
+            <Flame className="w-8 h-8" strokeWidth={1.75} />
           </div>
-          <div className="mt-3 text-[11px] text-blue-400 font-medium">View Keywords &rarr;</div>
+          <div>
+            <div className="text-4xl font-extrabold text-foreground tracking-tight">
+              {totalTrendsCount}
+            </div>
+            <div className="text-sm font-semibold text-foreground/90 mt-0.5">
+              Trends Ingested
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              trends24 & X.com
+            </div>
+          </div>
+        </div>
+
+        {/* Tweets Mined */}
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-card/40 hover:bg-card/70 transition-all">
+          <div className="w-16 h-16 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0 shadow-inner">
+            <MessageSquare className="w-8 h-8" strokeWidth={1.75} />
+          </div>
+          <div>
+            <div className="text-4xl font-extrabold text-foreground tracking-tight">
+              {totalTweetsCount}
+            </div>
+            <div className="text-sm font-semibold text-foreground/90 mt-0.5">
+              Tweets Mined
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              Clean timeline posts
+            </div>
+          </div>
+        </div>
+
+        {/* Synthesized Topics */}
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-card/40 hover:bg-card/70 transition-all">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 shadow-inner">
+            <Tags className="w-8 h-8" strokeWidth={1.75} />
+          </div>
+          <div>
+            <div className="text-4xl font-extrabold text-foreground tracking-tight">
+              {totalKeywordsTopicsCount}
+            </div>
+            <div className="text-sm font-semibold text-foreground/90 mt-0.5">
+              Synthesized Topics
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              20+ terms per topic
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Recent Pipeline Executions Table */}
-      <div className="rounded-xl bg-card border border-border/50 shadow-sm overflow-hidden">
-        <div className="p-3.5 border-b border-border/50 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-xs font-semibold text-foreground">Recent Pipeline Executions</h3>
-          </div>
+      {/* Side-by-side Big Action Buttons */}
+      <div className="pt-2">
+        <div className="flex flex-wrap items-center gap-5">
           <button
+            className="fancy-action-btn"
             onClick={function () {
-              props.onNavigateTab("history");
+              props.onNavigateTab("tweets");
             }}
-            className="text-[11px] text-primary hover:text-primary/80 font-medium"
           >
-            View all runs →
+            <span className="transition"></span>
+            <span className="gradient"></span>
+            <span className="label">View Tweets</span>
           </button>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border/50 bg-muted/20 text-[11px] font-semibold text-muted-foreground">
-                <th className="py-2.5 px-3">Run ID</th>
-                <th className="py-2.5 px-3">Country</th>
-                <th className="py-2.5 px-3">Status</th>
-                <th className="py-2.5 px-3">Started At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {renderedRecentRunRows.length > 0 ? (
-                renderedRecentRunRows
-              ) : (
-                <tr>
-                  <td colSpan={4} className="py-6 text-center text-xs text-muted-foreground">
-                    No pipeline runs recorded in SQLite yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <button
+            className="fancy-action-btn"
+            onClick={function () {
+              props.onNavigateTab("keywords");
+            }}
+          >
+            <span className="transition"></span>
+            <span className="gradient"></span>
+            <span className="label">View Keywords</span>
+          </button>
         </div>
       </div>
     </div>

@@ -655,6 +655,8 @@ export default function App() {
               pipelineProgressPercentage={pipelineProgressPercentage}
               onStartPipeline={handleStartPipeline}
               onCancelPipeline={handleCancelPipeline}
+              recentRunsList={recentRunsList}
+              onInspectRun={handleSelectHistoricalRun}
             />
           )}
 

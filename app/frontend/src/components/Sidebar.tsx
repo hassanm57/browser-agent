@@ -9,7 +9,8 @@ import {
   Globe,
   History,
   Settings,
-  Terminal
+  Terminal,
+  PanelLeftClose
 } from "lucide-react";
 
 interface SidebarProps {
@@ -17,102 +18,150 @@ interface SidebarProps {
   onSelectTab: (selectedTab: NavigationTabType) => void;
   isLogPanelOpen: boolean;
   onToggleLogPanel: () => void;
+  isOpen: boolean;
+  onToggleSidebar: () => void;
+  activeSourcesCount: number;
 }
 
 export function Sidebar(props: SidebarProps) {
-  // Define our navigation items with labels and icons
-  const navigationItemsList = [
-    { id: "dashboard" as NavigationTabType, label: "Dashboard", icon: LayoutDashboard },
-    { id: "pipeline" as NavigationTabType, label: "Run Pipeline", icon: PlayCircle },
-    { id: "trends" as NavigationTabType, label: "Trending Topics", icon: Flame },
-    { id: "headlines" as NavigationTabType, label: "News Headlines", icon: Newspaper },
-    { id: "tweets" as NavigationTabType, label: "Extracted Tweets", icon: MessageSquare },
-    { id: "keywords" as NavigationTabType, label: "Generated Keywords", icon: Tags },
-    { id: "sources" as NavigationTabType, label: "Intel Sources", icon: Globe },
-    { id: "history" as NavigationTabType, label: "Run History", icon: History },
+  // Navigation groups inspired by premium Linear/Vercel design
+  const navigationGroups = [
+    {
+      heading: "Overview",
+      items: [
+        { id: "dashboard" as NavigationTabType, label: "Dashboard", icon: LayoutDashboard },
+        { id: "pipeline" as NavigationTabType, label: "Run Pipeline", icon: PlayCircle },
+      ]
+    },
+    {
+      heading: "Intelligence",
+      items: [
+        { id: "trends" as NavigationTabType, label: "Trending Topics", icon: Flame },
+        { id: "headlines" as NavigationTabType, label: "News Headlines", icon: Newspaper },
+        { id: "tweets" as NavigationTabType, label: "Extracted Tweets", icon: MessageSquare },
+        { id: "keywords" as NavigationTabType, label: "Keywords", icon: Tags },
+      ]
+    },
+    {
+      heading: "System",
+      items: [
+        { 
+          id: "sources" as NavigationTabType, 
+          label: "Sources", 
+          icon: Globe,
+          badge: props.activeSourcesCount > 0 ? String(props.activeSourcesCount) : undefined
+        },
+        { id: "history" as NavigationTabType, label: "History", icon: History },
+        { id: "settings" as NavigationTabType, label: "Settings", icon: Settings },
+      ]
+    }
   ];
 
-  // We build the navigation elements array using a traditional for loop
-  const renderedNavigationButtons = [];
-  for (let itemIndex = 0; itemIndex < navigationItemsList.length; itemIndex++) {
-    const currentItem = navigationItemsList[itemIndex];
-    const isSelected = props.currentActiveTab === currentItem.id;
-    const IconComponent = currentItem.icon;
+  // Render navigation elements using a traditional for loop (avoiding functional .map())
+  const renderedNavGroups = [];
+  for (let groupIndex = 0; groupIndex < navigationGroups.length; groupIndex++) {
+    const currentGroup = navigationGroups[groupIndex];
+    const groupItems = currentGroup.items;
 
-    renderedNavigationButtons.push(
-      <button
-        key={currentItem.id}
-        onClick={function () {
-          props.onSelectTab(currentItem.id);
-        }}
-        className={
-          "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-xs font-medium transition-colors text-left " +
-          (isSelected
-            ? "bg-zinc-800/90 text-white font-semibold border-l-2 border-accentBlue pl-2.5"
-            : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40")
-        }
-      >
-        <IconComponent className={"w-4 h-4 " + (isSelected ? "text-accentBlue" : "text-zinc-400")} />
-        <span>{currentItem.label}</span>
-      </button>
-    );
-  }
+    const renderedItemsInGroup = [];
+    for (let itemIndex = 0; itemIndex < groupItems.length; itemIndex++) {
+      const navItem = groupItems[itemIndex];
+      const isSelected = props.currentActiveTab === navItem.id;
+      const IconComponent = navItem.icon;
 
-  const isSettingsSelected = props.currentActiveTab === "settings";
-
-  return (
-    <aside className="w-56 bg-zinc-950 border-r border-zinc-800/80 flex flex-col justify-between h-screen select-none">
-      {/* Top Header / Brand */}
-      <div>
-        <div className="p-4 border-b border-zinc-800/80 flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-md bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow">
-            BA
-          </div>
-          <div>
-            <h1 className="text-sm font-semibold text-zinc-100 tracking-tight leading-none">
-              Browser Agent
-            </h1>
-            <span className="text-[10px] text-zinc-500 font-mono">v1.0 • vLLM + Qwen3</span>
-          </div>
-        </div>
-
-        {/* Primary Navigation List */}
-        <nav className="p-2.5 space-y-1">
-          {renderedNavigationButtons}
-        </nav>
-      </div>
-
-      {/* Bottom Footer Actions: Live Log Toggle & Settings */}
-      <div className="p-2.5 border-t border-zinc-800/80 space-y-1">
+      renderedItemsInGroup.push(
         <button
-          onClick={props.onToggleLogPanel}
+          key={navItem.id}
+          onClick={function () {
+            props.onSelectTab(navItem.id);
+          }}
           className={
-            "w-full flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium transition-colors " +
-            (props.isLogPanelOpen
-              ? "bg-zinc-800 text-blue-400 font-semibold"
-              : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40")
+            "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 select-none group text-left " +
+            (isSelected
+              ? "bg-white/10 text-white font-medium shadow-sm"
+              : "text-zinc-400 hover:text-zinc-100 hover:bg-white/5")
           }
         >
           <div className="flex items-center gap-2.5">
-            <Terminal className="w-4 h-4 text-blue-400" />
-            <span>Live Logs</span>
+            <IconComponent
+              className={
+                "w-4 h-4 transition-colors duration-200 " +
+                (isSelected ? "text-blue-400" : "text-zinc-400 group-hover:text-zinc-200")
+              }
+              strokeWidth={1.75}
+            />
+            <span className="tracking-tight">{navItem.label}</span>
           </div>
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        </button>
 
+          {navItem.badge && (
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-500/10 text-blue-400 font-semibold">
+              {navItem.badge}
+            </span>
+          )}
+        </button>
+      );
+    }
+
+    renderedNavGroups.push(
+      <div key={currentGroup.heading} className="flex flex-col gap-0.5">
+        <span className="px-2.5 mb-1 text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">
+          {currentGroup.heading}
+        </span>
+        <div className="space-y-0.5">{renderedItemsInGroup}</div>
+      </div>
+    );
+  }
+
+  return (
+    <aside
+      className={
+        "h-screen shrink-0 overflow-hidden bg-zinc-950/80 backdrop-blur-md border-r border-zinc-850 flex flex-col justify-between select-none transition-all duration-300 ease-in-out " +
+        (props.isOpen ? "w-60 opacity-100" : "w-0 opacity-0 pointer-events-none border-r-0")
+      }
+    >
+      {/* Top Header / Clean Brand Indicator */}
+      <div>
+        <div className="h-14 px-3.5 border-b border-zinc-850/80 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-sm">
+              B
+            </div>
+            <span className="text-sm font-semibold text-zinc-100 tracking-tight">
+              Browser Agent
+            </span>
+          </div>
+
+          <button
+            onClick={props.onToggleSidebar}
+            title="Collapse Sidebar"
+            className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors"
+          >
+            <PanelLeftClose className="w-4 h-4" strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Grouped Nav Items */}
+        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-125px)]">
+          {renderedNavGroups}
+        </nav>
+      </div>
+
+      {/* Bottom Live Logs Toggle */}
+      <div className="p-3 border-t border-zinc-850/80">
         <button
-          onClick={function () {
-            props.onSelectTab("settings");
-          }}
+          onClick={props.onToggleLogPanel}
           className={
-            "w-full flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors text-left " +
-            (isSettingsSelected
-              ? "bg-zinc-800/90 text-white font-semibold border-l-2 border-accentBlue pl-2.5"
-              : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40")
+            "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 " +
+            (props.isLogPanelOpen
+              ? "bg-blue-500/15 text-blue-400 font-medium"
+              : "text-zinc-400 hover:text-zinc-100 hover:bg-white/5")
           }
         >
-          <Settings className={"w-4 h-4 " + (isSettingsSelected ? "text-accentBlue" : "text-zinc-400")} />
-          <span>Settings</span>
+          <div className="flex items-center gap-2.5">
+            <Terminal className="w-4 h-4 text-blue-400" strokeWidth={1.75} />
+            <span className="tracking-tight">Live Telemetry</span>
+          </div>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         </button>
       </div>
     </aside>

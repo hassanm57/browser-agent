@@ -107,47 +107,47 @@ export function DashboardPage(props: DashboardPageProps) {
 
       {/* 4 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="p-4 rounded-lg bg-zinc-900/60 border border-zinc-800/80 flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-zinc-900/40 hover:bg-zinc-900/70 border border-zinc-850 transition-all duration-200 flex items-center justify-between shadow-xs">
           <div>
             <span className="text-xs font-medium text-zinc-400">Active Sources</span>
             <div className="text-2xl font-bold text-zinc-100 mt-1">{props.activeSourcesCount}</div>
-            <span className="text-[10px] text-zinc-500">News & RSS feeds enabled</span>
+            <span className="text-[10px] text-zinc-500">News & RSS feeds</span>
           </div>
-          <div className="w-10 h-10 rounded-md bg-blue-950/40 border border-blue-900/50 flex items-center justify-center text-blue-400">
-            <Globe className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+            <Globe className="w-5 h-5" strokeWidth={1.75} />
           </div>
         </div>
 
-        <div className="p-4 rounded-lg bg-zinc-900/60 border border-zinc-800/80 flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-zinc-900/40 hover:bg-zinc-900/70 border border-zinc-850 transition-all duration-200 flex items-center justify-between shadow-xs">
           <div>
             <span className="text-xs font-medium text-zinc-400">Trends Ingested</span>
             <div className="text-2xl font-bold text-zinc-100 mt-1">{totalTrendsCount}</div>
-            <span className="text-[10px] text-zinc-500">From trends24 & X.com</span>
+            <span className="text-[10px] text-zinc-500">trends24 & X.com</span>
           </div>
-          <div className="w-10 h-10 rounded-md bg-amber-950/40 border border-amber-900/50 flex items-center justify-center text-amber-400">
-            <Flame className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+            <Flame className="w-5 h-5" strokeWidth={1.75} />
           </div>
         </div>
 
-        <div className="p-4 rounded-lg bg-zinc-900/60 border border-zinc-800/80 flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-zinc-900/40 hover:bg-zinc-900/70 border border-zinc-850 transition-all duration-200 flex items-center justify-between shadow-xs">
           <div>
             <span className="text-xs font-medium text-zinc-400">Tweets Mined</span>
             <div className="text-2xl font-bold text-zinc-100 mt-1">{totalTweetsCount}</div>
-            <span className="text-[10px] text-zinc-500">Filtered & noise-free</span>
+            <span className="text-[10px] text-zinc-500">Clean timeline posts</span>
           </div>
-          <div className="w-10 h-10 rounded-md bg-purple-950/40 border border-purple-900/50 flex items-center justify-center text-purple-400">
-            <MessageSquare className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+            <MessageSquare className="w-5 h-5" strokeWidth={1.75} />
           </div>
         </div>
 
-        <div className="p-4 rounded-lg bg-zinc-900/60 border border-zinc-800/80 flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-zinc-900/40 hover:bg-zinc-900/70 border border-zinc-850 transition-all duration-200 flex items-center justify-between shadow-xs">
           <div>
             <span className="text-xs font-medium text-zinc-400">Synthesized Topics</span>
             <div className="text-2xl font-bold text-zinc-100 mt-1">{totalKeywordsTopicsCount}</div>
-            <span className="text-[10px] text-zinc-500">20+ keywords per topic</span>
+            <span className="text-[10px] text-zinc-500">20+ terms per topic</span>
           </div>
-          <div className="w-10 h-10 rounded-md bg-emerald-950/40 border border-emerald-900/50 flex items-center justify-center text-emerald-400">
-            <Tags className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <Tags className="w-5 h-5" strokeWidth={1.75} />
           </div>
         </div>
       </div>

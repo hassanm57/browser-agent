@@ -7,6 +7,9 @@ export default {
   darkMode: "class",
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Nanami Medium"', 'Nanami', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+      },
       colors: {
         background: "#09090b",
         surface: "#121215",

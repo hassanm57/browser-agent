@@ -75,13 +75,13 @@ export function SourcesPage(props: SourcesPageProps) {
         <div className="flex items-center gap-3 overflow-hidden">
           <div
             className={
-              "w-8 h-8 rounded-md flex items-center justify-center shrink-0 " +
+              "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors " +
               (isRss
-                ? "bg-amber-950/40 text-amber-400 border border-amber-900/50"
-                : "bg-blue-950/40 text-blue-400 border border-blue-900/50")
+                ? "bg-amber-500/10 text-amber-400"
+                : "bg-blue-500/10 text-blue-400")
             }
           >
-            {isRss ? <Rss className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
+            {isRss ? <Rss className="w-4 h-4" strokeWidth={1.75} /> : <Globe className="w-4 h-4" strokeWidth={1.75} />}
           </div>
 
           <div className="overflow-hidden">
@@ -89,10 +89,10 @@ export function SourcesPage(props: SourcesPageProps) {
               <span className="text-xs font-semibold text-zinc-100">{sourceItem.name}</span>
               <span
                 className={
-                  "text-[9px] px-1.5 py-0.2 rounded uppercase font-mono font-medium border " +
+                  "text-[9px] px-1.5 py-0.2 rounded uppercase font-mono font-medium " +
                   (isRss
-                    ? "bg-amber-950/30 text-amber-300 border-amber-800/40"
-                    : "bg-blue-950/30 text-blue-300 border-blue-800/40")
+                    ? "bg-amber-500/10 text-amber-300"
+                    : "bg-blue-500/10 text-blue-300")
                 }
               >
                 {sourceItem.type}

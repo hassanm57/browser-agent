@@ -29,13 +29,13 @@ export function PipelinePage(props: PipelinePageProps) {
       }
     }
 
-    let tierBadgeClass = "bg-zinc-800 text-zinc-400 border-zinc-700";
+    let tierBadgeClass = "bg-zinc-800/60 text-zinc-400";
     if (country.is_home) {
-      tierBadgeClass = "bg-emerald-950/60 text-emerald-300 border-emerald-800/60";
+      tierBadgeClass = "bg-emerald-500/10 text-emerald-400 font-medium";
     } else if (country.tier === "UN P5") {
-      tierBadgeClass = "bg-blue-950/60 text-blue-300 border-blue-800/60";
+      tierBadgeClass = "bg-blue-500/10 text-blue-400 font-medium";
     } else if (country.tier === "strategic") {
-      tierBadgeClass = "bg-purple-950/60 text-purple-300 border-purple-800/60";
+      tierBadgeClass = "bg-purple-500/10 text-purple-400 font-medium";
     }
 
     renderedCountryCards.push(
@@ -47,18 +47,18 @@ export function PipelinePage(props: PipelinePageProps) {
           }
         }}
         className={
-          "p-3.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between select-none " +
+          "p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between select-none " +
           (isSelected
-            ? "bg-blue-950/20 border-blue-600/70 shadow-sm"
-            : "bg-zinc-900/40 border-zinc-800/80 hover:bg-zinc-900/80 opacity-70")
+            ? "bg-blue-500/10 border-blue-500/40 shadow-xs text-zinc-100"
+            : "bg-zinc-900/30 border-zinc-850 hover:bg-zinc-900/60 hover:border-zinc-800 text-zinc-400")
         }
       >
         <div className="flex items-center gap-3">
           <div className="text-zinc-400">
             {isSelected ? (
-              <CheckSquare className="w-4 h-4 text-blue-400" />
+              <CheckSquare className="w-4 h-4 text-blue-400" strokeWidth={1.75} />
             ) : (
-              <EmptySquare className="w-4 h-4 text-zinc-600" />
+              <EmptySquare className="w-4 h-4 text-zinc-600" strokeWidth={1.75} />
             )}
           </div>
           <div>
@@ -69,7 +69,7 @@ export function PipelinePage(props: PipelinePageProps) {
 
         <span
           className={
-            "text-[9px] font-semibold px-2 py-0.5 rounded-full border tracking-wide uppercase " +
+            "text-[9px] font-semibold px-2 py-0.5 rounded-full tracking-wide uppercase " +
             tierBadgeClass
           }
         >

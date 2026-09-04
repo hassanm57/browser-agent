@@ -464,7 +464,9 @@ def filter_trends_relevant_to_news(all_trends_list, news_sources_dictionary):
 
 def derive_web_homepage_url(source_url):
     # Map RSS feed URLs to their actual website homepages
-    if "breakingdefense.com" in source_url:
+    if "dawn.com" in source_url:
+        return "https://www.dawn.com/"
+    elif "breakingdefense.com" in source_url:
         return "https://breakingdefense.com/"
     elif "defensenews.com" in source_url:
         return "https://www.defensenews.com/"
@@ -512,8 +514,9 @@ async def scrape_source_via_browser_fallback(target_web_url, source_name):
 
 
 def clean_dom_tags_and_markdown(text_string):
-    # Remove [123]<div /> and similar DOM annotations injected by browser-use state serializer
-    cleaned_string = re.sub(r'\[\d+\]<[^>]*>', '', text_string)
+    # Remove [123], <tag>, </tag> and DOM annotations injected by browser-use state serializer
+    cleaned_string = re.sub(r'\[\d+\]', '', text_string)
+    cleaned_string = re.sub(r'<[^>]*>', '', cleaned_string)
     cleaned_string = re.sub(r'\|\w+\([^)]*\)\|', '', cleaned_string)
     cleaned_string = re.sub(r'\*\s*', '', cleaned_string)
     return ' '.join(cleaned_string.split())
@@ -521,7 +524,7 @@ def clean_dom_tags_and_markdown(text_string):
 
 def extract_x_explore_trends(raw_page_state_text):
     # Parses the DOM text from https://x.com/explore/tabs/trending
-    # Extracts all active trending hashtags and named topics
+    # Extracts all active trending hashtags and named topics (e.g. MiG-21, Security, TTP and BLA, Abhinandan)
     raw_lines_list = raw_page_state_text.split("\n")
     extracted_trend_names_list = []
 
@@ -532,7 +535,8 @@ def extract_x_explore_trends(raw_page_state_text):
     ]
 
     for line_index in range(len(raw_lines_list)):
-        current_line = raw_lines_list[line_index].strip()
+        current_raw_line = raw_lines_list[line_index].strip()
+        current_line = clean_dom_tags_and_markdown(current_raw_line)
 
         # Case 1: Trending hashtag directly starting with #
         if current_line.startswith("#") and len(current_line) > 2:
@@ -544,10 +548,16 @@ def extract_x_explore_trends(raw_page_state_text):
         # Case 2: Trending topic line preceded by a category or 'Trending' header
         # e.g., 'Trending in Pakistan', 'Only on X · Trending', 'Politics · Trending', 'Business & finance · Trending'
         if "trending" in current_line.lower():
-            # Look ahead for the actual trend name (skipping bullets or rank numbers)
-            for lookahead_index in range(line_index + 1, min(line_index + 5, len(raw_lines_list))):
-                candidate_line = raw_lines_list[lookahead_index].strip()
+            # Look ahead for the actual trend name (skipping bullets, rank numbers, or consecutive headers)
+            for lookahead_index in range(line_index + 1, min(line_index + 6, len(raw_lines_list))):
+                candidate_raw_line = raw_lines_list[lookahead_index].strip()
+                candidate_line = clean_dom_tags_and_markdown(candidate_raw_line)
+
                 if candidate_line in ["·", "•", ""] or candidate_line.isdigit():
+                    continue
+
+                if "trending" in candidate_line.lower():
+                    # Consecutive header line, continue looking forward
                     continue
 
                 line_has_noise = False
@@ -559,13 +569,17 @@ def extract_x_explore_trends(raw_page_state_text):
                 if line_has_noise:
                     continue
 
+                # Skip post count lines e.g. "24.5K posts"
+                if candidate_line.lower().endswith("posts") or candidate_line.lower().endswith("post"):
+                    continue
+
                 if candidate_line.startswith("#"):
                     clean_tag = candidate_line.split()[0].strip()
                     if clean_tag not in extracted_trend_names_list:
                         extracted_trend_names_list.append(clean_tag)
                     break
                 else:
-                    if len(candidate_line) >= 2 and not candidate_line.endswith("posts"):
+                    if len(candidate_line) >= 2:
                         if candidate_line not in extracted_trend_names_list:
                             extracted_trend_names_list.append(candidate_line)
                     break
@@ -880,54 +894,54 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         print("Sample trends: " + ", ".join(extracted_trend_names_list[:6]))
         print("")
 
-        # Step A: Identify relevant defense & foreign policy trending hashtags directly on X.com
-        relevant_x_hashtags_to_mine = []
+        # Step A: Identify relevant defense & foreign policy trending topics and hashtags directly on X.com
+        relevant_x_trends_to_mine = []
         for candidate_trend in extracted_trend_names_list:
             if is_strategic_or_defense_trend(candidate_trend):
-                if candidate_trend not in relevant_x_hashtags_to_mine:
-                    relevant_x_hashtags_to_mine.append(candidate_trend)
-                    if len(relevant_x_hashtags_to_mine) >= 8:
+                if candidate_trend not in relevant_x_trends_to_mine:
+                    relevant_x_trends_to_mine.append(candidate_trend)
+                    if len(relevant_x_trends_to_mine) >= 8:
                         break
 
-        # Fallback to relevant Trends24 defense topics if X explore had few explicit defense hashtags right now
-        if len(relevant_x_hashtags_to_mine) < 3 and trends24_topics_list is not None:
+        # Fallback to relevant Trends24 defense topics if X explore had few explicit defense topics/hashtags right now
+        if len(relevant_x_trends_to_mine) < 3 and trends24_topics_list is not None:
             for trend24_item in trends24_topics_list:
                 if is_strategic_or_defense_trend(trend24_item):
-                    if trend24_item not in relevant_x_hashtags_to_mine:
-                        relevant_x_hashtags_to_mine.append(trend24_item)
-                        if len(relevant_x_hashtags_to_mine) >= 8:
+                    if trend24_item not in relevant_x_trends_to_mine:
+                        relevant_x_trends_to_mine.append(trend24_item)
+                        if len(relevant_x_trends_to_mine) >= 8:
                             break
 
-        if len(relevant_x_hashtags_to_mine) > 0:
-            preview_hashtags_str = ", ".join(relevant_x_hashtags_to_mine)
-            print(f"Identified {len(relevant_x_hashtags_to_mine)} relevant defense/foreign policy hashtags on X: {preview_hashtags_str}")
+        if len(relevant_x_trends_to_mine) > 0:
+            preview_trends_str = ", ".join(relevant_x_trends_to_mine)
+            print(f"Identified {len(relevant_x_trends_to_mine)} relevant defense/foreign policy topics & hashtags on X: {preview_trends_str}")
         else:
-            print("No explicit defense hashtags on X explore at this moment; proceeding to news Boolean queries.")
+            print("No explicit defense topics or hashtags on X explore at this moment; proceeding to news Boolean queries.")
 
-        # Step B: Mine fresh Top tweets from each relevant X trending hashtag (strictly in Top category)
-        for hashtag_index in range(len(relevant_x_hashtags_to_mine)):
-            current_hashtag = relevant_x_hashtags_to_mine[hashtag_index]
-            encoded_hashtag = urllib.parse.quote(current_hashtag)
+        # Step B: Mine fresh Top tweets from each relevant X trending topic and hashtag (strictly in Top category)
+        for trend_index in range(len(relevant_x_trends_to_mine)):
+            current_trend_topic = relevant_x_trends_to_mine[trend_index]
+            encoded_topic = urllib.parse.quote(current_trend_topic)
             # Default search stays on the TOP category (NOT &f=live) as instructed
-            hashtag_search_url = f"https://x.com/search?q={encoded_hashtag}"
+            trend_search_url = f"https://x.com/search?q={encoded_topic}"
 
-            print(f"Mining Top tweets for X trending hashtag [{hashtag_index + 1}/{len(relevant_x_hashtags_to_mine)}]: {current_hashtag}")
+            print(f"Mining Top tweets for X trending topic/hashtag [{trend_index + 1}/{len(relevant_x_trends_to_mine)}]: {current_trend_topic}")
             try:
-                await browser_instance.navigate_to(hashtag_search_url)
+                await browser_instance.navigate_to(trend_search_url)
                 await asyncio.sleep(4)
 
-                collected_tweets_for_hashtag = []
+                collected_tweets_for_trend = []
                 for scroll_round in range(12):
                     page_state_text = await browser_instance.get_state_as_text()
                     fresh_batch_tweets = extract_tweets_from_article_chunks(page_state_text)
 
                     for tweet_item in fresh_batch_tweets:
-                        if tweet_item not in collected_tweets_for_hashtag:
-                            collected_tweets_for_hashtag.append(tweet_item)
+                        if tweet_item not in collected_tweets_for_trend:
+                            collected_tweets_for_trend.append(tweet_item)
 
-                    print(f"      Hashtag '{current_hashtag}' scroll {scroll_round + 1}: {len(collected_tweets_for_hashtag)} fresh Top tweets collected so far...")
+                    print(f"      Trend '{current_trend_topic}' scroll {scroll_round + 1}: {len(collected_tweets_for_trend)} fresh Top tweets collected so far...")
 
-                    if len(collected_tweets_for_hashtag) >= 20:
+                    if len(collected_tweets_for_trend) >= 20:
                         break
 
                     try:
@@ -939,10 +953,10 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                     except Exception:
                         break
 
-                print(f"      -> Successfully extracted {len(collected_tweets_for_hashtag)} fresh Top tweets for hashtag: {current_hashtag}")
-                x_native_intel_dictionary["sample_tweets_by_trend"][current_hashtag] = collected_tweets_for_hashtag[:25]
-            except Exception as hashtag_error:
-                print(f"      Notice: Skipping hashtag due to error: {hashtag_error}")
+                print(f"      -> Successfully extracted {len(collected_tweets_for_trend)} fresh Top tweets for trend: {current_trend_topic}")
+                x_native_intel_dictionary["sample_tweets_by_trend"][current_trend_topic] = collected_tweets_for_trend[:25]
+            except Exception as trend_error:
+                print(f"      Notice: Skipping trend due to error: {trend_error}")
 
             await asyncio.sleep(2)
 

@@ -356,47 +356,47 @@ async def run_single_country_pipeline(
         sample_preview_str = ", ".join(extracted_trend_names_list[:6])
         await log_and_record("SUCCESS", f"Identified {len(extracted_trend_names_list)} total trends/news on X.com. Sample: {sample_preview_str}")
 
-        # Step 4A: Identify relevant defense & foreign policy trending hashtags directly on X.com
-        relevant_x_hashtags_to_mine: List[str] = []
+        # Step 4A: Identify relevant defense & foreign policy trending topics and hashtags directly on X.com
+        relevant_x_trends_to_mine: List[str] = []
         for candidate_trend in extracted_trend_names_list:
             if trends.is_strategic_or_defense_trend(candidate_trend):
-                if candidate_trend not in relevant_x_hashtags_to_mine:
-                    relevant_x_hashtags_to_mine.append(candidate_trend)
-                    if len(relevant_x_hashtags_to_mine) >= 8:
+                if candidate_trend not in relevant_x_trends_to_mine:
+                    relevant_x_trends_to_mine.append(candidate_trend)
+                    if len(relevant_x_trends_to_mine) >= 8:
                         break
 
-        # Fallback to relevant Trends24 defense topics if X explore had few explicit defense hashtags right now
-        if len(relevant_x_hashtags_to_mine) < 3:
+        # Fallback to relevant Trends24 defense topics if X explore had few explicit defense topics/hashtags right now
+        if len(relevant_x_trends_to_mine) < 3:
             for trend24_item in relevant_trends24_topics_list:
                 if trends.is_strategic_or_defense_trend(trend24_item):
-                    if trend24_item not in relevant_x_hashtags_to_mine:
-                        relevant_x_hashtags_to_mine.append(trend24_item)
-                        if len(relevant_x_hashtags_to_mine) >= 8:
+                    if trend24_item not in relevant_x_trends_to_mine:
+                        relevant_x_trends_to_mine.append(trend24_item)
+                        if len(relevant_x_trends_to_mine) >= 8:
                             break
 
-        if len(relevant_x_hashtags_to_mine) > 0:
-            preview_hashtags_str = ", ".join(relevant_x_hashtags_to_mine)
-            await log_and_record("SUCCESS", f"Identified {len(relevant_x_hashtags_to_mine)} relevant defense/foreign policy hashtags on X: {preview_hashtags_str}")
+        if len(relevant_x_trends_to_mine) > 0:
+            preview_trends_str = ", ".join(relevant_x_trends_to_mine)
+            await log_and_record("SUCCESS", f"Identified {len(relevant_x_trends_to_mine)} relevant defense/foreign policy topics & hashtags on X: {preview_trends_str}")
         else:
-            await log_and_record("INFO", "No explicit defense hashtags on X explore at this moment; proceeding to news Boolean queries.")
+            await log_and_record("INFO", "No explicit defense topics or hashtags on X explore at this moment; proceeding to news Boolean queries.")
 
-        # Step 4B: Mine fresh Top tweets from each relevant X trending hashtag (strictly staying in Top category)
-        for hashtag_index in range(len(relevant_x_hashtags_to_mine)):
+        # Step 4B: Mine fresh Top tweets from each relevant X trending topic and hashtag (strictly staying in Top category)
+        for trend_index in range(len(relevant_x_trends_to_mine)):
             if cancellation_event.is_set():
                 break
 
-            current_hashtag = relevant_x_hashtags_to_mine[hashtag_index]
-            encoded_hashtag = urllib.parse.quote(current_hashtag)
+            current_trend_topic = relevant_x_trends_to_mine[trend_index]
+            encoded_topic = urllib.parse.quote(current_trend_topic)
             # Default search stays on the TOP category (NOT &f=live) as instructed
-            hashtag_search_url = f"https://x.com/search?q={encoded_hashtag}"
+            trend_search_url = f"https://x.com/search?q={encoded_topic}"
 
-            await log_and_record("BROWSER", f"[X Trending {hashtag_index + 1}/{len(relevant_x_hashtags_to_mine)}] Mining Top tweets for: {current_hashtag}")
+            await log_and_record("BROWSER", f"[X Trend {trend_index + 1}/{len(relevant_x_trends_to_mine)}] Mining Top tweets for: {current_trend_topic}")
 
             try:
-                await browser_instance.navigate_to(hashtag_search_url)
+                await browser_instance.navigate_to(trend_search_url)
                 await asyncio.sleep(4)
 
-                collected_tweets_for_hashtag: List[str] = []
+                collected_tweets_for_trend: List[str] = []
 
                 for scroll_round in range(max_scroll_rounds):
                     if cancellation_event.is_set():
@@ -406,12 +406,12 @@ async def run_single_country_pipeline(
                     fresh_batch_tweets = trends.extract_tweets_from_article_chunks(page_state_text)
 
                     for tweet_text in fresh_batch_tweets:
-                        if tweet_text not in collected_tweets_for_hashtag:
-                            collected_tweets_for_hashtag.append(tweet_text)
+                        if tweet_text not in collected_tweets_for_trend:
+                            collected_tweets_for_trend.append(tweet_text)
 
-                    await log_and_record("SCROLL", f"  Hashtag '{current_hashtag}' scroll {scroll_round + 1}/{max_scroll_rounds}: {len(collected_tweets_for_hashtag)} fresh Top tweets collected")
+                    await log_and_record("SCROLL", f"  Trend '{current_trend_topic}' scroll {scroll_round + 1}/{max_scroll_rounds}: {len(collected_tweets_for_trend)} fresh Top tweets collected")
 
-                    if len(collected_tweets_for_hashtag) >= max_tweets_target:
+                    if len(collected_tweets_for_trend) >= max_tweets_target:
                         break
 
                     try:
@@ -423,10 +423,10 @@ async def run_single_country_pipeline(
                     except Exception:
                         break
 
-                await log_and_record("SUCCESS", f"Captured {len(collected_tweets_for_hashtag)} fresh Top tweets for X hashtag: {current_hashtag}")
-                x_native_intel_dictionary["sample_tweets_by_trend"][current_hashtag] = collected_tweets_for_hashtag[:25]
-            except Exception as hashtag_scrape_error:
-                await log_and_record("WARN", f"Notice: Error mining hashtag '{current_hashtag}': {str(hashtag_scrape_error)}")
+                await log_and_record("SUCCESS", f"Captured {len(collected_tweets_for_trend)} fresh Top tweets for X trend: {current_trend_topic}")
+                x_native_intel_dictionary["sample_tweets_by_trend"][current_trend_topic] = collected_tweets_for_trend[:25]
+            except Exception as trend_scrape_error:
+                await log_and_record("WARN", f"Notice: Error mining trend '{current_trend_topic}': {str(trend_scrape_error)}")
 
         # Step 4C: Derive and mine news-derived Boolean queries synthesized from Phase 3 (also using Top category)
         queries_to_mine_list: List[str] = []

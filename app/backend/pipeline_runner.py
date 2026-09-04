@@ -37,7 +37,7 @@ async def run_single_country_pipeline(
     total_countries_count: int,
     settings_dictionary: Dict[str, str],
     log_callback_function: Callable[[str, str], Any],
-    progress_callback_function: Callable[[str, int, int, str], Any],
+    progress_callback_function: Callable[[str, int, int, str, Optional[str]], Any],
     cancellation_event: asyncio.Event,
     collected_log_lines_list: List[str]
 ) -> Optional[Dict[str, Any]]:
@@ -60,7 +60,7 @@ async def run_single_country_pipeline(
         country_slug_name = target_country_name.strip().lower().replace(" ", "-")
 
     await log_and_record("STEP", f"Starting intelligence pipeline for target country: {target_country_name} (Slug: {country_slug_name})")
-    await progress_callback_function("init", 1, 6, f"Initializing pipeline for {target_country_name}...")
+    await progress_callback_function("init", 1, 6, f"Initializing pipeline for {target_country_name}...", target_country_name)
 
     # Check for user cancellation
     if cancellation_event.is_set():
@@ -70,7 +70,7 @@ async def run_single_country_pipeline(
 
     # 2. PHASE 1: trends24 scraping
     await log_and_record("STEP", f"[1/5] Fetching trending topics from trends24.in for {country_slug_name}...")
-    await progress_callback_function("trends24", 2, 6, f"Fetching trends24 topics for {target_country_name}...")
+    await progress_callback_function("trends24", 2, 6, f"Fetching trends24 topics for {target_country_name}...", target_country_name)
     
     trends24_topics_list = []
     try:
@@ -87,7 +87,7 @@ async def run_single_country_pipeline(
 
     # 3. PHASE 2: Ingest news headlines from configured sources
     await log_and_record("STEP", "[2/5] Ingesting headlines from configured news and RSS sources...")
-    await progress_callback_function("news_sources", 3, 6, "Ingesting regional & global news sources...")
+    await progress_callback_function("news_sources", 3, 6, f"Ingesting regional & global news sources for {target_country_name}...", target_country_name)
     
     configured_sources_list = trends.load_sources_configuration_file()
     news_sources_intel_dictionary: Dict[str, List[str]] = {}
@@ -154,7 +154,7 @@ async def run_single_country_pipeline(
 
     # 4. PHASE 3: Browser-use deep mining on X.com
     await log_and_record("STEP", "[3/5] Launching Chrome browser to mine X.com trends and genuine tweets...")
-    await progress_callback_function("x_mining", 4, 6, "Mining X.com timeline tweets with Chrome...")
+    await progress_callback_function("x_mining", 4, 6, f"Mining X.com timeline tweets for {target_country_name}...", target_country_name)
 
     # Read user configurable thresholds
     is_headless = settings_dictionary.get("headless_mode", "false") == "true"
@@ -295,7 +295,7 @@ async def run_single_country_pipeline(
 
     # 6. PHASE 5: Feed consolidated intel to Qwen3-14B LLM for keyword synthesis
     await log_and_record("STEP", "[4/5] Initiating LLM keyword synthesis using local vLLM...")
-    await progress_callback_function("llm_synthesis", 5, 6, "Synthesizing 20+ keywords per topic with Qwen3-14B...")
+    await progress_callback_function("llm_synthesis", 5, 6, f"Synthesizing 20+ keywords per topic with Qwen3-14B for {target_country_name}...", target_country_name)
 
     endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.12.121:8000/v1")
     model_name = settings_dictionary.get("llm_model_name", "qwen3-14b")
@@ -346,7 +346,7 @@ async def run_single_country_pipeline(
         full_log_output_string
     )
 
-    await progress_callback_function("done", 6, 6, f"Pipeline complete for {target_country_name}!")
+    await progress_callback_function("done", 6, 6, f"Pipeline complete for {target_country_name}!", target_country_name)
     await log_and_record("STEP", f"[5/5] Pipeline successfully completed for {target_country_name}!")
 
     return {
@@ -360,7 +360,7 @@ async def run_single_country_pipeline(
 async def run_multi_country_pipeline_orchestrator(
     selected_countries_list: List[str],
     log_callback_function: Callable[[str, str], Any],
-    progress_callback_function: Callable[[str, int, int, str], Any],
+    progress_callback_function: Callable[[str, int, int, str, Optional[str]], Any],
     status_callback_function: Callable[[str], Any],
     result_callback_function: Callable[[Dict[str, Any]], Any],
     cancellation_event: asyncio.Event

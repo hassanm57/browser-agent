@@ -24,7 +24,8 @@ from app.backend.database import (
     get_all_pipeline_runs,
     get_pipeline_run_details,
     delete_pipeline_run_by_id,
-    update_run_keywords_data
+    update_run_keywords_data,
+    mark_active_runs_cancelled
 )
 
 # Initialize the SQLite tables on startup
@@ -351,13 +352,20 @@ async def send_log_to_websockets(level_name: str, message_text: str):
         "message": message_text
     })
 
-async def send_progress_to_websockets(phase_name: str, current_step_number: int, total_steps_count: int, detail_text: str):
+async def send_progress_to_websockets(
+    phase_name: str,
+    current_step_number: int,
+    total_steps_count: int,
+    detail_text: str,
+    country_name: Optional[str] = None
+):
     await broadcast_websocket_message({
         "type": "progress",
         "phase": phase_name,
         "current_step": current_step_number,
         "total_steps": total_steps_count,
-        "detail": detail_text
+        "detail": detail_text,
+        "country": country_name
     })
 
 async def send_status_to_websockets(status_string: str):
@@ -393,9 +401,11 @@ async def trigger_pipeline_job(countries_list: List[str]):
                 cancellation_event=pipeline_cancellation_event
             )
         except asyncio.CancelledError:
+            mark_active_runs_cancelled("Cancelled by user")
             await send_log_to_websockets("WARN", "Pipeline task was successfully aborted.")
             await send_status_to_websockets("cancelled")
         except Exception as unhandled_error:
+            mark_active_runs_cancelled(f"Failed: {str(unhandled_error)}")
             await send_log_to_websockets("ERROR", f"Unhandled pipeline exception: {str(unhandled_error)}")
             await send_status_to_websockets("error")
         finally:
@@ -414,6 +424,7 @@ async def abort_pipeline_job():
         current_running_pipeline_task.cancel()
         current_running_pipeline_task = None
 
+    mark_active_runs_cancelled("Cancelled by user")
     await send_log_to_websockets("WARN", "Pipeline cancellation request processed.")
     await send_status_to_websockets("cancelled")
     return {"status": "cancelled"}

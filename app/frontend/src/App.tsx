@@ -95,6 +95,8 @@ export default function App() {
   >("idle");
   const [pipelineProgressPercentage, setPipelineProgressPercentage] = useState(0);
   const [currentPipelineStepMessage, setCurrentPipelineStepMessage] = useState("");
+  const [activePipelineCountry, setActivePipelineCountry] = useState<string | null>(null);
+  const [currentPipelinePhase, setCurrentPipelinePhase] = useState<string>("init");
   const [logsList, setLogsList] = useState<LogMessageItem[]>([]);
 
   // WebSocket reference
@@ -139,6 +141,12 @@ export default function App() {
               addLogMessage(data.level || "INFO", data.message, data.timestamp);
             } else if (data.type === "progress") {
               setCurrentPipelineStepMessage(data.detail || "");
+              if (data.phase) {
+                setCurrentPipelinePhase(data.phase);
+              }
+              if (data.country) {
+                setActivePipelineCountry(data.country);
+              }
               if (data.total_steps && data.total_steps > 0) {
                 const calculatedPct = Math.round((data.current_step / data.total_steps) * 100);
                 setPipelineProgressPercentage(calculatedPct);
@@ -147,7 +155,11 @@ export default function App() {
               setPipelineStatus(data.status);
               if (data.status === "completed") {
                 setPipelineProgressPercentage(100);
+                setActivePipelineCountry(null);
+                setCurrentPipelinePhase("done");
                 fetchLatestData();
+              } else if (data.status === "cancelled" || data.status === "error") {
+                setActivePipelineCountry(null);
               }
             }
           } catch (e) {
@@ -304,6 +316,8 @@ export default function App() {
     if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
       setPipelineStatus("running");
       setPipelineProgressPercentage(5);
+      setCurrentPipelinePhase("init");
+      setActivePipelineCountry(selectedCountries.length > 0 ? selectedCountries[0] : "Pakistan");
       setCurrentPipelineStepMessage("Initializing browser and sources scraper...");
       setIsLogPanelOpen(true); // Open live log drawer so user sees everything transparently
 
@@ -327,6 +341,27 @@ export default function App() {
       );
     }
   }
+
+  // Global Keyboard shortcuts: ⌘+Enter to start pipeline, Esc to cancel
+  useEffect(function () {
+    function handleKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        if (pipelineStatus !== "running" && selectedCountries.length > 0) {
+          event.preventDefault();
+          handleStartPipeline();
+        }
+      } else if (event.key === "Escape") {
+        if (pipelineStatus === "running") {
+          event.preventDefault();
+          handleCancelPipeline();
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return function () {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [pipelineStatus, selectedCountries]);
 
   // Sources Handlers
   function handleToggleSource(sourceIndex: number, enabled: boolean) {
@@ -726,6 +761,8 @@ export default function App() {
               onCancelPipeline={handleCancelPipeline}
               recentRunsList={recentRunsList}
               onInspectRun={handleSelectHistoricalRun}
+              activePipelineCountry={activePipelineCountry}
+              currentPipelinePhase={currentPipelinePhase}
             />
           )}
 

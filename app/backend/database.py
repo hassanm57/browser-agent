@@ -70,6 +70,25 @@ def initialize_database():
                 (key_name, default_value)
             )
 
+    # Clean up any interrupted runs left in 'running' state from previous crashes/restarts
+    cursor.execute("""
+        UPDATE pipeline_runs
+        SET status = 'cancelled', error_message = 'Interrupted by server restart'
+        WHERE status = 'running'
+    """)
+
+    connection.commit()
+    connection.close()
+
+def mark_active_runs_cancelled(reason="Cancelled by user"):
+    connection = get_database_connection()
+    cursor = connection.cursor()
+    finished_time_iso = datetime.now().isoformat()
+    cursor.execute("""
+        UPDATE pipeline_runs
+        SET status = 'cancelled', finished_at = ?, error_message = ?
+        WHERE status = 'running'
+    """, (finished_time_iso, reason))
     connection.commit()
     connection.close()
 

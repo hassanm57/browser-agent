@@ -24,6 +24,7 @@ from app.backend.database import (
     get_all_pipeline_runs,
     get_pipeline_run_details,
     delete_pipeline_run_by_id,
+    clear_all_pipeline_runs,
     update_run_keywords_data,
     mark_active_runs_cancelled
 )
@@ -235,10 +236,10 @@ def get_latest_pipeline_results():
             
     return {
         "run_id": None,
-        "country_name": "Pakistan",
+        "country_name": "Worldwide",
         "started_at": None,
         "finished_at": None,
-        "status": "completed",
+        "status": "completed" if (keywords_disk and keywords_disk.get("topics")) else "idle",
         "raw_sources": raw_sources_disk,
         "keywords": keywords_disk
     }
@@ -272,6 +273,45 @@ def get_single_run(run_identifier: int):
         "raw_sources": raw_sources,
         "keywords": keywords,
         "log_output_text": record["log_output_text"]
+    }
+
+@app.post("/api/database/clear")
+@app.delete("/api/runs")
+def clear_entire_database_and_all_intelligence():
+    # Clears all run records in the SQLite database
+    clear_all_pipeline_runs()
+
+    # Reset on-disk JSON cache files to empty structures
+    empty_raw_sources_dictionary = {
+        "trends24_all_topics": [],
+        "trends24_relevant_topics": [],
+        "news_sources_intel": {},
+        "x_tweets_intel": {}
+    }
+    empty_keywords_dictionary = {
+        "generated_at": None,
+        "country": "Worldwide",
+        "sources_consulted": [],
+        "total_topics": 0,
+        "topics": []
+    }
+
+    try:
+        with open(RAW_SOURCES_FILE_PATH, "w", encoding="utf-8") as file_pointer:
+            json.dump(empty_raw_sources_dictionary, file_pointer, indent=2, ensure_ascii=False)
+    except Exception as raw_cache_error:
+        print("Warning: Could not clear raw_sources.json: " + str(raw_cache_error))
+
+    try:
+        with open(KEYWORDS_FILE_PATH, "w", encoding="utf-8") as file_pointer:
+            json.dump(empty_keywords_dictionary, file_pointer, indent=2, ensure_ascii=False)
+    except Exception as keywords_cache_error:
+        print("Warning: Could not clear keywords.json: " + str(keywords_cache_error))
+
+    return {
+        "message": "Database and caches cleared successfully",
+        "raw_sources": empty_raw_sources_dictionary,
+        "keywords": empty_keywords_dictionary
     }
 
 @app.delete("/api/runs/{run_identifier}")

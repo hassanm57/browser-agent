@@ -98,7 +98,7 @@ async def run_single_country_pipeline(
                         title_element = item_element.find("title")
                         if title_element is not None and title_element.text:
                             clean_title = trends.clean_dom_tags_and_markdown(title_element.text)
-                            if len(clean_title) > 15 and clean_title not in headlines_for_source:
+                            if len(clean_title) > 15 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
                                 headlines_for_source.append(clean_title)
             else:
                 response = trends.requests.get(source_url, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
@@ -107,8 +107,27 @@ async def run_single_country_pipeline(
                     for header_tag in html_soup.find_all(["h1", "h2", "h3", "h4", "a"]):
                         raw_text = header_tag.get_text()
                         clean_title = trends.clean_dom_tags_and_markdown(raw_text)
-                        if len(clean_title) > 25 and clean_title not in headlines_for_source:
+                        if len(clean_title) > 25 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
                             headlines_for_source.append(clean_title)
+
+            # If zero headlines extracted and source is Dawn News, attempt official RSS feed fallback
+            if len(headlines_for_source) == 0 and "dawn.com" in source_url:
+                await log_and_record("INFO", "Dawn News web blocked or empty. Attempting Dawn official RSS feed fallback (https://www.dawn.com/feed)...")
+                try:
+                    dawn_rss_response = trends.requests.get("https://www.dawn.com/feed", timeout=12, headers={"User-Agent": "Mozilla/5.0"})
+                    if dawn_rss_response.status_code == 200:
+                        dawn_xml_root = trends.ElementTree.fromstring(dawn_rss_response.content)
+                        for dawn_item in dawn_xml_root.findall(".//item"):
+                            dawn_title = dawn_item.find("title")
+                            if dawn_title is not None and dawn_title.text:
+                                dawn_clean_title = trends.clean_dom_tags_and_markdown(dawn_title.text)
+                                if len(dawn_clean_title) > 15 and not trends.is_bot_challenge_text(dawn_clean_title):
+                                    if dawn_clean_title not in headlines_for_source:
+                                        headlines_for_source.append(dawn_clean_title)
+                        if len(headlines_for_source) > 0:
+                            await log_and_record("SUCCESS", f"Dawn RSS fallback harvested {len(headlines_for_source)} clean headlines!")
+                except Exception as dawn_rss_error:
+                    await log_and_record("WARN", f"Dawn RSS fallback error: {str(dawn_rss_error)}")
 
             # If 0 headlines extracted via HTTP/RSS, activate browser-agent fallback
             if len(headlines_for_source) == 0:

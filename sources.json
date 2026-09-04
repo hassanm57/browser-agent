@@ -2,8 +2,8 @@
   {
     "name": "Dawn News",
     "category": "national_regional",
-    "type": "web",
-    "url": "https://www.dawn.com/",
+    "type": "rss",
+    "url": "https://www.dawn.com/feed",
     "enabled": true
   },
   {

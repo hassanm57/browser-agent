@@ -226,3 +226,14 @@ def update_run_keywords_data(run_identifier, new_keywords_json_string):
     """, (new_keywords_json_string, run_identifier))
     connection.commit()
     connection.close()
+
+def clear_all_pipeline_runs():
+    # Deletes all recorded pipeline runs from the SQLite database table
+    # and resets the autoincrement sequence so new runs start counting from 1
+    connection = get_database_connection()
+    cursor = connection.cursor()
+    cursor.execute("DELETE FROM pipeline_runs")
+    cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'pipeline_runs'")
+    connection.commit()
+    connection.close()
+

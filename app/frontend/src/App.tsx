@@ -267,17 +267,33 @@ export default function App() {
       })
       .then(function (result) {
         if (result) {
-          setActiveRunId(result.run_id);
-          if (result.raw_sources) {
-            setRawSourcesData(result.raw_sources);
-          }
-          if (result.keywords) {
-            setKeywordsData(result.keywords);
-          }
+          setActiveRunId(result.run_id || null);
+          setRawSourcesData(result.raw_sources || null);
+          setKeywordsData(result.keywords || null);
         }
       })
       .catch(function (err) {
         console.error("Failed to load latest results", err);
+      });
+  }
+
+  function handleClearDatabase() {
+    fetch(BACKEND_API_BASE_URL + "/api/database/clear", {
+      method: "POST",
+    })
+      .then(function (res) {
+        return res.json();
+      })
+      .then(function () {
+        setActiveRunId(null);
+        setRawSourcesData(null);
+        setKeywordsData(null);
+        setRecentRunsList([]);
+        fetchRuns();
+        fetchLatestData();
+      })
+      .catch(function (err) {
+        console.error("Failed to clear database", err);
       });
   }
 
@@ -775,6 +791,7 @@ export default function App() {
                 selectedCountries={selectedCountries}
                 onSelectCountryOnly={handleSelectCountryOnly}
                 onStartPipeline={handleStartPipeline}
+                onClearDatabase={handleClearDatabase}
                 isPipelineActive={isPipelineActive}
                 onNavigateTab={function (tab) {
                   setCurrentActiveTab(tab);

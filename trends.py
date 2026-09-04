@@ -152,6 +152,32 @@ def fetch_trends24_topics(target_country_slug):
         return []
 
 
+def is_bot_challenge_text(text_string):
+    # Checks if text contains Cloudflare or bot verification challenge keywords
+    lowercased_text_string = text_string.lower()
+    bot_challenge_indicator_phrases = [
+        "security verification",
+        "protect against malicious bots",
+        "verifies you are not a bot",
+        "cloudflare",
+        "performance and security by",
+        "ray id",
+        "just a moment",
+        "attention required",
+        "enable javascript and cookies",
+        "checking your browser",
+        "ddos protection",
+        "verify you are human",
+        "challenge-platform",
+        "security service to protect",
+        "svg content collapsed"
+    ]
+    for indicator_phrase in bot_challenge_indicator_phrases:
+        if indicator_phrase in lowercased_text_string:
+            return True
+    return False
+
+
 def fetch_headlines_from_configured_sources(sources_list):
     # This function processes each source defined in sources.json dynamically
     # It supports both 'rss' feed parsing and 'web' HTML scraping
@@ -189,7 +215,7 @@ def fetch_headlines_from_configured_sources(sources_list):
                         title_element = current_feed_item.find("title")
                         if title_element is not None and title_element.text is not None:
                             cleaned_headline = title_element.text.strip()
-                            if len(cleaned_headline) > 10 and len(extracted_headlines_list) < 20:
+                            if len(cleaned_headline) > 10 and not is_bot_challenge_text(cleaned_headline) and len(extracted_headlines_list) < 20:
                                 extracted_headlines_list.append(cleaned_headline)
             else:
                 # Parse HTML web page
@@ -204,6 +230,10 @@ def fetch_headlines_from_configured_sources(sources_list):
                     heading_text = heading_item.get_text(strip=True)
 
                     if len(heading_text) > 25 and len(heading_text) < 160:
+                        # Skip Cloudflare or bot verification challenge text
+                        if is_bot_challenge_text(heading_text):
+                            continue
+
                         if heading_text not in extracted_headlines_list:
                             # If it's a general landing page, prioritize defense/geopolitical keywords
                             lower_text = heading_text.lower()
@@ -221,6 +251,28 @@ def fetch_headlines_from_configured_sources(sources_list):
             print(f"        -> Extracted {len(extracted_headlines_list)} headlines.")
         except Exception as fetch_error:
             print(f"        -> Notice: Failed to fetch {source_name}: {fetch_error}")
+
+        # If zero headlines were extracted and this is Dawn News, use Dawn's official RSS feed
+        if len(extracted_headlines_list) == 0 and "dawn.com" in source_url:
+            print("        -> Dawn News web blocked or empty. Attempting Dawn official RSS feed fallback (https://www.dawn.com/feed)...")
+            try:
+                dawn_rss_response = requests.get("https://www.dawn.com/feed", headers=request_headers_dictionary, timeout=12)
+                dawn_xml_root = ElementTree.fromstring(dawn_rss_response.content)
+                dawn_channel = dawn_xml_root.find("channel")
+                if dawn_channel is not None:
+                    dawn_items = dawn_channel.findall("item")
+                    for dawn_item_index in range(len(dawn_items)):
+                        dawn_item = dawn_items[dawn_item_index]
+                        dawn_title = dawn_item.find("title")
+                        if dawn_title is not None and dawn_title.text is not None:
+                            dawn_headline = dawn_title.text.strip()
+                            if len(dawn_headline) > 10 and not is_bot_challenge_text(dawn_headline):
+                                if dawn_headline not in extracted_headlines_list and len(extracted_headlines_list) < 20:
+                                    extracted_headlines_list.append(dawn_headline)
+                    if len(extracted_headlines_list) > 0:
+                        print(f"        -> [Dawn RSS Fallback SUCCESS] Harvested {len(extracted_headlines_list)} clean headlines.")
+            except Exception as dawn_rss_error:
+                print(f"        -> [Dawn RSS Fallback Notice] Could not fetch Dawn RSS: {dawn_rss_error}")
 
         # Fallback to headless browser agent if HTTP or RSS returned 0 headlines
         if len(extracted_headlines_list) == 0:
@@ -321,6 +373,8 @@ async def scrape_source_via_browser_fallback(target_web_url, source_name):
 
             # Filter out navigation noise, buttons, and short labels
             if len(cleaned_line) < 25 or len(cleaned_line) > 180:
+                continue
+            if is_bot_challenge_text(cleaned_line):
                 continue
             lower_line = cleaned_line.lower()
             if lower_line.startswith("cookie") or lower_line.startswith("accept"):

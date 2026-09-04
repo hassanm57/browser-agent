@@ -7,7 +7,8 @@ import {
   Play,
   ArrowRight,
   Calendar,
-  Sparkles
+  Sparkles,
+  Trash2
 } from "lucide-react";
 
 interface DashboardPageProps {
@@ -19,6 +20,7 @@ interface DashboardPageProps {
   selectedCountries: string[];
   onSelectCountryOnly: (countryName: string) => void;
   onStartPipeline: () => void;
+  onClearDatabase: () => void;
   isPipelineActive: boolean;
   onNavigateTab: (targetTab: NavigationTabType) => void;
 }
@@ -108,11 +110,20 @@ export function DashboardPage(props: DashboardPageProps) {
     <div className="space-y-6 max-w-6xl py-2 animate-in fade-in-50 duration-300">
       {/* Top Action & System Status Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40 select-none">
-        <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-          <span className="font-semibold text-foreground">OSINT Intelligence Engine</span>
-          <span className="text-border">•</span>
-          <span className="hidden sm:inline">Qwen3-14B Vision-Language Active</span>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={function () {
+              if (window.confirm("Are you sure you want to clear the database and all cached intelligence? This will reset all counts and start completely fresh.")) {
+                props.onClearDatabase();
+              }
+            }}
+            disabled={props.isPipelineActive}
+            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400 font-medium text-xs border border-red-500/25 hover:border-red-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40 shadow-xs"
+            title="Clear all stored database runs and reset dashboard stats"
+          >
+            <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
+            <span>Clear Database</span>
+          </button>
         </div>
 
         {/* Action Buttons: Run Pipeline, View Tweets, View Keywords */}
@@ -414,7 +425,7 @@ export function DashboardPage(props: DashboardPageProps) {
             </div>
           ) : (
             <p className="text-xs text-muted-foreground/70 italic">
-              Run the pipeline to generate targeted domain keywords via Qwen3-14B.
+              Run the pipeline to generate targeted domain keywords.
             </p>
           )}
         </div>

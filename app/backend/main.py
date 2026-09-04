@@ -341,7 +341,7 @@ current_running_pipeline_task: Optional[asyncio.Task] = None
 pipeline_cancellation_event: Optional[asyncio.Event] = None
 
 class PipelineStartRequest(BaseModel):
-    countries: List[str] = ["Pakistan"]
+    countries: List[str] = ["Worldwide"]
 
 async def send_log_to_websockets(level_name: str, message_text: str):
     timestamp_string = datetime.now().strftime("%H:%M:%S")
@@ -461,7 +461,7 @@ async def pipeline_websocket_endpoint(websocket: WebSocket):
                 command_action = command_payload.get("action")
 
                 if command_action == "start":
-                    selected_countries = command_payload.get("countries", ["Pakistan"])
+                    selected_countries = command_payload.get("countries", ["Worldwide"])
                     await trigger_pipeline_job(selected_countries)
 
                 elif command_action == "cancel":

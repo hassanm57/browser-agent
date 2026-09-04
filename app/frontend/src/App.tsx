@@ -200,12 +200,19 @@ export default function App() {
       })
       .then(function (countries: CountryItem[]) {
         setAvailableCountries(countries);
-        // By default, select all countries as requested by the user
-        const allNames: string[] = [];
+        // By default, select Worldwide as primary global scope
+        let hasWorldwide = false;
         for (let i = 0; i < countries.length; i++) {
-          allNames.push(countries[i].name);
+          if (countries[i].name.toLowerCase() === "worldwide") {
+            hasWorldwide = true;
+            break;
+          }
         }
-        setSelectedCountries(allNames);
+        if (hasWorldwide) {
+          setSelectedCountries(["Worldwide"]);
+        } else if (countries.length > 0) {
+          setSelectedCountries([countries[0].name]);
+        }
       })
       .catch(function (err) {
         console.error("Failed to load countries", err);
@@ -311,13 +318,17 @@ export default function App() {
     setSelectedCountries([]);
   }
 
+  function handleSelectCountryOnly(countryName: string) {
+    setSelectedCountries([countryName]);
+  }
+
   // Pipeline Execution Control
   function handleStartPipeline() {
     if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
       setPipelineStatus("running");
       setPipelineProgressPercentage(5);
       setCurrentPipelinePhase("init");
-      setActivePipelineCountry(selectedCountries.length > 0 ? selectedCountries[0] : "Pakistan");
+      setActivePipelineCountry(selectedCountries.length > 0 ? selectedCountries[0] : "Worldwide");
       setCurrentPipelineStepMessage("Initializing browser and sources scraper...");
       setIsLogPanelOpen(true); // Open live log drawer so user sees everything transparently
 
@@ -687,6 +698,25 @@ export default function App() {
               </kbd>
             </button>
 
+            {/* Active Intelligence Scope Badge */}
+            <button
+              onClick={function () {
+                setCurrentActiveTab("pipeline");
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium tracking-wide bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 transition-all cursor-pointer"
+              title="Click to view or change country scope"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>
+                Scope:{" "}
+                {selectedCountries.length === 0
+                  ? "Worldwide"
+                  : selectedCountries.length === 1
+                  ? selectedCountries[0]
+                  : `${selectedCountries.length} Countries`}
+              </span>
+            </button>
+
             {/* Run status badge */}
             <div
               className={
@@ -741,6 +771,11 @@ export default function App() {
                 keywordsData={keywordsData}
                 recentRunsList={recentRunsList}
                 activeSourcesCount={activeSourcesCount}
+                availableCountries={availableCountries}
+                selectedCountries={selectedCountries}
+                onSelectCountryOnly={handleSelectCountryOnly}
+                onStartPipeline={handleStartPipeline}
+                isPipelineActive={isPipelineActive}
                 onNavigateTab={function (tab) {
                   setCurrentActiveTab(tab);
                 }}

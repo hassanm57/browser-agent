@@ -1,9 +1,15 @@
 [
   {
+    "name": "Worldwide",
+    "trends24_slug": "",
+    "tier": "global",
+    "is_home": false
+  },
+  {
     "name": "Pakistan",
     "trends24_slug": "pakistan",
-    "tier": "home",
-    "is_home": true
+    "tier": "regional",
+    "is_home": false
   },
   {
     "name": "United States",

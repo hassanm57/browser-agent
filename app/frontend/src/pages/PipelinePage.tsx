@@ -119,7 +119,9 @@ export function PipelinePage(props: PipelinePageProps) {
     const isThisCountryActive = isPipelineActive && props.activePipelineCountry === country.name;
 
     let tierBadgeClass = "bg-muted/60 text-muted-foreground";
-    if (country.is_home) {
+    if (country.tier === "global") {
+      tierBadgeClass = "bg-sky-500/10 text-sky-400 font-medium border border-sky-500/30";
+    } else if (country.is_home) {
       tierBadgeClass = "bg-emerald-500/10 text-emerald-400 font-medium border border-emerald-500/20";
     } else if (country.tier === "UN P5") {
       tierBadgeClass = "bg-blue-500/10 text-blue-400 font-medium border border-blue-500/20";
@@ -394,6 +396,17 @@ export function PipelinePage(props: PipelinePageProps) {
               />
             </div>
 
+            <button
+              onClick={function () {
+                props.onDeselectAllCountries();
+                props.onToggleCountry("Worldwide");
+              }}
+              disabled={isPipelineActive}
+              className="text-[11px] px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-medium transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1"
+            >
+              <Globe className="w-3 h-3" />
+              <span>Worldwide Only</span>
+            </button>
             <button
               onClick={props.onSelectAllCountries}
               disabled={isPipelineActive}

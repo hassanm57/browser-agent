@@ -61,5 +61,12 @@
     "type": "rss",
     "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
     "enabled": true
+  },
+  {
+    "name": "Defense One Intelligence & Tech",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://www.defenseone.com/rss/all/",
+    "enabled": true
   }
 ]

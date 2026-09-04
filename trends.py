@@ -96,9 +96,13 @@ def load_sources_configuration_file():
 
 
 def fetch_trends24_topics(target_country_slug):
-    # We fetch country trending hashtags from trends24 with cache-busting to ensure 100% fresh data
+    # We fetch country or worldwide trending hashtags from trends24 with cache-busting to ensure 100% fresh data
     cache_buster_timestamp = int(datetime.datetime.now().timestamp())
-    target_webpage_url = f"https://trends24.in/{target_country_slug}/?_ts={cache_buster_timestamp}"
+    cleaned_slug = str(target_country_slug or "").strip().lower()
+    if cleaned_slug == "" or cleaned_slug == "worldwide" or cleaned_slug == "global":
+        target_webpage_url = f"https://trends24.in/?_ts={cache_buster_timestamp}"
+    else:
+        target_webpage_url = f"https://trends24.in/{cleaned_slug}/?_ts={cache_buster_timestamp}"
     print("[1] Fetching live X trends from trends24: " + target_webpage_url)
 
     request_headers_dictionary = {
@@ -466,15 +470,63 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         print("Sample trends: " + ", ".join(extracted_trend_names_list[:6]))
         print("")
 
-        # Filter and prioritize the top trends to mine: prioritize actual hashtags (#) and specific topics
-        prioritized_trends_to_mine = []
-        # First pass: Hashtags starting with #
-        for candidate_trend in extracted_trend_names_list:
-            if candidate_trend.startswith("#") and candidate_trend not in prioritized_trends_to_mine:
-                prioritized_trends_to_mine.append(candidate_trend)
-        # Second pass: Remaining high-signal topics
-        for candidate_trend in extracted_trend_names_list:
-            if candidate_trend not in prioritized_trends_to_mine:
+        # Comprehensive list of indicators for foreign policy, defense, military, and strategic pacts
+        defense_and_foreign_policy_indicators = [
+            "defense", "defence", "military", "army", "navy", "airforce", "air force",
+            "foreign policy", "diplomacy", "diplomatic", "treaty", "pact", "agreement",
+            "accord", "security", "alliance", "nato", "aukus", "quad", "csto", "unsc",
+            "pentagon", "ministry of defense", "weapons", "missile", "nuclear",
+            "hypersonic", "warfare", "conflict", "frontline", "drone", "uav", "carrier",
+            "submarine", "air defense", "sanctions", "border", "strait", "maritime",
+            "escalation", "drills", "exercise", "counterterrorism", "bilateral", "sovereignty",
+            "arms deal", "ammunition", "artillery", "geopolitics"
+        ]
+
+        prioritized_defense_trends = []
+
+        # Step 1: Filter live trending topics for any that match defense or foreign policy
+        for candidate_index in range(len(extracted_trend_names_list)):
+            candidate_trend = extracted_trend_names_list[candidate_index]
+            lowered_candidate = candidate_trend.lower()
+            matches_defense = False
+            for indicator_word in defense_and_foreign_policy_indicators:
+                if indicator_word in lowered_candidate:
+                    matches_defense = True
+                    break
+            if matches_defense and candidate_trend not in prioritized_defense_trends:
+                prioritized_defense_trends.append(candidate_trend)
+
+        # Step 2: If live trends do not provide enough defense/foreign policy topics,
+        # dynamically augment with targeted high-signal queries for the target scope
+        normalized_country_name = target_country_name.strip().lower()
+        if normalized_country_name in ["worldwide", "global", "all"]:
+            targeted_fallback_queries = [
+                '"defense pact" OR "military agreement" OR "security alliance"',
+                '"foreign policy" OR "bilateral security" OR "defense treaty"',
+                '"joint military exercise" OR "air defense" OR "naval drills"',
+                '"arms deal" OR "weapons procurement" OR "defense modernization"',
+                '"maritime security" OR "strait security" OR "regional conflict"'
+            ]
+        else:
+            targeted_fallback_queries = [
+                f'"{target_country_name} defense pact" OR "{target_country_name} military agreement"',
+                f'"{target_country_name} foreign policy" OR "{target_country_name} strategic alliance"',
+                f'"{target_country_name} armed forces" OR "{target_country_name} defense modernization"',
+                f'"{target_country_name} joint military exercise" OR "{target_country_name} security treaty"',
+                f'"{target_country_name} border security" OR "{target_country_name} defense bilateral"'
+            ]
+
+        for fallback_index in range(len(targeted_fallback_queries)):
+            fallback_query = targeted_fallback_queries[fallback_index]
+            if len(prioritized_defense_trends) < 5 and fallback_query not in prioritized_defense_trends:
+                prioritized_defense_trends.append(fallback_query)
+
+        # Step 3: If still needed, add remaining live trending topics that are not noise
+        for candidate_index in range(len(extracted_trend_names_list)):
+            candidate_trend = extracted_trend_names_list[candidate_index]
+            if len(prioritized_defense_trends) >= 5:
+                break
+            if candidate_trend not in prioritized_defense_trends:
                 lowered_candidate = candidate_trend.lower()
                 has_noise = False
                 for noise_word in ui_noise_blacklist:
@@ -482,10 +534,10 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                         has_noise = True
                         break
                 if not has_noise:
-                    prioritized_trends_to_mine.append(candidate_trend)
+                    prioritized_defense_trends.append(candidate_trend)
 
         # Select top 5 trends to search and extract genuine tweets
-        selected_trends_to_mine_list = prioritized_trends_to_mine[:5]
+        selected_trends_to_mine_list = prioritized_defense_trends[:5]
 
         for trend_index in range(len(selected_trends_to_mine_list)):
             current_trend_query = selected_trends_to_mine_list[trend_index]
@@ -582,44 +634,82 @@ def synthesize_keywords_with_llm(target_country_name, consolidated_intel_diction
 
     full_intel_digest_string = "\n".join(digest_sections_list)
 
-    system_and_user_prompt = f"""You are an elite geopolitical intelligence and social search keyword engineer.
-Analyze the following multi-source intelligence report for the country: {target_country_name}.
+    system_and_user_prompt = f"""You are the Chief Worldwide Geopolitical & Defense Intelligence Specialist and Social Search Keyword Engineer.
+Analyze the following multi-source OSINT intelligence dossier for the target scope: {target_country_name} (Worldwide & International Strategic Scope).
 
-DATA REPORT:
+INTELLIGENCE DOSSIER (GLOBAL HEADLINES, RSS FEEDS, TRENDING DISCUSSIONS, AND AUTHENTIC TWEETS):
 {full_intel_digest_string}
 
-TASK:
-1. Filter strictly for FOREIGN AFFAIRS, DEFENSE, and GEOPOLITICAL topics:
-   - Defense, armed forces modernization, military pacts, naval/air exercises, weapons tests
-   - Bilateral and multilateral diplomacy, strategic partnerships, foreign delegations, treaties
-   - Regional conflicts, border security, maritime security, sanctions, energy corridors
-2. Discard purely domestic party politics, sports, celebrities, crypto, local crime, and gossip.
-3. Pay HEAVY attention to the authentic tweets extracted from X.com:
-   - Notice hidden keywords, specific military terms, pact names (like "Makkah Defence Pact"), military leadership titles, and related hashtags.
-4. FOR EACH TOPIC, GENERATE APPROXIMATELY 20 HIGH-PRECISION KEYWORDS / SEARCH TERMS.
-   - Do not stop at 3 or 4 terms. Provide a comprehensive list of ~20 terms per topic so downstream Twitter scrapers will not miss anything.
-   - Include: full official names, common abbreviations, nicknames, key leaders, related organizations, weapons systems, and relevant hashtags (in English and Urdu/local where applicable).
-5. Output 10 to 12 distinct, high-priority foreign-affairs topics.
+CORE MISSION OBJECTIVES:
+The primary directive is to synthesize hot, breaking, and critically important WORLDWIDE news topics and generate actionable keyword tracking matrices.
+DO NOT restrict yourself to any single country or domestic sphere. Even when a specific country is analyzed, frame its actions within global geopolitics, international alliances, and balance of power. If the scope is Worldwide or includes international feeds, provide balanced, high-impact global coverage across Europe, North America, the Indo-Pacific, Middle East, and Eurasia.
 
-OUTPUT REQUIREMENTS:
-Respond ONLY with a valid JSON array of objects. Do not include markdown backticks, thinking text, or conversational filler.
+TOPIC SELECTION DIRECTIVES - STRICTLY PRIORITIZE:
+1. FOREIGN & GLOBAL POLICIES:
+   - Major diplomatic agreements, bilateral and multilateral strategic partnerships, foreign ministry negotiations.
+   - International summits (UN, G7, BRICS, SCO, ASEAN), high-level state delegations, and diplomatic accords.
+   - International sanctions regimes, export controls on critical tech, and diplomatic sovereignty disputes.
+
+2. DEFENSE & MILITARY STRATEGY:
+   - Armed forces modernization programs, military doctrine shifts, and force deployments.
+   - Naval task forces, carrier strike groups, air defense interceptor deployments, and frontline military posture.
+   - Joint multinational military exercises, combat drills, and defense readiness maneuvers.
+   - Defense budget allocations, defense industrial base capacity, and major arms trade deals.
+
+3. GLOBAL AGREEMENTS & DEFENSE PACTS TO STRENGTHEN DEFENSE:
+   - Mutual defense treaties, bilateral security pacts, and collective security alliances (e.g., NATO expansions/initiatives, AUKUS Pillar 1 & 2 developments, Quad defense pacts, CSTO accords, Gulf security pacts).
+   - Bilateral military cooperation pacts, intelligence-sharing frameworks, and mutual logistics support agreements.
+   - International defense technology sharing, co-development agreements, and defense procurement accords.
+
+4. STRATEGIC DETERRENCE & EMERGING WARFARE TECH:
+   - Nuclear non-proliferation, nuclear modernization, and strategic deterrence posture.
+   - Hypersonic missile systems, integrated air and missile defense (IAMD), and anti-satellite (ASAT) capabilities.
+   - Military artificial intelligence (AI), autonomous drone swarms (UAV/USV), electronic warfare (EW), and cyber defense.
+
+5. REGIONAL CONFLICT FLASHPOINTS & MARITIME CHOKEPOINTS:
+   - Freedom of navigation operations, strait security (Hormuz, Bab-el-Mandeb, Malacca, Taiwan Strait, Black Sea).
+   - Border security operations, cross-border escalation dynamics, and counter-terrorism military campaigns.
+
+DISCARD: Domestic partisan squabbles, celebrity news, pop culture, entertainment, sports, cryptocurrency speculation, and local municipal crime.
+
+KEYWORD GENERATION REQUIREMENTS:
+1. Generate between 10 to 12 distinct, high-priority strategic topics based on the ingested intelligence.
+2. For EACH topic, provide approximately 20 RICH, DIVERSE, HIGH-PRECISION SEARCH KEYWORDS:
+   - Include: Full official treaty/pact names, common acronyms, operational code-names.
+   - Include: Key participating nations, defense ministries, key defense secretaries/commanders/officials.
+   - Include: Specific weapon platforms, defense contractors/firms, and military equipment involved.
+   - Include: Relevant search hashtags (#) and international terminology (in English and relevant regional languages where applicable).
+   - Downstream scrapers will use these exact terms to track timeline posts without missing emerging discourse.
+
+OUTPUT FORMAT:
+Respond ONLY with a valid, clean JSON array of objects. Do NOT include markdown backticks (```json), thinking reasoning, or preamble text.
 Each object must have these exact keys:
-- "label": Short clear title of the topic or event
-- "category": One of "defense", "diplomacy", "politics", "economic"
-- "terms": Array of approximately 20 keyword strings
+- "label": Short, descriptive title of the global strategic topic or defense development
+- "category": Exactly one of "defense", "diplomacy", "politics", "economic"
+- "terms": Array of approximately 20 comprehensive keyword and search phrase strings
 
-Example structure:
+Representative global example structure:
 [
   {{
-    "label": "Makkah Defence Pact",
+    "label": "NATO Collective Defense and Eastern Flank Modernization",
     "category": "defense",
     "terms": [
-      "Makkah Defence Pact", "Makkah Defense Pact", "the makkah defence pact", "MDP 2026",
-      "Saudi Pakistan defence pact", "Saudi Pak military cooperation", "VisionaryFieldMarshal",
-      "#VisionaryFieldMarshal", "#GreatManCDF", "General Asim Munir", "Field Marshal Asim Munir",
-      "Islamic Military Counter Terrorism Coalition", "IMCTC", "Riyadh Islamabad defense",
-      "Pakistan Armed Forces Saudi Arabia", "GCC security pact", "Makkah security agreement",
-      "#امہ_کی_شان_عاصم_منیر", "#مرد_آہن_فیلڈ_مارشل", "Pakistan Saudi bilateral security"
+      "NATO Collective Defense", "Article 5 NATO", "NATO Eastern Flank", "NATO Defense Spending 2%",
+      "Rapid Reaction Force", "NATO Joint Drills", "Steadfast Defender", "NATO Summit 2026",
+      "Mark Rutte NATO", "European Deterrence Initiative", "NATO Air Shielding", "Patriot Missile Deployment",
+      "Baltic Defense Line", "Suwalki Gap Security", "NATO Allied Command Operations", "NATO Nuclear Sharing",
+      "Defense Industrial Pledge", "#NATOSummit", "#CollectiveDefense", "Transatlantic Security Pact"
+    ]
+  }},
+  {{
+    "label": "AUKUS Pillar 2 Advanced Defense Tech and Hypersonics",
+    "category": "defense",
+    "terms": [
+      "AUKUS Pillar 2", "AUKUS Defense Tech Sharing", "Hypersonic Weapons Development", "AUKUS Submarine Accord",
+      "Undersea Autonomous Vehicles", "Quantum Defense Technologies", "Trilateral Security Partnership", "AUKUS Japan Cooperation",
+      "Indo-Pacific Deterrence", "SSN-AUKUS Submarines", "Defense Trade Controls Exemption", "Electronic Warfare Collaboration",
+      "AI Warfare Systems", "Pacific Defense Alliances", "Pentagon AUKUS Office", "Royal Navy AUKUS",
+      "Australian Submarine Agency", "#AUKUS", "#IndoPacificSecurity", "Advanced Cyber Defense Pact"
     ]
   }}
 ]

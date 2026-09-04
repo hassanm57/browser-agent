@@ -222,21 +222,82 @@ async def run_single_country_pipeline(
         sample_preview_str = ", ".join(extracted_trend_names_list[:6])
         await log_and_record("SUCCESS", f"Identified {len(extracted_trend_names_list)} fresh trending topics on X.com. Sample: {sample_preview_str}")
 
-        # Filter and prioritize the top trends to mine: prioritize actual hashtags (#) and specific topics
-        prioritized_trends_to_mine: List[str] = []
-        # First pass: Hashtags starting with #
-        for candidate_trend in extracted_trend_names_list:
-            if candidate_trend.startswith("#") and candidate_trend not in prioritized_trends_to_mine:
-                prioritized_trends_to_mine.append(candidate_trend)
-        # Second pass: Remaining high-signal topics
-        for candidate_trend in extracted_trend_names_list:
-            if candidate_trend not in prioritized_trends_to_mine:
+        mission_prompt_summary = (
+            f"[BROWSER-USE OSINT MISSION: REAL-TIME GLOBAL DEFENSE & FOREIGN POLICY COLLECTION]\n"
+            f"Scope: {target_country_name} | Directives: Focus strictly on foreign policy, defense/military, "
+            f"bilateral security agreements, mutual defense pacts (NATO, AUKUS, Quad, CSTO), deterrence, "
+            f"and maritime chokepoint security. Discard domestic politics and entertainment."
+        )
+        await log_and_record("PROMPT", mission_prompt_summary)
+
+        # Comprehensive list of indicators for foreign policy, defense, military, and strategic pacts
+        defense_and_foreign_policy_indicators = [
+            "defense", "defence", "military", "army", "navy", "airforce", "air force",
+            "foreign policy", "diplomacy", "diplomatic", "treaty", "pact", "agreement",
+            "accord", "security", "alliance", "nato", "aukus", "quad", "csto", "unsc",
+            "pentagon", "ministry of defense", "weapons", "missile", "nuclear",
+            "hypersonic", "warfare", "conflict", "frontline", "drone", "uav", "carrier",
+            "submarine", "air defense", "sanctions", "border", "strait", "maritime",
+            "escalation", "drills", "exercise", "counterterrorism", "bilateral", "sovereignty",
+            "arms deal", "ammunition", "artillery", "geopolitics"
+        ]
+
+        prioritized_defense_trends: List[str] = []
+
+        # Step 1: Filter live trending topics for any that match defense or foreign policy
+        for candidate_index in range(len(extracted_trend_names_list)):
+            candidate_trend = extracted_trend_names_list[candidate_index]
+            lowered_candidate = candidate_trend.lower()
+            matches_defense = False
+            for indicator_word in defense_and_foreign_policy_indicators:
+                if indicator_word in lowered_candidate:
+                    matches_defense = True
+                    break
+            if matches_defense and candidate_trend not in prioritized_defense_trends:
+                prioritized_defense_trends.append(candidate_trend)
+
+        # Step 2: If live trends do not provide enough defense/foreign policy topics,
+        # dynamically augment with targeted high-signal queries for the target scope
+        normalized_country_name = target_country_name.strip().lower()
+        if normalized_country_name in ["worldwide", "global", "all"]:
+            targeted_fallback_queries = [
+                '"defense pact" OR "military agreement" OR "security alliance"',
+                '"foreign policy" OR "bilateral security" OR "defense treaty"',
+                '"joint military exercise" OR "air defense" OR "naval drills"',
+                '"arms deal" OR "weapons procurement" OR "defense modernization"',
+                '"maritime security" OR "strait security" OR "regional conflict"'
+            ]
+        else:
+            targeted_fallback_queries = [
+                f'"{target_country_name} defense pact" OR "{target_country_name} military agreement"',
+                f'"{target_country_name} foreign policy" OR "{target_country_name} strategic alliance"',
+                f'"{target_country_name} armed forces" OR "{target_country_name} defense modernization"',
+                f'"{target_country_name} joint military exercise" OR "{target_country_name} security treaty"',
+                f'"{target_country_name} border security" OR "{target_country_name} defense bilateral"'
+            ]
+
+        for fallback_index in range(len(targeted_fallback_queries)):
+            fallback_query = targeted_fallback_queries[fallback_index]
+            if len(prioritized_defense_trends) < trends_to_mine_count and fallback_query not in prioritized_defense_trends:
+                prioritized_defense_trends.append(fallback_query)
+
+        # Step 3: If still needed, add remaining live trending topics that are not noise
+        for candidate_index in range(len(extracted_trend_names_list)):
+            candidate_trend = extracted_trend_names_list[candidate_index]
+            if len(prioritized_defense_trends) >= trends_to_mine_count:
+                break
+            if candidate_trend not in prioritized_defense_trends:
                 lowered_candidate = candidate_trend.lower()
-                if not any(noise in lowered_candidate for noise in ui_noise_blacklist):
-                    prioritized_trends_to_mine.append(candidate_trend)
+                has_noise = False
+                for noise_word in ui_noise_blacklist:
+                    if noise_word in lowered_candidate:
+                        has_noise = True
+                        break
+                if not has_noise:
+                    prioritized_defense_trends.append(candidate_trend)
 
         # Select top live trends to mine
-        selected_trends = prioritized_trends_to_mine[:trends_to_mine_count]
+        selected_trends = prioritized_defense_trends[:trends_to_mine_count]
 
         for trend_index in range(len(selected_trends)):
             if cancellation_event.is_set():
@@ -394,7 +455,7 @@ async def run_multi_country_pipeline_orchestrator(
 
     total_countries = len(selected_countries_list)
     if total_countries == 0:
-        selected_countries_list = ["Pakistan"]
+        selected_countries_list = ["Worldwide"]
         total_countries = 1
 
     for country_index in range(total_countries):

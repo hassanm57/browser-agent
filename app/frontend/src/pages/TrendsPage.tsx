@@ -1,5 +1,6 @@
+import { useState } from "react";
 import type { RawSourcesData } from "../types";
-import { Flame, ExternalLink, RefreshCw, Hash } from "lucide-react";
+import { Flame, ExternalLink, RefreshCw, Hash, Filter, Globe2 } from "lucide-react";
 
 interface TrendsPageProps {
   rawSourcesData: RawSourcesData | null;
@@ -7,6 +8,9 @@ interface TrendsPageProps {
 }
 
 export function TrendsPage(props: TrendsPageProps) {
+  // Tab state: "relevant" shows news-filtered trends, "all" shows full unfiltered Trends24 capture
+  const [activeTrendsTab, setActiveTrendsTab] = useState<"relevant" | "all">("relevant");
+
   if (!props.rawSourcesData) {
     return (
       <div className="p-12 text-center text-zinc-500 space-y-3">
@@ -19,16 +23,26 @@ export function TrendsPage(props: TrendsPageProps) {
     );
   }
 
-  const trends24TopicsList = props.rawSourcesData.x_trends24_topics || [];
+  // Determine lists of trends
+  const allTrendsList = props.rawSourcesData.all_trends24_topics && props.rawSourcesData.all_trends24_topics.length > 0
+    ? props.rawSourcesData.all_trends24_topics
+    : props.rawSourcesData.x_trends24_topics || [];
+
+  const relevantTrendsList = props.rawSourcesData.relevant_trends24_topics && props.rawSourcesData.relevant_trends24_topics.length > 0
+    ? props.rawSourcesData.relevant_trends24_topics
+    : props.rawSourcesData.x_trends24_topics || [];
+
+  const displayTrendsList = activeTrendsTab === "relevant" ? relevantTrendsList : allTrendsList;
+
   const xExploreTopicsList =
     props.rawSourcesData.x_native_explore && props.rawSourcesData.x_native_explore.trends_observed
       ? props.rawSourcesData.x_native_explore.trends_observed
       : [];
 
-  // Render trends24 ranked items using traditional for loop
+  // Render selected trends24 items using traditional for loop
   const renderedTrends24Items = [];
-  for (let topicIndex = 0; topicIndex < trends24TopicsList.length; topicIndex++) {
-    const topicText = trends24TopicsList[topicIndex];
+  for (let topicIndex = 0; topicIndex < displayTrendsList.length; topicIndex++) {
+    const topicText = displayTrendsList[topicIndex];
     const rankNumber = topicIndex + 1;
     const isTopThree = rankNumber <= 3;
     const encodedTopic = encodeURIComponent(topicText);
@@ -36,7 +50,7 @@ export function TrendsPage(props: TrendsPageProps) {
     renderedTrends24Items.push(
       <a
         key={topicText + "_" + rankNumber}
-        href={"https://x.com/search?q=" + encodedTopic}
+        href={"https://x.com/search?q=" + encodedTopic + "&f=live"}
         target="_blank"
         rel="noreferrer"
         className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/40 hover:bg-zinc-900/90 border border-zinc-800/80 group transition-all"
@@ -78,7 +92,7 @@ export function TrendsPage(props: TrendsPageProps) {
     renderedExploreItems.push(
       <a
         key={exploreText + "_explore_" + rankNumber}
-        href={"https://x.com/search?q=" + encodedTopic}
+        href={"https://x.com/search?q=" + encodedTopic + "&f=live"}
         target="_blank"
         rel="noreferrer"
         className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/40 hover:bg-zinc-900/90 border border-zinc-800/80 group transition-all"
@@ -105,7 +119,7 @@ export function TrendsPage(props: TrendsPageProps) {
             <span>Trending Topics — {props.rawSourcesData.country}</span>
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Ranked national trends scraped from trends24 and confirmed on X.com Explore.
+            Full raw activity captured from Trends24 and cross-referenced with breaking news.
           </p>
         </div>
 
@@ -118,16 +132,49 @@ export function TrendsPage(props: TrendsPageProps) {
         </button>
       </div>
 
-      {/* Two-Column Grid: trends24 on Left, X Native Explore on Right */}
+      {/* Two-Column Grid: Trends24 on Left, X Native Explore on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* trends24 Section */}
+        {/* Trends24 Section */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex items-center gap-2">
               <Flame className="w-4 h-4 text-amber-500" />
-              <span>trends24 Ingested ({trends24TopicsList.length})</span>
-            </h3>
-            <span className="text-[10px] text-zinc-500 font-mono">Aggregated hourly</span>
+              <h3 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
+                Trends24 Ingestion
+              </h3>
+            </div>
+
+            {/* Filter Tabs: News-Relevant vs All Captured */}
+            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-zinc-900 border border-zinc-800">
+              <button
+                onClick={function () {
+                  setActiveTrendsTab("relevant");
+                }}
+                className={
+                  "flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium transition-all " +
+                  (activeTrendsTab === "relevant"
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200")
+                }
+              >
+                <Filter className="w-3 h-3" />
+                <span>News-Relevant ({relevantTrendsList.length})</span>
+              </button>
+              <button
+                onClick={function () {
+                  setActiveTrendsTab("all");
+                }}
+                className={
+                  "flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium transition-all " +
+                  (activeTrendsTab === "all"
+                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200")
+                }
+              >
+                <Globe2 className="w-3 h-3" />
+                <span>All Captured ({allTrendsList.length})</span>
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
@@ -135,7 +182,7 @@ export function TrendsPage(props: TrendsPageProps) {
               renderedTrends24Items
             ) : (
               <div className="p-4 text-xs text-zinc-500 bg-zinc-900/30 rounded border border-zinc-800">
-                No trends24 topics recorded.
+                No trends recorded in this category.
               </div>
             )}
           </div>
@@ -148,7 +195,7 @@ export function TrendsPage(props: TrendsPageProps) {
               <Hash className="w-4 h-4 text-blue-400" />
               <span>X.com Native Explore ({xExploreTopicsList.length})</span>
             </h3>
-            <span className="text-[10px] text-zinc-500 font-mono">Mined in headful browser</span>
+            <span className="text-[10px] text-zinc-500 font-mono">Mined in browser</span>
           </div>
 
           <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">

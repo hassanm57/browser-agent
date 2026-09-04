@@ -68,26 +68,9 @@ async def run_single_country_pipeline(
         update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user before scraping")
         return None
 
-    # 2. PHASE 1: trends24 scraping
-    await log_and_record("STEP", f"[1/5] Fetching trending topics from trends24.in for {country_slug_name}...")
-    await progress_callback_function("trends24", 2, 6, f"Fetching trends24 topics for {target_country_name}...", target_country_name)
-    
-    trends24_topics_list = []
-    try:
-        trends24_topics_list = trends.fetch_trends24_topics(country_slug_name)
-        sample_topics_preview = ", ".join(trends24_topics_list[:5])
-        await log_and_record("SUCCESS", f"Harvested {len(trends24_topics_list)} topics from trends24. Sample: {sample_topics_preview}")
-    except Exception as trends24_error:
-        await log_and_record("WARN", f"Failed to fetch trends24: {str(trends24_error)}. Continuing with fallback seeds.")
-
-    if cancellation_event.is_set():
-        await log_and_record("WARN", "Pipeline execution cancelled by user.")
-        update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user after trends24")
-        return None
-
-    # 3. PHASE 2: Ingest news headlines from configured sources
-    await log_and_record("STEP", "[2/5] Ingesting headlines from configured news and RSS sources...")
-    await progress_callback_function("news_sources", 3, 6, f"Ingesting regional & global news sources for {target_country_name}...", target_country_name)
+    # PHASE 1: Ingest ground truth news headlines from configured sources first
+    await log_and_record("STEP", "[1/5] Ingesting authoritative headlines from configured news and RSS sources...")
+    await progress_callback_function("news_sources", 2, 6, f"Ingesting ground truth news for {target_country_name}...", target_country_name)
     
     configured_sources_list = trends.load_sources_configuration_file()
     news_sources_intel_dictionary: Dict[str, List[str]] = {}
@@ -106,7 +89,6 @@ async def run_single_country_pipeline(
 
         await log_and_record("INFO", f"Fetching {source_name} ({source_type.upper()})...")
         try:
-            # We call fetch for single source using trends logic
             headlines_for_source = []
             if source_type == "rss":
                 response = trends.requests.get(source_url, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
@@ -152,11 +134,68 @@ async def run_single_country_pipeline(
         update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user during news ingestion")
         return None
 
-    # 4. PHASE 3: Browser-use deep mining on X.com
-    await log_and_record("STEP", "[3/5] Launching Chrome browser to mine X.com trends and genuine tweets...")
-    await progress_callback_function("x_mining", 4, 6, f"Mining X.com timeline tweets for {target_country_name}...", target_country_name)
+    # PHASE 2: Ingest ALL trends from Trends24, then filter for news-relevant trends
+    await log_and_record("STEP", f"[2/5] Ingesting all Trends24 topics and filtering for news-relevance ({country_slug_name})...")
+    await progress_callback_function("trends24", 3, 6, f"Capturing all Trends24 topics & filtering for {target_country_name}...", target_country_name)
+    
+    all_trends24_topics_list = []
+    try:
+        all_trends24_topics_list = trends.fetch_trends24_topics(country_slug_name)
+        await log_and_record("SUCCESS", f"Captured all {len(all_trends24_topics_list)} raw trending topics from Trends24.")
+    except Exception as trends24_error:
+        await log_and_record("WARN", f"Failed to fetch trends24: {str(trends24_error)}. Continuing with fallback seeds.")
 
-    # Read user configurable thresholds
+    # Cross-reference Trends24 topics with the news headlines
+    relevant_trends24_topics_list = trends.filter_trends_relevant_to_news(
+        all_trends24_topics_list, news_sources_intel_dictionary
+    )
+    if len(relevant_trends24_topics_list) > 0:
+        sample_relevant_preview = ", ".join(relevant_trends24_topics_list[:6])
+        await log_and_record("SUCCESS", f"Filtered {len(relevant_trends24_topics_list)} news-relevant trends from Trends24. Sample: {sample_relevant_preview}")
+    else:
+        await log_and_record("INFO", "No direct lexical trend-news overlap found. Relying on primary ground truth news headlines.")
+
+    if cancellation_event.is_set():
+        await log_and_record("WARN", "Pipeline execution cancelled by user.")
+        update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user after trends24")
+        return None
+
+    # PHASE 3: Synthesize news-derived topics and high-precision Boolean X queries with Qwen3-14B
+    await log_and_record("STEP", "[3/5] Synthesizing news-derived topics & Boolean X queries (15 crisp keywords each) with Qwen3-14B...")
+    await progress_callback_function("llm_synthesis", 4, 6, f"Synthesizing 15 crisp keywords per topic for {target_country_name}...", target_country_name)
+
+    endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.12.121:8000/v1")
+    model_name = settings_dictionary.get("llm_model_name", "qwen3-14b")
+    timeout_seconds = int(settings_dictionary.get("llm_timeout_seconds", "180"))
+
+    await log_and_record("LLM", f"Synthesizing topics via {endpoint_url} (Model: {model_name}, Timeout: {timeout_seconds}s)...")
+
+    synthesized_topics_list = []
+    try:
+        loop = asyncio.get_event_loop()
+        synthesized_topics_list = await loop.run_in_executor(
+            None,
+            trends.synthesize_topics_from_news_and_trends,
+            target_country_name,
+            news_sources_intel_dictionary,
+            relevant_trends24_topics_list
+        )
+        await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} news-derived topics (15 crisp keywords each + Boolean queries).")
+        for topic_preview_index in range(min(3, len(synthesized_topics_list))):
+            preview_item = synthesized_topics_list[topic_preview_index]
+            await log_and_record("INFO", f"  Topic {topic_preview_index + 1}: {preview_item.get('label')} -> Boolean: {preview_item.get('boolean_query')}")
+    except Exception as llm_error:
+        await log_and_record("ERROR", f"LLM topic synthesis failed: {str(llm_error)}")
+
+    if cancellation_event.is_set():
+        await log_and_record("WARN", "Pipeline execution cancelled by user.")
+        update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user after LLM synthesis")
+        return None
+
+    # PHASE 4: Launch Chrome browser to mine latest tweets on X.com using the news-derived Boolean queries
+    await log_and_record("STEP", "[4/5] Mining latest tweets on X.com via news-derived Boolean queries (using &f=live)...")
+    await progress_callback_function("x_mining", 5, 6, f"Mining latest tweets for news queries for {target_country_name}...", target_country_name)
+
     is_headless = settings_dictionary.get("headless_mode", "false") == "true"
     use_real_chrome = settings_dictionary.get("use_real_chrome", "true") == "true"
     max_tweets_target = int(settings_dictionary.get("maximum_tweets_per_trend", "20"))
@@ -179,7 +218,7 @@ async def run_single_country_pipeline(
 
     try:
         await browser_instance.start()
-        await log_and_record("BROWSER", "Navigating to https://x.com/explore/tabs/trending...")
+        await log_and_record("BROWSER", "Navigating to https://x.com/explore/tabs/trending to observe active trends...")
         await browser_instance.navigate_to("https://x.com/explore/tabs/trending")
         await asyncio.sleep(4)
 
@@ -187,7 +226,6 @@ async def run_single_country_pipeline(
         trending_page_state_text = await browser_instance.get_state_as_text()
         extracted_trend_names_list: List[str] = []
 
-        # List of UI junk to filter out if parsed from raw text
         ui_noise_blacklist = [
             "terms of service", "privacy policy", "cookie policy",
             "accessibility", "ads info", "more", "settings", "explore",
@@ -213,107 +251,49 @@ async def run_single_country_pipeline(
                     ):
                         extracted_trend_names_list.append(next_line_text)
 
-        # Merge in the latest freshly harvested trends24 topics so we always have the freshest country trends
-        for live_trend_item in trends24_topics_list:
+        # Merge in the latest freshly harvested trends24 topics
+        for live_trend_item in relevant_trends24_topics_list:
             if live_trend_item not in extracted_trend_names_list:
                 extracted_trend_names_list.append(live_trend_item)
 
         x_native_intel_dictionary["trends_observed"] = extracted_trend_names_list
         sample_preview_str = ", ".join(extracted_trend_names_list[:6])
-        await log_and_record("SUCCESS", f"Identified {len(extracted_trend_names_list)} fresh trending topics on X.com. Sample: {sample_preview_str}")
+        await log_and_record("SUCCESS", f"Identified {len(extracted_trend_names_list)} trends on X.com explore. Sample: {sample_preview_str}")
 
-        mission_prompt_summary = (
-            f"[BROWSER-USE OSINT MISSION: REAL-TIME GLOBAL DEFENSE & FOREIGN POLICY COLLECTION]\n"
-            f"Scope: {target_country_name} | Directives: Focus strictly on foreign policy, defense/military, "
-            f"bilateral security agreements, mutual defense pacts (NATO, AUKUS, Quad, CSTO), deterrence, "
-            f"and maritime chokepoint security. Discard domestic politics and entertainment."
-        )
-        await log_and_record("PROMPT", mission_prompt_summary)
-
-        # Comprehensive list of indicators for foreign policy, defense, military, and strategic pacts
-        defense_and_foreign_policy_indicators = [
-            "defense", "defence", "military", "army", "navy", "airforce", "air force",
-            "foreign policy", "diplomacy", "diplomatic", "treaty", "pact", "agreement",
-            "accord", "security", "alliance", "nato", "aukus", "quad", "csto", "unsc",
-            "pentagon", "ministry of defense", "weapons", "missile", "nuclear",
-            "hypersonic", "warfare", "conflict", "frontline", "drone", "uav", "carrier",
-            "submarine", "air defense", "sanctions", "border", "strait", "maritime",
-            "escalation", "drills", "exercise", "counterterrorism", "bilateral", "sovereignty",
-            "arms deal", "ammunition", "artillery", "geopolitics"
-        ]
-
-        prioritized_defense_trends: List[str] = []
-
-        # Step 1: Filter live trending topics for any that match defense or foreign policy
-        for candidate_index in range(len(extracted_trend_names_list)):
-            candidate_trend = extracted_trend_names_list[candidate_index]
-            lowered_candidate = candidate_trend.lower()
-            matches_defense = False
-            for indicator_word in defense_and_foreign_policy_indicators:
-                if indicator_word in lowered_candidate:
-                    matches_defense = True
+        # Derive queries to mine: prioritize Boolean queries generated from the news topics
+        queries_to_mine_list: List[str] = []
+        for topic_item in synthesized_topics_list:
+            topic_query = topic_item.get("boolean_query", "").strip()
+            if len(topic_query) == 0:
+                topic_query = topic_item.get("label", "").strip()
+            if len(topic_query) > 0 and topic_query not in queries_to_mine_list:
+                queries_to_mine_list.append(topic_query)
+                if len(queries_to_mine_list) >= trends_to_mine_count:
                     break
-            if matches_defense and candidate_trend not in prioritized_defense_trends:
-                prioritized_defense_trends.append(candidate_trend)
 
-        # Step 2: If live trends do not provide enough defense/foreign policy topics,
-        # dynamically augment with targeted high-signal queries for the target scope
-        normalized_country_name = target_country_name.strip().lower()
-        if normalized_country_name in ["worldwide", "global", "all"]:
-            targeted_fallback_queries = [
-                '"defense pact" OR "military agreement" OR "security alliance"',
-                '"foreign policy" OR "bilateral security" OR "defense treaty"',
-                '"joint military exercise" OR "air defense" OR "naval drills"',
-                '"arms deal" OR "weapons procurement" OR "defense modernization"',
-                '"maritime security" OR "strait security" OR "regional conflict"'
-            ]
-        else:
-            targeted_fallback_queries = [
-                f'"{target_country_name} defense pact" OR "{target_country_name} military agreement"',
-                f'"{target_country_name} foreign policy" OR "{target_country_name} strategic alliance"',
-                f'"{target_country_name} armed forces" OR "{target_country_name} defense modernization"',
-                f'"{target_country_name} joint military exercise" OR "{target_country_name} security treaty"',
-                f'"{target_country_name} border security" OR "{target_country_name} defense bilateral"'
-            ]
+        # Fallback to defense indicators if no topic queries
+        if len(queries_to_mine_list) == 0:
+            for fallback_trend in relevant_trends24_topics_list[:trends_to_mine_count]:
+                queries_to_mine_list.append(fallback_trend)
 
-        for fallback_index in range(len(targeted_fallback_queries)):
-            fallback_query = targeted_fallback_queries[fallback_index]
-            if len(prioritized_defense_trends) < trends_to_mine_count and fallback_query not in prioritized_defense_trends:
-                prioritized_defense_trends.append(fallback_query)
+        await log_and_record("INFO", f"Selected {len(queries_to_mine_list)} news-derived Boolean queries to mine on X.com using Latest tab (&f=live).")
 
-        # Step 3: If still needed, add remaining live trending topics that are not noise
-        for candidate_index in range(len(extracted_trend_names_list)):
-            candidate_trend = extracted_trend_names_list[candidate_index]
-            if len(prioritized_defense_trends) >= trends_to_mine_count:
-                break
-            if candidate_trend not in prioritized_defense_trends:
-                lowered_candidate = candidate_trend.lower()
-                has_noise = False
-                for noise_word in ui_noise_blacklist:
-                    if noise_word in lowered_candidate:
-                        has_noise = True
-                        break
-                if not has_noise:
-                    prioritized_defense_trends.append(candidate_trend)
-
-        # Select top live trends to mine
-        selected_trends = prioritized_defense_trends[:trends_to_mine_count]
-
-        for trend_index in range(len(selected_trends)):
+        for query_index in range(len(queries_to_mine_list)):
             if cancellation_event.is_set():
                 break
 
-            current_trend_topic = selected_trends[trend_index]
-            encoded_query = urllib.parse.quote(current_trend_topic)
-            search_url = f"https://x.com/search?q={encoded_query}&f=top"
+            current_mining_query = queries_to_mine_list[query_index]
+            encoded_query = urllib.parse.quote(current_mining_query)
+            # Use &f=live to strictly open Twitter's Latest tab (reverse chronological, recent tweets)
+            search_url = f"https://x.com/search?q={encoded_query}&f=live"
 
-            await log_and_record("BROWSER", f"Mining tweets [{trend_index + 1}/{len(selected_trends)}]: {current_trend_topic}")
+            await log_and_record("BROWSER", f"Mining latest tweets [{query_index + 1}/{len(queries_to_mine_list)}]: {current_mining_query}")
             
             try:
                 await browser_instance.navigate_to(search_url)
                 await asyncio.sleep(4)
 
-                collected_tweets_for_trend: List[str] = []
+                collected_tweets_for_query: List[str] = []
 
                 # Progressive scrolling loop
                 for scroll_round in range(max_scroll_rounds):
@@ -324,12 +304,12 @@ async def run_single_country_pipeline(
                     fresh_batch_tweets = trends.extract_tweets_from_article_chunks(page_state_text)
 
                     for tweet_text in fresh_batch_tweets:
-                        if tweet_text not in collected_tweets_for_trend:
-                            collected_tweets_for_trend.append(tweet_text)
+                        if tweet_text not in collected_tweets_for_query:
+                            collected_tweets_for_query.append(tweet_text)
 
-                    await log_and_record("SCROLL", f"  Scroll round {scroll_round + 1}/{max_scroll_rounds}: {len(collected_tweets_for_trend)} tweets accumulated for {current_trend_topic}")
+                    await log_and_record("SCROLL", f"  Scroll round {scroll_round + 1}/{max_scroll_rounds}: {len(collected_tweets_for_query)} fresh tweets accumulated for query")
 
-                    if len(collected_tweets_for_trend) >= max_tweets_target:
+                    if len(collected_tweets_for_query) >= max_tweets_target:
                         break
 
                     try:
@@ -341,10 +321,17 @@ async def run_single_country_pipeline(
                     except Exception:
                         break
 
-                await log_and_record("SUCCESS", f"Captured {len(collected_tweets_for_trend)} genuine tweets for {current_trend_topic}")
-                x_native_intel_dictionary["sample_tweets_by_trend"][current_trend_topic] = collected_tweets_for_trend[:25]
-            except Exception as trend_scrape_error:
-                await log_and_record("WARN", f"Notice: Error mining {current_trend_topic}: {str(trend_scrape_error)}")
+                await log_and_record("SUCCESS", f"Captured {len(collected_tweets_for_query)} fresh tweets for: {current_mining_query}")
+                x_native_intel_dictionary["sample_tweets_by_trend"][current_mining_query] = collected_tweets_for_query[:25]
+            except Exception as query_scrape_error:
+                await log_and_record("WARN", f"Notice: Error mining query '{current_mining_query}': {str(query_scrape_error)}")
+
+        # Attach mined tweets to matching synthesized topics
+        sample_tweets_map = x_native_intel_dictionary.get("sample_tweets_by_trend", {})
+        for topic_item in synthesized_topics_list:
+            b_query = topic_item.get("boolean_query", "")
+            if b_query in sample_tweets_map:
+                topic_item["sample_tweets"] = sample_tweets_map[b_query]
 
     finally:
         # We always close the browser session to release Chrome resources
@@ -359,13 +346,16 @@ async def run_single_country_pipeline(
         update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user after browser mining")
         return None
 
-    # 5. PHASE 4: Consolidate raw data and save raw_sources.json
+    # PHASE 5: Consolidate raw data and save raw_sources.json and keywords.json
+    await log_and_record("STEP", "[5/5] Consolidating and saving intelligence artifacts...")
     current_iso_time = datetime.datetime.now().isoformat()
     consolidated_raw_sources = {
         "country": target_country_name,
         "slug": country_slug_name,
         "collected_at": current_iso_time,
-        "x_trends24_topics": trends24_topics_list,
+        "all_trends24_topics": all_trends24_topics_list,
+        "relevant_trends24_topics": relevant_trends24_topics_list,
+        "x_trends24_topics": relevant_trends24_topics_list,
         "news_sources_intel": news_sources_intel_dictionary,
         "x_native_explore": x_native_intel_dictionary
     }
@@ -374,31 +364,6 @@ async def run_single_country_pipeline(
         file_pointer.write(json.dumps(consolidated_raw_sources, indent=2, ensure_ascii=False))
     await log_and_record("SUCCESS", f"Saved consolidated raw intelligence to {RAW_SOURCES_FILE_PATH}")
 
-    # 6. PHASE 5: Feed consolidated intel to Qwen3-14B LLM for keyword synthesis
-    await log_and_record("STEP", "[4/5] Initiating LLM keyword synthesis using local vLLM...")
-    await progress_callback_function("llm_synthesis", 5, 6, f"Synthesizing 20+ keywords per topic with Qwen3-14B for {target_country_name}...", target_country_name)
-
-    endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.12.121:8000/v1")
-    model_name = settings_dictionary.get("llm_model_name", "qwen3-14b")
-    timeout_seconds = int(settings_dictionary.get("llm_timeout_seconds", "180"))
-
-    await log_and_record("LLM", f"Contacting {endpoint_url} (Model: {model_name}, Timeout: {timeout_seconds}s)...")
-
-    synthesized_topics_list = []
-    try:
-        # Run synthesis in threadpool so it doesn't block asyncio event loop
-        loop = asyncio.get_event_loop()
-        synthesized_topics_list = await loop.run_in_executor(
-            None,
-            trends.synthesize_keywords_with_llm,
-            target_country_name,
-            consolidated_raw_sources
-        )
-        await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} high-precision topics.")
-    except Exception as llm_error:
-        await log_and_record("ERROR", f"LLM synthesis failed: {str(llm_error)}")
-
-    # 7. PHASE 6: Save final keywords.json and update SQLite database
     final_keywords_payload = {
         "generated_at": current_iso_time,
         "country": target_country_name,
@@ -417,7 +382,7 @@ async def run_single_country_pipeline(
     with open(KEYWORDS_FILE_PATH, "w", encoding="utf-8") as file_pointer:
         file_pointer.write(keywords_json_string)
         
-    await log_and_record("SUCCESS", f"Saved final keyword sets to {KEYWORDS_FILE_PATH}")
+    await log_and_record("SUCCESS", f"Saved final keyword sets with Boolean queries to {KEYWORDS_FILE_PATH}")
 
     # Persist in SQLite
     complete_pipeline_run_with_data(
@@ -428,7 +393,7 @@ async def run_single_country_pipeline(
     )
 
     await progress_callback_function("done", 6, 6, f"Pipeline complete for {target_country_name}!", target_country_name)
-    await log_and_record("STEP", f"[5/5] Pipeline successfully completed for {target_country_name}!")
+    await log_and_record("STEP", f"Pipeline successfully completed for {target_country_name}!")
 
     return {
         "run_id": run_identifier,

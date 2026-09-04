@@ -30,6 +30,8 @@ export interface KeywordTopicItem {
   label: string;
   category: string;
   terms: string[];
+  boolean_query?: string;
+  sample_tweets?: string[];
 }
 
 export interface KeywordsData {
@@ -44,6 +46,8 @@ export interface RawSourcesData {
   country: string;
   slug: string;
   collected_at: string;
+  all_trends24_topics?: string[];
+  relevant_trends24_topics?: string[];
   x_trends24_topics: string[];
   news_sources_intel: Record<string, string[]>;
   x_native_explore: {

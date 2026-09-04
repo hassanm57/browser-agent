@@ -7,9 +7,7 @@ import {
   Play,
   ArrowRight,
   Calendar,
-  Sparkles,
-  ShieldCheck,
-  SlidersHorizontal
+  Sparkles
 } from "lucide-react";
 
 interface DashboardPageProps {
@@ -172,26 +170,21 @@ export function DashboardPage(props: DashboardPageProps) {
 
       {/* Target Scope & Country Quick Switcher Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-2xl bg-card/60 border border-border/50 shadow-xs backdrop-blur-sm select-none">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
             <Globe className="w-4 h-4" />
           </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-semibold text-foreground">Target Intelligence Scope:</span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-sky-500/10 text-sky-400 border border-sky-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
-                {activeScopeLabel}
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Tracking hot global defense, military agreements, foreign policy, and strategic alliances worldwide.
-            </p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-foreground">Target Intelligence Scope:</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
+              {activeScopeLabel}
+            </span>
           </div>
         </div>
 
-        {/* Quick Scope Switcher Pills */}
-        <div className="flex items-center flex-wrap gap-1.5">
+        {/* Big, Sleek Scope Switcher Buttons */}
+        <div className="flex items-center flex-wrap gap-2">
           {["Worldwide", "United States", "China", "Russia", "United Kingdom", "Pakistan"].map(function (countryName) {
             const isCountryActive =
               (countryName === "Worldwide" &&
@@ -209,10 +202,10 @@ export function DashboardPage(props: DashboardPageProps) {
                 }}
                 disabled={props.isPipelineActive}
                 className={
-                  "text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer disabled:opacity-50 " +
+                  "text-xs px-3.5 py-2 rounded-xl font-medium transition-all duration-150 cursor-pointer disabled:opacity-50 " +
                   (isCountryActive
-                    ? "bg-sky-500 text-white shadow-xs font-semibold"
-                    : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60")
+                    ? "bg-sky-500 text-white shadow-sm font-semibold"
+                    : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/70")
                 }
               >
                 {countryName}
@@ -223,7 +216,7 @@ export function DashboardPage(props: DashboardPageProps) {
             onClick={function () {
               props.onNavigateTab("pipeline");
             }}
-            className="text-[11px] px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors flex items-center gap-1 cursor-pointer"
+            className="text-xs px-3 py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors flex items-center gap-1 cursor-pointer font-medium"
             title="Configure all countries in Pipeline tab"
           >
             <span>All Countries</span>
@@ -323,211 +316,150 @@ export function DashboardPage(props: DashboardPageProps) {
         </div>
       </div>
 
-      {/* Middle Section: Intelligence Snapshot + System Telemetry Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (2/3 width): Latest Intelligence Synthesis Snapshot */}
-        <div className="lg:col-span-2 rounded-2xl bg-card border border-border/50 p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-border/40 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Latest Intelligence Ingestion</h3>
-                <p className="text-xs text-muted-foreground">
-                  {latestRun
-                    ? `Last ran on ${formatDashboardDate(latestRun.finished_at || latestRun.started_at)}`
-                    : "No runs executed yet"}
-                </p>
-              </div>
+      {/* Full-Width Latest Intelligence Ingestion Snapshot */}
+      <div className="w-full rounded-2xl bg-card border border-border/50 p-6 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <Sparkles className="w-4 h-4" />
             </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Latest Intelligence Ingestion</h3>
+              <p className="text-xs text-muted-foreground">
+                {latestRun
+                  ? `Last ran on ${formatDashboardDate(latestRun.finished_at || latestRun.started_at)}`
+                  : "No runs executed yet"}
+              </p>
+            </div>
+          </div>
 
+          <div className="flex items-center gap-3">
             {latestRun && (
               <span
                 className={
-                  "text-[10px] font-mono px-2 py-0.5 rounded-full font-medium " +
+                  "text-[10px] font-mono px-2.5 py-1 rounded-full font-medium " +
                   (latestRun.status === "completed"
-                    ? "bg-emerald-500/10 text-emerald-400"
-                    : "bg-amber-500/10 text-amber-400")
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    : "bg-amber-500/10 text-amber-400 border border-amber-500/20")
                 }
               >
                 {latestRun.status.toUpperCase()}
               </span>
             )}
-          </div>
-
-          {/* Top Trends Discovered */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-muted-foreground">Discovered Trending Hashtags</span>
-              <button
-                onClick={() => props.onNavigateTab("trends")}
-                className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
-              >
-                View all trends →
-              </button>
-            </div>
-            {topTrendsList.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {topTrendsList.map((trend, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => props.onNavigateTab("tweets")}
-                    className="px-2.5 py-1 rounded-lg text-xs bg-muted/30 hover:bg-primary/15 text-foreground hover:text-primary transition-colors border border-border/30 cursor-pointer"
-                  >
-                    {trend}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground/70 italic">
-                No trends ingested yet. Run the pipeline to harvest trending hashtags.
-              </p>
-            )}
-          </div>
-
-          {/* Synthesized Keyword Terms Preview */}
-          <div className="pt-1">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-muted-foreground">Sample Synthesized Boolean Keywords</span>
-              <button
-                onClick={() => props.onNavigateTab("keywords")}
-                className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
-              >
-                Inspect keyword sets →
-              </button>
-            </div>
-            {sampleKeywordTerms.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {sampleKeywordTerms.map((term, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  >
-                    {term}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground/70 italic">
-                Run the pipeline to generate targeted domain keywords via Qwen3-14B.
-              </p>
-            )}
+            <button
+              onClick={() => props.onNavigateTab("sources")}
+              className="text-xs text-primary hover:underline font-medium flex items-center gap-1 cursor-pointer"
+            >
+              <span>Sources ({props.activeSourcesCount})</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
         </div>
 
-        {/* Right Column (1/3 width): System Engines & Feeds Telemetry */}
-        <div className="rounded-2xl bg-card border border-border/50 p-5 shadow-sm flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center gap-2 pb-3 border-b border-border/40">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Engine Architecture</h3>
-            </div>
-
-            <div className="space-y-3 mt-3.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Chrome Browser Agent</span>
-                <span className="inline-flex items-center gap-1.5 font-medium text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  CDP Ready
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Local Vision LLM</span>
-                <span className="inline-flex items-center gap-1.5 font-medium text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Qwen3-14B
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Scraping Strategy</span>
-                <span className="inline-flex items-center gap-1.5 font-medium text-blue-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                  Fast + Fallback
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Telemetry Stream</span>
-                <span className="inline-flex items-center gap-1.5 font-medium text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  WebSocket
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-border/40 flex items-center justify-between gap-2">
+        {/* Top Trends Discovered */}
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Discovered Trending Hashtags
+            </span>
             <button
-              onClick={() => props.onNavigateTab("sources")}
-              className="flex items-center gap-1 text-xs text-primary hover:underline font-medium cursor-pointer"
+              onClick={() => props.onNavigateTab("trends")}
+              className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
             >
-              <span>Manage Sources ({props.activeSourcesCount})</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
-
-            <button
-              onClick={() => props.onNavigateTab("settings")}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
-              title="Open Settings"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
+              View all trends →
             </button>
           </div>
+          {topTrendsList.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {topTrendsList.map((trend, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => props.onNavigateTab("tweets")}
+                  className="px-3 py-1.5 rounded-xl text-xs bg-muted/40 hover:bg-primary/15 text-foreground hover:text-primary transition-colors border border-border/40 cursor-pointer font-medium"
+                >
+                  {trend}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground/70 italic">
+              No trends ingested yet. Run the pipeline to harvest trending hashtags.
+            </p>
+          )}
+        </div>
+
+        {/* Extracted Keywords Preview */}
+        <div className="pt-2 border-t border-border/30">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Extracted Keywords
+            </span>
+            <button
+              onClick={() => props.onNavigateTab("keywords")}
+              className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
+            >
+              Inspect keyword sets →
+            </button>
+          </div>
+          {sampleKeywordTerms.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {sampleKeywordTerms.map((term, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                >
+                  {term}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground/70 italic">
+              Run the pipeline to generate targeted domain keywords via Qwen3-14B.
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Quick Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 select-none">
-        <div
+      {/* Sleek, Minimal Navigation Buttons (Subtext Removed) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 select-none">
+        <button
           onClick={() => props.onNavigateTab("trends")}
-          className="p-4 rounded-xl bg-card hover:bg-muted/20 border border-border/50 hover:border-border cursor-pointer transition-all duration-200 group shadow-xs"
+          className="p-4 rounded-2xl bg-card hover:bg-muted/40 border border-border/60 hover:border-border cursor-pointer transition-all duration-200 group shadow-xs flex items-center justify-between"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Flame className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-semibold text-foreground">Trending Topics</span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <Flame className="w-4 h-4 group-hover:scale-110 transition-transform" />
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+            <span className="text-xs font-semibold text-foreground">Trending Topics</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
-            Real-time ranked topics scraped from trends24 and X.com explore.
-          </p>
-        </div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+        </button>
 
-        <div
+        <button
           onClick={() => props.onNavigateTab("headlines")}
-          className="p-4 rounded-xl bg-card hover:bg-muted/20 border border-border/50 hover:border-border cursor-pointer transition-all duration-200 group shadow-xs"
+          className="p-4 rounded-2xl bg-card hover:bg-muted/40 border border-border/60 hover:border-border cursor-pointer transition-all duration-200 group shadow-xs flex items-center justify-between"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-semibold text-foreground">News Headlines</span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <Globe className="w-4 h-4 group-hover:scale-110 transition-transform" />
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+            <span className="text-xs font-semibold text-foreground">News Headlines</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
-            Consolidated intelligence from Dawn, Tribune, Breaking Defense, and BBC.
-          </p>
-        </div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+        </button>
 
-        <div
+        <button
           onClick={() => props.onNavigateTab("history")}
-          className="p-4 rounded-xl bg-card hover:bg-muted/20 border border-border/50 hover:border-border cursor-pointer transition-all duration-200 group shadow-xs"
+          className="p-4 rounded-2xl bg-card hover:bg-muted/40 border border-border/60 hover:border-border cursor-pointer transition-all duration-200 group shadow-xs flex items-center justify-between"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-semibold text-foreground">Run History</span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <Calendar className="w-4 h-4 group-hover:scale-110 transition-transform" />
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+            <span className="text-xs font-semibold text-foreground">Run History</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
-            Inspect past pipeline execution datasets permanently saved in SQLite.
-          </p>
-        </div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+        </button>
       </div>
     </div>
   );

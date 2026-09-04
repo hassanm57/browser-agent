@@ -242,6 +242,57 @@ def fetch_headlines_from_configured_sources(sources_list):
     return aggregated_sources_intel_dictionary
 
 
+def filter_trends_relevant_to_news(all_trends_list, news_sources_dictionary):
+    # Cross-references the full list of Trends24 topics with the hot news headlines
+    # Identifies trends that share keywords with breaking news or match core strategic indicators
+    news_word_tokens = set()
+    for source_name in news_sources_dictionary:
+        headlines_list = news_sources_dictionary[source_name]
+        for headline in headlines_list:
+            cleaned_headline = headline.lower()
+            for punctuation_char in [",", ".", ":", ";", "'", '"', "(", ")", "[", "]", "!", "?", "-", "/", "\\"]:
+                cleaned_headline = cleaned_headline.replace(punctuation_char, " ")
+            headline_words = cleaned_headline.split()
+            for word in headline_words:
+                if len(word) > 3:
+                    news_word_tokens.add(word)
+
+    strategic_indicators = [
+        "defense", "defence", "military", "army", "navy", "airforce", "air force",
+        "foreign policy", "diplomacy", "diplomat", "treaty", "pact", "accord",
+        "security", "alliance", "nato", "aukus", "quad", "csto", "unsc", "pentagon",
+        "weapons", "missile", "nuclear", "hypersonic", "warfare", "conflict", "frontline",
+        "drone", "uav", "carrier", "submarine", "air defense", "sanctions", "border",
+        "strait", "maritime", "escalation", "drills", "exercise", "counterterrorism",
+        "bilateral", "sovereignty", "arms deal", "ammunition", "artillery", "geopolitics",
+        "hormuz", "taiwan", "gaza", "israel", "iran", "ukraine", "russia", "china", "india", "pakistan"
+    ]
+
+    relevant_trends_list = []
+
+    for trend_index in range(len(all_trends_list)):
+        current_trend = all_trends_list[trend_index]
+        cleaned_trend = current_trend.lower().replace("#", "").replace("_", " ")
+        trend_words = cleaned_trend.split()
+
+        is_relevant = False
+        for trend_word in trend_words:
+            if len(trend_word) > 3 and trend_word in news_word_tokens:
+                is_relevant = True
+                break
+
+        if not is_relevant:
+            for indicator in strategic_indicators:
+                if indicator in cleaned_trend:
+                    is_relevant = True
+                    break
+
+        if is_relevant and current_trend not in relevant_trends_list:
+            relevant_trends_list.append(current_trend)
+
+    return relevant_trends_list
+
+
 def derive_web_homepage_url(source_url):
     # Map RSS feed URLs to their actual website homepages
     if "breakingdefense.com" in source_url:
@@ -295,6 +346,92 @@ def clean_dom_tags_and_markdown(text_string):
     cleaned_string = re.sub(r'\|\w+\([^)]*\)\|', '', cleaned_string)
     cleaned_string = re.sub(r'\*\s*', '', cleaned_string)
     return ' '.join(cleaned_string.split())
+
+
+def validate_tweet_date_margin(cleaned_lines, reference_date=None):
+    # Strictly enforces a 10-day date margin: [Today - 10 days, Today].
+    # Rejects tweets from past historical years (e.g. 2010 through previous year),
+    # relative dates older than 10 days (e.g. 11d, 30d), and older months outside the 10-day window.
+    if reference_date is None:
+        reference_date = datetime.date.today()
+
+    current_year_number = reference_date.year
+
+    # 1. Immediate rejection for past historical years (e.g. 2010 through current_year - 1)
+    for past_year_int in range(2010, current_year_number):
+        past_year_str = str(past_year_int)
+        for check_index in range(min(8, len(cleaned_lines))):
+            if past_year_str in cleaned_lines[check_index]:
+                return False, ""
+
+    # Build the set of acceptable month-day strings for the last 10 days
+    acceptable_date_strings = []
+    for day_offset in range(11):
+        target_day = reference_date - datetime.timedelta(days=day_offset)
+        month_abbr = target_day.strftime("%b").lower()
+        month_full = target_day.strftime("%B").lower()
+        day_num = str(target_day.day)
+        day_pad = target_day.strftime("%d")
+
+        acceptable_date_strings.append(f"{month_abbr} {day_num}")
+        acceptable_date_strings.append(f"{month_abbr} {day_pad}")
+        acceptable_date_strings.append(f"{month_full} {day_num}")
+
+    month_names_list = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+
+    detected_date_label = ""
+
+    # Check header lines where timestamp tokens live
+    for line_index in range(min(6, len(cleaned_lines))):
+        current_line = cleaned_lines[line_index].strip()
+        lower_line = current_line.lower()
+
+        # Relative seconds, minutes, hours -> posted today
+        if re.match(r'^\d+[smh]$', lower_line):
+            detected_date_label = current_line
+            return True, detected_date_label
+
+        # Relative days: "1d" through "10d"
+        day_match = re.match(r'^(\d+)d$', lower_line)
+        if day_match:
+            days_count = int(day_match.group(1))
+            if days_count <= 10:
+                detected_date_label = current_line
+                return True, detected_date_label
+            else:
+                return False, ""
+
+        # Explicit acceptable month-day strings
+        for acceptable_date in acceptable_date_strings:
+            if acceptable_date in lower_line:
+                detected_date_label = current_line
+                return True, detected_date_label
+
+        # Check if an older month outside the window is mentioned
+        for month_name in month_names_list:
+            if re.search(r'\b' + month_name + r'[a-z]*\s+\d{1,2}\b', lower_line):
+                return False, ""
+
+    # Check for dot separator lines e.g. "· 2h" or "· 5d"
+    for line_index in range(min(6, len(cleaned_lines))):
+        current_line = cleaned_lines[line_index]
+        if "·" in current_line:
+            parts = current_line.split("·")
+            for part in parts:
+                cleaned_part = part.strip().lower()
+                if re.match(r'^\d+[smh]$', cleaned_part):
+                    return True, part.strip()
+                day_match = re.match(r'^(\d+)d$', cleaned_part)
+                if day_match:
+                    if int(day_match.group(1)) <= 10:
+                        return True, part.strip()
+                    else:
+                        return False, ""
+                for acceptable_date in acceptable_date_strings:
+                    if acceptable_date in cleaned_part:
+                        return True, part.strip()
+
+    return True, detected_date_label
 
 
 def extract_tweets_from_article_chunks(page_state_text):
@@ -364,16 +501,22 @@ def extract_tweets_from_article_chunks(page_state_text):
             combined_body_text = " ".join(body_text_lines).strip()
             combined_body_text = combined_body_text.replace("<!-- SVG content collapsed -->", "").strip()
 
+            # Strictly enforce date margin: only tweets from Today down to 10 days ago
+            is_valid_date, detected_tweet_date = validate_tweet_date_margin(cleaned_lines)
+            if not is_valid_date:
+                continue
+
             # Ensure tweet has substantial content and no sidebar follow widgets
             lower_body = combined_body_text.lower()
             if lower_body.startswith("follow ") or ("follow " in lower_body and len(combined_body_text) < 40):
                 continue
 
             if len(combined_body_text) > 15:
+                date_tag = f" | {detected_tweet_date}" if len(detected_tweet_date) > 0 else ""
                 if len(author_display_name) > 0 and "svg" not in author_display_name.lower():
-                    formatted_tweet = f"[{author_display_name} | {user_handle_string}] {combined_body_text}"
+                    formatted_tweet = f"[{author_display_name} | {user_handle_string}{date_tag}] {combined_body_text}"
                 else:
-                    formatted_tweet = f"[{user_handle_string}] {combined_body_text}"
+                    formatted_tweet = f"[{user_handle_string}{date_tag}] {combined_body_text}"
 
                 if formatted_tweet not in parsed_tweets:
                     parsed_tweets.append(formatted_tweet)
@@ -381,15 +524,15 @@ def extract_tweets_from_article_chunks(page_state_text):
     return parsed_tweets
 
 
-async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_enabled, trends24_topics_list=None):
+async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_enabled, trends24_topics_list=None, topics_with_boolean_queries_list=None):
     # This function uses an active headful browser session so you can see Chrome on screen
     # 1. Opens https://x.com/explore/tabs/trending and extracts active live trends
-    # 2. Selects top defense/geopolitical trends
-    # 3. Navigates to search results and progressively scrolls down until AT LEAST 20 genuine tweets are collected
-    # 4. Uses extract_tweets_from_article_chunks to isolate tweets and filter out sidebar noise
+    # 2. Mines tweets using news-derived Boolean queries or top defense/geopolitical trends
+    # 3. Navigates to search results using &f=live (Latest tab) and scrolls until AT LEAST 20 fresh tweets are collected
+    # 4. Uses extract_tweets_from_article_chunks to isolate tweets and reject historical past-year tweets
     print("")
     print("==================================================")
-    print("[3] Mining Live Trends and Tweets Directly on X.com (Headful Browser)")
+    print("[4] Mining Latest Tweets on X.com via Boolean Queries (Headful Browser)")
     print("==================================================")
 
     x_native_intel_dictionary = {
@@ -470,87 +613,82 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         print("Sample trends: " + ", ".join(extracted_trend_names_list[:6]))
         print("")
 
-        # Comprehensive list of indicators for foreign policy, defense, military, and strategic pacts
-        defense_and_foreign_policy_indicators = [
-            "defense", "defence", "military", "army", "navy", "airforce", "air force",
-            "foreign policy", "diplomacy", "diplomatic", "treaty", "pact", "agreement",
-            "accord", "security", "alliance", "nato", "aukus", "quad", "csto", "unsc",
-            "pentagon", "ministry of defense", "weapons", "missile", "nuclear",
-            "hypersonic", "warfare", "conflict", "frontline", "drone", "uav", "carrier",
-            "submarine", "air defense", "sanctions", "border", "strait", "maritime",
-            "escalation", "drills", "exercise", "counterterrorism", "bilateral", "sovereignty",
-            "arms deal", "ammunition", "artillery", "geopolitics"
-        ]
+        selected_trends_to_mine_list = []
 
-        prioritized_defense_trends = []
-
-        # Step 1: Filter live trending topics for any that match defense or foreign policy
-        for candidate_index in range(len(extracted_trend_names_list)):
-            candidate_trend = extracted_trend_names_list[candidate_index]
-            lowered_candidate = candidate_trend.lower()
-            matches_defense = False
-            for indicator_word in defense_and_foreign_policy_indicators:
-                if indicator_word in lowered_candidate:
-                    matches_defense = True
-                    break
-            if matches_defense and candidate_trend not in prioritized_defense_trends:
-                prioritized_defense_trends.append(candidate_trend)
-
-        # Step 2: If live trends do not provide enough defense/foreign policy topics,
-        # dynamically augment with targeted high-signal queries for the target scope
-        normalized_country_name = target_country_name.strip().lower()
-        if normalized_country_name in ["worldwide", "global", "all"]:
-            targeted_fallback_queries = [
-                '"defense pact" OR "military agreement" OR "security alliance"',
-                '"foreign policy" OR "bilateral security" OR "defense treaty"',
-                '"joint military exercise" OR "air defense" OR "naval drills"',
-                '"arms deal" OR "weapons procurement" OR "defense modernization"',
-                '"maritime security" OR "strait security" OR "regional conflict"'
-            ]
-        else:
-            targeted_fallback_queries = [
-                f'"{target_country_name} defense pact" OR "{target_country_name} military agreement"',
-                f'"{target_country_name} foreign policy" OR "{target_country_name} strategic alliance"',
-                f'"{target_country_name} armed forces" OR "{target_country_name} defense modernization"',
-                f'"{target_country_name} joint military exercise" OR "{target_country_name} security treaty"',
-                f'"{target_country_name} border security" OR "{target_country_name} defense bilateral"'
-            ]
-
-        for fallback_index in range(len(targeted_fallback_queries)):
-            fallback_query = targeted_fallback_queries[fallback_index]
-            if len(prioritized_defense_trends) < 5 and fallback_query not in prioritized_defense_trends:
-                prioritized_defense_trends.append(fallback_query)
-
-        # Step 3: If still needed, add remaining live trending topics that are not noise
-        for candidate_index in range(len(extracted_trend_names_list)):
-            candidate_trend = extracted_trend_names_list[candidate_index]
-            if len(prioritized_defense_trends) >= 5:
-                break
-            if candidate_trend not in prioritized_defense_trends:
-                lowered_candidate = candidate_trend.lower()
-                has_noise = False
-                for noise_word in ui_noise_blacklist:
-                    if noise_word in lowered_candidate:
-                        has_noise = True
+        # Check if news-derived topics with Boolean queries were provided
+        if topics_with_boolean_queries_list is not None and len(topics_with_boolean_queries_list) > 0:
+            for topic_candidate_item in topics_with_boolean_queries_list:
+                boolean_query_candidate = topic_candidate_item.get("boolean_query", "").strip()
+                if len(boolean_query_candidate) == 0:
+                    boolean_query_candidate = topic_candidate_item.get("label", "").strip()
+                if len(boolean_query_candidate) > 0 and boolean_query_candidate not in selected_trends_to_mine_list:
+                    selected_trends_to_mine_list.append(boolean_query_candidate)
+                    if len(selected_trends_to_mine_list) >= 5:
                         break
-                if not has_noise:
-                    prioritized_defense_trends.append(candidate_trend)
 
-        # Select top 5 trends to search and extract genuine tweets
-        selected_trends_to_mine_list = prioritized_defense_trends[:5]
+        # Fallback if no Boolean queries were provided: use defense/geopolitical trend matching
+        if len(selected_trends_to_mine_list) == 0:
+            defense_and_foreign_policy_indicators = [
+                "defense", "defence", "military", "army", "navy", "airforce", "air force",
+                "foreign policy", "diplomacy", "diplomatic", "treaty", "pact", "agreement",
+                "accord", "security", "alliance", "nato", "aukus", "quad", "csto", "unsc",
+                "pentagon", "ministry of defense", "weapons", "missile", "nuclear",
+                "hypersonic", "warfare", "conflict", "frontline", "drone", "uav", "carrier",
+                "submarine", "air defense", "sanctions", "border", "strait", "maritime",
+                "escalation", "drills", "exercise", "counterterrorism", "bilateral", "sovereignty",
+                "arms deal", "ammunition", "artillery", "geopolitics"
+            ]
+
+            for candidate_index in range(len(extracted_trend_names_list)):
+                candidate_trend = extracted_trend_names_list[candidate_index]
+                lowered_candidate = candidate_trend.lower()
+                matches_defense = False
+                for indicator_word in defense_and_foreign_policy_indicators:
+                    if indicator_word in lowered_candidate:
+                        matches_defense = True
+                        break
+                if matches_defense and candidate_trend not in selected_trends_to_mine_list:
+                    selected_trends_to_mine_list.append(candidate_trend)
+
+            normalized_country_name = target_country_name.strip().lower()
+            if normalized_country_name in ["worldwide", "global", "all"]:
+                targeted_fallback_queries = [
+                    '"defense pact" OR "military agreement" OR "security alliance"',
+                    '"foreign policy" OR "bilateral security" OR "defense treaty"',
+                    '"joint military exercise" OR "air defense" OR "naval drills"',
+                    '"arms deal" OR "weapons procurement" OR "defense modernization"',
+                    '"maritime security" OR "strait security" OR "regional conflict"'
+                ]
+            else:
+                targeted_fallback_queries = [
+                    f'"{target_country_name} defense pact" OR "{target_country_name} military agreement"',
+                    f'"{target_country_name} foreign policy" OR "{target_country_name} strategic alliance"',
+                    f'"{target_country_name} armed forces" OR "{target_country_name} defense modernization"',
+                    f'"{target_country_name} joint military exercise" OR "{target_country_name} security treaty"',
+                    f'"{target_country_name} border security" OR "{target_country_name} defense bilateral"'
+                ]
+
+            for fallback_index in range(len(targeted_fallback_queries)):
+                fallback_query = targeted_fallback_queries[fallback_index]
+                if len(selected_trends_to_mine_list) < 5 and fallback_query not in selected_trends_to_mine_list:
+                    selected_trends_to_mine_list.append(fallback_query)
+
+        # Cap at 5 queries for focused extraction
+        selected_trends_to_mine_list = selected_trends_to_mine_list[:5]
 
         for trend_index in range(len(selected_trends_to_mine_list)):
             current_trend_query = selected_trends_to_mine_list[trend_index]
             encoded_query_string = urllib.parse.quote(current_trend_query)
-            search_url_string = "https://x.com/search?q=" + encoded_query_string + "&f=top"
+            # Use &f=live so X.com strictly loads the Latest tab (reverse-chronological fresh tweets)
+            search_url_string = "https://x.com/search?q=" + encoded_query_string + "&f=live"
 
-            print(f"Mining tweets for trend [{trend_index + 1}/5]: {current_trend_query}")
+            print(f"Mining latest tweets for query [{trend_index + 1}/{len(selected_trends_to_mine_list)}]: {current_trend_query}")
             try:
                 await browser_instance.navigate_to(search_url_string)
                 await asyncio.sleep(4)
 
                 collected_tweets_for_trend = []
-                # Progressively scroll down to dynamically load tweets until at least 20 tweets are captured
+                # Progressively scroll down to dynamically load fresh tweets until at least 20 tweets are captured
                 for scroll_round in range(12):
                     page_state_text = await browser_instance.get_state_as_text()
                     fresh_batch_tweets = extract_tweets_from_article_chunks(page_state_text)
@@ -559,7 +697,7 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                         if tweet_item not in collected_tweets_for_trend:
                             collected_tweets_for_trend.append(tweet_item)
 
-                    print(f"      Scroll round {scroll_round + 1}: {len(collected_tweets_for_trend)} unique tweets collected so far...")
+                    print(f"      Scroll round {scroll_round + 1}: {len(collected_tweets_for_trend)} fresh tweets collected so far...")
 
                     if len(collected_tweets_for_trend) >= 20:
                         break
@@ -573,18 +711,18 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                     except Exception:
                         break
 
-                print(f"      -> Successfully extracted {len(collected_tweets_for_trend)} genuine tweets for: {current_trend_query}")
+                print(f"      -> Successfully extracted {len(collected_tweets_for_trend)} fresh tweets for: {current_trend_query}")
                 for preview_index in range(min(2, len(collected_tweets_for_trend))):
                     print(f"         {preview_index + 1}. {collected_tweets_for_trend[preview_index][:120]}...")
 
                 x_native_intel_dictionary["sample_tweets_by_trend"][current_trend_query] = collected_tweets_for_trend[:25]
             except Exception as trend_error:
-                print(f"      Notice: Skipping trend due to network timeout: {trend_error}")
+                print(f"      Notice: Skipping query due to network timeout: {trend_error}")
 
             await asyncio.sleep(2)
 
         await browser_instance.stop()
-        print("Successfully completed headful X.com trend and tweet extraction!")
+        print("Successfully completed headful X.com tweet extraction using Latest tab!")
     except Exception as browser_error:
         print("Notice: X.com browser inspection encountered: " + str(browser_error))
         try:
@@ -595,54 +733,41 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
     return x_native_intel_dictionary
 
 
-def synthesize_keywords_with_llm(target_country_name, consolidated_intel_dictionary):
-    # We pass the full multi-source digest into Qwen3-14B to filter foreign affairs,
-    # analyze tweets and headlines, and generate 20 comprehensive search keywords for each topic.
+def synthesize_topics_from_news_and_trends(target_country_name, news_sources_intel_dictionary, relevant_trends_list):
+    # This function synthesizes 10 to 12 strategic topics directly from authoritative news headlines,
+    # enriched by confirmed news-relevant X trends, and formulates high-precision Boolean search queries for each topic.
     print("")
     print("==================================================")
-    print("[4] Synthesizing 20 Keywords per Topic with Qwen3-14B")
+    print("[3] Synthesizing News-Derived Topics & Boolean X Queries with Qwen3-14B")
     print("==================================================")
 
     digest_sections_list = []
 
-    # Ingest all news headlines from sources.json
-    configured_news_sources_dictionary = consolidated_intel_dictionary.get("news_sources_intel", {})
-    for source_name_key in configured_news_sources_dictionary:
-        headlines_list = configured_news_sources_dictionary[source_name_key]
+    # Ingest all authoritative news headlines first (Ground Truth)
+    for source_name_key in news_sources_intel_dictionary:
+        headlines_list = news_sources_intel_dictionary[source_name_key]
         if len(headlines_list) > 0:
-            digest_sections_list.append(f"\n--- {source_name_key.upper()} ---")
-            for idx in range(len(headlines_list)):
-                digest_sections_list.append("• " + headlines_list[idx])
+            digest_sections_list.append(f"\n--- AUTHORITATIVE NEWS SOURCE: {source_name_key.upper()} ---")
+            for headline_index in range(len(headlines_list)):
+                digest_sections_list.append("• " + headlines_list[headline_index])
 
-    # Ingest trends24 topics
-    trends24_list = consolidated_intel_dictionary.get("x_trends24_topics", [])
-    if len(trends24_list) > 0:
-        digest_sections_list.append(f"\n--- X.COM CHATTER & TRENDS ({target_country_name.upper()}) ---")
-        for idx in range(len(trends24_list)):
-            digest_sections_list.append("• " + trends24_list[idx])
-
-    # Ingest extracted authentic tweets from X.com
-    x_native_data = consolidated_intel_dictionary.get("x_native_explore", {})
-    sample_tweets_map = x_native_data.get("sample_tweets_by_trend", {})
-    if len(sample_tweets_map) > 0:
-        digest_sections_list.append("\n--- AUTHENTIC TWEETS EXTRACTED FROM X.COM ---")
-        for trend_key in sample_tweets_map:
-            tweets_list = sample_tweets_map[trend_key]
-            digest_sections_list.append(f"Trend: {trend_key}")
-            for t_idx in range(len(tweets_list)):
-                digest_sections_list.append(f"   [Tweet {t_idx+1}]: {tweets_list[t_idx]}")
+    # Ingest confirmed news-relevant trending topics
+    if len(relevant_trends_list) > 0:
+        digest_sections_list.append(f"\n--- CONFIRMED NEWS-RELEVANT X TRENDS ({target_country_name.upper()}) ---")
+        for trend_index in range(len(relevant_trends_list)):
+            digest_sections_list.append("• " + relevant_trends_list[trend_index])
 
     full_intel_digest_string = "\n".join(digest_sections_list)
 
     system_and_user_prompt = f"""You are the Chief Worldwide Geopolitical & Defense Intelligence Specialist and Social Search Keyword Engineer.
-Analyze the following multi-source OSINT intelligence dossier for the target scope: {target_country_name} (Worldwide & International Strategic Scope).
+Analyze the following multi-source news and intelligence dossier for the target scope: {target_country_name} (Worldwide & International Strategic Scope).
 
-INTELLIGENCE DOSSIER (GLOBAL HEADLINES, RSS FEEDS, TRENDING DISCUSSIONS, AND AUTHENTIC TWEETS):
+INTELLIGENCE DOSSIER (GLOBAL HEADLINES, RSS FEEDS, AND NEWS-RELEVANT TRENDS):
 {full_intel_digest_string}
 
 CORE MISSION OBJECTIVES:
-The primary directive is to synthesize hot, breaking, and critically important WORLDWIDE news topics and generate actionable keyword tracking matrices.
-DO NOT restrict yourself to any single country or domestic sphere. Even when a specific country is analyzed, frame its actions within global geopolitics, international alliances, and balance of power. If the scope is Worldwide or includes international feeds, provide balanced, high-impact global coverage across Europe, North America, the Indo-Pacific, Middle East, and Eurasia.
+The primary directive is to synthesize hot, breaking, and critically important WORLDWIDE news topics and generate actionable keyword tracking matrices and precise Boolean search queries.
+The topics MUST BE DERIVED DIRECTLY FROM THE NEWS HEADLINES. Discard unrelated social gossip, memes, domestic partisan squabbles, entertainment, and sports. Focus on high-impact global coverage across Europe, North America, the Indo-Pacific, Middle East, and Eurasia.
 
 TOPIC SELECTION DIRECTIVES - STRICTLY PRIORITIZE:
 1. FOREIGN & GLOBAL POLICIES:
@@ -670,46 +795,34 @@ TOPIC SELECTION DIRECTIVES - STRICTLY PRIORITIZE:
    - Freedom of navigation operations, strait security (Hormuz, Bab-el-Mandeb, Malacca, Taiwan Strait, Black Sea).
    - Border security operations, cross-border escalation dynamics, and counter-terrorism military campaigns.
 
-DISCARD: Domestic partisan squabbles, celebrity news, pop culture, entertainment, sports, cryptocurrency speculation, and local municipal crime.
-
-KEYWORD GENERATION REQUIREMENTS:
-1. Generate between 10 to 12 distinct, high-priority strategic topics based on the ingested intelligence.
-2. For EACH topic, provide approximately 20 RICH, DIVERSE, HIGH-PRECISION SEARCH KEYWORDS:
-   - Include: Full official treaty/pact names, common acronyms, operational code-names.
-   - Include: Key participating nations, defense ministries, key defense secretaries/commanders/officials.
-   - Include: Specific weapon platforms, defense contractors/firms, and military equipment involved.
-   - Include: Relevant search hashtags (#) and international terminology (in English and relevant regional languages where applicable).
-   - Downstream scrapers will use these exact terms to track timeline posts without missing emerging discourse.
+KEYWORD & BOOLEAN QUERY REQUIREMENTS:
+1. Generate between 10 to 12 distinct, high-priority strategic topics based on the ingested news.
+2. For EACH topic, provide:
+   - "boolean_query": Formulate an exact, high-precision Boolean search query formatted for X.com (Twitter) search using quotation marks and OR logic, e.g.:
+     ("NATO" OR "Article 5") ("Eastern Flank" OR "deterrence")
+     ("AUKUS" OR "Hypersonic") ("defense pact" OR "Indo-Pacific")
+     ("Strait of Hormuz" OR "Red Sea") ("maritime security" OR "naval escort")
+   - "terms": Array of EXACTLY 15 CRISP, HIGH-IMPACT search keywords and phrases (official treaty/pact names, commanders, weapons systems, hashtags, regional terminology). NO generic fluff, keep each keyword crisp, punchy, and highly targeted.
 
 OUTPUT FORMAT:
 Respond ONLY with a valid, clean JSON array of objects. Do NOT include markdown backticks (```json), thinking reasoning, or preamble text.
 Each object must have these exact keys:
-- "label": Short, descriptive title of the global strategic topic or defense development
+- "label": Short, descriptive title of the news topic or defense development
 - "category": Exactly one of "defense", "diplomacy", "politics", "economic"
-- "terms": Array of approximately 20 comprehensive keyword and search phrase strings
+- "boolean_query": High-precision Boolean search query formatted for X.com search
+- "terms": Array of exactly 15 crisp keyword and search phrase strings
 
-Representative global example structure:
+Representative example structure:
 [
   {{
     "label": "NATO Collective Defense and Eastern Flank Modernization",
     "category": "defense",
+    "boolean_query": "(\\"NATO\\" OR \\"Article 5\\") (\\"Eastern Flank\\" OR \\"deterrence\\")",
     "terms": [
       "NATO Collective Defense", "Article 5 NATO", "NATO Eastern Flank", "NATO Defense Spending 2%",
       "Rapid Reaction Force", "NATO Joint Drills", "Steadfast Defender", "NATO Summit 2026",
       "Mark Rutte NATO", "European Deterrence Initiative", "NATO Air Shielding", "Patriot Missile Deployment",
-      "Baltic Defense Line", "Suwalki Gap Security", "NATO Allied Command Operations", "NATO Nuclear Sharing",
-      "Defense Industrial Pledge", "#NATOSummit", "#CollectiveDefense", "Transatlantic Security Pact"
-    ]
-  }},
-  {{
-    "label": "AUKUS Pillar 2 Advanced Defense Tech and Hypersonics",
-    "category": "defense",
-    "terms": [
-      "AUKUS Pillar 2", "AUKUS Defense Tech Sharing", "Hypersonic Weapons Development", "AUKUS Submarine Accord",
-      "Undersea Autonomous Vehicles", "Quantum Defense Technologies", "Trilateral Security Partnership", "AUKUS Japan Cooperation",
-      "Indo-Pacific Deterrence", "SSN-AUKUS Submarines", "Defense Trade Controls Exemption", "Electronic Warfare Collaboration",
-      "AI Warfare Systems", "Pacific Defense Alliances", "Pentagon AUKUS Office", "Royal Navy AUKUS",
-      "Australian Submarine Agency", "#AUKUS", "#IndoPacificSecurity", "Advanced Cyber Defense Pact"
+      "Baltic Defense Line", "Suwalki Gap Security", "#NATOSummit"
     ]
   }}
 ]
@@ -740,9 +853,9 @@ Representative global example structure:
         cleaned_json_text = cleaned_json_text[:-3]
     cleaned_json_text = cleaned_json_text.strip()
 
+    parsed_topics_list = []
     try:
         parsed_topics_list = json.loads(cleaned_json_text)
-        return parsed_topics_list
     except Exception:
         first_bracket_index = cleaned_json_text.find("[")
         last_bracket_index = cleaned_json_text.rfind("]")
@@ -750,10 +863,37 @@ Representative global example structure:
             bracket_substring = cleaned_json_text[first_bracket_index:last_bracket_index + 1]
             try:
                 parsed_topics_list = json.loads(bracket_substring)
-                return parsed_topics_list
             except Exception:
                 pass
-        return []
+
+    # Ensure every topic has a valid boolean_query and strictly cap at 15 crisp keywords
+    for topic_index in range(len(parsed_topics_list)):
+        topic_item = parsed_topics_list[topic_index]
+        existing_boolean_query = topic_item.get("boolean_query", "").strip()
+        topic_terms = topic_item.get("terms", [])
+
+        # Cap strictly at 15 crisp keywords
+        topic_item["terms"] = topic_terms[:15]
+
+        if len(existing_boolean_query) == 0:
+            if len(topic_terms) >= 2:
+                topic_item["boolean_query"] = f'("{topic_terms[0]}" OR "{topic_terms[1]}") ("defense" OR "policy")'
+            elif len(topic_terms) == 1:
+                topic_item["boolean_query"] = f'"{topic_terms[0]}"'
+            else:
+                topic_item["boolean_query"] = f'"{topic_item.get("label", target_country_name)}"'
+
+    return parsed_topics_list
+
+
+def synthesize_keywords_with_llm(target_country_name, consolidated_intel_dictionary):
+    # Compatibility wrapper that delegates to synthesize_topics_from_news_and_trends
+    news_intel = consolidated_intel_dictionary.get("news_sources_intel", {})
+    relevant_trends = consolidated_intel_dictionary.get("relevant_trends24_topics", [])
+    if len(relevant_trends) == 0:
+        relevant_trends = consolidated_intel_dictionary.get("x_trends24_topics", [])
+
+    return synthesize_topics_from_news_and_trends(target_country_name, news_intel, relevant_trends)
 
 
 def run_country_hot_news_pipeline():
@@ -786,30 +926,55 @@ def run_country_hot_news_pipeline():
     print("==================================================")
     print("")
 
-    # PHASE 1: Gather raw news and trends from all sources
-    trends24_topics_list = fetch_trends24_topics(target_country_slug)
-
-    # Load and ingest all configured sources from sources.json
+    # PHASE 1: Ingest ground truth news headlines first from configured sources
+    print("[1] Ingesting Authoritative News Headlines...")
     configured_sources_list = load_sources_configuration_file()
     news_sources_intel_dictionary = fetch_headlines_from_configured_sources(configured_sources_list)
 
-    # PHASE 2: Run X.com browser agent to inspect explore tabs and mine at least 20 sample tweets per trend
+    # PHASE 2: Ingest all trends from Trends24, then filter for news-relevant trends
+    print("[2] Ingesting All Trends24 Topics & Filtering for News-Relevance...")
+    all_trends24_topics_list = fetch_trends24_topics(target_country_slug)
+    relevant_trends24_topics_list = filter_trends_relevant_to_news(
+        all_trends24_topics_list, news_sources_intel_dictionary
+    )
+    print(f"    Total Trends24 topics captured: {len(all_trends24_topics_list)}")
+    print(f"    News-relevant trends filtered: {len(relevant_trends24_topics_list)}")
+    if len(relevant_trends24_topics_list) > 0:
+        print("    Sample relevant trends: " + ", ".join(relevant_trends24_topics_list[:5]))
+
+    # PHASE 3: Synthesize news-derived topics and high-precision Boolean X queries
+    synthesized_topics_list = synthesize_topics_from_news_and_trends(
+        target_country_name, news_sources_intel_dictionary, relevant_trends24_topics_list
+    )
+
+    # PHASE 4: Mine X.com using the generated Boolean queries & fetch LATEST tweets (&f=live)
     x_native_intel_dictionary = asyncio.run(
         run_x_com_deep_trend_and_tweet_miner(
             target_country_name,
             target_country_slug,
             is_headless_mode_enabled,
-            trends24_topics_list
+            trends24_topics_list=relevant_trends24_topics_list,
+            topics_with_boolean_queries_list=synthesized_topics_list
         )
     )
 
-    # PHASE 3: Consolidate all raw data into raw_sources.json
+    # Attach collected fresh tweets to their corresponding topics
+    sample_tweets_map = x_native_intel_dictionary.get("sample_tweets_by_trend", {})
+    for topic_index in range(len(synthesized_topics_list)):
+        topic_item = synthesized_topics_list[topic_index]
+        topic_boolean_query = topic_item.get("boolean_query", "")
+        if topic_boolean_query in sample_tweets_map:
+            topic_item["sample_tweets"] = sample_tweets_map[topic_boolean_query]
+
+    # PHASE 5: Consolidate and persist raw intelligence and structured keywords
     current_iso_timestamp = datetime.datetime.now().isoformat()
     consolidated_raw_sources_data = {
         "country": target_country_name,
         "slug": target_country_slug,
         "collected_at": current_iso_timestamp,
-        "x_trends24_topics": trends24_topics_list,
+        "all_trends24_topics": all_trends24_topics_list,
+        "relevant_trends24_topics": relevant_trends24_topics_list,
+        "x_trends24_topics": relevant_trends24_topics_list,
         "news_sources_intel": news_sources_intel_dictionary,
         "x_native_explore": x_native_intel_dictionary
     }
@@ -821,12 +986,6 @@ def run_country_hot_news_pipeline():
     print("")
     print("Saved consolidated raw intelligence to: " + raw_sources_filename)
 
-    # PHASE 4: Feed consolidated intel to Qwen3-14B for 20 keywords per topic
-    synthesized_topics_list = synthesize_keywords_with_llm(
-        target_country_name, consolidated_raw_sources_data
-    )
-
-    # PHASE 5: Format and save the final structured keywords strictly into keywords.json
     final_output_structure = {
         "generated_at": current_iso_timestamp,
         "country": target_country_name,
@@ -845,24 +1004,27 @@ def run_country_hot_news_pipeline():
 
     print("")
     print("==================================================")
-    print("SUCCESS: Keyword Synthesis Finished")
+    print("SUCCESS: Pipeline Finished")
     print("==================================================")
     print("Saved output to: " + keywords_output_filename)
     print("Total high-precision topics generated: " + str(len(synthesized_topics_list)))
     print("==================================================")
     print("")
 
-    # Display the final generated topics with their 20 keywords
+    # Display the final generated topics with their Boolean query and keywords
     for topic_index in range(len(synthesized_topics_list)):
         current_topic_item = synthesized_topics_list[topic_index]
         topic_label = current_topic_item.get("label", "Unknown")
         topic_category = current_topic_item.get("category", "general")
+        topic_boolean_query = current_topic_item.get("boolean_query", "")
         topic_terms = current_topic_item.get("terms", [])
 
         print(f"{topic_index + 1}. [{topic_category.upper()}] {topic_label} ({len(topic_terms)} keywords)")
-        print(f"   Keywords: {', '.join(topic_terms)}")
+        print(f"   Boolean Query: {topic_boolean_query}")
+        print(f"   Keywords: {', '.join(topic_terms[:8])}...")
         print("")
 
 
 if __name__ == "__main__":
     run_country_hot_news_pipeline()
+

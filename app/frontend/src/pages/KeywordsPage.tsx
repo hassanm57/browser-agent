@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { KeywordsData, KeywordTopicItem } from "../types";
-import { Tags, Plus, X, Trash2, Download, Check } from "lucide-react";
+import { Tags, Plus, X, Trash2, Download, Check, Copy, ExternalLink } from "lucide-react";
 
 interface KeywordsPageProps {
   keywordsData: KeywordsData | null;
@@ -47,6 +47,8 @@ export function KeywordsPage(props: KeywordsPageProps) {
         updatedTopics.push({
           label: topicItem.label,
           category: topicItem.category,
+          boolean_query: topicItem.boolean_query,
+          sample_tweets: topicItem.sample_tweets,
           terms: updatedTerms
         });
       } else {
@@ -78,6 +80,8 @@ export function KeywordsPage(props: KeywordsPageProps) {
         updatedTopics.push({
           label: topicItem.label,
           category: topicItem.category,
+          boolean_query: topicItem.boolean_query,
+          sample_tweets: topicItem.sample_tweets,
           terms: updatedTerms
         });
       } else {
@@ -123,6 +127,8 @@ export function KeywordsPage(props: KeywordsPageProps) {
         updatedTopics.push({
           label: topicItem.label,
           category: topicItem.category,
+          boolean_query: topicItem.boolean_query,
+          sample_tweets: topicItem.sample_tweets,
           terms: updatedTerms
         });
       } else {
@@ -314,6 +320,43 @@ export function KeywordsPage(props: KeywordsPageProps) {
             </button>
           </div>
         </div>
+
+        {/* News-Derived Boolean Query Banner */}
+        {topicItem.boolean_query ? (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2.5 rounded-md bg-zinc-900/60 border border-zinc-800/80">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0">
+                Boolean Query
+              </span>
+              <span className="text-xs font-mono text-zinc-300 truncate select-all">
+                {topicItem.boolean_query}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={function () {
+                  navigator.clipboard.writeText(topicItem.boolean_query || "");
+                }}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                title="Copy Boolean query"
+              >
+                <Copy className="w-3 h-3" />
+                <span>Copy</span>
+              </button>
+              <a
+                href={"https://x.com/search?q=" + encodeURIComponent(topicItem.boolean_query) + "&f=live"}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-blue-400 hover:text-blue-300 hover:bg-blue-950/40 border border-blue-900/40 transition-colors"
+                title="Search Latest on X.com"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Test on X (&f=live)</span>
+              </a>
+            </div>
+          </div>
+        ) : null}
 
         {/* Keywords Chips Container */}
         <div className="flex flex-wrap gap-1.5 items-center">

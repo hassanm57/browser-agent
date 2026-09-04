@@ -294,10 +294,81 @@ def fetch_headlines_from_configured_sources(sources_list):
     return aggregated_sources_intel_dictionary
 
 
+STRATEGIC_DEFENSE_INDICATORS = [
+    # Military branches, command & defense institutions
+    "defense", "defence", "military", "army", "navy", "airforce", "air force",
+    "marines", "armed forces", "corps", "brigade", "pentagon", "ministry of defense",
+    "general", "admiral", "command", "frontline", "airbase", "garrison", "troops",
+    
+    # Weapons, systems & military technology
+    "missile", "ballistic", "hypersonic", "cruise missile", "nuclear", "warhead",
+    "uranium", "enrichment", "drone", "uav", "unmanned", "fighter jet", "stealth",
+    "aircraft carrier", "warship", "destroyer", "frigate", "submarine",
+    "air defense", "patriot", "thaad", "s-300", "s-400", "s-500", "iron dome",
+    "artillery", "ammunition", "radar", "electronic warfare", "weapons", "arms deal",
+    
+    # Foreign policy, diplomacy, treaties & international pacts
+    "foreign policy", "diplomacy", "diplomat", "ambassador", "foreign minister",
+    "foreign ministry", "state department", "treaty", "pact", "accord", "agreement",
+    "alliance", "bilateral", "trilateral", "multilateral", "summit", "sovereignty",
+    "sanctions", "embargo", "boycott", "unsc", "security council",
+    
+    # Strategic alliances & coalitions
+    "nato", "aukus", "quad", "csto", "brics", "sco", "makkah pact", "mecca pact",
+    "abraham accords",
+    
+    # Strategic straits, waterways & conflict hotspots
+    "hormuz", "strait", "taiwan", "gaza", "rafah", "west bank", "israel", "idf",
+    "hamas", "hezbollah", "lebanon", "iran", "irgc", "yemen", "houthi", "red sea",
+    "ukraine", "russia", "kyiv", "moscow", "crimea", "donbas", "kursk",
+    "south china sea", "indo-pacific", "baltic", "black sea", "kashmir", "narowal", "loc",
+    
+    # Conflict, deterrence & strategic operations
+    "warfare", "conflict", "escalation", "retaliation", "strike", "airstrike",
+    "deterrence", "ceasefire", "drills", "exercise", "naval drills", "combat",
+    "counterterrorism", "intelligence", "geopolitics"
+]
+
+ENTERTAINMENT_SPORTS_NOISE = [
+    "cricket", "football", "soccer", "ipl", "world cup", "worldcup", "match",
+    "tournament", "album", "song", "music", "trailer", "movie", "cinema",
+    "boxoffice", "actor", "actress", "episode", "season", "drama", "biggboss",
+    "birthday", "hbd", "sale", "discount", "fashion", "gaming", "game", "gamer",
+    "bollywood", "hollywood", "horoscope", "comedy", "meme"
+]
+
+
+def is_strategic_or_defense_trend(trend_text_string):
+    # Evaluates if a trend string belongs strictly to defense, military, foreign policy, or geopolitics
+    cleaned_trend_text = trend_text_string.lower().replace("#", " ").replace("_", " ")
+
+    # Reject entertainment, sports, and casual noise immediately
+    for noise_phrase in ENTERTAINMENT_SPORTS_NOISE:
+        if noise_phrase in cleaned_trend_text:
+            return False
+
+    # Match against strategic domain indicators
+    for strategic_indicator in STRATEGIC_DEFENSE_INDICATORS:
+        if strategic_indicator in cleaned_trend_text:
+            return True
+
+    return False
+
+
 def filter_trends_relevant_to_news(all_trends_list, news_sources_dictionary):
     # Cross-references the full list of Trends24 topics with the hot news headlines
-    # Identifies trends that share keywords with breaking news or match core strategic indicators
-    news_word_tokens = set()
+    # Filters Trends24 topics to retain only those strictly relevant to defense, military, foreign policy, and geopolitics
+    relevant_trends_list = []
+
+    # First pass: check direct strategic indicators and filter out noise
+    for trend_index in range(len(all_trends_list)):
+        current_trend = all_trends_list[trend_index]
+        if is_strategic_or_defense_trend(current_trend):
+            if current_trend not in relevant_trends_list:
+                relevant_trends_list.append(current_trend)
+
+    # Second pass: check overlap with strategic tokens from authoritative news headlines
+    strategic_news_tokens = set()
     for source_name in news_sources_dictionary:
         headlines_list = news_sources_dictionary[source_name]
         for headline in headlines_list:
@@ -306,41 +377,18 @@ def filter_trends_relevant_to_news(all_trends_list, news_sources_dictionary):
                 cleaned_headline = cleaned_headline.replace(punctuation_char, " ")
             headline_words = cleaned_headline.split()
             for word in headline_words:
-                if len(word) > 3:
-                    news_word_tokens.add(word)
-
-    strategic_indicators = [
-        "defense", "defence", "military", "army", "navy", "airforce", "air force",
-        "foreign policy", "diplomacy", "diplomat", "treaty", "pact", "accord",
-        "security", "alliance", "nato", "aukus", "quad", "csto", "unsc", "pentagon",
-        "weapons", "missile", "nuclear", "hypersonic", "warfare", "conflict", "frontline",
-        "drone", "uav", "carrier", "submarine", "air defense", "sanctions", "border",
-        "strait", "maritime", "escalation", "drills", "exercise", "counterterrorism",
-        "bilateral", "sovereignty", "arms deal", "ammunition", "artillery", "geopolitics",
-        "hormuz", "taiwan", "gaza", "israel", "iran", "ukraine", "russia", "china", "india", "pakistan"
-    ]
-
-    relevant_trends_list = []
+                if len(word) > 3 and is_strategic_or_defense_trend(word):
+                    strategic_news_tokens.add(word)
 
     for trend_index in range(len(all_trends_list)):
         current_trend = all_trends_list[trend_index]
-        cleaned_trend = current_trend.lower().replace("#", "").replace("_", " ")
+        cleaned_trend = current_trend.lower().replace("#", " ").replace("_", " ")
         trend_words = cleaned_trend.split()
-
-        is_relevant = False
         for trend_word in trend_words:
-            if len(trend_word) > 3 and trend_word in news_word_tokens:
-                is_relevant = True
+            if trend_word in strategic_news_tokens:
+                if current_trend not in relevant_trends_list:
+                    relevant_trends_list.append(current_trend)
                 break
-
-        if not is_relevant:
-            for indicator in strategic_indicators:
-                if indicator in cleaned_trend:
-                    is_relevant = True
-                    break
-
-        if is_relevant and current_trend not in relevant_trends_list:
-            relevant_trends_list.append(current_trend)
 
     return relevant_trends_list
 
@@ -667,43 +715,84 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         print("Sample trends: " + ", ".join(extracted_trend_names_list[:6]))
         print("")
 
-        selected_trends_to_mine_list = []
+        # Step A: Identify relevant defense & foreign policy trending hashtags directly on X.com
+        relevant_x_hashtags_to_mine = []
+        for candidate_trend in extracted_trend_names_list:
+            if is_strategic_or_defense_trend(candidate_trend):
+                if candidate_trend not in relevant_x_hashtags_to_mine:
+                    relevant_x_hashtags_to_mine.append(candidate_trend)
+                    if len(relevant_x_hashtags_to_mine) >= 4:
+                        break
 
-        # Check if news-derived topics with Boolean queries were provided
+        # Fallback to relevant Trends24 defense topics if X explore had few explicit defense hashtags right now
+        if len(relevant_x_hashtags_to_mine) < 3 and trends24_topics_list is not None:
+            for trend24_item in trends24_topics_list:
+                if is_strategic_or_defense_trend(trend24_item):
+                    if trend24_item not in relevant_x_hashtags_to_mine:
+                        relevant_x_hashtags_to_mine.append(trend24_item)
+                        if len(relevant_x_hashtags_to_mine) >= 4:
+                            break
+
+        if len(relevant_x_hashtags_to_mine) > 0:
+            preview_hashtags_str = ", ".join(relevant_x_hashtags_to_mine)
+            print(f"Identified {len(relevant_x_hashtags_to_mine)} relevant defense/foreign policy hashtags on X: {preview_hashtags_str}")
+        else:
+            print("No explicit defense hashtags on X explore at this moment; proceeding to news Boolean queries.")
+
+        # Step B: Mine fresh tweets from each relevant X trending hashtag
+        for hashtag_index in range(len(relevant_x_hashtags_to_mine)):
+            current_hashtag = relevant_x_hashtags_to_mine[hashtag_index]
+            encoded_hashtag = urllib.parse.quote(current_hashtag)
+            hashtag_search_url = f"https://x.com/search?q={encoded_hashtag}&f=live"
+
+            print(f"Mining latest tweets for X trending hashtag [{hashtag_index + 1}/{len(relevant_x_hashtags_to_mine)}]: {current_hashtag}")
+            try:
+                await browser_instance.navigate_to(hashtag_search_url)
+                await asyncio.sleep(4)
+
+                collected_tweets_for_hashtag = []
+                for scroll_round in range(12):
+                    page_state_text = await browser_instance.get_state_as_text()
+                    fresh_batch_tweets = extract_tweets_from_article_chunks(page_state_text)
+
+                    for tweet_item in fresh_batch_tweets:
+                        if tweet_item not in collected_tweets_for_hashtag:
+                            collected_tweets_for_hashtag.append(tweet_item)
+
+                    print(f"      Hashtag scroll {scroll_round + 1}: {len(collected_tweets_for_hashtag)} fresh tweets collected so far...")
+
+                    if len(collected_tweets_for_hashtag) >= 20:
+                        break
+
+                    try:
+                        scroll_action_event = browser_instance.event_bus.dispatch(
+                            ScrollEvent(direction="down", amount=1200)
+                        )
+                        await scroll_action_event
+                        await asyncio.sleep(2)
+                    except Exception:
+                        break
+
+                print(f"      -> Successfully extracted {len(collected_tweets_for_hashtag)} fresh tweets for hashtag: {current_hashtag}")
+                x_native_intel_dictionary["sample_tweets_by_trend"][current_hashtag] = collected_tweets_for_hashtag[:25]
+            except Exception as hashtag_error:
+                print(f"      Notice: Skipping hashtag due to error: {hashtag_error}")
+
+            await asyncio.sleep(2)
+
+        # Step C: Derive and mine news-derived Boolean queries synthesized by LLM
+        queries_to_mine_list = []
         if topics_with_boolean_queries_list is not None and len(topics_with_boolean_queries_list) > 0:
             for topic_candidate_item in topics_with_boolean_queries_list:
                 boolean_query_candidate = topic_candidate_item.get("boolean_query", "").strip()
                 if len(boolean_query_candidate) == 0:
                     boolean_query_candidate = topic_candidate_item.get("label", "").strip()
-                if len(boolean_query_candidate) > 0 and boolean_query_candidate not in selected_trends_to_mine_list:
-                    selected_trends_to_mine_list.append(boolean_query_candidate)
-                    if len(selected_trends_to_mine_list) >= 5:
+                if len(boolean_query_candidate) > 0 and boolean_query_candidate not in queries_to_mine_list:
+                    queries_to_mine_list.append(boolean_query_candidate)
+                    if len(queries_to_mine_list) >= 5:
                         break
 
-        # Fallback if no Boolean queries were provided: use defense/geopolitical trend matching
-        if len(selected_trends_to_mine_list) == 0:
-            defense_and_foreign_policy_indicators = [
-                "defense", "defence", "military", "army", "navy", "airforce", "air force",
-                "foreign policy", "diplomacy", "diplomatic", "treaty", "pact", "agreement",
-                "accord", "security", "alliance", "nato", "aukus", "quad", "csto", "unsc",
-                "pentagon", "ministry of defense", "weapons", "missile", "nuclear",
-                "hypersonic", "warfare", "conflict", "frontline", "drone", "uav", "carrier",
-                "submarine", "air defense", "sanctions", "border", "strait", "maritime",
-                "escalation", "drills", "exercise", "counterterrorism", "bilateral", "sovereignty",
-                "arms deal", "ammunition", "artillery", "geopolitics"
-            ]
-
-            for candidate_index in range(len(extracted_trend_names_list)):
-                candidate_trend = extracted_trend_names_list[candidate_index]
-                lowered_candidate = candidate_trend.lower()
-                matches_defense = False
-                for indicator_word in defense_and_foreign_policy_indicators:
-                    if indicator_word in lowered_candidate:
-                        matches_defense = True
-                        break
-                if matches_defense and candidate_trend not in selected_trends_to_mine_list:
-                    selected_trends_to_mine_list.append(candidate_trend)
-
+        if len(queries_to_mine_list) == 0:
             normalized_country_name = target_country_name.strip().lower()
             if normalized_country_name in ["worldwide", "global", "all"]:
                 targeted_fallback_queries = [
@@ -721,28 +810,23 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                     f'"{target_country_name} joint military exercise" OR "{target_country_name} security treaty"',
                     f'"{target_country_name} border security" OR "{target_country_name} defense bilateral"'
                 ]
+            for fallback_query in targeted_fallback_queries:
+                if len(queries_to_mine_list) < 5 and fallback_query not in queries_to_mine_list:
+                    queries_to_mine_list.append(fallback_query)
 
-            for fallback_index in range(len(targeted_fallback_queries)):
-                fallback_query = targeted_fallback_queries[fallback_index]
-                if len(selected_trends_to_mine_list) < 5 and fallback_query not in selected_trends_to_mine_list:
-                    selected_trends_to_mine_list.append(fallback_query)
+        print(f"Mining latest tweets for {len(queries_to_mine_list)} news-derived Boolean queries...")
 
-        # Cap at 5 queries for focused extraction
-        selected_trends_to_mine_list = selected_trends_to_mine_list[:5]
-
-        for trend_index in range(len(selected_trends_to_mine_list)):
-            current_trend_query = selected_trends_to_mine_list[trend_index]
+        for query_index in range(len(queries_to_mine_list)):
+            current_trend_query = queries_to_mine_list[query_index]
             encoded_query_string = urllib.parse.quote(current_trend_query)
-            # Use &f=live so X.com strictly loads the Latest tab (reverse-chronological fresh tweets)
             search_url_string = "https://x.com/search?q=" + encoded_query_string + "&f=live"
 
-            print(f"Mining latest tweets for query [{trend_index + 1}/{len(selected_trends_to_mine_list)}]: {current_trend_query}")
+            print(f"Mining latest tweets for Boolean query [{query_index + 1}/{len(queries_to_mine_list)}]: {current_trend_query}")
             try:
                 await browser_instance.navigate_to(search_url_string)
                 await asyncio.sleep(4)
 
                 collected_tweets_for_trend = []
-                # Progressively scroll down to dynamically load fresh tweets until at least 20 tweets are captured
                 for scroll_round in range(12):
                     page_state_text = await browser_instance.get_state_as_text()
                     fresh_batch_tweets = extract_tweets_from_article_chunks(page_state_text)
@@ -765,7 +849,7 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                     except Exception:
                         break
 
-                print(f"      -> Successfully extracted {len(collected_tweets_for_trend)} fresh tweets for: {current_trend_query}")
+                print(f"      -> Successfully extracted {len(collected_tweets_for_trend)} fresh tweets for Boolean query: {current_trend_query}")
                 for preview_index in range(min(2, len(collected_tweets_for_trend))):
                     print(f"         {preview_index + 1}. {collected_tweets_for_trend[preview_index][:120]}...")
 

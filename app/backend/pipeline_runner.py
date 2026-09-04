@@ -187,36 +187,56 @@ async def run_single_country_pipeline(
         trending_page_state_text = await browser_instance.get_state_as_text()
         extracted_trend_names_list: List[str] = []
 
+        # List of UI junk to filter out if parsed from raw text
+        ui_noise_blacklist = [
+            "terms of service", "privacy policy", "cookie policy",
+            "accessibility", "ads info", "more", "settings", "explore",
+            "log in", "sign up", "trending in", "trending with", "show more"
+        ]
+
         raw_state_lines_list = trending_page_state_text.split("\n")
         for line_index in range(len(raw_state_lines_list)):
             current_raw_line = raw_state_lines_list[line_index].strip()
             if current_raw_line.startswith("#") and len(current_raw_line) > 2:
-                if current_raw_line not in extracted_trend_names_list:
-                    extracted_trend_names_list.append(current_raw_line)
+                clean_hashtag = current_raw_line.split()[0].strip()
+                if clean_hashtag not in extracted_trend_names_list:
+                    extracted_trend_names_list.append(clean_hashtag)
             elif "Trending with" in current_raw_line or "Trending in" in current_raw_line:
                 if line_index + 1 < len(raw_state_lines_list):
                     next_line_text = raw_state_lines_list[line_index + 1].strip()
-                    if len(next_line_text) > 3 and not next_line_text.startswith("[") and next_line_text not in extracted_trend_names_list:
+                    lowered_text = next_line_text.lower()
+                    if (
+                        len(next_line_text) > 2
+                        and not next_line_text.startswith("[")
+                        and not any(noise in lowered_text for noise in ui_noise_blacklist)
+                        and next_line_text not in extracted_trend_names_list
+                    ):
                         extracted_trend_names_list.append(next_line_text)
 
-        # National security seed fallback trends
-        seed_priority_trends = [
-            "#VisionaryFieldMarshal",
-            "#GreatManCDF",
-            "#امہ_کی_شان_عاصم_منیر",
-            "#مرد_آہن_فیلڈ_مارشل",
-            "Makkah Defence Pact",
-            "Pakistan Navy Sea Spark"
-        ]
-        for seed_item in seed_priority_trends:
-            if seed_item not in extracted_trend_names_list:
-                extracted_trend_names_list.append(seed_item)
+        # Merge in the latest freshly harvested trends24 topics so we always have the freshest country trends
+        for live_trend_item in trends24_topics_list:
+            if live_trend_item not in extracted_trend_names_list:
+                extracted_trend_names_list.append(live_trend_item)
 
         x_native_intel_dictionary["trends_observed"] = extracted_trend_names_list
-        await log_and_record("SUCCESS", f"Discovered {len(extracted_trend_names_list)} trending topics on X.com.")
+        sample_preview_str = ", ".join(extracted_trend_names_list[:6])
+        await log_and_record("SUCCESS", f"Identified {len(extracted_trend_names_list)} fresh trending topics on X.com. Sample: {sample_preview_str}")
 
-        # Mine top trends
-        selected_trends = extracted_trend_names_list[:trends_to_mine_count]
+        # Filter and prioritize the top trends to mine: prioritize actual hashtags (#) and specific topics
+        prioritized_trends_to_mine: List[str] = []
+        # First pass: Hashtags starting with #
+        for candidate_trend in extracted_trend_names_list:
+            if candidate_trend.startswith("#") and candidate_trend not in prioritized_trends_to_mine:
+                prioritized_trends_to_mine.append(candidate_trend)
+        # Second pass: Remaining high-signal topics
+        for candidate_trend in extracted_trend_names_list:
+            if candidate_trend not in prioritized_trends_to_mine:
+                lowered_candidate = candidate_trend.lower()
+                if not any(noise in lowered_candidate for noise in ui_noise_blacklist):
+                    prioritized_trends_to_mine.append(candidate_trend)
+
+        # Select top live trends to mine
+        selected_trends = prioritized_trends_to_mine[:trends_to_mine_count]
 
         for trend_index in range(len(selected_trends)):
             if cancellation_event.is_set():

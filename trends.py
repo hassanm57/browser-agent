@@ -96,12 +96,16 @@ def load_sources_configuration_file():
 
 
 def fetch_trends24_topics(target_country_slug):
-    # We fetch country trending hashtags from trends24 without heavy browser overhead
-    target_webpage_url = "https://trends24.in/" + target_country_slug + "/"
-    print("[1] Fetching X trends from trends24: " + target_webpage_url)
+    # We fetch country trending hashtags from trends24 with cache-busting to ensure 100% fresh data
+    cache_buster_timestamp = int(datetime.datetime.now().timestamp())
+    target_webpage_url = f"https://trends24.in/{target_country_slug}/?_ts={cache_buster_timestamp}"
+    print("[1] Fetching live X trends from trends24: " + target_webpage_url)
 
     request_headers_dictionary = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
     }
 
     try:
@@ -109,20 +113,35 @@ def fetch_trends24_topics(target_country_slug):
         http_response_object.encoding = "utf-8"
 
         html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
-        ordered_lists_collection = html_soup_parser.find_all("ol")
-
+        
+        # Each hourly trend block is a div.list-container, ordered from newest to oldest
+        list_containers_collection = html_soup_parser.find_all("div", class_="list-container")
+        
         extracted_trending_topics_list = []
-        if len(ordered_lists_collection) > 0:
-            most_recent_hour_list = ordered_lists_collection[0]
-            list_items_collection = most_recent_hour_list.find_all("li")
-
+        for container_index in range(len(list_containers_collection)):
+            current_container = list_containers_collection[container_index]
+            ordered_list = current_container.find("ol")
+            if ordered_list is None:
+                continue
+                
+            list_items_collection = ordered_list.find_all("li")
             for item_index in range(len(list_items_collection)):
                 current_list_item = list_items_collection[item_index]
-                cleaned_topic_text = current_list_item.get_text(strip=True)
-                if len(cleaned_topic_text) > 0 and len(extracted_trending_topics_list) < 35:
+                anchor_element = current_list_item.find("a")
+                if anchor_element is not None:
+                    cleaned_topic_text = anchor_element.get_text(strip=True)
+                else:
+                    cleaned_topic_text = current_list_item.get_text(strip=True)
+                    
+                if len(cleaned_topic_text) > 0 and cleaned_topic_text not in extracted_trending_topics_list:
                     extracted_trending_topics_list.append(cleaned_topic_text)
+                    if len(extracted_trending_topics_list) >= 40:
+                        break
+                        
+            if len(extracted_trending_topics_list) >= 40:
+                break
 
-        print("    Fetched " + str(len(extracted_trending_topics_list)) + " trending topics from trends24.")
+        print("    Fetched " + str(len(extracted_trending_topics_list)) + " fresh trending topics from trends24.")
         return extracted_trending_topics_list
     except Exception as error_message:
         print("    Warning: Could not fetch trends24: " + str(error_message))
@@ -358,7 +377,7 @@ def extract_tweets_from_article_chunks(page_state_text):
     return parsed_tweets
 
 
-async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_enabled):
+async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_enabled, trends24_topics_list=None):
     # This function uses an active headful browser session so you can see Chrome on screen
     # 1. Opens https://x.com/explore/tabs/trending and extracts active live trends
     # 2. Selects top defense/geopolitical trends
@@ -394,39 +413,79 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         trending_page_state_text = await browser_instance.get_state_as_text()
         extracted_trend_names_list = []
 
+        if trends24_topics_list is None:
+            trends24_topics_list = []
+
+        ui_noise_blacklist = [
+            "what's happening",
+            "trending",
+            "show more",
+            "follow",
+            "who to follow",
+            "terms of service",
+            "privacy policy",
+            "cookie policy",
+            "accessibility",
+            "ads info",
+            "more",
+            "posts",
+            "explore",
+            "entertainment",
+            "sports",
+            "news",
+            "only on x"
+        ]
+
         raw_state_lines_list = trending_page_state_text.split("\n")
         for line_index in range(len(raw_state_lines_list)):
             current_raw_line = raw_state_lines_list[line_index].strip()
             if current_raw_line.startswith("#") and len(current_raw_line) > 2:
-                if current_raw_line not in extracted_trend_names_list:
-                    extracted_trend_names_list.append(current_raw_line)
+                clean_hashtag = current_raw_line.split()[0].strip()
+                if clean_hashtag not in extracted_trend_names_list:
+                    extracted_trend_names_list.append(clean_hashtag)
             elif "Trending with" in current_raw_line or "Trending in" in current_raw_line:
                 if line_index + 1 < len(raw_state_lines_list):
                     next_line_text = raw_state_lines_list[line_index + 1].strip()
-                    if len(next_line_text) > 3 and not next_line_text.startswith("[") and next_line_text not in extracted_trend_names_list:
-                        extracted_trend_names_list.append(next_line_text)
+                    lowered_text = next_line_text.lower()
+                    has_noise = False
+                    for noise_word in ui_noise_blacklist:
+                        if noise_word in lowered_text:
+                            has_noise = True
+                            break
+                    if len(next_line_text) > 2 and not next_line_text.startswith("[") and not has_noise:
+                        if next_line_text not in extracted_trend_names_list:
+                            extracted_trend_names_list.append(next_line_text)
 
-        # Ensure our primary national security trends are included
-        seed_priority_trends = [
-            "#VisionaryFieldMarshal",
-            "#GreatManCDF",
-            "#امہ_کی_شان_عاصم_منیر",
-            "#مرد_آہن_فیلڈ_مارشل",
-            "Makkah Defence Pact",
-            "Pakistan Navy Sea Spark"
-        ]
-        for seed_index in range(len(seed_priority_trends)):
-            current_seed = seed_priority_trends[seed_index]
-            if current_seed not in extracted_trend_names_list:
-                extracted_trend_names_list.append(current_seed)
+        # Merge in the latest freshly harvested trends24 topics so we always have the freshest country trends
+        for live_trend_item in trends24_topics_list:
+            if live_trend_item not in extracted_trend_names_list:
+                extracted_trend_names_list.append(live_trend_item)
 
         x_native_intel_dictionary["trends_observed"] = extracted_trend_names_list
         print("Discovered " + str(len(extracted_trend_names_list)) + " trending topics on X.com.")
         print("Sample trends: " + ", ".join(extracted_trend_names_list[:6]))
         print("")
 
+        # Filter and prioritize the top trends to mine: prioritize actual hashtags (#) and specific topics
+        prioritized_trends_to_mine = []
+        # First pass: Hashtags starting with #
+        for candidate_trend in extracted_trend_names_list:
+            if candidate_trend.startswith("#") and candidate_trend not in prioritized_trends_to_mine:
+                prioritized_trends_to_mine.append(candidate_trend)
+        # Second pass: Remaining high-signal topics
+        for candidate_trend in extracted_trend_names_list:
+            if candidate_trend not in prioritized_trends_to_mine:
+                lowered_candidate = candidate_trend.lower()
+                has_noise = False
+                for noise_word in ui_noise_blacklist:
+                    if noise_word in lowered_candidate:
+                        has_noise = True
+                        break
+                if not has_noise:
+                    prioritized_trends_to_mine.append(candidate_trend)
+
         # Select top 5 trends to search and extract genuine tweets
-        selected_trends_to_mine_list = extracted_trend_names_list[:5]
+        selected_trends_to_mine_list = prioritized_trends_to_mine[:5]
 
         for trend_index in range(len(selected_trends_to_mine_list)):
             current_trend_query = selected_trends_to_mine_list[trend_index]
@@ -646,7 +705,12 @@ def run_country_hot_news_pipeline():
 
     # PHASE 2: Run X.com browser agent to inspect explore tabs and mine at least 20 sample tweets per trend
     x_native_intel_dictionary = asyncio.run(
-        run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_mode_enabled)
+        run_x_com_deep_trend_and_tweet_miner(
+            target_country_name,
+            target_country_slug,
+            is_headless_mode_enabled,
+            trends24_topics_list
+        )
     )
 
     # PHASE 3: Consolidate all raw data into raw_sources.json

@@ -170,7 +170,9 @@ def is_bot_challenge_text(text_string):
         "verify you are human",
         "challenge-platform",
         "security service to protect",
-        "svg content collapsed"
+        "svg content collapsed",
+        "more content below viewport",
+        "scroll to reveal"
     ]
     for indicator_phrase in bot_challenge_indicator_phrases:
         if indicator_phrase in lowercased_text_string:
@@ -185,7 +187,9 @@ def fetch_headlines_from_configured_sources(sources_list):
     aggregated_sources_intel_dictionary = {}
 
     request_headers_dictionary = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
     }
 
     source_number = 1
@@ -324,34 +328,61 @@ STRATEGIC_DEFENSE_INDICATORS = [
     "defense", "defence", "military", "army", "navy", "airforce", "air force",
     "marines", "armed forces", "corps", "brigade", "pentagon", "ministry of defense",
     "general", "admiral", "command", "frontline", "airbase", "garrison", "troops",
-    
-    # Weapons, systems & military technology
+    "marshal", "field marshal", "fieldmarshal", "coas", "ispr", "dg ispr",
+    "chief of army", "army chief", "corps commander", "commander",
+
+    # Military leadership names & key international figures
+    "asim munir", "munir", "hegseth", "lloyd austin", "dan driscoll", "vance", "jd vance",
+    "trump", "biden", "putin", "zelensky", "lavrov", "xi jinping", "netanyahu",
+    "khamenei", "pezeshkian",
+
+    # Weapons, fighter jets, aerial combat & systems
     "missile", "ballistic", "hypersonic", "cruise missile", "nuclear", "warhead",
     "uranium", "enrichment", "drone", "uav", "unmanned", "fighter jet", "stealth",
     "aircraft carrier", "warship", "destroyer", "frigate", "submarine",
     "air defense", "patriot", "thaad", "s-300", "s-400", "s-500", "iron dome",
     "artillery", "ammunition", "radar", "electronic warfare", "weapons", "arms deal",
-    
+    "mig", "mig-21", "mig21", "sukhoi", "su-30", "su-35", "su-57", "f-16", "f16", "jf-17", "jf17",
+    "j-10", "j10", "j-20", "j20", "f-35", "f-22", "rafale", "eurofighter", "gripen",
+    "mirage", "dogfight", "pilot", "ejection", "downed", "shot down", "abhinandan", "wing commander",
+
+    # Militant groups, insurgency & counterterrorism
+    "ttp", "bla", "blf", "bra", "taliban", "isis", "daesh", "al-qaeda", "militant",
+    "militants", "terrorist", "terrorism", "insurgency", "insurgent", "counterterrorism",
+
     # Foreign policy, diplomacy, treaties & international pacts
     "foreign policy", "diplomacy", "diplomat", "ambassador", "foreign minister",
     "foreign ministry", "state department", "treaty", "pact", "accord", "agreement",
     "alliance", "bilateral", "trilateral", "multilateral", "summit", "sovereignty",
     "sanctions", "embargo", "boycott", "unsc", "security council",
-    
+
     # Strategic alliances & coalitions
     "nato", "aukus", "quad", "csto", "brics", "sco", "makkah pact", "mecca pact",
     "abraham accords",
-    
+
     # Strategic straits, waterways & conflict hotspots
     "hormuz", "strait", "taiwan", "gaza", "rafah", "west bank", "israel", "idf",
     "hamas", "hezbollah", "lebanon", "iran", "irgc", "yemen", "houthi", "red sea",
     "ukraine", "russia", "kyiv", "moscow", "crimea", "donbas", "kursk",
     "south china sea", "indo-pacific", "baltic", "black sea", "kashmir", "narowal", "loc",
-    
+
     # Conflict, deterrence & strategic operations
     "warfare", "conflict", "escalation", "retaliation", "strike", "airstrike",
     "deterrence", "ceasefire", "drills", "exercise", "naval drills", "combat",
-    "counterterrorism", "intelligence", "geopolitics"
+    "geopolitics",
+
+    # Security & intelligence agencies
+    "security", "national security", "homeland security", "border security",
+    "intelligence", "isi", "raw", "cia", "mossad", "mi6",
+
+    # Historic defense & war commemorations
+    "defence day", "defense day", "yom-e-difa", "september 6", "6 september",
+
+    # Urdu & Arabic strategic/defense terminology
+    "عاصم منیر", "عاصم", "منیر", "فوج", "پاک فوج", "دفاع", "دفاعی", "شہداء", "شہید",
+    "جنگ", "معرکہ", "طیارہ", "میزائل", "دہشت گرد", "کشمیر", "غزہ", "حماس", "حزب اللہ",
+    "اسرائیل", "ایران", "طالبان", "بی ایل اے", "ٹی ٹی پی", "مزاحمت", "فیلڈ مارشل",
+    "سپاہ سالار", "کور کمانڈر", "جہاز", "لڑاکا طیارہ", "ابھینندن", "ستمبر"
 ]
 
 ENTERTAINMENT_SPORTS_NOISE = [
@@ -374,8 +405,21 @@ def is_strategic_or_defense_trend(trend_text_string):
 
     # Match against strategic domain indicators
     for strategic_indicator in STRATEGIC_DEFENSE_INDICATORS:
-        if strategic_indicator in cleaned_trend_text:
-            return True
+        # Check if indicator has non-ascii characters (e.g. Urdu/Arabic)
+        has_non_ascii = False
+        for character in strategic_indicator:
+            if ord(character) > 127:
+                has_non_ascii = True
+                break
+
+        if len(strategic_indicator) <= 4 and not has_non_ascii:
+            # Short English acronyms require word boundary check to avoid false positives (e.g. 'isi' in 'rising')
+            pattern_string = r'\b' + re.escape(strategic_indicator) + r'\b'
+            if re.search(pattern_string, cleaned_trend_text):
+                return True
+        else:
+            if strategic_indicator in cleaned_trend_text:
+                return True
 
     return False
 
@@ -475,17 +519,72 @@ def clean_dom_tags_and_markdown(text_string):
     return ' '.join(cleaned_string.split())
 
 
+def extract_x_explore_trends(raw_page_state_text):
+    # Parses the DOM text from https://x.com/explore/tabs/trending
+    # Extracts all active trending hashtags and named topics
+    raw_lines_list = raw_page_state_text.split("\n")
+    extracted_trend_names_list = []
+
+    ui_noise_blacklist = [
+        "terms of service", "privacy policy", "cookie policy",
+        "accessibility", "ads info", "more", "settings", "explore",
+        "log in", "sign up", "show more", "what's happening", "who to follow"
+    ]
+
+    for line_index in range(len(raw_lines_list)):
+        current_line = raw_lines_list[line_index].strip()
+
+        # Case 1: Trending hashtag directly starting with #
+        if current_line.startswith("#") and len(current_line) > 2:
+            clean_hashtag_term = current_line.split()[0].strip()
+            if clean_hashtag_term not in extracted_trend_names_list:
+                extracted_trend_names_list.append(clean_hashtag_term)
+            continue
+
+        # Case 2: Trending topic line preceded by a category or 'Trending' header
+        # e.g., 'Trending in Pakistan', 'Only on X · Trending', 'Politics · Trending', 'Business & finance · Trending'
+        if "trending" in current_line.lower():
+            # Look ahead for the actual trend name (skipping bullets or rank numbers)
+            for lookahead_index in range(line_index + 1, min(line_index + 5, len(raw_lines_list))):
+                candidate_line = raw_lines_list[lookahead_index].strip()
+                if candidate_line in ["·", "•", ""] or candidate_line.isdigit():
+                    continue
+
+                line_has_noise = False
+                for noise_word in ui_noise_blacklist:
+                    if noise_word in candidate_line.lower():
+                        line_has_noise = True
+                        break
+
+                if line_has_noise:
+                    continue
+
+                if candidate_line.startswith("#"):
+                    clean_tag = candidate_line.split()[0].strip()
+                    if clean_tag not in extracted_trend_names_list:
+                        extracted_trend_names_list.append(clean_tag)
+                    break
+                else:
+                    if len(candidate_line) >= 2 and not candidate_line.endswith("posts"):
+                        if candidate_line not in extracted_trend_names_list:
+                            extracted_trend_names_list.append(candidate_line)
+                    break
+
+    return extracted_trend_names_list
+
+
 def validate_tweet_date_margin(cleaned_lines, reference_date=None):
     # Strictly enforces a 10-day date margin: [Today - 10 days, Today].
-    # Rejects tweets from past historical years (e.g. 2010 through previous year),
+    # Rejects tweets from past historical years (2006 to previous year),
     # relative dates older than 10 days (e.g. 11d, 30d), and older months outside the 10-day window.
+    # On the Top tab, enforces that a valid fresh timestamp within the last 10 days is detected.
     if reference_date is None:
         reference_date = datetime.date.today()
 
     current_year_number = reference_date.year
 
-    # 1. Immediate rejection for past historical years (e.g. 2010 through current_year - 1)
-    for past_year_int in range(2010, current_year_number):
+    # 1. Immediate rejection for past historical years (2006 through current_year - 1)
+    for past_year_int in range(2006, current_year_number):
         past_year_str = str(past_year_int)
         for check_index in range(min(8, len(cleaned_lines))):
             if past_year_str in cleaned_lines[check_index]:
@@ -502,14 +601,17 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None):
 
         acceptable_date_strings.append(f"{month_abbr} {day_num}")
         acceptable_date_strings.append(f"{month_abbr} {day_pad}")
+        acceptable_date_strings.append(f"{day_num} {month_abbr}")
+        acceptable_date_strings.append(f"{day_pad} {month_abbr}")
         acceptable_date_strings.append(f"{month_full} {day_num}")
+        acceptable_date_strings.append(f"{day_num} {month_full}")
 
     month_names_list = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
 
     detected_date_label = ""
 
     # Check header lines where timestamp tokens live
-    for line_index in range(min(6, len(cleaned_lines))):
+    for line_index in range(min(8, len(cleaned_lines))):
         current_line = cleaned_lines[line_index].strip()
         lower_line = current_line.lower()
 
@@ -534,23 +636,16 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None):
                 detected_date_label = current_line
                 return True, detected_date_label
 
-        # Check if an older month outside the window is mentioned
-        for month_name in month_names_list:
-            if re.search(r'\b' + month_name + r'[a-z]*\s+\d{1,2}\b', lower_line):
-                return False, ""
-
-    # Check for dot separator lines e.g. "· 2h" or "· 5d"
-    for line_index in range(min(6, len(cleaned_lines))):
-        current_line = cleaned_lines[line_index]
+        # Check for dot separator lines e.g. "· 2h" or "· 5d"
         if "·" in current_line:
             parts = current_line.split("·")
             for part in parts:
                 cleaned_part = part.strip().lower()
                 if re.match(r'^\d+[smh]$', cleaned_part):
                     return True, part.strip()
-                day_match = re.match(r'^(\d+)d$', cleaned_part)
-                if day_match:
-                    if int(day_match.group(1)) <= 10:
+                day_submatch = re.match(r'^(\d+)d$', cleaned_part)
+                if day_submatch:
+                    if int(day_submatch.group(1)) <= 10:
                         return True, part.strip()
                     else:
                         return False, ""
@@ -558,7 +653,16 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None):
                     if acceptable_date in cleaned_part:
                         return True, part.strip()
 
-    return True, detected_date_label
+        # Check if an older month outside the window is mentioned (both "May 14" and "14 May")
+        for month_name in month_names_list:
+            if re.search(r'\b' + month_name + r'[a-z]*\s+\d{1,2}\b', lower_line) or re.search(r'\b\d{1,2}\s+' + month_name + r'[a-z]*\b', lower_line):
+                return False, ""
+
+    # On Top tab, enforce that a fresh date within 10 days was detected
+    if len(detected_date_label) > 0:
+        return True, detected_date_label
+
+    return False, ""
 
 
 def extract_tweets_from_article_chunks(page_state_text):
@@ -683,9 +787,22 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         await browser_instance.navigate_to("https://x.com/explore/tabs/trending")
         await asyncio.sleep(5)
 
-        # Extract page text to identify trending hashtags
+        # Scroll down twice to ensure all ~30 active trends on X explore are loaded in the DOM
         trending_page_state_text = await browser_instance.get_state_as_text()
-        extracted_trend_names_list = []
+        for scroll_index in range(2):
+            try:
+                scroll_action_event = browser_instance.event_bus.dispatch(
+                    ScrollEvent(direction="down", amount=1200)
+                )
+                await scroll_action_event
+                await asyncio.sleep(2)
+                state_chunk_text = await browser_instance.get_state_as_text()
+                trending_page_state_text = trending_page_state_text + "\n" + state_chunk_text
+            except Exception:
+                pass
+
+        # Extract trending hashtags and named topics using robust parser
+        extracted_trend_names_list = extract_x_explore_trends(trending_page_state_text)
 
         if trends24_topics_list is None:
             trends24_topics_list = []
@@ -709,26 +826,6 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
             "news",
             "only on x"
         ]
-
-        raw_state_lines_list = trending_page_state_text.split("\n")
-        for line_index in range(len(raw_state_lines_list)):
-            current_raw_line = raw_state_lines_list[line_index].strip()
-            if current_raw_line.startswith("#") and len(current_raw_line) > 2:
-                clean_hashtag = current_raw_line.split()[0].strip()
-                if clean_hashtag not in extracted_trend_names_list:
-                    extracted_trend_names_list.append(clean_hashtag)
-            elif "Trending with" in current_raw_line or "Trending in" in current_raw_line:
-                if line_index + 1 < len(raw_state_lines_list):
-                    next_line_text = raw_state_lines_list[line_index + 1].strip()
-                    lowered_text = next_line_text.lower()
-                    has_noise = False
-                    for noise_word in ui_noise_blacklist:
-                        if noise_word in lowered_text:
-                            has_noise = True
-                            break
-                    if len(next_line_text) > 2 and not next_line_text.startswith("[") and not has_noise:
-                        if next_line_text not in extracted_trend_names_list:
-                            extracted_trend_names_list.append(next_line_text)
 
         # Merge in the latest freshly harvested trends24 topics so we always have the freshest country trends
         for live_trend_item in trends24_topics_list:
@@ -789,7 +886,7 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
             if is_strategic_or_defense_trend(candidate_trend):
                 if candidate_trend not in relevant_x_hashtags_to_mine:
                     relevant_x_hashtags_to_mine.append(candidate_trend)
-                    if len(relevant_x_hashtags_to_mine) >= 4:
+                    if len(relevant_x_hashtags_to_mine) >= 8:
                         break
 
         # Fallback to relevant Trends24 defense topics if X explore had few explicit defense hashtags right now
@@ -798,7 +895,7 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                 if is_strategic_or_defense_trend(trend24_item):
                     if trend24_item not in relevant_x_hashtags_to_mine:
                         relevant_x_hashtags_to_mine.append(trend24_item)
-                        if len(relevant_x_hashtags_to_mine) >= 4:
+                        if len(relevant_x_hashtags_to_mine) >= 8:
                             break
 
         if len(relevant_x_hashtags_to_mine) > 0:
@@ -807,13 +904,14 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         else:
             print("No explicit defense hashtags on X explore at this moment; proceeding to news Boolean queries.")
 
-        # Step B: Mine fresh tweets from each relevant X trending hashtag
+        # Step B: Mine fresh Top tweets from each relevant X trending hashtag (strictly in Top category)
         for hashtag_index in range(len(relevant_x_hashtags_to_mine)):
             current_hashtag = relevant_x_hashtags_to_mine[hashtag_index]
             encoded_hashtag = urllib.parse.quote(current_hashtag)
-            hashtag_search_url = f"https://x.com/search?q={encoded_hashtag}&f=live"
+            # Default search stays on the TOP category (NOT &f=live) as instructed
+            hashtag_search_url = f"https://x.com/search?q={encoded_hashtag}"
 
-            print(f"Mining latest tweets for X trending hashtag [{hashtag_index + 1}/{len(relevant_x_hashtags_to_mine)}]: {current_hashtag}")
+            print(f"Mining Top tweets for X trending hashtag [{hashtag_index + 1}/{len(relevant_x_hashtags_to_mine)}]: {current_hashtag}")
             try:
                 await browser_instance.navigate_to(hashtag_search_url)
                 await asyncio.sleep(4)
@@ -827,7 +925,7 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                         if tweet_item not in collected_tweets_for_hashtag:
                             collected_tweets_for_hashtag.append(tweet_item)
 
-                    print(f"      Hashtag scroll {scroll_round + 1}: {len(collected_tweets_for_hashtag)} fresh tweets collected so far...")
+                    print(f"      Hashtag '{current_hashtag}' scroll {scroll_round + 1}: {len(collected_tweets_for_hashtag)} fresh Top tweets collected so far...")
 
                     if len(collected_tweets_for_hashtag) >= 20:
                         break
@@ -841,14 +939,14 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                     except Exception:
                         break
 
-                print(f"      -> Successfully extracted {len(collected_tweets_for_hashtag)} fresh tweets for hashtag: {current_hashtag}")
+                print(f"      -> Successfully extracted {len(collected_tweets_for_hashtag)} fresh Top tweets for hashtag: {current_hashtag}")
                 x_native_intel_dictionary["sample_tweets_by_trend"][current_hashtag] = collected_tweets_for_hashtag[:25]
             except Exception as hashtag_error:
                 print(f"      Notice: Skipping hashtag due to error: {hashtag_error}")
 
             await asyncio.sleep(2)
 
-        # Step C: Derive and mine news-derived Boolean queries synthesized by LLM
+        # Step C: Derive and mine news-derived Boolean queries synthesized by LLM (also using Top category)
         queries_to_mine_list = []
         if topics_with_boolean_queries_list is not None and len(topics_with_boolean_queries_list) > 0:
             for topic_candidate_item in topics_with_boolean_queries_list:
@@ -882,14 +980,15 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                 if len(queries_to_mine_list) < 5 and fallback_query not in queries_to_mine_list:
                     queries_to_mine_list.append(fallback_query)
 
-        print(f"Mining latest tweets for {len(queries_to_mine_list)} news-derived Boolean queries...")
+        print(f"Mining Top tweets for {len(queries_to_mine_list)} news-derived Boolean queries...")
 
         for query_index in range(len(queries_to_mine_list)):
             current_trend_query = queries_to_mine_list[query_index]
             encoded_query_string = urllib.parse.quote(current_trend_query)
-            search_url_string = "https://x.com/search?q=" + encoded_query_string + "&f=live"
+            # Default search stays on Top category
+            search_url_string = "https://x.com/search?q=" + encoded_query_string
 
-            print(f"Mining latest tweets for Boolean query [{query_index + 1}/{len(queries_to_mine_list)}]: {current_trend_query}")
+            print(f"Mining Top tweets for Boolean query [{query_index + 1}/{len(queries_to_mine_list)}]: {current_trend_query}")
             try:
                 await browser_instance.navigate_to(search_url_string)
                 await asyncio.sleep(4)

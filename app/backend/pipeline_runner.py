@@ -87,11 +87,17 @@ async def run_single_country_pipeline(
         if not is_source_enabled:
             continue
 
+        desktop_browser_headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9"
+        }
+
         await log_and_record("INFO", f"Fetching {source_name} ({source_type.upper()})...")
         try:
             headlines_for_source = []
             if source_type == "rss":
-                response = trends.requests.get(source_url, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
+                response = trends.requests.get(source_url, timeout=12, headers=desktop_browser_headers)
                 if response.status_code == 200:
                     xml_root = trends.ElementTree.fromstring(response.content)
                     for item_element in xml_root.findall(".//item"):
@@ -101,7 +107,7 @@ async def run_single_country_pipeline(
                             if len(clean_title) > 15 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
                                 headlines_for_source.append(clean_title)
             else:
-                response = trends.requests.get(source_url, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
+                response = trends.requests.get(source_url, timeout=12, headers=desktop_browser_headers)
                 if response.status_code == 200:
                     html_soup = trends.BeautifulSoup(response.text, "html.parser")
                     for header_tag in html_soup.find_all(["h1", "h2", "h3", "h4", "a"]):
@@ -125,7 +131,7 @@ async def run_single_country_pipeline(
                 await log_and_record("INFO", "Reuters web restricted. Attempting Reuters verified RSS wire feed...")
                 try:
                     reuters_feed_url = "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en"
-                    reuters_response = trends.requests.get(reuters_feed_url, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
+                    reuters_response = trends.requests.get(reuters_feed_url, timeout=12, headers=desktop_browser_headers)
                     if reuters_response.status_code == 200:
                         reuters_xml_root = trends.ElementTree.fromstring(reuters_response.content)
                         for r_item in reuters_xml_root.findall(".//item"):
@@ -146,7 +152,7 @@ async def run_single_country_pipeline(
             if len(headlines_for_source) == 0 and "dawn.com" in source_url:
                 await log_and_record("INFO", "Dawn News web blocked or empty. Attempting Dawn official RSS feed fallback (https://www.dawn.com/feed)...")
                 try:
-                    dawn_rss_response = trends.requests.get("https://www.dawn.com/feed", timeout=12, headers={"User-Agent": "Mozilla/5.0"})
+                    dawn_rss_response = trends.requests.get("https://www.dawn.com/feed", timeout=12, headers=desktop_browser_headers)
                     if dawn_rss_response.status_code == 200:
                         dawn_xml_root = trends.ElementTree.fromstring(dawn_rss_response.content)
                         for dawn_item in dawn_xml_root.findall(".//item"):
@@ -167,8 +173,12 @@ async def run_single_country_pipeline(
                 fallback_web_url = trends.derive_web_homepage_url(source_url)
                 try:
                     browser_fallback_headlines = await trends.scrape_source_via_browser_fallback(fallback_web_url, source_name)
-                    if len(browser_fallback_headlines) > 0:
-                        headlines_for_source = browser_fallback_headlines[:20]
+                    filtered_fallback_headlines = []
+                    for h_item in browser_fallback_headlines:
+                        if not trends.is_bot_challenge_text(h_item) and len(h_item) > 20:
+                            filtered_fallback_headlines.append(h_item)
+                    if len(filtered_fallback_headlines) > 0:
+                        headlines_for_source = filtered_fallback_headlines[:20]
                         await log_and_record("SUCCESS", f"Browser fallback harvested {len(headlines_for_source)} headlines for {source_name}!")
                 except Exception as fallback_error:
                     await log_and_record("WARN", f"Browser fallback error for {source_name}: {str(fallback_error)}")
@@ -273,34 +283,28 @@ async def run_single_country_pipeline(
         await browser_instance.navigate_to("https://x.com/explore/tabs/trending")
         await asyncio.sleep(4)
 
-        # Extract explore text to identify active live hashtags
+        # Scroll down twice to ensure all ~30 active trends on X explore are loaded in the DOM
         trending_page_state_text = await browser_instance.get_state_as_text()
-        extracted_trend_names_list: List[str] = []
+        for scroll_index in range(2):
+            try:
+                scroll_event_action = browser_instance.event_bus.dispatch(
+                    ScrollEvent(direction="down", amount=1200)
+                )
+                await scroll_event_action
+                await asyncio.sleep(2)
+                state_chunk_text = await browser_instance.get_state_as_text()
+                trending_page_state_text = trending_page_state_text + "\n" + state_chunk_text
+            except Exception:
+                pass
+
+        # Extract trending hashtags and named topics using robust parser
+        extracted_trend_names_list: List[str] = trends.extract_x_explore_trends(trending_page_state_text)
 
         ui_noise_blacklist = [
             "terms of service", "privacy policy", "cookie policy",
             "accessibility", "ads info", "more", "settings", "explore",
             "log in", "sign up", "trending in", "trending with", "show more"
         ]
-
-        raw_state_lines_list = trending_page_state_text.split("\n")
-        for line_index in range(len(raw_state_lines_list)):
-            current_raw_line = raw_state_lines_list[line_index].strip()
-            if current_raw_line.startswith("#") and len(current_raw_line) > 2:
-                clean_hashtag = current_raw_line.split()[0].strip()
-                if clean_hashtag not in extracted_trend_names_list:
-                    extracted_trend_names_list.append(clean_hashtag)
-            elif "Trending with" in current_raw_line or "Trending in" in current_raw_line:
-                if line_index + 1 < len(raw_state_lines_list):
-                    next_line_text = raw_state_lines_list[line_index + 1].strip()
-                    lowered_text = next_line_text.lower()
-                    if (
-                        len(next_line_text) > 2
-                        and not next_line_text.startswith("[")
-                        and not any(noise in lowered_text for noise in ui_noise_blacklist)
-                        and next_line_text not in extracted_trend_names_list
-                    ):
-                        extracted_trend_names_list.append(next_line_text)
 
         # Merge in the latest freshly harvested trends24 topics
         for live_trend_item in relevant_trends24_topics_list:
@@ -358,7 +362,7 @@ async def run_single_country_pipeline(
             if trends.is_strategic_or_defense_trend(candidate_trend):
                 if candidate_trend not in relevant_x_hashtags_to_mine:
                     relevant_x_hashtags_to_mine.append(candidate_trend)
-                    if len(relevant_x_hashtags_to_mine) >= 4:
+                    if len(relevant_x_hashtags_to_mine) >= 8:
                         break
 
         # Fallback to relevant Trends24 defense topics if X explore had few explicit defense hashtags right now
@@ -367,7 +371,7 @@ async def run_single_country_pipeline(
                 if trends.is_strategic_or_defense_trend(trend24_item):
                     if trend24_item not in relevant_x_hashtags_to_mine:
                         relevant_x_hashtags_to_mine.append(trend24_item)
-                        if len(relevant_x_hashtags_to_mine) >= 4:
+                        if len(relevant_x_hashtags_to_mine) >= 8:
                             break
 
         if len(relevant_x_hashtags_to_mine) > 0:
@@ -376,16 +380,17 @@ async def run_single_country_pipeline(
         else:
             await log_and_record("INFO", "No explicit defense hashtags on X explore at this moment; proceeding to news Boolean queries.")
 
-        # Step 4B: Mine fresh tweets from each relevant X trending hashtag
+        # Step 4B: Mine fresh Top tweets from each relevant X trending hashtag (strictly staying in Top category)
         for hashtag_index in range(len(relevant_x_hashtags_to_mine)):
             if cancellation_event.is_set():
                 break
 
             current_hashtag = relevant_x_hashtags_to_mine[hashtag_index]
             encoded_hashtag = urllib.parse.quote(current_hashtag)
-            hashtag_search_url = f"https://x.com/search?q={encoded_hashtag}&f=live"
+            # Default search stays on the TOP category (NOT &f=live) as instructed
+            hashtag_search_url = f"https://x.com/search?q={encoded_hashtag}"
 
-            await log_and_record("BROWSER", f"[X Trending Hashtag {hashtag_index + 1}/{len(relevant_x_hashtags_to_mine)}] Mining latest tweets for: {current_hashtag}")
+            await log_and_record("BROWSER", f"[X Trending {hashtag_index + 1}/{len(relevant_x_hashtags_to_mine)}] Mining Top tweets for: {current_hashtag}")
 
             try:
                 await browser_instance.navigate_to(hashtag_search_url)
@@ -404,7 +409,7 @@ async def run_single_country_pipeline(
                         if tweet_text not in collected_tweets_for_hashtag:
                             collected_tweets_for_hashtag.append(tweet_text)
 
-                    await log_and_record("SCROLL", f"  Hashtag scroll {scroll_round + 1}/{max_scroll_rounds}: {len(collected_tweets_for_hashtag)} fresh tweets collected")
+                    await log_and_record("SCROLL", f"  Hashtag '{current_hashtag}' scroll {scroll_round + 1}/{max_scroll_rounds}: {len(collected_tweets_for_hashtag)} fresh Top tweets collected")
 
                     if len(collected_tweets_for_hashtag) >= max_tweets_target:
                         break
@@ -418,12 +423,12 @@ async def run_single_country_pipeline(
                     except Exception:
                         break
 
-                await log_and_record("SUCCESS", f"Captured {len(collected_tweets_for_hashtag)} fresh tweets for X hashtag: {current_hashtag}")
+                await log_and_record("SUCCESS", f"Captured {len(collected_tweets_for_hashtag)} fresh Top tweets for X hashtag: {current_hashtag}")
                 x_native_intel_dictionary["sample_tweets_by_trend"][current_hashtag] = collected_tweets_for_hashtag[:25]
             except Exception as hashtag_scrape_error:
                 await log_and_record("WARN", f"Notice: Error mining hashtag '{current_hashtag}': {str(hashtag_scrape_error)}")
 
-        # Step 4C: Derive and mine news-derived Boolean queries synthesized from Phase 3
+        # Step 4C: Derive and mine news-derived Boolean queries synthesized from Phase 3 (also using Top category)
         queries_to_mine_list: List[str] = []
         for topic_item in synthesized_topics_list:
             topic_query = topic_item.get("boolean_query", "").strip()
@@ -434,7 +439,7 @@ async def run_single_country_pipeline(
                 if len(queries_to_mine_list) >= trends_to_mine_count:
                     break
 
-        await log_and_record("INFO", f"Mining {len(queries_to_mine_list)} news-derived Boolean queries on X.com using Latest tab (&f=live)...")
+        await log_and_record("INFO", f"Mining {len(queries_to_mine_list)} news-derived Boolean queries on X.com (Top category)...")
 
         for query_index in range(len(queries_to_mine_list)):
             if cancellation_event.is_set():
@@ -442,9 +447,10 @@ async def run_single_country_pipeline(
 
             current_mining_query = queries_to_mine_list[query_index]
             encoded_query = urllib.parse.quote(current_mining_query)
-            search_url = f"https://x.com/search?q={encoded_query}&f=live"
+            # Default search stays on Top category
+            search_url = f"https://x.com/search?q={encoded_query}"
 
-            await log_and_record("BROWSER", f"[Boolean Query {query_index + 1}/{len(queries_to_mine_list)}] Mining latest tweets for: {current_mining_query}")
+            await log_and_record("BROWSER", f"[Boolean Query {query_index + 1}/{len(queries_to_mine_list)}] Mining Top tweets for: {current_mining_query}")
             
             try:
                 await browser_instance.navigate_to(search_url)

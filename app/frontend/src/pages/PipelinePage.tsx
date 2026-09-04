@@ -9,7 +9,6 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
-  Calendar,
   Clock,
   Search,
   Flame,
@@ -64,22 +63,22 @@ export function PipelinePage(props: PipelinePageProps) {
   const recentRuns = props.recentRunsList || [];
   const latestRun = recentRuns.length > 0 ? recentRuns[0] : null;
 
-  // 5 Strategic Phases definition for visual stepper
+  // 5 Strategic Phases definition for visual stepper updated to current news-first pipeline
   const PIPELINE_PHASES = [
-    { id: "trends24", name: "trends24", desc: "Regional Trends", icon: Flame },
-    { id: "news_sources", name: "News Intel", desc: "RSS & Web Feeds", icon: Globe },
-    { id: "x_mining", name: "X.com Mining", desc: "Native Search & Tweets", icon: MessageSquare },
-    { id: "llm_synthesis", name: "Qwen3-14B", desc: "Topic Synthesis", icon: Cpu },
-    { id: "done", name: "Persist", desc: "SQLite & Exports", icon: CheckCircle2 }
+    { id: "news_sources", name: "News Intel", desc: "17 Sources & Feeds", icon: Globe },
+    { id: "trends24", name: "Trends24", desc: "Regional News-Filter", icon: Flame },
+    { id: "llm_synthesis", name: "Query Synthesis", desc: "Boolean Query LLM", icon: Cpu },
+    { id: "x_mining", name: "X.com Mining", desc: "Tabs & 10d Tweets", icon: MessageSquare },
+    { id: "done", name: "15 Keywords", desc: "SQLite & JSON Export", icon: CheckCircle2 }
   ];
 
   // Map phase string to index for stepper progression
   function getPhaseStepIndex(phaseName?: string): number {
     if (!phaseName || phaseName === "init") return 0;
-    if (phaseName === "trends24") return 1;
-    if (phaseName === "news_sources") return 2;
-    if (phaseName === "x_mining") return 3;
-    if (phaseName === "llm_synthesis") return 4;
+    if (phaseName === "news_sources") return 1;
+    if (phaseName === "trends24") return 2;
+    if (phaseName === "llm_synthesis") return 3;
+    if (phaseName === "x_mining") return 4;
     if (phaseName === "done") return 5;
     return 0;
   }
@@ -183,85 +182,61 @@ export function PipelinePage(props: PipelinePageProps) {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      {/* Top Banner with Date and Time of Last Pipeline Run */}
-      <div className="p-4 rounded-xl bg-card border border-border/50 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            {isPipelineActive ? (
-              <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            ) : (
-              <Calendar className="w-5 h-5 text-primary" strokeWidth={1.75} />
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-foreground">
-                {isPipelineActive ? "Pipeline Execution Active" : "Last Pipeline Execution"}
-              </span>
-              <span
-                className={
-                  "inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full font-medium " +
-                  (isPipelineActive
-                    ? "bg-primary/15 text-primary animate-pulse border border-primary/20"
-                    : latestRun && latestRun.status === "completed"
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    : "bg-muted text-muted-foreground")
-                }
-              >
-                {isPipelineActive ? "● RUNNING" : latestRun ? `● ${latestRun.status.toUpperCase()}` : "IDLE"}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-              {latestRun
-                ? `Last ran on ${formatPipelineDate(latestRun.finished_at || latestRun.started_at)}`
-                : "No runs recorded yet. Select target countries below and execute."}
-            </p>
-          </div>
-        </div>
-
-        {latestRun && props.onInspectRun && !isPipelineActive && (
-          <button
-            onClick={() => props.onInspectRun!(latestRun.id)}
-            className="px-3 py-1.5 text-xs rounded-lg bg-card hover:bg-muted text-foreground transition-colors font-medium border border-border/60 shrink-0 self-start sm:self-center cursor-pointer shadow-xs"
-          >
-            Inspect Keywords →
-          </button>
-        )}
-      </div>
-
-      {/* Header & Execution Action Buttons */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-border/50">
+      {/* Sleek Minimal Header & Execution Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border/40">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <span>Pipeline Controller</span>
-            <span className="text-xs font-normal text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md font-mono">
-              Phase 3 Live
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">
+              Pipeline Controller
+            </h2>
+            <span
+              className={
+                "inline-flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-full font-medium " +
+                (isPipelineActive
+                  ? "bg-primary/15 text-primary animate-pulse border border-primary/20"
+                  : latestRun && latestRun.status === "completed"
+                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  : "bg-muted text-muted-foreground border border-border/40")
+              }
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+              {isPipelineActive ? "RUNNING" : latestRun ? latestRun.status.toUpperCase() : "IDLE"}
             </span>
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Configure target countries, trigger autonomous multi-source scrapers, and monitor live telemetry in real-time.
-          </p>
+          </div>
+          {latestRun && (
+            <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+              Last run: {formatPipelineDate(latestRun.finished_at || latestRun.started_at)}
+            </p>
+          )}
         </div>
 
-        {/* Action Buttons: Run / Cancel with Keyboard Badges */}
-        <div className="flex items-center gap-2.5">
+        {/* Action Controls */}
+        <div className="flex items-center gap-2">
+          {latestRun && props.onInspectRun && !isPipelineActive && (
+            <button
+              onClick={() => props.onInspectRun!(latestRun.id)}
+              className="px-3 py-2 text-xs rounded-xl bg-card hover:bg-muted text-foreground transition-colors font-medium border border-border/60 cursor-pointer shadow-xs"
+            >
+              Inspect Keywords →
+            </button>
+          )}
+
           {isPipelineActive ? (
             <button
               onClick={props.onCancelPipeline}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow-md shadow-red-500/20 transition-all cursor-pointer animate-pulse"
+              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
               <span>Cancel Pipeline</span>
-              <kbd className="text-[10px] bg-red-800/80 px-1.5 py-0.2 rounded font-mono ml-1">Esc</kbd>
             </button>
           ) : (
             <button
               onClick={props.onStartPipeline}
               disabled={props.selectedCountries.length === 0}
               className={
-                "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold shadow-md transition-all " +
+                "flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all " +
                 (props.selectedCountries.length > 0
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer"
                   : "bg-muted text-muted-foreground cursor-not-allowed")
               }
             >
@@ -269,28 +244,27 @@ export function PipelinePage(props: PipelinePageProps) {
               <span>
                 Run Pipeline ({props.selectedCountries.length} {props.selectedCountries.length === 1 ? "Country" : "Countries"})
               </span>
-              <kbd className="hidden sm:inline text-[10px] bg-white/20 px-1.5 py-0.2 rounded font-mono ml-1">⌘↵</kbd>
             </button>
           )}
         </div>
       </div>
 
       {/* Progress & 5-Phase Pipeline Stepper */}
-      <div className="p-5 rounded-2xl bg-card border border-border/50 space-y-5 shadow-sm">
+      <div className="p-5 rounded-2xl bg-card border border-border/50 space-y-4 shadow-xs">
         {/* Status Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {isPipelineActive ? (
-              <Loader2 className="w-4 h-4 text-primary animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
             ) : props.pipelineStatus === "completed" ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
             ) : props.pipelineStatus === "cancelled" ? (
-              <AlertCircle className="w-4 h-4 text-amber-400" />
+              <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
             ) : (
-              <Radio className="w-4 h-4 text-muted-foreground" />
+              <Radio className="w-3.5 h-3.5 text-muted-foreground" />
             )}
-            <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-              Status: {props.pipelineStatus}
+            <span className="text-xs font-medium text-foreground">
+              Status: <span className="capitalize">{props.pipelineStatus}</span>
             </span>
             {props.activePipelineCountry && isPipelineActive && (
               <span className="text-xs text-primary font-mono font-medium">
@@ -299,15 +273,13 @@ export function PipelinePage(props: PipelinePageProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-semibold text-primary">
-              {props.pipelineProgressPercentage}%
-            </span>
-          </div>
+          <span className="text-xs font-mono font-medium text-primary">
+            {props.pipelineProgressPercentage}%
+          </span>
         </div>
 
         {/* Progress Bar Container */}
-        <div className="w-full h-2.5 bg-muted/60 rounded-full overflow-hidden border border-border/40 relative">
+        <div className="w-full h-1.5 bg-muted/60 rounded-full overflow-hidden border border-border/40 relative">
           <div
             className="h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400 transition-all duration-300 rounded-full"
             style={{ width: props.pipelineProgressPercentage + "%" }}
@@ -358,13 +330,12 @@ export function PipelinePage(props: PipelinePageProps) {
           })}
         </div>
 
-        {/* Current Activity Subtext */}
-        <div className="text-[11px] text-muted-foreground font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-1 border-t border-border/30">
-          <span className="truncate">{props.currentPipelineStepMessage || "System ready. Press Run Pipeline to execute."}</span>
-          {isPipelineActive && (
-            <span className="text-primary text-[10px] shrink-0">Streaming live telemetry via WebSocket</span>
-          )}
-        </div>
+        {/* Current Activity: Clean live step message only when active */}
+        {isPipelineActive && props.currentPipelineStepMessage && (
+          <div className="text-[11px] text-muted-foreground font-mono truncate pt-1 border-t border-border/30">
+            {props.currentPipelineStepMessage}
+          </div>
+        )}
       </div>
 
       {/* Target Country Selection Grid */}
@@ -377,9 +348,6 @@ export function PipelinePage(props: PipelinePageProps) {
                 ({props.selectedCountries.length} of {props.availableCountries.length} selected)
               </span>
             </h3>
-            <p className="text-[11px] text-muted-foreground">
-              Select one or multiple countries. The orchestrator executes scraping, timeline mining, and LLM synthesis sequentially.
-            </p>
           </div>
 
           <div className="flex items-center gap-2">

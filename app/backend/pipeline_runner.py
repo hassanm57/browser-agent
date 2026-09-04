@@ -108,9 +108,41 @@ async def run_single_country_pipeline(
                         raw_text = header_tag.get_text()
                         clean_title = trends.clean_dom_tags_and_markdown(raw_text)
                         if len(clean_title) > 25 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
-                            headlines_for_source.append(clean_title)
+                            lower_title = clean_title.lower()
+                            is_relevant = True
+                            if any(d in source_url for d in ["foreignaffairs.com", "janes.com", "csis.org", "atlanticcouncil.org", "iiss.org", "defensenews.com", "breakingdefense.com", "defenseone.com"]):
+                                is_relevant = True
+                            elif any(k in lower_title for k in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "court", "forces", "treaty", "pact", "russia", "border", "missile", "defense", "defence", "nato", "taiwan", "ukraine", "hormuz", "sanctions"]):
+                                is_relevant = True
+                            else:
+                                is_relevant = False
 
-            # If zero headlines extracted and source is Dawn News, attempt official RSS feed fallback
+                            if is_relevant and len(headlines_for_source) < 20:
+                                headlines_for_source.append(clean_title)
+
+            # Fallback 1: If zero headlines extracted and source is Reuters, attempt verified Reuters RSS wire
+            if len(headlines_for_source) == 0 and "reuters.com" in source_url:
+                await log_and_record("INFO", "Reuters web restricted. Attempting Reuters verified RSS wire feed...")
+                try:
+                    reuters_feed_url = "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en"
+                    reuters_response = trends.requests.get(reuters_feed_url, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
+                    if reuters_response.status_code == 200:
+                        reuters_xml_root = trends.ElementTree.fromstring(reuters_response.content)
+                        for r_item in reuters_xml_root.findall(".//item"):
+                            r_title = r_item.find("title")
+                            if r_title is not None and r_title.text:
+                                clean_r_title = trends.clean_dom_tags_and_markdown(r_title.text)
+                                if clean_r_title.endswith("- Reuters"):
+                                    clean_r_title = clean_r_title[:-9].strip()
+                                if len(clean_r_title) > 15 and not trends.is_bot_challenge_text(clean_r_title):
+                                    if clean_r_title not in headlines_for_source and len(headlines_for_source) < 20:
+                                        headlines_for_source.append(clean_r_title)
+                        if len(headlines_for_source) > 0:
+                            await log_and_record("SUCCESS", f"Reuters RSS wire harvested {len(headlines_for_source)} clean headlines!")
+                except Exception as reuters_err:
+                    await log_and_record("WARN", f"Reuters RSS wire error: {str(reuters_err)}")
+
+            # Fallback 2: If zero headlines extracted and source is Dawn News, attempt official RSS feed fallback
             if len(headlines_for_source) == 0 and "dawn.com" in source_url:
                 await log_and_record("INFO", "Dawn News web blocked or empty. Attempting Dawn official RSS feed fallback (https://www.dawn.com/feed)...")
                 try:
@@ -275,9 +307,50 @@ async def run_single_country_pipeline(
             if live_trend_item not in extracted_trend_names_list:
                 extracted_trend_names_list.append(live_trend_item)
 
+        # Step 4A-2: Also navigate to https://x.com/explore/tabs/news to extract curated news headlines and events
+        await log_and_record("BROWSER", "Navigating to https://x.com/explore/tabs/news to extract live curated news topics...")
+        try:
+            await browser_instance.navigate_to("https://x.com/explore/tabs/news")
+            await asyncio.sleep(4)
+
+            news_page_state_text = await browser_instance.get_state_as_text()
+            raw_news_lines_list = news_page_state_text.split("\n")
+            extracted_x_news_topics: List[str] = []
+
+            for line_idx in range(len(raw_news_lines_list)):
+                raw_news_line = raw_news_lines_list[line_idx].strip()
+                cleaned_news_line = trends.clean_dom_tags_and_markdown(raw_news_line)
+                lower_news_line = cleaned_news_line.lower()
+
+                if len(cleaned_news_line) < 15 or len(cleaned_news_line) > 160:
+                    continue
+                has_noise = False
+                for noise_word in ui_noise_blacklist:
+                    if noise_word in lower_news_line:
+                        has_noise = True
+                        break
+
+                if has_noise:
+                    continue
+                if cleaned_news_line.endswith("posts") or cleaned_news_line.isdigit():
+                    continue
+
+                if cleaned_news_line not in extracted_trend_names_list and cleaned_news_line not in extracted_x_news_topics:
+                    if trends.is_strategic_or_defense_trend(cleaned_news_line):
+                        extracted_x_news_topics.append(cleaned_news_line)
+                        extracted_trend_names_list.append(cleaned_news_line)
+
+            if len(extracted_x_news_topics) > 0:
+                sample_news_str = ", ".join(extracted_x_news_topics[:5])
+                await log_and_record("SUCCESS", f"Extracted {len(extracted_x_news_topics)} relevant news topics from X news tab: {sample_news_str}")
+            else:
+                await log_and_record("INFO", "Processed X news tab (https://x.com/explore/tabs/news).")
+        except Exception as news_tab_error:
+            await log_and_record("WARN", f"Notice: Error navigating X news tab: {str(news_tab_error)}")
+
         x_native_intel_dictionary["trends_observed"] = extracted_trend_names_list
         sample_preview_str = ", ".join(extracted_trend_names_list[:6])
-        await log_and_record("SUCCESS", f"Identified {len(extracted_trend_names_list)} trends on X.com explore. Sample: {sample_preview_str}")
+        await log_and_record("SUCCESS", f"Identified {len(extracted_trend_names_list)} total trends/news on X.com. Sample: {sample_preview_str}")
 
         # Step 4A: Identify relevant defense & foreign policy trending hashtags directly on X.com
         relevant_x_hashtags_to_mine: List[str] = []

@@ -68,5 +68,55 @@
     "type": "rss",
     "url": "https://www.defenseone.com/rss/all/",
     "enabled": true
+  },
+  {
+    "name": "Janes Defence News",
+    "category": "defense_military",
+    "type": "web",
+    "url": "https://www.janes.com/defence-intelligence-insights/defence-news",
+    "enabled": true
+  },
+  {
+    "name": "Reuters World News",
+    "category": "wire_services",
+    "type": "web",
+    "url": "https://www.reuters.com/",
+    "enabled": true
+  },
+  {
+    "name": "IISS Defence & Military Analysis",
+    "category": "defense_military",
+    "type": "web",
+    "url": "https://www.iiss.org/research/defence-and-military-analysis/",
+    "enabled": true
+  },
+  {
+    "name": "IISS Nuclear Arms Control",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.iiss.org/research/nuclear-arms-control-non-proliferation-and-disarmament/",
+    "enabled": true
+  },
+  {
+    "name": "IISS Strategic Intelligence",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.iiss.org/",
+    "enabled": true
+  },
+  {
+    "name": "CSIS Strategic & International Studies",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.csis.org/",
+    "enabled": true
+  },
+  {
+    "name": "Atlantic Council Geopolitics & Defense",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.atlanticcouncil.org/",
+    "enabled": true
   }
 ]
+

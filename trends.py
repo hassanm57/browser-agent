@@ -235,12 +235,12 @@ def fetch_headlines_from_configured_sources(sources_list):
                             continue
 
                         if heading_text not in extracted_headlines_list:
-                            # If it's a general landing page, prioritize defense/geopolitical keywords
+                            # If it's a specialized defense or geopolitical think tank, all articles are relevant
                             lower_text = heading_text.lower()
                             is_relevant = True
-                            if "foreignaffairs.com" in source_url:
+                            if any(d in source_url for d in ["foreignaffairs.com", "janes.com", "csis.org", "atlanticcouncil.org", "iiss.org", "defensenews.com", "breakingdefense.com", "defenseone.com"]):
                                 is_relevant = True
-                            elif any(k in lower_text for k in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "court", "forces", "treaty", "pact", "russia", "border", "missile"]):
+                            elif any(k in lower_text for k in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "court", "forces", "treaty", "pact", "russia", "border", "missile", "defense", "defence", "nato", "taiwan", "ukraine", "hormuz", "sanctions"]):
                                 is_relevant = True
                             else:
                                 is_relevant = False
@@ -252,7 +252,32 @@ def fetch_headlines_from_configured_sources(sources_list):
         except Exception as fetch_error:
             print(f"        -> Notice: Failed to fetch {source_name}: {fetch_error}")
 
-        # If zero headlines were extracted and this is Dawn News, use Dawn's official RSS feed
+        # Fallback 1: If zero headlines from Reuters, use verified Reuters RSS wire
+        if len(extracted_headlines_list) == 0 and "reuters.com" in source_url:
+            print("        -> Reuters web blocked or empty. Attempting Reuters verified RSS wire feed...")
+            try:
+                reuters_feed_url = "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en"
+                reuters_response = requests.get(reuters_feed_url, headers=request_headers_dictionary, timeout=12)
+                reuters_root = ElementTree.fromstring(reuters_response.content)
+                reuters_channel = reuters_root.find("channel")
+                if reuters_channel is not None:
+                    reuters_items = reuters_channel.findall("item")
+                    for item_idx in range(len(reuters_items)):
+                        r_item = reuters_items[item_idx]
+                        r_title = r_item.find("title")
+                        if r_title is not None and r_title.text:
+                            clean_r_title = r_title.text.strip()
+                            if clean_r_title.endswith("- Reuters"):
+                                clean_r_title = clean_r_title[:-9].strip()
+                            if len(clean_r_title) > 15 and not is_bot_challenge_text(clean_r_title):
+                                if clean_r_title not in extracted_headlines_list and len(extracted_headlines_list) < 20:
+                                    extracted_headlines_list.append(clean_r_title)
+                    if len(extracted_headlines_list) > 0:
+                        print(f"        -> [Reuters RSS Fallback SUCCESS] Harvested {len(extracted_headlines_list)} clean headlines.")
+            except Exception as reuters_error:
+                print(f"        -> [Reuters RSS Fallback Notice] Could not fetch Reuters RSS: {reuters_error}")
+
+        # Fallback 2: If zero headlines were extracted and this is Dawn News, use Dawn's official RSS feed
         if len(extracted_headlines_list) == 0 and "dawn.com" in source_url:
             print("        -> Dawn News web blocked or empty. Attempting Dawn official RSS feed fallback (https://www.dawn.com/feed)...")
             try:
@@ -709,6 +734,49 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         for live_trend_item in trends24_topics_list:
             if live_trend_item not in extracted_trend_names_list:
                 extracted_trend_names_list.append(live_trend_item)
+
+        # Step A-2: Also navigate to https://x.com/explore/tabs/news to extract curated news headlines and events
+        print("Navigating to https://x.com/explore/tabs/news to extract live curated news topics...")
+        try:
+            await browser_instance.navigate_to("https://x.com/explore/tabs/news")
+            await asyncio.sleep(4)
+
+            news_page_state_text = await browser_instance.get_state_as_text()
+            raw_news_lines_list = news_page_state_text.split("\n")
+            extracted_x_news_topics = []
+
+            for line_index in range(len(raw_news_lines_list)):
+                raw_news_line = raw_news_lines_list[line_index].strip()
+                cleaned_news_line = clean_dom_tags_and_markdown(raw_news_line)
+                lower_news_line = cleaned_news_line.lower()
+
+                if len(cleaned_news_line) < 15 or len(cleaned_news_line) > 160:
+                    continue
+
+                line_has_noise = False
+                for noise_word in ui_noise_blacklist:
+                    if noise_word in lower_news_line:
+                        line_has_noise = True
+                        break
+
+                if line_has_noise:
+                    continue
+
+                if cleaned_news_line.endswith("posts") or cleaned_news_line.isdigit():
+                    continue
+
+                if cleaned_news_line not in extracted_trend_names_list and cleaned_news_line not in extracted_x_news_topics:
+                    if is_strategic_or_defense_trend(cleaned_news_line):
+                        extracted_x_news_topics.append(cleaned_news_line)
+                        extracted_trend_names_list.append(cleaned_news_line)
+
+            if len(extracted_x_news_topics) > 0:
+                sample_news_str = ", ".join(extracted_x_news_topics[:5])
+                print(f"Extracted {len(extracted_x_news_topics)} relevant news topics from X news tab: {sample_news_str}")
+            else:
+                print("Processed X news tab (https://x.com/explore/tabs/news).")
+        except Exception as news_tab_error:
+            print(f"Notice: Error navigating X news tab: {str(news_tab_error)}")
 
         x_native_intel_dictionary["trends_observed"] = extracted_trend_names_list
         print("Discovered " + str(len(extracted_trend_names_list)) + " trending topics on X.com.")

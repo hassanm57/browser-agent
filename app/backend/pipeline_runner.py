@@ -55,7 +55,7 @@ async def run_single_country_pipeline(
     selected_country_data = trends.find_target_country_by_name(target_country_name, available_countries_list)
 
     if selected_country_data is not None:
-        country_slug_name = selected_country_data.get("trends24_slug", "")
+        country_slug_name = selected_country_data.get("slug", selected_country_data.get("trends24_slug", ""))
     else:
         if target_country_name.strip().lower() in ["worldwide", "global", "all"]:
             country_slug_name = ""
@@ -64,7 +64,7 @@ async def run_single_country_pipeline(
 
     country_display_label = "Worldwide" if len(country_slug_name) == 0 else f"{target_country_name} (Slug: {country_slug_name})"
     await log_and_record("STEP", f"Starting intelligence pipeline for target: {country_display_label}")
-    await progress_callback_function("init", 1, 6, f"Initializing pipeline for {target_country_name}...", target_country_name)
+    await progress_callback_function("init", 1, 5, f"Initializing pipeline for {target_country_name}...", target_country_name)
 
     # Check for user cancellation
     if cancellation_event.is_set():
@@ -73,8 +73,8 @@ async def run_single_country_pipeline(
         return None
 
     # PHASE 1: Ingest ground truth news headlines from configured sources first
-    await log_and_record("STEP", "[1/5] Ingesting authoritative headlines from configured news and RSS sources...")
-    await progress_callback_function("news_sources", 2, 6, f"Ingesting ground truth news for {target_country_name}...", target_country_name)
+    await log_and_record("STEP", "[1/4] Ingesting authoritative headlines from configured news and RSS sources...")
+    await progress_callback_function("news_sources", 1, 5, f"Ingesting ground truth news for {target_country_name}...", target_country_name)
     
     configured_sources_list = trends.load_sources_configuration_file()
     news_sources_intel_dictionary: Dict[str, List[str]] = {}
@@ -203,36 +203,13 @@ async def run_single_country_pipeline(
         update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user during news ingestion")
         return None
 
-    # PHASE 2: Ingest ALL trends from Trends24, then filter for news-relevant trends
-    t24_target_label = "Worldwide" if len(country_slug_name) == 0 else country_slug_name
-    await log_and_record("STEP", f"[2/5] Ingesting all Trends24 topics and filtering for news-relevance ({t24_target_label})...")
-    await progress_callback_function("trends24", 3, 6, f"Capturing all Trends24 topics & filtering for {target_country_name}...", target_country_name)
-    
+    # Empty placeholder lists for backward compatibility in storage
     all_trends24_topics_list = []
-    try:
-        all_trends24_topics_list = trends.fetch_trends24_topics(country_slug_name)
-        await log_and_record("SUCCESS", f"Captured all {len(all_trends24_topics_list)} raw trending topics from Trends24.")
-    except Exception as trends24_error:
-        await log_and_record("WARN", f"Failed to fetch trends24: {str(trends24_error)}. Continuing with fallback seeds.")
+    relevant_trends24_topics_list = []
 
-    # Cross-reference Trends24 topics with the news headlines
-    relevant_trends24_topics_list = trends.filter_trends_relevant_to_news(
-        all_trends24_topics_list, news_sources_intel_dictionary
-    )
-    if len(relevant_trends24_topics_list) > 0:
-        sample_relevant_preview = ", ".join(relevant_trends24_topics_list[:6])
-        await log_and_record("SUCCESS", f"Filtered {len(relevant_trends24_topics_list)} news-relevant trends from Trends24. Sample: {sample_relevant_preview}")
-    else:
-        await log_and_record("INFO", "No direct lexical trend-news overlap found. Relying on primary ground truth news headlines.")
-
-    if cancellation_event.is_set():
-        await log_and_record("WARN", "Pipeline execution cancelled by user.")
-        update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user after trends24")
-        return None
-
-    # PHASE 3: Launch Chrome browser to scrape configured X correspondent accounts and explore live trends
-    await log_and_record("STEP", f"[3/5] Launching Chrome browser to scrape configured X defense accounts & explore trends...")
-    await progress_callback_function("x_mining", 4, 6, f"Scraping correspondent accounts and X trends for {target_country_name}...", target_country_name)
+    # PHASE 2: Launch Chrome browser to scrape configured X defense accounts and explore live trends
+    await log_and_record("STEP", f"[2/4] Launching Chrome browser to scrape configured X defense accounts & explore trends...")
+    await progress_callback_function("x_accounts", 2, 5, f"Scraping correspondent accounts and X trends for {target_country_name}...", target_country_name)
 
     is_headless = settings_dictionary.get("headless_mode", "false") == "true"
     use_real_chrome = settings_dictionary.get("use_real_chrome", "true") == "true"
@@ -367,10 +344,6 @@ async def run_single_country_pipeline(
             "log in", "sign up", "trending in", "trending with", "show more"
         ]
 
-        for live_trend_item in relevant_trends24_topics_list:
-            if live_trend_item not in extracted_trend_names_list:
-                extracted_trend_names_list.append(live_trend_item)
-
         # Step 3C: Navigate to X explore news tab
         await log_and_record("BROWSER", "Navigating to https://x.com/explore/tabs/news to extract live curated news topics...")
         try:
@@ -475,10 +448,10 @@ async def run_single_country_pipeline(
             except Exception as trend_scrape_error:
                 await log_and_record("WARN", f"Notice: Error mining trend '{current_trend_topic}': {str(trend_scrape_error)}")
 
-        # PHASE 4: Synthesize news-derived topics & Boolean X queries with Qwen3-14B
-        # Passing curated_x_sources_tweets so correspondent scoops are fully accounted for in keywords!
-        await log_and_record("STEP", "[4/5] Synthesizing news + correspondent topics & Boolean X queries with Qwen3-14B...")
-        await progress_callback_function("llm_synthesis", 5, 6, f"Synthesizing 15 crisp keywords per topic for {target_country_name}...", target_country_name)
+        # PHASE 3: Synthesize news-derived topics & Boolean X queries with Qwen3-14B
+        # Passing curated_x_sources_tweets and X explore topics so ground truth and correspondent scoops are fully accounted for!
+        await log_and_record("STEP", "[3/4] Synthesizing news + correspondent topics & Boolean X queries with Qwen3-14B...")
+        await progress_callback_function("llm_synthesis", 3, 5, f"Synthesizing 15 crisp keywords per topic for {target_country_name}...", target_country_name)
 
         endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.12.121:8000/v1")
         model_name = settings_dictionary.get("llm_model_name", "qwen3-14b")
@@ -494,7 +467,7 @@ async def run_single_country_pipeline(
                 trends.synthesize_topics_from_news_and_trends,
                 target_country_name,
                 news_sources_intel_dictionary,
-                relevant_trends24_topics_list,
+                x_native_intel_dictionary.get("trends_observed", []),
                 curated_x_sources_tweets
             )
             await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} topics (15 crisp keywords each + Boolean queries).")
@@ -504,7 +477,7 @@ async def run_single_country_pipeline(
         except Exception as llm_error:
             await log_and_record("ERROR", f"LLM topic synthesis failed: {str(llm_error)}")
 
-        # Step 4E: Mine Boolean queries on X.com (Top category) using same active browser session
+        # PHASE 4: Mine Boolean queries on X.com (Top category) using same active browser session
         queries_to_mine_list: List[str] = []
         for topic_item in synthesized_topics_list:
             topic_query = topic_item.get("boolean_query", "").strip()
@@ -515,7 +488,8 @@ async def run_single_country_pipeline(
                 if len(queries_to_mine_list) >= trends_to_mine_count:
                     break
 
-        await log_and_record("INFO", f"Mining {len(queries_to_mine_list)} news-derived Boolean queries on X.com (Top category)...")
+        await log_and_record("STEP", f"[4/4] Mining {len(queries_to_mine_list)} news-derived Boolean queries on X.com (Top category)...")
+        await progress_callback_function("x_mining", 4, 5, f"Mining live tweets for Boolean queries for {target_country_name}...", target_country_name)
 
         for query_index in range(len(queries_to_mine_list)):
             if cancellation_event.is_set():
@@ -637,7 +611,6 @@ async def run_single_country_pipeline(
         "generated_at": current_iso_time,
         "country": target_country_name,
         "sources_consulted": [
-            "trends24",
             "x.com_native_explore_and_tweets"
         ] + [s.get("name", "") for s in configured_sources_list if s.get("enabled", True)],
         "total_topics": len(synthesized_topics_list),
@@ -661,7 +634,7 @@ async def run_single_country_pipeline(
         full_log_output_string
     )
 
-    await progress_callback_function("done", 6, 6, f"Pipeline complete for {target_country_name}!", target_country_name)
+    await progress_callback_function("done", 5, 5, f"Pipeline complete for {target_country_name}!", target_country_name)
     await log_and_record("STEP", f"Pipeline successfully completed for {target_country_name}!")
 
     return {

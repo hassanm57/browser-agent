@@ -283,10 +283,13 @@ def clear_entire_database_and_all_intelligence():
 
     # Reset on-disk JSON cache files to empty structures
     empty_raw_sources_dictionary = {
-        "trends24_all_topics": [],
-        "trends24_relevant_topics": [],
         "news_sources_intel": {},
-        "x_tweets_intel": {}
+        "curated_x_sources_intel": {},
+        "x_native_explore": {
+            "country": "Worldwide",
+            "trends_observed": [],
+            "sample_tweets_by_trend": {}
+        }
     }
     empty_keywords_dictionary = {
         "generated_at": None,

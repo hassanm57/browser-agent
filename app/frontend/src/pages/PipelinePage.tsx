@@ -63,12 +63,12 @@ export function PipelinePage(props: PipelinePageProps) {
   const recentRuns = props.recentRunsList || [];
   const latestRun = recentRuns.length > 0 ? recentRuns[0] : null;
 
-  // 5 Strategic Phases definition for visual stepper updated to current news-first pipeline
+  // 5 Strategic Phases definition for visual stepper (Trends24 completely removed)
   const PIPELINE_PHASES = [
-    { id: "news_sources", name: "News Intel", desc: "17 Sources & Feeds", icon: Globe },
-    { id: "trends24", name: "Trends24", desc: "Regional News-Filter", icon: Flame },
+    { id: "news_sources", name: "News Intel", desc: "17 Ground Truth Feeds", icon: Globe },
+    { id: "x_accounts", name: "Correspondent X", desc: "Pentagon & OSINT Feeds", icon: Flame },
     { id: "llm_synthesis", name: "Query Synthesis", desc: "Boolean Query LLM", icon: Cpu },
-    { id: "x_mining", name: "X.com Mining", desc: "Tabs & 10d Tweets", icon: MessageSquare },
+    { id: "x_mining", name: "X.com Mining", desc: "Explore & Live Tweets", icon: MessageSquare },
     { id: "done", name: "15 Keywords", desc: "SQLite & JSON Export", icon: CheckCircle2 }
   ];
 
@@ -76,9 +76,9 @@ export function PipelinePage(props: PipelinePageProps) {
   function getPhaseStepIndex(phaseName?: string): number {
     if (!phaseName || phaseName === "init") return 0;
     if (phaseName === "news_sources") return 1;
-    if (phaseName === "trends24") return 2;
+    if (phaseName === "x_accounts" || phaseName === "x_scraping") return 2;
     if (phaseName === "llm_synthesis") return 3;
-    if (phaseName === "x_mining") return 4;
+    if (phaseName === "x_mining" || phaseName === "boolean_mining") return 4;
     if (phaseName === "done") return 5;
     return 0;
   }
@@ -91,10 +91,11 @@ export function PipelinePage(props: PipelinePageProps) {
 
   for (let countryIndex = 0; countryIndex < props.availableCountries.length; countryIndex++) {
     const country = props.availableCountries[countryIndex];
+    const countrySlugValue = country.slug !== undefined ? country.slug : (country.trends24_slug || "");
     if (
       normalizedSearch.length === 0 ||
       country.name.toLowerCase().includes(normalizedSearch) ||
-      country.trends24_slug.toLowerCase().includes(normalizedSearch) ||
+      countrySlugValue.toLowerCase().includes(normalizedSearch) ||
       country.tier.toLowerCase().includes(normalizedSearch)
     ) {
       filteredCountriesList.push(country);
@@ -163,7 +164,9 @@ export function PipelinePage(props: PipelinePageProps) {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-muted-foreground/80 font-mono">/{country.trends24_slug}</span>
+              <span className="text-[10px] text-muted-foreground/80 font-mono">
+                {country.slug ? "/" + country.slug : (country.trends24_slug ? "/" + country.trends24_slug : "/global")}
+              </span>
             </div>
           </div>
 

@@ -1,78 +1,91 @@
 [
   {
     "name": "Worldwide",
+    "slug": "",
     "trends24_slug": "",
     "tier": "global",
     "is_home": true
   },
   {
     "name": "Pakistan",
+    "slug": "pakistan",
     "trends24_slug": "pakistan",
     "tier": "regional",
     "is_home": false
   },
   {
     "name": "United States",
+    "slug": "united-states",
     "trends24_slug": "united-states",
     "tier": "UN P5",
     "is_home": false
   },
   {
     "name": "Russia",
+    "slug": "russia",
     "trends24_slug": "russia",
     "tier": "UN P5",
     "is_home": false
   },
   {
     "name": "China",
+    "slug": "china",
     "trends24_slug": "china",
     "tier": "UN P5",
     "is_home": false
   },
   {
     "name": "United Kingdom",
+    "slug": "united-kingdom",
     "trends24_slug": "united-kingdom",
     "tier": "UN P5",
     "is_home": false
   },
   {
     "name": "France",
+    "slug": "france",
     "trends24_slug": "france",
     "tier": "UN P5",
     "is_home": false
   },
   {
     "name": "Iran",
+    "slug": "iran",
     "trends24_slug": "iran",
     "tier": "strategic",
     "is_home": false
   },
   {
     "name": "Israel",
+    "slug": "israel",
     "trends24_slug": "israel",
     "tier": "strategic",
     "is_home": false
   },
   {
     "name": "India",
+    "slug": "india",
     "trends24_slug": "india",
     "tier": "strategic",
     "is_home": false
   },
   {
     "name": "North Korea",
+    "slug": "north-korea",
     "trends24_slug": "north-korea",
     "tier": "strategic",
     "is_home": false
   },
   {
     "name": "Saudi Arabia",
+    "slug": "saudi-arabia",
     "trends24_slug": "saudi-arabia",
     "tier": "gulf",
     "is_home": false
   },
   {
     "name": "United Arab Emirates",
+    "slug": "united-arab-emirates",
     "trends24_slug": "united-arab-emirates",
     "tier": "gulf",
     "is_home": false

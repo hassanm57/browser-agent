@@ -13,7 +13,8 @@ export type NavigationTabType =
 
 export interface CountryItem {
   name: string;
-  trends24_slug: string;
+  slug?: string;
+  trends24_slug?: string;
   tier: string;
   is_home: boolean;
 }

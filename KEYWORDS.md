@@ -13,8 +13,7 @@ The initial home country is **Pakistan**, but the engine is designed to run modu
 Rather than relying on a single platform, the engine ingests signal from 6 targeted sources:
 
 ### A. Real-Time X/Twitter Chatter & Tweet Mining
-1. **trends24.in (`https://trends24.in/{country_slug}/`)**: Fast hourly snapshot of country-specific hashtags.
-2. **Native X.com Explore Tabs (`https://x.com/explore/tabs/trending` & `https://x.com/explore/tabs/news`)**:
+1. **Native X.com Explore Tabs (`https://x.com/explore/tabs/trending` & `https://x.com/explore/tabs/news`)**:
    - Uses the authenticated Chrome browser to access live local and global trending topics directly on X.
    - For the top 5 to 10 foreign-affairs and defense trends, clicks into each trend and extracts **5 to 10 top tweets**.
    - **Why this is critical**: Real tweets reveal rich, organic search phrasing, emerging slang, secondary hashtags, and specific breaking details that aren't captured by headlines alone.
@@ -43,7 +42,7 @@ Rather than relying on a single platform, the engine ingests signal from 6 targe
 To respect the **32,768 context window** of the local model (`Qwen3-14B`) and avoid out-of-memory errors:
 
 1. **Parallel Lightweight Workers**:
-   - The 5 news websites and trends24 are processed independently in parallel.
+   - The configured news websites and RSS feeds are processed independently in parallel.
    - Workers extract **only headline text and article titles** (10–20 clean strings per source).
    - **Zero raw HTML, ads, or scripts** are sent to the LLM.
 2. **Native X.com Tweet Mining**:

@@ -841,11 +841,6 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
             "only on x"
         ]
 
-        # Merge in the latest freshly harvested trends24 topics so we always have the freshest country trends
-        for live_trend_item in trends24_topics_list:
-            if live_trend_item not in extracted_trend_names_list:
-                extracted_trend_names_list.append(live_trend_item)
-
         # Step A-2: Also navigate to https://x.com/explore/tabs/news to extract curated news headlines and events
         print("Navigating to https://x.com/explore/tabs/news to extract live curated news topics...")
         try:
@@ -902,15 +897,6 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
                     relevant_x_trends_to_mine.append(candidate_trend)
                     if len(relevant_x_trends_to_mine) >= 8:
                         break
-
-        # Fallback to relevant Trends24 defense topics if X explore had few explicit defense topics/hashtags right now
-        if len(relevant_x_trends_to_mine) < 3 and trends24_topics_list is not None:
-            for trend24_item in trends24_topics_list:
-                if is_strategic_or_defense_trend(trend24_item):
-                    if trend24_item not in relevant_x_trends_to_mine:
-                        relevant_x_trends_to_mine.append(trend24_item)
-                        if len(relevant_x_trends_to_mine) >= 8:
-                            break
 
         if len(relevant_x_trends_to_mine) > 0:
             preview_trends_str = ", ".join(relevant_x_trends_to_mine)
@@ -1055,11 +1041,11 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
 def synthesize_topics_from_news_and_trends(
     target_country_name,
     news_sources_intel_dictionary,
-    relevant_trends_list,
+    observed_trends_list=None,
     x_accounts_tweets_dictionary=None
 ):
     # This function synthesizes 10 to 12 strategic topics directly from authoritative news headlines,
-    # enriched by confirmed news-relevant X trends and verified defense correspondent & OSINT reporting,
+    # enriched by verified defense correspondent & OSINT reporting and live social trends observed on X,
     # and formulates high-precision Boolean search queries for each topic.
     print("")
     print("==================================================")
@@ -1086,18 +1072,18 @@ def synthesize_topics_from_news_and_trends(
                 for tweet_index in range(min(15, len(account_tweets_list))):
                     digest_sections_list.append("• " + account_tweets_list[tweet_index])
 
-    # Ingest confirmed news-relevant trending topics
-    if len(relevant_trends_list) > 0:
-        digest_sections_list.append(f"\n--- CONFIRMED NEWS-RELEVANT X TRENDS ({target_country_name.upper()}) ---")
-        for trend_index in range(len(relevant_trends_list)):
-            digest_sections_list.append("• " + relevant_trends_list[trend_index])
+    # Ingest confirmed live social trends observed on X.com
+    if observed_trends_list is not None and len(observed_trends_list) > 0:
+        digest_sections_list.append(f"\n--- CONFIRMED LIVE X TRENDS & SOCIAL EXPLORE ({target_country_name.upper()}) ---")
+        for trend_index in range(len(observed_trends_list)):
+            digest_sections_list.append("• " + observed_trends_list[trend_index])
 
     full_intel_digest_string = "\n".join(digest_sections_list)
 
     system_and_user_prompt = f"""You are the Chief Worldwide Geopolitical & Defense Intelligence Specialist and Social Search Keyword Engineer.
 Analyze the following multi-source news and intelligence dossier for the target scope: {target_country_name} (Worldwide & International Strategic Scope).
 
-INTELLIGENCE DOSSIER (GLOBAL HEADLINES, RSS FEEDS, VERIFIED DEFENSE CORRESPONDENTS & OSINT TWEETS, AND NEWS-RELEVANT TRENDS):
+INTELLIGENCE DOSSIER (GLOBAL HEADLINES, RSS FEEDS, VERIFIED DEFENSE CORRESPONDENTS & OSINT TWEETS, AND LIVE X EXPLORE TOPICS):
 {full_intel_digest_string}
 
 CORE MISSION OBJECTIVES:
@@ -1224,15 +1210,15 @@ Representative example structure:
 def synthesize_keywords_with_llm(target_country_name, consolidated_intel_dictionary):
     # Compatibility wrapper that delegates to synthesize_topics_from_news_and_trends
     news_intel = consolidated_intel_dictionary.get("news_sources_intel", {})
-    relevant_trends = consolidated_intel_dictionary.get("relevant_trends24_topics", [])
-    if len(relevant_trends) == 0:
-        relevant_trends = consolidated_intel_dictionary.get("x_trends24_topics", [])
+    x_explore = consolidated_intel_dictionary.get("x_native_explore", {})
+    observed_trends = x_explore.get("trends_observed", [])
+    x_accounts = consolidated_intel_dictionary.get("curated_x_sources_intel", {})
 
-    return synthesize_topics_from_news_and_trends(target_country_name, news_intel, relevant_trends)
+    return synthesize_topics_from_news_and_trends(target_country_name, news_intel, observed_trends, x_accounts)
 
 
 def run_country_hot_news_pipeline():
-    # Read the country argument or default to Pakistan
+    # Read the country argument or default to Worldwide
     terminal_arguments_list = sys.argv
     if len(terminal_arguments_list) > 1:
         argument_words_list = []
@@ -1248,7 +1234,7 @@ def run_country_hot_news_pipeline():
 
     if selected_country_data is not None:
         target_country_name = selected_country_data.get("name")
-        target_country_slug = selected_country_data.get("trends24_slug")
+        target_country_slug = selected_country_data.get("slug", selected_country_data.get("trends24_slug", ""))
     else:
         target_country_name = requested_country_query.title()
         target_country_slug = requested_country_query.strip().lower().replace(" ", "-")
@@ -1266,40 +1252,40 @@ def run_country_hot_news_pipeline():
     configured_sources_list = load_sources_configuration_file()
     news_sources_intel_dictionary = fetch_headlines_from_configured_sources(configured_sources_list)
 
-    # PHASE 2: Ingest all trends from Trends24, then filter for news-relevant trends
-    print("[2] Ingesting All Trends24 Topics & Filtering for News-Relevance...")
-    all_trends24_topics_list = fetch_trends24_topics(target_country_slug)
-    relevant_trends24_topics_list = filter_trends_relevant_to_news(
-        all_trends24_topics_list, news_sources_intel_dictionary
-    )
-    print(f"    Total Trends24 topics captured: {len(all_trends24_topics_list)}")
-    print(f"    News-relevant trends filtered: {len(relevant_trends24_topics_list)}")
-    if len(relevant_trends24_topics_list) > 0:
-        print("    Sample relevant trends: " + ", ".join(relevant_trends24_topics_list[:5]))
-
-    # PHASE 3: Synthesize news-derived topics and high-precision Boolean X queries
-    synthesized_topics_list = synthesize_topics_from_news_and_trends(
-        target_country_name, news_sources_intel_dictionary, relevant_trends24_topics_list
-    )
-
-    # PHASE 4: Mine X.com using the generated Boolean queries & fetch LATEST tweets (&f=live)
+    # PHASE 2: Discover social trends and explore topics on X.com
+    print("[2] Discovering Live Trends and News on X.com...")
     x_native_intel_dictionary = asyncio.run(
         run_x_com_deep_trend_and_tweet_miner(
             target_country_name,
             target_country_slug,
-            is_headless_mode_enabled,
-            trends24_topics_list=relevant_trends24_topics_list,
-            topics_with_boolean_queries_list=synthesized_topics_list
+            is_headless_mode_enabled
         )
     )
+    observed_x_trends_list = x_native_intel_dictionary.get("trends_observed", [])
 
-    # Attach collected fresh tweets to their corresponding topics
-    sample_tweets_map = x_native_intel_dictionary.get("sample_tweets_by_trend", {})
-    for topic_index in range(len(synthesized_topics_list)):
-        topic_item = synthesized_topics_list[topic_index]
-        topic_boolean_query = topic_item.get("boolean_query", "")
-        if topic_boolean_query in sample_tweets_map:
-            topic_item["sample_tweets"] = sample_tweets_map[topic_boolean_query]
+    # PHASE 3: Synthesize news-derived topics and high-precision Boolean X queries
+    synthesized_topics_list = synthesize_topics_from_news_and_trends(
+        target_country_name,
+        news_sources_intel_dictionary,
+        observed_x_trends_list
+    )
+
+    # PHASE 4: Mine X.com using the generated Boolean queries & fetch latest tweets
+    if len(synthesized_topics_list) > 0:
+        query_mined_intel = asyncio.run(
+            run_x_com_deep_trend_and_tweet_miner(
+                target_country_name,
+                target_country_slug,
+                is_headless_mode_enabled,
+                topics_with_boolean_queries_list=synthesized_topics_list
+            )
+        )
+        sample_tweets_map = query_mined_intel.get("sample_tweets_by_trend", {})
+        for topic_index in range(len(synthesized_topics_list)):
+            topic_item = synthesized_topics_list[topic_index]
+            topic_boolean_query = topic_item.get("boolean_query", "")
+            if topic_boolean_query in sample_tweets_map:
+                topic_item["sample_tweets"] = sample_tweets_map[topic_boolean_query]
 
     # PHASE 5: Consolidate and persist raw intelligence and structured keywords
     current_iso_timestamp = datetime.datetime.now().isoformat()
@@ -1307,9 +1293,9 @@ def run_country_hot_news_pipeline():
         "country": target_country_name,
         "slug": target_country_slug,
         "collected_at": current_iso_timestamp,
-        "all_trends24_topics": all_trends24_topics_list,
-        "relevant_trends24_topics": relevant_trends24_topics_list,
-        "x_trends24_topics": relevant_trends24_topics_list,
+        "all_trends24_topics": [],
+        "relevant_trends24_topics": [],
+        "x_trends24_topics": [],
         "news_sources_intel": news_sources_intel_dictionary,
         "x_native_explore": x_native_intel_dictionary
     }
@@ -1325,7 +1311,6 @@ def run_country_hot_news_pipeline():
         "generated_at": current_iso_timestamp,
         "country": target_country_name,
         "sources_consulted": [
-            "trends24",
             "x.com_native_explore_and_tweets"
         ] + [s.get("name") for s in configured_sources_list if s.get("enabled")],
         "total_topics": len(synthesized_topics_list),

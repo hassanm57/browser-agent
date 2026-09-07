@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import asyncio
+import urllib.parse
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
@@ -375,6 +376,311 @@ def export_keywords(run_identifier: int, format: str = Query("json", enum=["json
         headers={"Content-Disposition": f"attachment; filename=keywords_run_{run_identifier}.csv"}
     )
 
+# ----------------- TRENDS & KEYWORDS HELPERS & ENDPOINTS -----------------
+
+# List of common navigation strings to filter out non-article headlines
+WEB_NAVIGATION_JUNK_WORDS_LIST = [
+    "advertisement",
+    "subscribe",
+    "newsletter",
+    "sign in",
+    "login",
+    "cookie",
+    "privacy policy",
+    "terms of service",
+    "skip to content",
+    "all rights reserved",
+    "scroll element",
+    "home page"
+]
+
+def is_genuine_news_headline(candidate_text: str) -> bool:
+    # Short snippets are usually navigation elements rather than genuine news headlines
+    trimmed_headline = candidate_text.strip()
+    if len(trimmed_headline) < 18:
+        return False
+
+    lowercased_headline = trimmed_headline.lower()
+    for junk_word in WEB_NAVIGATION_JUNK_WORDS_LIST:
+        if junk_word in lowercased_headline:
+            return False
+
+    return True
+
+def resolve_source_website_url(source_name_string: str) -> str:
+    # Resolve the main website destination for a given news source
+    lowercased_source_name = source_name_string.lower()
+
+    if "defense news" in lowercased_source_name:
+        return "https://www.defensenews.com"
+    if "the news" in lowercased_source_name or "thenews" in lowercased_source_name:
+        return "https://www.thenews.com.pk/latest/category/world"
+    if "dawn" in lowercased_source_name:
+        return "https://www.dawn.com"
+    if "tribune" in lowercased_source_name:
+        return "https://tribune.com.pk"
+    if "breaking defense" in lowercased_source_name:
+        return "https://breakingdefense.com"
+    if "bbc" in lowercased_source_name:
+        return "https://www.bbc.com/news/world"
+    if "reuters" in lowercased_source_name:
+        return "https://www.reuters.com/world"
+    if "defense one" in lowercased_source_name:
+        return "https://www.defenseone.com"
+    if "janes" in lowercased_source_name:
+        return "https://www.janes.com/defence-intelligence-insights/defence-news"
+    if "foreign affairs" in lowercased_source_name:
+        if "nuclear" in lowercased_source_name:
+            return "https://www.foreignaffairs.com/topics/nuclear-weapons-proliferation"
+        if "war" in lowercased_source_name:
+            return "https://www.foreignaffairs.com/topics/war-military-strategy"
+        return "https://www.foreignaffairs.com/topics/defense-military"
+    if "iiss" in lowercased_source_name:
+        if "nuclear" in lowercased_source_name:
+            return "https://www.iiss.org/research/nuclear-arms-control-non-proliferation-and-disarmament"
+        return "https://www.iiss.org/research/defence-and-military-analysis"
+    if "csis" in lowercased_source_name:
+        return "https://www.csis.org"
+    if "atlantic council" in lowercased_source_name:
+        return "https://www.atlanticcouncil.org"
+
+    return "https://www.google.com"
+
+def extract_curated_top_trends(raw_intelligence_dictionary: Dict[str, Any], requested_limit: int = 10) -> List[Dict[str, Any]]:
+    # Curates top trends matching the dashboard curation:
+    # 1. Take up to 2 headlines from Defense News RSS
+    # 2. Take 1 headline from The News International World
+    # 3. Fill up to requested_limit with other news sources
+    curated_trends_list = []
+    seen_headlines_set = set()
+
+    news_sources_intel_map = raw_intelligence_dictionary.get("news_sources_intel", {})
+    if not news_sources_intel_map:
+        return curated_trends_list
+
+    def attempt_add_headline(source_title: str, candidate_headline: str, category_name: str):
+        if len(curated_trends_list) >= requested_limit:
+            return
+        cleaned_text = candidate_headline.strip()
+        if not is_genuine_news_headline(cleaned_text):
+            return
+        if cleaned_text in seen_headlines_set:
+            return
+        seen_headlines_set.add(cleaned_text)
+
+        target_website_url = resolve_source_website_url(source_title)
+        current_rank_number = len(curated_trends_list) + 1
+        curated_trends_list.append({
+            "rank": current_rank_number,
+            "headline": cleaned_text,
+            "source_name": source_title,
+            "source_url": target_website_url,
+            "category": category_name
+        })
+
+    # Step 1: Find Defense News source key
+    defense_news_source_key = ""
+    for candidate_source_key in news_sources_intel_map.keys():
+        if "defense news" in candidate_source_key.lower():
+            defense_news_source_key = candidate_source_key
+            break
+
+    if len(defense_news_source_key) > 0:
+        defense_headlines = news_sources_intel_map.get(defense_news_source_key, [])
+        for headline_item in defense_headlines:
+            if len(curated_trends_list) >= 2:
+                break
+            attempt_add_headline(defense_news_source_key, headline_item, "Defense & Military")
+
+    # Step 2: Find The News International source key
+    the_news_source_key = ""
+    for candidate_source_key in news_sources_intel_map.keys():
+        lowered_candidate_key = candidate_source_key.lower()
+        if "the news" in lowered_candidate_key or "thenews" in lowered_candidate_key:
+            the_news_source_key = candidate_source_key
+            break
+
+    if len(the_news_source_key) > 0:
+        the_news_headlines = news_sources_intel_map.get(the_news_source_key, [])
+        for headline_item in the_news_headlines:
+            initial_count = len(curated_trends_list)
+            attempt_add_headline(the_news_source_key, headline_item, "International / Regional")
+            if len(curated_trends_list) > initial_count:
+                break
+
+    # Step 3: Gather remaining sources and add 1 from each source until reaching requested_limit
+    remaining_source_keys_list = []
+    for candidate_source_key in news_sources_intel_map.keys():
+        if candidate_source_key != defense_news_source_key and candidate_source_key != the_news_source_key:
+            remaining_source_keys_list.append(candidate_source_key)
+
+    # Pass 1: Add 1 headline from each remaining source
+    for remaining_source_key in remaining_source_keys_list:
+        if len(curated_trends_list) >= requested_limit:
+            break
+        source_headlines = news_sources_intel_map.get(remaining_source_key, [])
+        for headline_item in source_headlines:
+            initial_count = len(curated_trends_list)
+            attempt_add_headline(remaining_source_key, headline_item, "Global Intel")
+            if len(curated_trends_list) > initial_count:
+                break
+
+    # Pass 2: If still under requested_limit, add more headlines from any source
+    if len(curated_trends_list) < requested_limit:
+        for candidate_source_key in news_sources_intel_map.keys():
+            if len(curated_trends_list) >= requested_limit:
+                break
+            source_headlines = news_sources_intel_map.get(candidate_source_key, [])
+            for headline_item in source_headlines:
+                if len(curated_trends_list) >= requested_limit:
+                    break
+                attempt_add_headline(candidate_source_key, headline_item, "Global Intel")
+
+    return curated_trends_list
+
+def load_latest_keywords_dictionary(specific_run_identifier: Optional[int] = None) -> tuple[Optional[int], Dict[str, Any]]:
+    # Loads keywords data from SQLite by run id or latest run, falling back to keywords.json
+    if specific_run_identifier is not None:
+        run_record = get_pipeline_run_details(specific_run_identifier)
+        if run_record and run_record.get("keywords_data"):
+            return (specific_run_identifier, run_record["keywords_data"])
+
+    all_runs_list = get_all_pipeline_runs()
+    if len(all_runs_list) > 0:
+        latest_run_summary = all_runs_list[0]
+        latest_run_record = get_pipeline_run_details(latest_run_summary["id"])
+        if latest_run_record and latest_run_record.get("keywords_data"):
+            return (latest_run_summary["id"], latest_run_record["keywords_data"])
+
+    if os.path.exists(KEYWORDS_FILE_PATH):
+        try:
+            with open(KEYWORDS_FILE_PATH, "r", encoding="utf-8") as file_pointer:
+                file_keywords_data = json.load(file_pointer)
+                return (None, file_keywords_data)
+        except Exception:
+            pass
+
+    return (None, {})
+
+def build_flat_keywords_list(keywords_dictionary: Dict[str, Any]) -> List[str]:
+    # Gathers all keyword terms from all topics without duplicate strings
+    flat_keywords_list = []
+    seen_keywords_set = set()
+
+    topics_list = keywords_dictionary.get("topics", [])
+    for topic_item in topics_list:
+        terms_list = topic_item.get("terms", [])
+        for term_string in terms_list:
+            clean_term = term_string.strip()
+            if len(clean_term) > 0 and clean_term not in seen_keywords_set:
+                seen_keywords_set.add(clean_term)
+                flat_keywords_list.append(clean_term)
+
+    return flat_keywords_list
+
+@app.get("/api/trends")
+@app.get("/api/trends/top")
+@app.get("/api/pipeline/trends")
+def get_top_trends_endpoint(limit: int = Query(default=10, ge=1, le=50, description="Number of top trends to return")):
+    # Extract top trends from raw_sources.json or database
+    raw_intelligence_data = {}
+    if os.path.exists(RAW_SOURCES_FILE_PATH):
+        try:
+            with open(RAW_SOURCES_FILE_PATH, "r", encoding="utf-8") as file_pointer:
+                raw_intelligence_data = json.load(file_pointer)
+        except Exception:
+            raw_intelligence_data = {}
+
+    if not raw_intelligence_data:
+        all_runs_list = get_all_pipeline_runs()
+        if len(all_runs_list) > 0:
+            latest_run_record = get_pipeline_run_details(all_runs_list[0]["id"])
+            if latest_run_record and latest_run_record.get("raw_sources_data"):
+                raw_intelligence_data = latest_run_record["raw_sources_data"]
+
+    if not raw_intelligence_data:
+        raise HTTPException(status_code=404, detail="No trends data available. Please run the pipeline first.")
+
+    curated_trends = extract_curated_top_trends(raw_intelligence_data, requested_limit=limit)
+    updated_at_timestamp = raw_intelligence_data.get("collected_at", "")
+    sources_count = len(raw_intelligence_data.get("news_sources_intel", {}))
+
+    return {
+        "total_trends": len(curated_trends),
+        "updated_at": updated_at_timestamp,
+        "sources_consulted_count": sources_count,
+        "trends": curated_trends
+    }
+
+@app.get("/api/keywords")
+@app.get("/api/pipeline/keywords")
+def get_keywords_endpoint(
+    run_id: Optional[int] = Query(default=None, description="Optional pipeline run ID"),
+    flat: bool = Query(default=False, description="If true, returns a flat list of keywords"),
+    format: str = Query(default="json", description="Output format: 'json' or 'csv'")
+):
+    run_identifier, keywords_data = load_latest_keywords_dictionary(specific_run_identifier=run_id)
+
+    if not keywords_data:
+        raise HTTPException(status_code=404, detail="No keywords data found. Please run the pipeline first.")
+
+    flat_keywords = build_flat_keywords_list(keywords_data)
+
+    if format == "csv":
+        csv_rows = ["Topic Label,Category,Keyword Term"]
+        topics_list = keywords_data.get("topics", [])
+        for topic_item in topics_list:
+            topic_label = topic_item.get("label", "").replace('"', '""')
+            category_name = topic_item.get("category", "").replace('"', '""')
+            terms_list = topic_item.get("terms", [])
+            for term_string in terms_list:
+                escaped_term = term_string.replace('"', '""')
+                csv_rows.append(f'"{topic_label}","{category_name}","{escaped_term}"')
+        csv_content = "\n".join(csv_rows)
+        return PlainTextResponse(
+            content=csv_content,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=intelligence_keywords.csv"}
+        )
+
+    if flat:
+        return {
+            "run_id": run_identifier,
+            "generated_at": keywords_data.get("generated_at", ""),
+            "total_keywords": len(flat_keywords),
+            "keywords": flat_keywords
+        }
+
+    # Standard detailed JSON output
+    formatted_topics = []
+    topics_list = keywords_data.get("topics", [])
+    topic_counter = 1
+    for topic_item in topics_list:
+        formatted_topics.append({
+            "topic_id": topic_counter,
+            "label": topic_item.get("label", ""),
+            "category": topic_item.get("category", ""),
+            "boolean_query": topic_item.get("boolean_query", ""),
+            "terms": topic_item.get("terms", []),
+            "sample_tweets": topic_item.get("sample_tweets", [])
+        })
+        topic_counter = topic_counter + 1
+
+    return {
+        "run_id": run_identifier,
+        "generated_at": keywords_data.get("generated_at", ""),
+        "total_topics": len(formatted_topics),
+        "total_keywords": len(flat_keywords),
+        "topics": formatted_topics,
+        "flat_keywords_list": flat_keywords
+    }
+
+@app.get("/api/keywords/csv")
+def get_keywords_csv_endpoint(
+    run_id: Optional[int] = Query(default=None, description="Optional pipeline run ID")
+):
+    return get_keywords_endpoint(run_id=run_id, flat=False, format="csv")
+
 from app.backend.pipeline_runner import run_multi_country_pipeline_orchestrator
 
 # ----------------- WEBSOCKET & PIPELINE EXECUTION -----------------
@@ -382,6 +688,19 @@ from app.backend.pipeline_runner import run_multi_country_pipeline_orchestrator
 # Global pipeline execution handles
 current_running_pipeline_task: Optional[asyncio.Task] = None
 pipeline_cancellation_event: Optional[asyncio.Event] = None
+
+# In-memory dictionary tracking live pipeline execution progress
+current_pipeline_progress_state: Dict[str, Any] = {
+    "is_running": False,
+    "status": "idle",
+    "phase": "Idle",
+    "current_step": 0,
+    "total_steps": 0,
+    "progress_percentage": 0,
+    "detail": "Pipeline is idle and ready to run.",
+    "started_at": None,
+    "finished_at": None
+}
 
 class PipelineStartRequest(BaseModel):
     countries: List[str] = ["Worldwide"]
@@ -402,6 +721,14 @@ async def send_progress_to_websockets(
     detail_text: str,
     country_name: Optional[str] = None
 ):
+    current_pipeline_progress_state["phase"] = phase_name
+    current_pipeline_progress_state["current_step"] = current_step_number
+    current_pipeline_progress_state["total_steps"] = total_steps_count
+    current_pipeline_progress_state["detail"] = detail_text
+    if total_steps_count > 0:
+        computed_percentage = int((current_step_number / total_steps_count) * 100)
+        current_pipeline_progress_state["progress_percentage"] = min(100, computed_percentage)
+
     await broadcast_websocket_message({
         "type": "progress",
         "phase": phase_name,
@@ -412,6 +739,12 @@ async def send_progress_to_websockets(
     })
 
 async def send_status_to_websockets(status_string: str):
+    current_pipeline_progress_state["status"] = status_string
+    if status_string == "running":
+        current_pipeline_progress_state["is_running"] = True
+    elif status_string in ["completed", "cancelled", "error", "idle"]:
+        current_pipeline_progress_state["is_running"] = False
+
     await broadcast_websocket_message({
         "type": "status",
         "status": status_string
@@ -434,6 +767,13 @@ async def trigger_pipeline_job(countries_list: List[str]):
 
     async def execute_task_wrapper():
         global current_running_pipeline_task
+        current_pipeline_progress_state["is_running"] = True
+        current_pipeline_progress_state["status"] = "running"
+        current_pipeline_progress_state["phase"] = "Starting"
+        current_pipeline_progress_state["detail"] = "Initializing intelligence gathering..."
+        current_pipeline_progress_state["started_at"] = datetime.now().isoformat()
+        current_pipeline_progress_state["finished_at"] = None
+
         try:
             await run_multi_country_pipeline_orchestrator(
                 selected_countries_list=countries_list,
@@ -443,15 +783,27 @@ async def trigger_pipeline_job(countries_list: List[str]):
                 result_callback_function=send_result_to_websockets,
                 cancellation_event=pipeline_cancellation_event
             )
+            current_pipeline_progress_state["status"] = "completed"
+            current_pipeline_progress_state["phase"] = "Completed"
+            current_pipeline_progress_state["detail"] = "Pipeline completed successfully."
+            current_pipeline_progress_state["progress_percentage"] = 100
         except asyncio.CancelledError:
             mark_active_runs_cancelled("Cancelled by user")
+            current_pipeline_progress_state["status"] = "cancelled"
+            current_pipeline_progress_state["phase"] = "Cancelled"
+            current_pipeline_progress_state["detail"] = "Pipeline was cancelled by user."
             await send_log_to_websockets("WARN", "Pipeline task was successfully aborted.")
             await send_status_to_websockets("cancelled")
         except Exception as unhandled_error:
             mark_active_runs_cancelled(f"Failed: {str(unhandled_error)}")
+            current_pipeline_progress_state["status"] = "error"
+            current_pipeline_progress_state["phase"] = "Error"
+            current_pipeline_progress_state["detail"] = str(unhandled_error)
             await send_log_to_websockets("ERROR", f"Unhandled pipeline exception: {str(unhandled_error)}")
             await send_status_to_websockets("error")
         finally:
+            current_pipeline_progress_state["is_running"] = False
+            current_pipeline_progress_state["finished_at"] = datetime.now().isoformat()
             current_running_pipeline_task = None
 
     current_running_pipeline_task = asyncio.create_task(execute_task_wrapper())
@@ -467,14 +819,48 @@ async def abort_pipeline_job():
         current_running_pipeline_task.cancel()
         current_running_pipeline_task = None
 
+    current_pipeline_progress_state["is_running"] = False
+    current_pipeline_progress_state["status"] = "cancelled"
+    current_pipeline_progress_state["phase"] = "Cancelled"
+    current_pipeline_progress_state["detail"] = "Pipeline cancellation requested."
+    current_pipeline_progress_state["finished_at"] = datetime.now().isoformat()
+
     mark_active_runs_cancelled("Cancelled by user")
     await send_log_to_websockets("WARN", "Pipeline cancellation request processed.")
     await send_status_to_websockets("cancelled")
     return {"status": "cancelled"}
 
+@app.get("/api/pipeline/status")
+@app.get("/api/status")
+def get_pipeline_status_endpoint():
+    latest_run_id = None
+    latest_run_finished_at = None
+
+    all_runs_list = get_all_pipeline_runs()
+    if len(all_runs_list) > 0:
+        latest_run_id = all_runs_list[0].get("id")
+        latest_run_finished_at = all_runs_list[0].get("finished_at")
+
+    return {
+        "is_running": current_pipeline_progress_state["is_running"],
+        "status": current_pipeline_progress_state["status"],
+        "current_phase": current_pipeline_progress_state["phase"],
+        "current_step": current_pipeline_progress_state["current_step"],
+        "total_steps": current_pipeline_progress_state["total_steps"],
+        "progress_percentage": current_pipeline_progress_state["progress_percentage"],
+        "detail": current_pipeline_progress_state["detail"],
+        "started_at": current_pipeline_progress_state["started_at"],
+        "finished_at": current_pipeline_progress_state["finished_at"],
+        "latest_run_id": latest_run_id,
+        "latest_run_finished_at": latest_run_finished_at
+    }
+
 @app.post("/api/pipeline/start")
-async def api_start_pipeline(request_payload: PipelineStartRequest):
-    result = await trigger_pipeline_job(request_payload.countries)
+async def api_start_pipeline(request_payload: Optional[PipelineStartRequest] = None):
+    target_countries = ["Worldwide"]
+    if request_payload is not None and request_payload.countries:
+        target_countries = request_payload.countries
+    result = await trigger_pipeline_job(target_countries)
     return result
 
 @app.post("/api/pipeline/cancel")

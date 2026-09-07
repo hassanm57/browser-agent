@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { RawSourcesData, KeywordsData, PipelineRunRecord, NavigationTabType, CountryItem, SourceItem } from "../types";
 import {
   Globe,
@@ -14,8 +14,6 @@ import {
   Zap
 } from "lucide-react";
 import { Banner } from "@/components/ui/banner";
-import { Player } from "@remotion/player";
-import { PerspectiveMarquee } from "@/components/ui/remocn-perspective-marquee";
 
 interface DashboardPageProps {
   rawSourcesData: RawSourcesData | null;
@@ -144,136 +142,6 @@ function getExactNewsSourceWebsiteUrl(sourceNameString: string, sourcesList?: So
   return "https://news.google.com";
 }
 
-function getRandomKeywordsPerCategory(
-  keywordsData: KeywordsData | null,
-  maximumKeywordsPerCategory: number
-): string[] {
-  // Return empty list if no topics are available in keywords data
-  if (!keywordsData || !keywordsData.topics || keywordsData.topics.length === 0) {
-    return [];
-  }
-
-  // Step 1: Collect terms grouped by category using a dictionary object
-  const categoryTermsDictionary: Record<string, string[]> = {};
-
-  for (let topicIndex = 0; topicIndex < keywordsData.topics.length; topicIndex++) {
-    const currentTopic = keywordsData.topics[topicIndex];
-    let categoryName = "general";
-    if (currentTopic.category && currentTopic.category.trim().length > 0) {
-      categoryName = currentTopic.category.toLowerCase().trim();
-    }
-
-    if (!categoryTermsDictionary[categoryName]) {
-      categoryTermsDictionary[categoryName] = [];
-    }
-
-    if (currentTopic.terms && currentTopic.terms.length > 0) {
-      for (let termIndex = 0; termIndex < currentTopic.terms.length; termIndex++) {
-        const rawTerm = currentTopic.terms[termIndex];
-        if (!rawTerm) {
-          continue;
-        }
-        const cleanedTerm = rawTerm.trim();
-        if (cleanedTerm.length === 0) {
-          continue;
-        }
-
-        // Avoid adding duplicate terms in the same category
-        let isAlreadyPresent = false;
-        for (let checkIndex = 0; checkIndex < categoryTermsDictionary[categoryName].length; checkIndex++) {
-          if (categoryTermsDictionary[categoryName][checkIndex].toLowerCase() === cleanedTerm.toLowerCase()) {
-            isAlreadyPresent = true;
-            break;
-          }
-        }
-
-        if (!isAlreadyPresent) {
-          categoryTermsDictionary[categoryName].push(cleanedTerm);
-        }
-      }
-    }
-  }
-
-  // Step 2: Randomly sample up to maximumKeywordsPerCategory from each category
-  const selectedKeywordsList: string[] = [];
-  const categoryKeysList = Object.keys(categoryTermsDictionary);
-
-  for (let keyIndex = 0; keyIndex < categoryKeysList.length; keyIndex++) {
-    const categoryKey = categoryKeysList[keyIndex];
-    const termsInCategory = categoryTermsDictionary[categoryKey];
-
-    if (termsInCategory.length === 0) {
-      continue;
-    }
-
-    // Determine category badge icon and name
-    let categoryIcon = "⚡";
-    let categoryTitle = categoryKey.toUpperCase();
-
-    if (categoryKey.includes("defense") || categoryKey.includes("military")) {
-      categoryIcon = "🛡️";
-      categoryTitle = "DEFENSE";
-    } else if (categoryKey.includes("diplomacy") || categoryKey.includes("foreign")) {
-      categoryIcon = "🌐";
-      categoryTitle = "DIPLOMACY";
-    } else if (categoryKey.includes("politic") || categoryKey.includes("governance")) {
-      categoryIcon = "🏛️";
-      categoryTitle = "POLITICS";
-    } else if (categoryKey.includes("econom") || categoryKey.includes("trade") || categoryKey.includes("finance")) {
-      categoryIcon = "📈";
-      categoryTitle = "ECONOMY";
-    } else if (categoryKey.includes("tech") || categoryKey.includes("cyber")) {
-      categoryIcon = "💻";
-      categoryTitle = "CYBER";
-    } else if (categoryKey.includes("secur") || categoryKey.includes("crisis")) {
-      categoryIcon = "⚠️";
-      categoryTitle = "SECURITY";
-    }
-
-    // Copy terms array before shuffling
-    const termsCopy: string[] = [];
-    for (let copyIndex = 0; copyIndex < termsInCategory.length; copyIndex++) {
-      termsCopy.push(termsInCategory[copyIndex]);
-    }
-
-    // Traditional Fisher-Yates shuffle with for loop
-    for (let shuffleIndex = termsCopy.length - 1; shuffleIndex > 0; shuffleIndex--) {
-      const randomSwapIndex = Math.floor(Math.random() * (shuffleIndex + 1));
-      const temporaryTerm = termsCopy[shuffleIndex];
-      termsCopy[shuffleIndex] = termsCopy[randomSwapIndex];
-      termsCopy[randomSwapIndex] = temporaryTerm;
-    }
-
-    // Pick top items after shuffling
-    const countToPick = Math.min(maximumKeywordsPerCategory, termsCopy.length);
-    for (let pickIndex = 0; pickIndex < countToPick; pickIndex++) {
-      const selectedTerm = termsCopy[pickIndex];
-      const formattedEntry = `${categoryIcon} ${categoryTitle} • ${selectedTerm}`;
-      selectedKeywordsList.push(formattedEntry);
-    }
-  }
-
-  // Shuffle final list so categories are distributed evenly across the marquee strip
-  for (let finalShuffleIndex = selectedKeywordsList.length - 1; finalShuffleIndex > 0; finalShuffleIndex--) {
-    const randomDestinationIndex = Math.floor(Math.random() * (finalShuffleIndex + 1));
-    const temporarySwapItem = selectedKeywordsList[finalShuffleIndex];
-    selectedKeywordsList[finalShuffleIndex] = selectedKeywordsList[randomDestinationIndex];
-    selectedKeywordsList[randomDestinationIndex] = temporarySwapItem;
-  }
-
-  // If there are only a few items, duplicate them to ensure seamless marquee sliding
-  if (selectedKeywordsList.length > 0 && selectedKeywordsList.length < 8) {
-    const originalCount = selectedKeywordsList.length;
-    for (let duplicateRound = 0; duplicateRound < 2; duplicateRound++) {
-      for (let originalIndex = 0; originalIndex < originalCount; originalIndex++) {
-        selectedKeywordsList.push(selectedKeywordsList[originalIndex]);
-      }
-    }
-  }
-
-  return selectedKeywordsList;
-}
-
 export function DashboardPage(props: DashboardPageProps) {
   // Always clear any old dismissed state from localStorage to ensure rainbow banner is permanently active
   useEffect(function () {
@@ -284,41 +152,6 @@ export function DashboardPage(props: DashboardPageProps) {
       // Ignore
     }
   }, []);
-
-  const [currentMarqueeKeywords, setCurrentMarqueeKeywords] = useState<string[]>([]);
-  const [isTransitioningMarquee, setIsTransitioningMarquee] = useState<boolean>(false);
-  const [marqueeCycleCounter, setMarqueeCycleCounter] = useState<number>(0);
-
-  // Periodically refresh the randomized keyword stream from active categories
-  useEffect(function () {
-    if (!props.keywordsData || !props.keywordsData.topics || props.keywordsData.topics.length === 0) {
-      setCurrentMarqueeKeywords([]);
-      return;
-    }
-
-    // Load initial set of randomized keywords
-    const initialKeywordList = getRandomKeywordsPerCategory(props.keywordsData, 4);
-    setCurrentMarqueeKeywords(initialKeywordList);
-
-    // Refresh every 20 seconds with a smooth fade transition
-    const intervalIdentifier = window.setInterval(function () {
-      setIsTransitioningMarquee(true);
-      window.setTimeout(function () {
-        const freshKeywordList = getRandomKeywordsPerCategory(props.keywordsData, 4);
-        if (freshKeywordList.length > 0) {
-          setCurrentMarqueeKeywords(freshKeywordList);
-          setMarqueeCycleCounter(function (previousCycle) {
-            return previousCycle + 1;
-          });
-        }
-        setIsTransitioningMarquee(false);
-      }, 400);
-    }, 20000);
-
-    return function () {
-      window.clearInterval(intervalIdentifier);
-    };
-  }, [props.keywordsData]);
 
   // Count trends discovered
   let totalTrendsCount = 0;
@@ -712,14 +545,6 @@ export function DashboardPage(props: DashboardPageProps) {
   }
 
   const latestRun = props.recentRunsList.length > 0 ? props.recentRunsList[0] : null;
-  const isPipelineCompleted = Boolean(
-    latestRun &&
-    latestRun.status === "completed" &&
-    !props.isPipelineActive &&
-    props.keywordsData &&
-    props.keywordsData.topics &&
-    props.keywordsData.topics.length > 0
-  );
 
   return (
     <div className="space-y-6 max-w-6xl py-1 animate-in fade-in-50 duration-300 select-none">
@@ -872,71 +697,7 @@ export function DashboardPage(props: DashboardPageProps) {
         </div>
       </div>
 
-      {/* 3. Live Synthesized Keywords Animated Strip (Remotion 3D Perspective Marquee) */}
-      {isPipelineCompleted && currentMarqueeKeywords.length > 0 && (
-        <div className="relative w-full rounded-3xl bg-zinc-900/40 border border-zinc-800/50 p-4 sm:p-5 backdrop-blur-xl shadow-2xl shadow-black/30 overflow-hidden space-y-3">
-          {/* Header row with live indicator badge and title */}
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-2.5">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                Live Extracted Keywords Stream
-              </span>
-              <span className="hidden sm:inline-block text-[11px] text-zinc-400 font-mono">
-                • Real-time cross-category intelligence
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
-              <span className="px-2 py-0.5 rounded-full bg-zinc-800/80 border border-zinc-700/50 text-zinc-300">
-                {currentMarqueeKeywords.length} terms rotating
-              </span>
-            </div>
-          </div>
-
-          {/* Marquee 3D Perspective viewport */}
-          <div className="relative h-24 sm:h-28 w-full rounded-2xl overflow-hidden bg-zinc-950/80 border border-zinc-800/40">
-            <div
-              className={
-                "w-full h-full transition-opacity duration-500 " +
-                (isTransitioningMarquee ? "opacity-0" : "opacity-100")
-              }
-            >
-              <Player
-                key={marqueeCycleCounter}
-                component={PerspectiveMarquee as any}
-                inputProps={{
-                  items: currentMarqueeKeywords,
-                  fontSize: 22,
-                  color: "#f4f4f5",
-                  fontWeight: 600,
-                  rotateY: -18,
-                  rotateX: 6,
-                  perspective: 1000,
-                  pixelsPerFrame: 2,
-                  speed: 3,
-                  fadeColor: "#09090b",
-                  background: "#09090b",
-                }}
-                durationInFrames={100000}
-                compositionWidth={1280}
-                compositionHeight={112}
-                fps={30}
-                autoPlay
-                loop
-                controls={false}
-                acknowledgeRemotionLicense
-                style={{ width: "100%", height: "100%" }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 4. Top 10 Trending Hot Topics (Podium Showcase for Top 3, NO outer border box) */}
+      {/* 3. Top 10 Trending Hot Topics (Podium Showcase for Top 3, NO outer border box) */}
       <div className="w-full rounded-3xl bg-zinc-900/40 p-6 backdrop-blur-xl shadow-2xl shadow-black/30 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-4">
           <div className="flex items-center gap-3">
@@ -985,7 +746,7 @@ export function DashboardPage(props: DashboardPageProps) {
         )}
       </div>
 
-      {/* 5. Keywords Section */}
+      {/* 4. Keywords Section */}
       <div className="w-full rounded-3xl bg-zinc-900/40 p-6 backdrop-blur-xl shadow-2xl shadow-black/30 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-4">
           <div className="flex items-center gap-3">
@@ -1021,7 +782,7 @@ export function DashboardPage(props: DashboardPageProps) {
         )}
       </div>
 
-      {/* 6. Sleek Navigation Cards with Rounded Edges & Smooth Glow */}
+      {/* 5. Sleek Navigation Cards with Rounded Edges & Smooth Glow */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 select-none">
         <button
           onClick={() => props.onNavigateTab("trends")}

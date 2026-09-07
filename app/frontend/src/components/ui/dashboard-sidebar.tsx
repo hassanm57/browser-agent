@@ -15,7 +15,7 @@ import {
   Globe,
   Terminal,
   Blocks,
-  Radar,
+  TrendingUp,
   PanelLeftClose,
   PanelLeftOpen,
   Command,
@@ -98,8 +98,8 @@ export const mockBottomItems: NavItemData[] = [
 export function BrandHeader({ title = 'Trendline' }: { title?: string }) {
   return (
     <div className="flex items-center gap-2.5 px-2 py-2 mb-4 select-none">
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-md shadow-blue-500/20 text-white shrink-0">
-        <Radar className="w-4 h-4 text-white" strokeWidth={2} />
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-600 via-yellow-500 to-amber-400 flex items-center justify-center shadow-md shadow-amber-500/30 ring-1 ring-amber-400/40 text-zinc-950 shrink-0">
+        <TrendingUp className="w-4 h-4 text-zinc-950" strokeWidth={2.5} />
       </div>
       <span className="text-[14px] font-semibold text-foreground tracking-tight truncate">
         {title}

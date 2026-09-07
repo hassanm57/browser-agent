@@ -9,7 +9,8 @@ import {
   Globe,
   History,
   Settings,
-  Terminal
+  Terminal,
+  TrendingUp
 } from "lucide-react";
 
 interface SidebarProps {
@@ -129,8 +130,8 @@ export function Sidebar(props: SidebarProps) {
       {/* Top Header / Clean Brand Indicator */}
       <div>
         <div className="h-14 px-4 border-b border-zinc-850/80 flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-sm">
-            T
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-600 via-yellow-500 to-amber-400 flex items-center justify-center text-zinc-950 shadow-md shadow-amber-500/25 ring-1 ring-amber-400/40 shrink-0">
+            <TrendingUp className="w-4 h-4 text-zinc-950" strokeWidth={2.5} />
           </div>
           <span className="text-sm font-semibold text-zinc-100 tracking-tight">
             Trendline

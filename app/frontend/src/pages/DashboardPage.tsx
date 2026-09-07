@@ -569,8 +569,8 @@ export function DashboardPage(props: DashboardPageProps) {
           </span>
         </div>
 
-        {latestRun && (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {latestRun && (
             <span
               className={
                 "text-xs font-mono px-3.5 py-1 rounded-full font-semibold " +
@@ -581,8 +581,21 @@ export function DashboardPage(props: DashboardPageProps) {
             >
               {latestRun.status.toUpperCase()}
             </span>
-          </div>
-        )}
+          )}
+
+          <button
+            onClick={function () {
+              props.onStartPipeline();
+            }}
+            disabled={props.isPipelineActive}
+            className="group relative inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-50"
+          >
+            <Play className="w-3.5 h-3.5 fill-current transition-transform group-hover:scale-110" />
+            <span>
+              {props.isPipelineActive ? "Pipeline Running..." : "Run Pipeline"}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Main Stat Boxes */}
@@ -660,41 +673,10 @@ export function DashboardPage(props: DashboardPageProps) {
         </div>
       </div>
 
-      {/* 3. Action Controls Strip (NO border box completely) */}
-      <div className="w-full rounded-3xl bg-zinc-900/40 p-5 backdrop-blur-xl shadow-xl shadow-black/20">
+      {/* 3. Action Controls Strip */}
+      <div className="w-full rounded-3xl bg-zinc-900/40 p-4 backdrop-blur-xl shadow-xl shadow-black/20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={function () {
-                if (window.confirm("Are you sure you want to clear all stored intelligence records? This will reset all counts and start completely fresh.")) {
-                  props.onClearDatabase();
-                }
-              }}
-              disabled={props.isPipelineActive}
-              className="group inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-medium text-xs shadow-md hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40"
-              title="Clear all stored intelligence runs and reset dashboard stats"
-            >
-              <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
-              <span>Clear Stored Records</span>
-            </button>
-          </div>
-
           <div className="flex items-center flex-wrap gap-2.5">
-            <button
-              onClick={function () {
-                props.onStartPipeline();
-              }}
-              disabled={props.isPipelineActive}
-              className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-50"
-            >
-              <Play className="w-3.5 h-3.5 fill-current transition-transform group-hover:scale-110" />
-              <span>
-                {props.isPipelineActive
-                  ? "Pipeline Running..."
-                  : "Run Pipeline"}
-              </span>
-            </button>
-
             <button
               onClick={function () {
                 props.onNavigateTab("tweets");
@@ -723,6 +705,22 @@ export function DashboardPage(props: DashboardPageProps) {
                   {totalKeywordsCount}
                 </span>
               )}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={function () {
+                if (window.confirm("Are you sure you want to clear all stored intelligence records? This will reset all counts and start completely fresh.")) {
+                  props.onClearDatabase();
+                }
+              }}
+              disabled={props.isPipelineActive}
+              className="group inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-medium text-xs shadow-md hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40"
+              title="Clear all stored intelligence runs and reset dashboard stats"
+            >
+              <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
+              <span>Clear Stored Records</span>
             </button>
           </div>
         </div>

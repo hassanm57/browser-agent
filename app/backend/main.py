@@ -407,8 +407,47 @@ def is_genuine_news_headline(candidate_text: str) -> bool:
 
     return True
 
+def get_source_category_label(source_title: str, fallback_label: str = "Global Intel") -> str:
+    # Read category dynamically from sources.json if available
+    category_display_map = {
+        "defense_military": "Defense & Military",
+        "geopolitics_strategy": "Geopolitics & Strategy",
+        "national_regional": "National / Regional",
+        "international": "International / Regional",
+        "global": "Global Intel"
+    }
+    if os.path.exists(SOURCES_FILE_PATH):
+        try:
+            with open(SOURCES_FILE_PATH, "r", encoding="utf-8") as file_pointer:
+                configured_sources = json.load(file_pointer)
+                for source_item in configured_sources:
+                    if source_item.get("name", "").strip().lower() == source_title.strip().lower():
+                        raw_category = source_item.get("category", "")
+                        if raw_category in category_display_map:
+                            return category_display_map[raw_category]
+                        elif raw_category:
+                            return raw_category.replace("_", " ").title()
+        except Exception:
+            pass
+    return fallback_label
+
 def resolve_source_website_url(source_name_string: str) -> str:
-    # Resolve the main website destination for a given news source
+    # 1. Dynamically search sources.json for the configured URL first
+    if os.path.exists(SOURCES_FILE_PATH):
+        try:
+            with open(SOURCES_FILE_PATH, "r", encoding="utf-8") as file_pointer:
+                configured_sources = json.load(file_pointer)
+                for source_entry in configured_sources:
+                    if source_entry.get("name", "").strip().lower() == source_name_string.strip().lower():
+                        configured_url = source_entry.get("url", "")
+                        parsed_url = urllib.parse.urlparse(configured_url)
+                        if parsed_url.scheme and parsed_url.netloc:
+                            return f"{parsed_url.scheme}://{parsed_url.netloc}"
+                        return configured_url
+        except Exception:
+            pass
+
+    # 2. Known domain mappings fallback
     lowercased_source_name = source_name_string.lower()
 
     if "defense news" in lowercased_source_name:
@@ -430,15 +469,9 @@ def resolve_source_website_url(source_name_string: str) -> str:
     if "janes" in lowercased_source_name:
         return "https://www.janes.com/defence-intelligence-insights/defence-news"
     if "foreign affairs" in lowercased_source_name:
-        if "nuclear" in lowercased_source_name:
-            return "https://www.foreignaffairs.com/topics/nuclear-weapons-proliferation"
-        if "war" in lowercased_source_name:
-            return "https://www.foreignaffairs.com/topics/war-military-strategy"
-        return "https://www.foreignaffairs.com/topics/defense-military"
+        return "https://www.foreignaffairs.com"
     if "iiss" in lowercased_source_name:
-        if "nuclear" in lowercased_source_name:
-            return "https://www.iiss.org/research/nuclear-arms-control-non-proliferation-and-disarmament"
-        return "https://www.iiss.org/research/defence-and-military-analysis"
+        return "https://www.iiss.org"
     if "csis" in lowercased_source_name:
         return "https://www.csis.org"
     if "atlantic council" in lowercased_source_name:
@@ -450,7 +483,7 @@ def extract_curated_top_trends(raw_intelligence_dictionary: Dict[str, Any], requ
     # Curates top trends matching the dashboard curation:
     # 1. Take up to 2 headlines from Defense News RSS
     # 2. Take 1 headline from The News International World
-    # 3. Fill up to requested_limit with other news sources
+    # 3. Fill up to requested_limit with other news sources using dynamic categories
     curated_trends_list = []
     seen_headlines_set = set()
 
@@ -469,13 +502,14 @@ def extract_curated_top_trends(raw_intelligence_dictionary: Dict[str, Any], requ
         seen_headlines_set.add(cleaned_text)
 
         target_website_url = resolve_source_website_url(source_title)
+        resolved_category = get_source_category_label(source_title, fallback_label=category_name)
         current_rank_number = len(curated_trends_list) + 1
         curated_trends_list.append({
             "rank": current_rank_number,
             "headline": cleaned_text,
             "source_name": source_title,
             "source_url": target_website_url,
-            "category": category_name
+            "category": resolved_category
         })
 
     # Step 1: Find Defense News source key
@@ -539,24 +573,36 @@ def extract_curated_top_trends(raw_intelligence_dictionary: Dict[str, Any], requ
     return curated_trends_list
 
 def load_latest_keywords_dictionary(specific_run_identifier: Optional[int] = None) -> tuple[Optional[int], Dict[str, Any]]:
-    # Loads keywords data from SQLite by run id or latest run, falling back to keywords.json
+    # Loads keywords data from SQLite by run id or latest completed run, falling back to keywords.json
     if specific_run_identifier is not None:
         run_record = get_pipeline_run_details(specific_run_identifier)
-        if run_record and run_record.get("keywords_data"):
-            return (specific_run_identifier, run_record["keywords_data"])
+        if run_record and run_record.get("keywords_json"):
+            try:
+                parsed_keywords = json.loads(run_record["keywords_json"])
+                return (specific_run_identifier, parsed_keywords)
+            except Exception:
+                pass
 
+    # Inspect runs from SQLite starting from the most recent
     all_runs_list = get_all_pipeline_runs()
-    if len(all_runs_list) > 0:
-        latest_run_summary = all_runs_list[0]
-        latest_run_record = get_pipeline_run_details(latest_run_summary["id"])
-        if latest_run_record and latest_run_record.get("keywords_data"):
-            return (latest_run_summary["id"], latest_run_record["keywords_data"])
+    for run_summary in all_runs_list:
+        run_record = get_pipeline_run_details(run_summary["id"])
+        if run_record and run_record.get("keywords_json"):
+            try:
+                parsed_keywords = json.loads(run_record["keywords_json"])
+                if parsed_keywords and parsed_keywords.get("topics"):
+                    return (run_summary["id"], parsed_keywords)
+            except Exception:
+                pass
 
+    # Fallback to keywords.json file on disk
     if os.path.exists(KEYWORDS_FILE_PATH):
         try:
             with open(KEYWORDS_FILE_PATH, "r", encoding="utf-8") as file_pointer:
                 file_keywords_data = json.load(file_pointer)
-                return (None, file_keywords_data)
+                if file_keywords_data and file_keywords_data.get("topics"):
+                    latest_run_id = all_runs_list[0]["id"] if len(all_runs_list) > 0 else None
+                    return (latest_run_id, file_keywords_data)
         except Exception:
             pass
 
@@ -581,24 +627,48 @@ def build_flat_keywords_list(keywords_dictionary: Dict[str, Any]) -> List[str]:
 @app.get("/api/trends")
 @app.get("/api/trends/top")
 @app.get("/api/pipeline/trends")
-def get_top_trends_endpoint(limit: int = Query(default=10, ge=1, le=50, description="Number of top trends to return")):
-    # Extract top trends from raw_sources.json or database
+def get_top_trends_endpoint(
+    limit: int = Query(default=10, ge=1, le=50, description="Number of top trends to return"),
+    run_id: Optional[int] = Query(default=None, description="Optional pipeline run ID")
+):
     raw_intelligence_data = {}
-    if os.path.exists(RAW_SOURCES_FILE_PATH):
+    actual_run_id = None
+
+    if run_id is not None:
+        run_record = get_pipeline_run_details(run_id)
+        if run_record and run_record.get("raw_sources_json"):
+            try:
+                raw_intelligence_data = json.loads(run_record["raw_sources_json"])
+                actual_run_id = run_id
+            except Exception:
+                pass
+
+    # If no specific run requested, inspect latest run in SQLite
+    if not raw_intelligence_data:
+        all_runs_list = get_all_pipeline_runs()
+        for run_summary in all_runs_list:
+            run_record = get_pipeline_run_details(run_summary["id"])
+            if run_record and run_record.get("raw_sources_json"):
+                try:
+                    candidate_data = json.loads(run_record["raw_sources_json"])
+                    if candidate_data and candidate_data.get("news_sources_intel"):
+                        raw_intelligence_data = candidate_data
+                        actual_run_id = run_summary["id"]
+                        break
+                except Exception:
+                    pass
+
+    # Fallback to raw_sources.json on disk if database is empty
+    if not raw_intelligence_data and os.path.exists(RAW_SOURCES_FILE_PATH):
         try:
             with open(RAW_SOURCES_FILE_PATH, "r", encoding="utf-8") as file_pointer:
-                raw_intelligence_data = json.load(file_pointer)
+                candidate_data = json.load(file_pointer)
+                if candidate_data and candidate_data.get("news_sources_intel"):
+                    raw_intelligence_data = candidate_data
         except Exception:
             raw_intelligence_data = {}
 
-    if not raw_intelligence_data:
-        all_runs_list = get_all_pipeline_runs()
-        if len(all_runs_list) > 0:
-            latest_run_record = get_pipeline_run_details(all_runs_list[0]["id"])
-            if latest_run_record and latest_run_record.get("raw_sources_data"):
-                raw_intelligence_data = latest_run_record["raw_sources_data"]
-
-    if not raw_intelligence_data:
+    if not raw_intelligence_data or not raw_intelligence_data.get("news_sources_intel"):
         raise HTTPException(status_code=404, detail="No trends data available. Please run the pipeline first.")
 
     curated_trends = extract_curated_top_trends(raw_intelligence_data, requested_limit=limit)
@@ -606,6 +676,7 @@ def get_top_trends_endpoint(limit: int = Query(default=10, ge=1, le=50, descript
     sources_count = len(raw_intelligence_data.get("news_sources_intel", {}))
 
     return {
+        "run_id": actual_run_id,
         "total_trends": len(curated_trends),
         "updated_at": updated_at_timestamp,
         "sources_consulted_count": sources_count,
@@ -835,22 +906,46 @@ async def abort_pipeline_job():
 def get_pipeline_status_endpoint():
     latest_run_id = None
     latest_run_finished_at = None
+    latest_run_started_at = None
+    latest_run_status = "idle"
 
     all_runs_list = get_all_pipeline_runs()
     if len(all_runs_list) > 0:
-        latest_run_id = all_runs_list[0].get("id")
-        latest_run_finished_at = all_runs_list[0].get("finished_at")
+        latest_run_record = all_runs_list[0]
+        latest_run_id = latest_run_record.get("id")
+        latest_run_started_at = latest_run_record.get("started_at")
+        latest_run_finished_at = latest_run_record.get("finished_at")
+        latest_run_status = latest_run_record.get("status", "idle")
+
+    # If the pipeline is not currently executing in memory, report the persistent run state
+    reported_status = current_pipeline_progress_state["status"]
+    reported_phase = current_pipeline_progress_state["phase"]
+    reported_percentage = current_pipeline_progress_state["progress_percentage"]
+    reported_detail = current_pipeline_progress_state["detail"]
+
+    if not current_pipeline_progress_state["is_running"]:
+        if latest_run_status in ["completed", "cancelled", "error"]:
+            reported_status = latest_run_status
+            if latest_run_status == "completed":
+                reported_phase = "Completed"
+                reported_percentage = 100
+                reported_detail = "Pipeline completed successfully."
+            elif latest_run_status == "cancelled":
+                reported_phase = "Cancelled"
+                reported_detail = "Pipeline execution was cancelled."
+            elif latest_run_status == "error":
+                reported_phase = "Error"
 
     return {
         "is_running": current_pipeline_progress_state["is_running"],
-        "status": current_pipeline_progress_state["status"],
-        "current_phase": current_pipeline_progress_state["phase"],
+        "status": reported_status,
+        "current_phase": reported_phase,
         "current_step": current_pipeline_progress_state["current_step"],
         "total_steps": current_pipeline_progress_state["total_steps"],
-        "progress_percentage": current_pipeline_progress_state["progress_percentage"],
-        "detail": current_pipeline_progress_state["detail"],
-        "started_at": current_pipeline_progress_state["started_at"],
-        "finished_at": current_pipeline_progress_state["finished_at"],
+        "progress_percentage": reported_percentage,
+        "detail": reported_detail,
+        "started_at": current_pipeline_progress_state["started_at"] or latest_run_started_at,
+        "finished_at": current_pipeline_progress_state["finished_at"] or latest_run_finished_at,
         "latest_run_id": latest_run_id,
         "latest_run_finished_at": latest_run_finished_at
     }

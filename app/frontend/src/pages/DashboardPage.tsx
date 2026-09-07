@@ -343,11 +343,15 @@ export function DashboardPage(props: DashboardPageProps) {
     const rankNumber = podiumIndex + 1;
 
     if (rankNumber === 1) {
-      // 1st Place Podium (Most orange / deep amber-orange gold)
+      // 1st Place Podium (Most orange / deep amber-orange gold) - Entire card is clickable
       renderedPodiumCards.push(
-        <div
+        <a
           key={item.source_name + "_podium_" + rankNumber}
-          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-orange-500/25 via-amber-950/40 to-zinc-950/90 hover:from-orange-500/35 shadow-xl shadow-orange-500/10 hover:shadow-[0_0_35px_rgba(249,115,22,0.25)] transition-all duration-300 gap-4"
+          href={item.source_url}
+          target="_blank"
+          rel="noreferrer"
+          title={"Visit " + item.source_name}
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-orange-500/25 via-amber-950/40 to-zinc-950/90 hover:from-orange-500/35 shadow-xl shadow-orange-500/10 hover:shadow-[0_0_35px_rgba(249,115,22,0.25)] transition-all duration-300 gap-4 cursor-pointer select-none"
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -360,41 +364,37 @@ export function DashboardPage(props: DashboardPageProps) {
                   Hot
                 </span>
               </div>
-              <a
-                href={item.source_url}
-                target="_blank"
-                rel="noreferrer"
-                title={"Visit " + item.source_name}
-                className="p-2 rounded-xl text-orange-400/80 hover:text-orange-200 hover:bg-orange-500/20 transition-all shrink-0 cursor-pointer"
+              <div
+                className="p-2 rounded-xl text-orange-400/80 group-hover:text-orange-200 group-hover:bg-orange-500/20 transition-all shrink-0"
               >
                 <ExternalLink className="w-4 h-4" />
-              </a>
+              </div>
             </div>
             <p className="text-sm font-bold text-zinc-100 group-hover:text-orange-300 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
           <div className="pt-2.5 border-t border-orange-500/20 flex items-center justify-between gap-2 text-[11px]">
-            <a
-              href={item.source_url}
-              target="_blank"
-              rel="noreferrer"
-              title={"Visit source: " + item.source_name}
-              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-orange-300 drop-shadow-[0_0_8px_rgba(249,115,22,0.7)] hover:text-orange-100 hover:underline transition-all min-w-0"
+            <div
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-orange-300 drop-shadow-[0_0_8px_rgba(249,115,22,0.7)] group-hover:text-orange-100 group-hover:underline transition-all min-w-0"
             >
               <Globe className="w-3.5 h-3.5 text-orange-400 shrink-0" />
               <span className="truncate">{item.source_name}</span>
-              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
-            </a>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100 shrink-0" />
+            </div>
           </div>
-        </div>
+        </a>
       );
     } else if (rankNumber === 2) {
-      // 2nd Place Podium (Less orange, more yellow / pure warm gold)
+      // 2nd Place Podium (Less orange, more yellow / pure warm gold) - Entire card is clickable
       renderedPodiumCards.push(
-        <div
+        <a
           key={item.source_name + "_podium_" + rankNumber}
-          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-amber-500/20 via-yellow-950/30 to-zinc-950/90 hover:from-amber-500/30 shadow-xl shadow-amber-500/10 hover:shadow-[0_0_30px_rgba(245,158,11,0.22)] transition-all duration-300 gap-4"
+          href={item.source_url}
+          target="_blank"
+          rel="noreferrer"
+          title={"Visit " + item.source_name}
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-amber-500/20 via-yellow-950/30 to-zinc-950/90 hover:from-amber-500/30 shadow-xl shadow-amber-500/10 hover:shadow-[0_0_30px_rgba(245,158,11,0.22)] transition-all duration-300 gap-4 cursor-pointer select-none"
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -407,41 +407,37 @@ export function DashboardPage(props: DashboardPageProps) {
                   Hot
                 </span>
               </div>
-              <a
-                href={item.source_url}
-                target="_blank"
-                rel="noreferrer"
-                title={"Visit " + item.source_name}
-                className="p-2 rounded-xl text-amber-400/80 hover:text-amber-200 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer"
+              <div
+                className="p-2 rounded-xl text-amber-400/80 group-hover:text-amber-200 group-hover:bg-amber-500/20 transition-all shrink-0"
               >
                 <ExternalLink className="w-4 h-4" />
-              </a>
+              </div>
             </div>
             <p className="text-sm font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
           <div className="pt-2.5 border-t border-amber-500/20 flex items-center justify-between gap-2 text-[11px]">
-            <a
-              href={item.source_url}
-              target="_blank"
-              rel="noreferrer"
-              title={"Visit source: " + item.source_name}
-              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] hover:text-amber-100 hover:underline transition-all min-w-0"
+            <div
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] group-hover:text-amber-100 group-hover:underline transition-all min-w-0"
             >
               <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span className="truncate">{item.source_name}</span>
-              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
-            </a>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100 shrink-0" />
+            </div>
           </div>
-        </div>
+        </a>
       );
     } else {
-      // 3rd Place Podium (Lighter yellow hue)
+      // 3rd Place Podium (Lighter yellow hue) - Entire card is clickable
       renderedPodiumCards.push(
-        <div
+        <a
           key={item.source_name + "_podium_" + rankNumber}
-          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-yellow-300/15 via-zinc-900/80 to-zinc-950/90 hover:from-yellow-300/25 shadow-xl shadow-yellow-300/5 hover:shadow-[0_0_25px_rgba(250,204,21,0.2)] transition-all duration-300 gap-4"
+          href={item.source_url}
+          target="_blank"
+          rel="noreferrer"
+          title={"Visit " + item.source_name}
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-yellow-300/15 via-zinc-900/80 to-zinc-950/90 hover:from-yellow-300/25 shadow-xl shadow-yellow-300/5 hover:shadow-[0_0_25px_rgba(250,204,21,0.2)] transition-all duration-300 gap-4 cursor-pointer select-none"
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -454,48 +450,44 @@ export function DashboardPage(props: DashboardPageProps) {
                   Hot
                 </span>
               </div>
-              <a
-                href={item.source_url}
-                target="_blank"
-                rel="noreferrer"
-                title={"Visit " + item.source_name}
-                className="p-2 rounded-xl text-yellow-300/80 hover:text-yellow-100 hover:bg-yellow-300/20 transition-all shrink-0 cursor-pointer"
+              <div
+                className="p-2 rounded-xl text-yellow-300/80 group-hover:text-yellow-100 group-hover:bg-yellow-300/20 transition-all shrink-0"
               >
                 <ExternalLink className="w-4 h-4" />
-              </a>
+              </div>
             </div>
             <p className="text-sm font-semibold text-zinc-100 group-hover:text-yellow-200 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
           <div className="pt-2.5 border-t border-yellow-400/20 flex items-center justify-between gap-2 text-[11px]">
-            <a
-              href={item.source_url}
-              target="_blank"
-              rel="noreferrer"
-              title={"Visit source: " + item.source_name}
-              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-yellow-200 drop-shadow-[0_0_8px_rgba(250,204,21,0.7)] hover:text-yellow-100 hover:underline transition-all min-w-0"
+            <div
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-yellow-200 drop-shadow-[0_0_8px_rgba(250,204,21,0.7)] group-hover:text-yellow-100 group-hover:underline transition-all min-w-0"
             >
               <Globe className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
               <span className="truncate">{item.source_name}</span>
-              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
-            </a>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100 shrink-0" />
+            </div>
           </div>
-        </div>
+        </a>
       );
     }
   }
 
-  // Render Ranks 4 to 10 in a clean, compact 2-column grid using traditional for loop
+  // Render Ranks 4 to 10 in a clean, compact 2-column grid using traditional for loop - Entire card is clickable
   const renderedRemainingHotTopicCards = [];
   for (let topicIndex = 3; topicIndex < curatedHotTopicsList.length; topicIndex++) {
     const item = curatedHotTopicsList[topicIndex];
     const rankNumber = topicIndex + 1;
 
     renderedRemainingHotTopicCards.push(
-      <div
+      <a
         key={item.source_name + "_" + rankNumber}
-        className="group relative flex items-center justify-between gap-3.5 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-850/70 shadow-md shadow-black/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.08)] transition-all duration-300"
+        href={item.source_url}
+        target="_blank"
+        rel="noreferrer"
+        title={"Visit " + item.source_name}
+        className="group relative flex items-center justify-between gap-3.5 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-850/70 shadow-md shadow-black/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.08)] transition-all duration-300 cursor-pointer select-none"
       >
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <span className="w-7 h-7 rounded-xl bg-zinc-800/90 text-zinc-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform mt-0.5">
@@ -506,31 +498,23 @@ export function DashboardPage(props: DashboardPageProps) {
               {item.headline_text}
             </p>
             <div>
-              <a
-                href={item.source_url}
-                target="_blank"
-                rel="noreferrer"
-                title={"Visit source: " + item.source_name}
-                className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-sky-400 drop-shadow-[0_0_6px_rgba(56,189,248,0.6)] hover:text-sky-200 hover:underline transition-all"
+              <div
+                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-sky-400 drop-shadow-[0_0_6px_rgba(56,189,248,0.6)] group-hover:text-sky-200 group-hover:underline transition-all"
               >
                 <Globe className="w-3 h-3 text-sky-400 shrink-0" />
                 <span className="truncate">{item.source_name}</span>
-                <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
-              </a>
+                <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100 shrink-0" />
+              </div>
             </div>
           </div>
         </div>
 
-        <a
-          href={item.source_url}
-          target="_blank"
-          rel="noreferrer"
-          title={"Visit " + item.source_name}
-          className="p-2 rounded-xl text-zinc-500 hover:text-sky-300 hover:bg-sky-500/15 transition-all shrink-0 self-center cursor-pointer"
+        <div
+          className="p-2 rounded-xl text-zinc-500 group-hover:text-sky-300 group-hover:bg-sky-500/15 transition-all shrink-0 self-center"
         >
           <ExternalLink className="w-4 h-4" />
-        </a>
-      </div>
+        </div>
+      </a>
     );
   }
 

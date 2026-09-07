@@ -45,7 +45,7 @@ const BACKEND_WEBSOCKET_URL = "ws://localhost:8000/ws/pipeline";
 export default function App() {
   // Navigation & Shell State
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeWorkspace, setActiveWorkspace] = useState("Browser Agent");
+  const [activeWorkspace, setActiveWorkspace] = useState("Trendline");
   const [currentActiveTab, setCurrentActiveTab] = useState<NavigationTabType>("dashboard");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -570,7 +570,8 @@ export default function App() {
           id: "pipeline",
           title: "Run Pipeline",
           icon: PlayCircle,
-          badge: pipelineStatus === "running" ? "RUNNING" : undefined
+          badge: pipelineStatus === "running" ? "RUNNING" : undefined,
+          badgeClassName: "bg-rose-500/15 text-rose-400 font-semibold animate-pulse"
         },
       ]
     },
@@ -581,25 +582,29 @@ export default function App() {
           id: "trends",
           title: "Trending Topics",
           icon: Flame,
-          badge: totalTrendsCount > 0 ? String(totalTrendsCount) : undefined
+          badge: totalTrendsCount > 0 ? String(totalTrendsCount) : undefined,
+          badgeClassName: "bg-amber-500/15 text-amber-400 font-semibold"
         },
         {
           id: "headlines",
           title: "News Headlines",
           icon: Globe,
-          badge: totalHeadlinesCount > 0 ? String(totalHeadlinesCount) : undefined
+          badge: totalHeadlinesCount > 0 ? String(totalHeadlinesCount) : undefined,
+          badgeClassName: "bg-blue-500/15 text-blue-400 font-semibold"
         },
         {
           id: "tweets",
           title: "Extracted Tweets",
           icon: MessageSquare,
-          badge: totalTweetsCount > 0 ? String(totalTweetsCount) : undefined
+          badge: totalTweetsCount > 0 ? String(totalTweetsCount) : undefined,
+          badgeClassName: "bg-purple-500/15 text-purple-400 font-semibold"
         },
         {
           id: "keywords",
           title: "Keywords",
           icon: Tags,
-          badge: totalKeywordsCount > 0 ? String(totalKeywordsCount) : undefined
+          badge: totalKeywordsCount > 0 ? String(totalKeywordsCount) : undefined,
+          badgeClassName: "bg-amber-500/15 text-amber-300 font-semibold"
         },
       ]
     },
@@ -610,13 +615,15 @@ export default function App() {
           id: "sources",
           title: "Sources",
           icon: Globe,
-          badge: activeSourcesCount > 0 ? String(activeSourcesCount) : undefined
+          badge: activeSourcesCount > 0 ? String(activeSourcesCount) : undefined,
+          badgeClassName: "bg-blue-500/15 text-blue-400 font-semibold"
         },
         {
           id: "history",
           title: "Run History",
           icon: History,
-          badge: totalRunsCount > 0 ? String(totalRunsCount) : undefined
+          badge: totalRunsCount > 0 ? String(totalRunsCount) : undefined,
+          badgeClassName: "bg-rose-500/15 text-rose-400 font-semibold"
         },
       ]
     }
@@ -633,10 +640,10 @@ export default function App() {
     { id: "trends", label: "Trending Topics", desc: "Hot news headlines and X.com explore trends" },
     { id: "headlines", label: "News Headlines", desc: "Ingested news headlines across all configured sources" },
     { id: "tweets", label: "Extracted Tweets", desc: "Live tweets mined directly from X.com search timelines" },
-    { id: "keywords", label: "Synthesized Keywords", desc: "High-precision keywords generated via Qwen3-14B" },
+    { id: "keywords", label: "Synthesized Keywords", desc: "High-precision keywords generated via Strategic AI Engine" },
     { id: "sources", label: "Sources Management", desc: "Configure, toggle, and add news sites & RSS feeds" },
     { id: "history", label: "Run History", desc: "Inspect and export past intelligence pipeline runs" },
-    { id: "settings", label: "Application Settings", desc: "vLLM endpoint, Chrome options, and scraping thresholds" },
+    { id: "settings", label: "Application Settings", desc: "Model server endpoint, browser options, and scraping thresholds" },
   ];
 
   const filteredSearchPages = [];

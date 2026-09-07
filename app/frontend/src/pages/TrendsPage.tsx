@@ -110,7 +110,7 @@ export function TrendsPage(props: TrendsPageProps) {
             className={
               "w-6 h-6 rounded flex items-center justify-center text-xs font-bold font-mono mt-0.5 shrink-0 " +
               (isTopThree
-                ? "bg-amber-500/20 text-amber-400 border border-amber-500/40"
+                ? "bg-amber-500/20 text-amber-400"
                 : "bg-zinc-800 text-zinc-400")
             }
           >
@@ -120,17 +120,14 @@ export function TrendsPage(props: TrendsPageProps) {
             <p className="text-xs font-medium text-zinc-200 group-hover:text-amber-300 transition-colors leading-relaxed">
               {headlineEntry.headline_text}
             </p>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-950/40 text-blue-400 border border-blue-900/50 font-medium">
-                {headlineEntry.source_name}
-              </span>
-              {isTopThree && (
+            {isTopThree && (
+              <div className="flex items-center gap-2 pt-0.5">
                 <span className="flex items-center gap-1 text-[10px] text-amber-400 font-medium">
                   <Flame className="w-3 h-3 fill-amber-500" />
                   Hot
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -235,7 +232,7 @@ export function TrendsPage(props: TrendsPageProps) {
               <h3 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
                 Trending Hot News
               </h3>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-mono">
                 {filteredHeadlinesList.length} articles
               </span>
             </div>

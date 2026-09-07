@@ -37,10 +37,10 @@ export function SettingsPage(props: SettingsPageProps) {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-zinc-800/80">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-zinc-100">
-            System & LLM Settings
+            System & AI Settings
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Configure local vLLM/llama.cpp inference parameters, Chrome browser behaviors, and mining thresholds.
+            Configure AI model endpoint parameters, browser behaviors, and mining thresholds.
           </p>
         </div>
 
@@ -58,14 +58,14 @@ export function SettingsPage(props: SettingsPageProps) {
           <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
             <Cpu className="w-4 h-4 text-blue-400" />
             <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
-              Local LLM Inference (vLLM / llama.cpp)
+              AI Model Inference Engine
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-[11px] font-medium text-zinc-400 mb-1.5">
-                vLLM Base URL
+                Model Server Base URL
               </label>
               <input
                 type="text"
@@ -110,7 +110,7 @@ export function SettingsPage(props: SettingsPageProps) {
                 className="w-full px-3 py-2 rounded bg-zinc-950 border border-zinc-700 text-xs text-zinc-100 font-mono outline-none focus:border-blue-500"
               />
               <span className="text-[10px] text-zinc-500 mt-1 block">
-                Currently configured: qwen3-14b
+                Currently configured: Strategic AI Model
               </span>
             </div>
 

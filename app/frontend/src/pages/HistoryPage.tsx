@@ -15,7 +15,7 @@ export function HistoryPage(props: HistoryPageProps) {
         <History className="w-8 h-8 text-zinc-600 mx-auto" />
         <h3 className="text-sm font-semibold text-zinc-300">No Execution History</h3>
         <p className="text-xs text-zinc-500 max-w-md mx-auto">
-          Completed and cancelled pipeline executions will be permanently stored in your local SQLite database and listed here.
+          Completed and cancelled pipeline executions will be permanently stored in your local storage and listed here.
         </p>
       </div>
     );
@@ -41,10 +41,10 @@ export function HistoryPage(props: HistoryPageProps) {
         <td className="py-3 px-4">
           <span
             className={
-              "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium border " +
+              "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium " +
               (isSuccess
-                ? "bg-emerald-950/60 text-emerald-400 border-emerald-800/50"
-                : "bg-red-950/60 text-red-400 border-red-800/50")
+                ? "bg-emerald-500/15 text-emerald-400"
+                : "bg-red-500/15 text-red-400")
             }
           >
             {isSuccess ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
@@ -93,7 +93,7 @@ export function HistoryPage(props: HistoryPageProps) {
             Pipeline Run History
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Archived intelligence extractions stored locally in SQLite. Click Inspect on any row to view its data.
+            Archived intelligence extractions stored in local records. Click Inspect on any row to view its data.
           </p>
         </div>
       </div>

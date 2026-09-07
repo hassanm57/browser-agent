@@ -91,7 +91,22 @@ export function Sidebar(props: SidebarProps) {
           </div>
 
           {navItem.badge && (
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-500/10 text-blue-400 font-semibold">
+            <span
+              className={
+                "text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold " +
+                (navItem.id === "trends"
+                  ? "bg-amber-500/15 text-amber-400"
+                  : navItem.id === "headlines"
+                  ? "bg-blue-500/15 text-blue-400"
+                  : navItem.id === "tweets"
+                  ? "bg-purple-500/15 text-purple-400"
+                  : navItem.id === "keywords"
+                  ? "bg-amber-500/15 text-amber-300"
+                  : navItem.id === "history"
+                  ? "bg-rose-500/15 text-rose-400"
+                  : "bg-blue-500/15 text-blue-400")
+              }
+            >
               {navItem.badge}
             </span>
           )}
@@ -115,10 +130,10 @@ export function Sidebar(props: SidebarProps) {
       <div>
         <div className="h-14 px-4 border-b border-zinc-850/80 flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-sm">
-            B
+            T
           </div>
           <span className="text-sm font-semibold text-zinc-100 tracking-tight">
-            Browser Agent
+            Trendline
           </span>
         </div>
 

@@ -448,9 +448,9 @@ async def run_single_country_pipeline(
             except Exception as trend_scrape_error:
                 await log_and_record("WARN", f"Notice: Error mining trend '{current_trend_topic}': {str(trend_scrape_error)}")
 
-        # PHASE 3: Synthesize news-derived topics & Boolean X queries with Qwen3-14B
+        # PHASE 3: Synthesize news-derived topics & Boolean X queries with Strategic AI Model
         # Passing curated_x_sources_tweets and X explore topics so ground truth and correspondent scoops are fully accounted for!
-        await log_and_record("STEP", "[3/4] Synthesizing news + correspondent topics & Boolean X queries with Qwen3-14B...")
+        await log_and_record("STEP", "[3/4] Synthesizing news + correspondent topics & Boolean X queries with Strategic AI Model...")
         await progress_callback_function("llm_synthesis", 3, 5, f"Synthesizing 15 crisp keywords per topic for {target_country_name}...", target_country_name)
 
         endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.12.121:8000/v1")

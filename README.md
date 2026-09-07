@@ -1,4 +1,4 @@
-# 🌐 Autonomous Multi-Source News & Intelligence Agent
+# 🌐 Trendline — Autonomous Multi-Source News & Intelligence Agent
 
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -7,9 +7,9 @@
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
 [![browser--use](https://img.shields.io/badge/Browser--Use-0.1+-FF6F61)](https://github.com/browser-use/browser-use)
-[![vLLM](https://img.shields.io/badge/vLLM-Qwen3--14B-8A2BE2)](https://vllm.ai)
+[![Local AI](https://img.shields.io/badge/Local_AI-LLM_Synthesis-8A2BE2)](https://vllm.ai)
 
-An autonomous, multi-source Open-Source Intelligence (OSINT) and news mining engine. It combines high-speed RSS/HTTP scrapers, real headful/headless Chrome browser agents, and local vision-language model synthesis (Qwen3-14B on vLLM) to extract breaking national and geopolitical trends, mine genuine X.com timeline posts, and synthesize high-precision boolean search keywords.
+**Trendline** is an autonomous, multi-source Open-Source Intelligence (OSINT) and news mining engine. It combines high-speed RSS/HTTP scrapers, real headful/headless Chrome browser agents, and local vision-language model synthesis (Strategic AI Model via vLLM / llama.cpp) to extract breaking national and geopolitical trends, mine genuine X.com timeline posts, and synthesize high-precision boolean search keywords.
 
 Included is a modern **FastAPI** backend with real-time **WebSocket telemetry** and a **React 19 + TypeScript + Tailwind CSS** dashboard featuring a **shadcn/ui** layout.
 
@@ -34,7 +34,7 @@ Included is a modern **FastAPI** backend with real-time **WebSocket telemetry** 
 ## ⚡ Key Capabilities
 
 ### 1. Multi-Source Intelligence Gathering
-- **Regional & Global Trends**: Scrapes real-time ranked hashtags from `trends24.in` across configured countries.
+- **Regional & Global Trends**: Mines real-time trending topics and breaking stories directly from verified news outlets and native X.com explore feeds.
 - **Configurable News Outlets**: Pulls headlines dynamically from web publications and RSS feeds (Dawn, Express Tribune, The News International, Defense News, Breaking Defense, Foreign Affairs, BBC World).
 - **Hybrid Scraper with Browser Fallback**: Queries feeds in parallel via sub-second HTTP/RSS. If an outlet returns 0 headlines (due to bot-protection, 403, or broken RSS XML), it automatically spawns a headless Chrome browser agent to render the dynamic DOM and extract live headlines.
 
@@ -43,9 +43,9 @@ Included is a modern **FastAPI** backend with real-time **WebSocket telemetry** 
 - **Progressive Scrolling**: Automatically navigates to X.com search timelines and scrolls iteratively until at least 20 genuine tweets per trending topic are harvested.
 - **Noise-Free Tweet Extraction**: Splits DOM state specifically by `<article role=article />` containers, completely isolating genuine user tweets from sidebars, search suggestions, and promoted ad cards.
 
-### 3. Local LLM Keyword Synthesis (vLLM / llama.cpp)
+### 3. Local AI Keyword Synthesis (vLLM / llama.cpp)
 - Consolidates all raw data into `raw_sources.json`.
-- Feeds news articles, trending hashtags, and timeline tweets into a local **Qwen3-14B Instruct** model.
+- Feeds news articles, trending topics, and timeline tweets into a local **Strategic AI Model**.
 - Generates 20+ comprehensive, multi-lingual (English, Urdu, Arabic) boolean-ready search keywords per topic categorized by domain (National Security, Diplomacy, Domestic Politics, Defense, Technology).
 
 ### 4. Interactive Full-Stack Control Center
@@ -54,7 +54,7 @@ Included is a modern **FastAPI** backend with real-time **WebSocket telemetry** 
 - **Interactive Keywords Editor**: Click-to-edit topic chips, remove noise terms with `✕`, add custom terms, or export directly to JSON and CSV.
 - **Global Command Palette (`⌘K`)**: Quick-jump search modal to navigate across any page with keyboard shortcuts.
 - **Sources Management**: Live toggle switches, delete actions, and auto-detecting URL submission (RSS vs. Web).
-- **SQLite Persistence**: Complete run history with status, country, timestamps, raw data payloads, and full execution transcripts.
+- **Local Persistence**: Complete run history with status, country, timestamps, raw data payloads, and full execution transcripts.
 
 ---
 
@@ -69,22 +69,22 @@ flowchart TB
         D[Sources & Settings Manager]
     end
 
-    subgraph Backend ["Backend Server (FastAPI + SQLite)"]
+    subgraph Backend ["Backend Server (FastAPI + Storage)"]
         E[REST API Endpoints]
         F[WebSocket Stream /ws/pipeline]
-        G[(SQLite: intelligence_records.db)]
+        G[(Local Storage: intelligence_records.db)]
         H[Pipeline Runner Orchestrator]
     end
 
     subgraph Harvesters ["Data Harvesting Layer"]
-        I[trends24.in Scraper]
+        I[X.com Trending Topics]
         J[News & RSS Feeds Parser]
         K[browser-use Chrome Agent]
     end
 
     subgraph LLM ["Local AI Engine"]
         L[vLLM / llama.cpp]
-        M[Qwen3-14B Model]
+        M[Strategic AI Model]
     end
 
     UI <-->|REST & WebSockets| Backend
@@ -153,7 +153,7 @@ browser-agent/
 1. **Python 3.11 or 3.12**
 2. **Node.js 18+ & npm**
 3. **Google Chrome** installed on your operating system
-4. **Local LLM Endpoint**: vLLM or `llama.cpp` server running an OpenAI-compatible API (tested with `Qwen3-14B Instruct` / `Qwen3-VL`).
+4. **Local LLM Endpoint**: vLLM or `llama.cpp` server running an OpenAI-compatible API (tested with local Strategic AI Models).
 
 ---
 
@@ -182,7 +182,7 @@ Create a `.env` file in the project root:
 # Local Model Endpoint (OpenAI-compatible)
 VLLM_BASE_URL=http://10.13.12.121:8000/v1
 VLLM_API_KEY=EMPTY
-LLM_MODEL=qwen3-14b
+LLM_MODEL=strategic-ai-model
 
 # Browser Configuration
 HEADLESS=false          # Set to true to run Chrome silently in the background
@@ -218,11 +218,11 @@ python trends.py "India"
 ```
 
 ### CLI Execution Workflow:
-1. Scrapes **trends24.in** for top hashtags.
-2. Ingests all active news sources in **`sources.json`** via fast HTTP/RSS (with automatic headless browser fallback if a source returns 0 headlines).
+1. Ingests all active news sources in **`sources.json`** via fast HTTP/RSS (with automatic headless browser fallback if a source returns 0 headlines).
+2. Mines verified defense correspondent and OSINT timeline feeds.
 3. Opens Chrome via **`browser-use`**, explores X.com trending tabs, and mines search timelines with progressive scrolling (target: 20+ tweets per trend).
 4. Saves all raw harvested data to **`raw_sources.json`**.
-5. Prompts local **Qwen3-14B** on vLLM to synthesize 20+ keywords per topic.
+5. Prompts local **Strategic AI Model** to synthesize 20+ keywords per topic.
 6. Writes structured output to **`keywords.json`** and logs a formatted summary in the terminal.
 
 ---
@@ -337,7 +337,7 @@ Settings can be modified either via `.env` or in real-time from the **Settings P
 | :--- | :--- | :--- |
 | `VLLM_BASE_URL` | `http://10.13.12.121:8000/v1` | OpenAI-compatible endpoint of your local LLM |
 | `VLLM_API_KEY` | `EMPTY` | API key for local LLM authentication |
-| `LLM_MODEL` | `qwen3-14b` | Model name to target on vLLM / llama.cpp |
+| `LLM_MODEL` | `strategic-ai-model` | Model name to target on model server |
 | `LLM_MAX_TOKENS` | `8192` | Maximum token ceiling for keyword synthesis |
 | `LLM_TIMEOUT` | `180` | Request timeout in seconds for heavy LLM prompts |
 | `HEADLESS` | `false` | When `false`, Chrome window is visible on your desktop |

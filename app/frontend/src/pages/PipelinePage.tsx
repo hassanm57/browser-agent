@@ -67,9 +67,9 @@ export function PipelinePage(props: PipelinePageProps) {
   const PIPELINE_PHASES = [
     { id: "news_sources", name: "News Intel", desc: "17 Ground Truth Feeds", icon: Globe },
     { id: "x_accounts", name: "Correspondent X", desc: "Pentagon & OSINT Feeds", icon: Flame },
-    { id: "llm_synthesis", name: "Query Synthesis", desc: "Boolean Query LLM", icon: Cpu },
+    { id: "llm_synthesis", name: "Query Synthesis", desc: "Boolean Query Engine", icon: Cpu },
     { id: "x_mining", name: "X.com Mining", desc: "Explore & Live Tweets", icon: MessageSquare },
-    { id: "done", name: "15 Keywords", desc: "SQLite & JSON Export", icon: CheckCircle2 }
+    { id: "done", name: "15 Keywords", desc: "Intelligence Export", icon: CheckCircle2 }
   ];
 
   // Map phase string to index for stepper progression
@@ -411,7 +411,7 @@ export function PipelinePage(props: PipelinePageProps) {
               </h3>
             </div>
             <span className="text-[11px] text-muted-foreground font-mono">
-              SQLite: intelligence_records.db
+              Storage: intelligence_records
             </span>
           </div>
 
@@ -436,10 +436,10 @@ export function PipelinePage(props: PipelinePageProps) {
                     className={
                       "text-[10px] font-mono px-2.5 py-0.5 rounded-full font-medium " +
                       (run.status === "completed"
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        ? "bg-emerald-500/15 text-emerald-400"
                         : run.status === "running"
-                        ? "bg-primary/10 text-primary border border-primary/20"
-                        : "bg-amber-500/10 text-amber-400 border border-amber-500/20")
+                        ? "bg-primary/15 text-primary"
+                        : "bg-amber-500/15 text-amber-400")
                     }
                   >
                     {run.status.toUpperCase()}

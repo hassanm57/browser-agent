@@ -82,12 +82,10 @@ export function DashboardPage(props: DashboardPageProps) {
     }
   }
 
-  // Count synthesized topics and total keywords count
-  let totalTopicsCount = 0;
+  // Count total keywords count and sample terms
   let totalKeywordsCount = 0;
   const sampleKeywordTerms: string[] = [];
   if (props.keywordsData && props.keywordsData.topics) {
-    totalTopicsCount = props.keywordsData.topics.length;
     for (let i = 0; i < props.keywordsData.topics.length; i++) {
       const topic = props.keywordsData.topics[i];
       if (topic.terms && topic.terms.length > 0) {
@@ -252,13 +250,6 @@ export function DashboardPage(props: DashboardPageProps) {
     const isTopThree = rankNumber <= 3;
     const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(item.headline_text);
 
-    let sourceBadgeStyle = "bg-blue-500/10 text-blue-400 border-blue-500/20";
-    if (item.source_name.toLowerCase().includes("defense news")) {
-      sourceBadgeStyle = "bg-rose-500/10 text-rose-400 border-rose-500/25";
-    } else if (item.source_name.toLowerCase().includes("the news")) {
-      sourceBadgeStyle = "bg-emerald-500/10 text-emerald-400 border-emerald-500/25";
-    }
-
     renderedHotTopicCards.push(
       <div
         key={item.source_name + "_" + rankNumber}
@@ -275,8 +266,8 @@ export function DashboardPage(props: DashboardPageProps) {
             className={
               "w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold font-mono shrink-0 transition-transform group-hover:scale-105 " +
               (isTopThree
-                ? "bg-gradient-to-br from-amber-500/30 to-amber-600/10 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
-                : "bg-zinc-800/80 text-zinc-300 border border-zinc-700/50")
+                ? "bg-gradient-to-br from-amber-500/30 to-amber-600/10 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
+                : "bg-zinc-800/80 text-zinc-300")
             }
           >
             {rankNumber}
@@ -288,20 +279,14 @@ export function DashboardPage(props: DashboardPageProps) {
               {item.headline_text}
             </p>
 
-            <div className="flex items-center gap-2 flex-wrap pt-0.5">
-              <span className={"text-[10px] px-2 py-0.5 rounded-full font-medium border " + sourceBadgeStyle}>
-                {item.source_name}
-              </span>
-              <span className="text-[10px] text-zinc-400 font-medium">
-                {item.category_label}
-              </span>
-              {isTopThree && (
+            {isTopThree && (
+              <div className="flex items-center gap-2 flex-wrap pt-0.5">
                 <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-medium">
                   <Flame className="w-3 h-3 fill-amber-500" />
                   Hot
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -344,12 +329,12 @@ export function DashboardPage(props: DashboardPageProps) {
         className="rounded-2xl border border-white/10 shadow-[0_0_25px_rgba(59,130,246,0.15)] overflow-hidden"
       >
         <div className="flex items-center gap-2 text-xs font-medium text-foreground">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/30">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary">
             <Zap className="w-3 h-3" />
             LIVE INTEL
           </span>
           <span>
-            Autonomous Agent Active — Curating real-time defense & breaking global intelligence via Qwen3-14B
+            Autonomous Agent Active — Curating real-time defense & breaking global intelligence via Strategic AI Model
           </span>
         </div>
       </Banner>
@@ -359,16 +344,16 @@ export function DashboardPage(props: DashboardPageProps) {
         <div className="flex items-center gap-2.5">
           <button
             onClick={function () {
-              if (window.confirm("Are you sure you want to clear the database and all cached intelligence? This will reset all counts and start completely fresh.")) {
+              if (window.confirm("Are you sure you want to clear all stored intelligence records? This will reset all counts and start completely fresh.")) {
                 props.onClearDatabase();
               }
             }}
             disabled={props.isPipelineActive}
             className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-medium text-xs border border-red-500/25 hover:border-red-500/40 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40"
-            title="Clear all stored database runs and reset dashboard stats"
+            title="Clear all stored intelligence runs and reset dashboard stats"
           >
             <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
-            <span>Clear Database</span>
+            <span>Clear Stored Records</span>
           </button>
         </div>
 
@@ -402,7 +387,7 @@ export function DashboardPage(props: DashboardPageProps) {
             <MessageSquare className="w-3.5 h-3.5 text-purple-400 transition-transform group-hover:scale-110" />
             <span>View Tweets</span>
             {totalTweetsCount > 0 && (
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 font-semibold">
                 {totalTweetsCount}
               </span>
             )}
@@ -417,7 +402,7 @@ export function DashboardPage(props: DashboardPageProps) {
             <Tags className="w-3.5 h-3.5 text-emerald-400 transition-transform group-hover:scale-110" />
             <span>View Keywords</span>
             {totalKeywordsCount > 0 && (
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">
                 {totalKeywordsCount}
               </span>
             )}
@@ -428,12 +413,12 @@ export function DashboardPage(props: DashboardPageProps) {
       {/* Target Scope & Country Quick Switcher Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5 p-4 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-xl shadow-lg shadow-black/20 select-none">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/25 shadow-[0_0_15px_rgba(56,189,248,0.15)] shrink-0">
+          <div className="p-2.5 rounded-2xl bg-sky-500/10 text-sky-400 shadow-[0_0_15px_rgba(56,189,248,0.15)] shrink-0">
             <Globe className="w-4 h-4" />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-zinc-200">Intelligence Scope:</span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/30">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-sky-500/15 text-sky-400">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
               {activeScopeLabel}
             </span>
@@ -488,12 +473,11 @@ export function DashboardPage(props: DashboardPageProps) {
         <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-blue-500/30 hover:shadow-[0_0_25px_rgba(59,130,246,0.12)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.2)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-blue-500/20 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.2)]">
                 <Globe className="w-4 h-4" />
               </span>
               <p className="text-xs font-semibold text-zinc-300">Active Sources</p>
             </div>
-            <span className="text-xs font-semibold text-blue-400 font-mono">100%</span>
           </div>
           <div className="space-y-2">
             <p className="text-2xl font-bold text-zinc-100 font-mono">{props.activeSourcesCount}</p>
@@ -507,12 +491,11 @@ export function DashboardPage(props: DashboardPageProps) {
         <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-amber-500/30 hover:shadow-[0_0_25px_rgba(245,158,11,0.12)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-500/20 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
                 <Flame className="w-4 h-4" />
               </span>
               <p className="text-xs font-semibold text-zinc-300">Trends Ingested</p>
             </div>
-            <span className="text-xs font-semibold text-amber-400 font-mono">Live</span>
           </div>
           <div className="space-y-2">
             <p className="text-2xl font-bold text-zinc-100 font-mono">{totalTrendsCount}</p>
@@ -526,12 +509,11 @@ export function DashboardPage(props: DashboardPageProps) {
         <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-purple-500/30 hover:shadow-[0_0_25px_rgba(139,92,246,0.12)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-[0_0_12px_rgba(139,92,246,0.2)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.2)]">
                 <MessageSquare className="w-4 h-4" />
               </span>
               <p className="text-xs font-semibold text-zinc-300">Tweets Mined</p>
             </div>
-            <span className="text-xs font-semibold text-purple-400 font-mono">Deep</span>
           </div>
           <div className="space-y-2">
             <p className="text-2xl font-bold text-zinc-100 font-mono">{totalTweetsCount}</p>
@@ -545,12 +527,11 @@ export function DashboardPage(props: DashboardPageProps) {
         <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-emerald-500/30 hover:shadow-[0_0_25px_rgba(16,185,129,0.12)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
                 <Tags className="w-4 h-4" />
               </span>
               <p className="text-xs font-semibold text-zinc-300">Synthesized Keywords</p>
             </div>
-            <span className="text-xs font-semibold text-emerald-400 font-mono">{totalTopicsCount} Topics</span>
           </div>
           <div className="space-y-2">
             <p className="text-2xl font-bold text-zinc-100 font-mono">{totalKeywordsCount}</p>
@@ -567,19 +548,11 @@ export function DashboardPage(props: DashboardPageProps) {
       <div className="w-full rounded-3xl bg-zinc-900/50 border border-zinc-800/80 p-6 backdrop-blur-xl shadow-xl shadow-black/25 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 shadow-[0_0_18px_rgba(245,158,11,0.2)]">
+            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 shadow-[0_0_18px_rgba(245,158,11,0.2)]">
               <Flame className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-zinc-100">Top 10 Trending Hot Topics</h3>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/25 font-mono">
-                  {curatedHotTopicsList.length}/10 Active
-                </span>
-              </div>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Targeted cross-outlet feed: Top 2 from Defense News RSS, 1 from The News International World, and global wire coverage.
-              </p>
+              <h3 className="text-base font-bold text-zinc-100">Top 10 Trending Hot Topics</h3>
             </div>
           </div>
 
@@ -610,7 +583,7 @@ export function DashboardPage(props: DashboardPageProps) {
       <div className="w-full rounded-3xl bg-zinc-900/40 border border-zinc-800/80 p-6 backdrop-blur-xl shadow-lg space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+            <div className="w-9 h-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
@@ -627,10 +600,10 @@ export function DashboardPage(props: DashboardPageProps) {
             {latestRun && (
               <span
                 className={
-                  "text-[10px] font-mono px-3 py-1 rounded-full font-medium border " +
+                  "text-[10px] font-mono px-3 py-1 rounded-full font-medium " +
                   (latestRun.status === "completed"
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
-                    : "bg-amber-500/10 text-amber-400 border-amber-500/25 shadow-[0_0_10px_rgba(245,158,11,0.15)]")
+                    ? "bg-emerald-500/15 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
+                    : "bg-amber-500/15 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.15)]")
                 }
               >
                 {latestRun.status.toUpperCase()}
@@ -664,7 +637,7 @@ export function DashboardPage(props: DashboardPageProps) {
               {sampleKeywordTerms.map((term, idx) => (
                 <span
                   key={idx}
-                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.08)]"
+                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/15 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.08)]"
                 >
                   {term}
                 </span>
@@ -672,20 +645,20 @@ export function DashboardPage(props: DashboardPageProps) {
             </div>
           ) : (
             <p className="text-xs text-zinc-500 italic">
-              Run the intelligence pipeline to generate strategic keywords via Qwen3-14B.
+              Run the intelligence pipeline to generate strategic keywords via Strategic AI Engine.
             </p>
           )}
         </div>
       </div>
 
-      {/* Sleek Navigation Cards with Rounded Edges & Smooth Glow */}
+      {/* Sleek Navigation Cards with Rounded Edges & Smooth Glow (Outline removed) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 select-none">
         <button
           onClick={() => props.onNavigateTab("trends")}
-          className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/70 border border-zinc-800/80 hover:border-amber-500/30 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/10 hover:shadow-[0_0_25px_rgba(245,158,11,0.1)] flex items-center justify-between"
+          className="p-5 rounded-3xl bg-zinc-900/60 hover:bg-zinc-850/90 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/20 hover:shadow-[0_0_25px_rgba(245,158,11,0.15)] flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/25 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(245,158,11,0.15)]">
+            <div className="p-2.5 rounded-2xl bg-amber-500/15 text-amber-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(245,158,11,0.15)]">
               <Flame className="w-4 h-4" />
             </div>
             <div className="text-left">
@@ -698,10 +671,10 @@ export function DashboardPage(props: DashboardPageProps) {
 
         <button
           onClick={() => props.onNavigateTab("headlines")}
-          className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/70 border border-zinc-800/80 hover:border-blue-500/30 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/10 hover:shadow-[0_0_25px_rgba(59,130,246,0.1)] flex items-center justify-between"
+          className="p-5 rounded-3xl bg-zinc-900/60 hover:bg-zinc-850/90 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/20 hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/25 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(59,130,246,0.15)]">
+            <div className="p-2.5 rounded-2xl bg-blue-500/15 text-blue-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(59,130,246,0.15)]">
               <Globe className="w-4 h-4" />
             </div>
             <div className="text-left">
@@ -714,15 +687,15 @@ export function DashboardPage(props: DashboardPageProps) {
 
         <button
           onClick={() => props.onNavigateTab("history")}
-          className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/70 border border-zinc-800/80 hover:border-emerald-500/30 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/10 hover:shadow-[0_0_25px_rgba(16,185,129,0.1)] flex items-center justify-between"
+          className="p-5 rounded-3xl bg-zinc-900/60 hover:bg-zinc-850/90 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/20 hover:shadow-[0_0_25px_rgba(16,185,129,0.15)] flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/15 text-emerald-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(16,185,129,0.15)]">
               <Calendar className="w-4 h-4" />
             </div>
             <div className="text-left">
               <p className="text-xs font-semibold text-zinc-200 group-hover:text-emerald-300 transition-colors">Run History</p>
-              <p className="text-[10px] text-zinc-500">Archived SQLite intelligence</p>
+              <p className="text-[10px] text-zinc-500">Archived Intelligence History</p>
             </div>
           </div>
           <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />

@@ -27,6 +27,7 @@ export type NavItemData = {
   title: string;
   icon: React.ElementType;
   badge?: number | string;
+  badgeClassName?: string;
   shortcut?: string;
   children?: NavItemData[];
 };
@@ -94,7 +95,7 @@ export const mockBottomItems: NavItemData[] = [
   { id: 'logout', title: 'Log out', icon: LogOut },
 ];
 
-export function BrandHeader({ title = 'Browser Agent' }: { title?: string }) {
+export function BrandHeader({ title = 'Trendline' }: { title?: string }) {
   return (
     <div className="flex items-center gap-2.5 px-2 py-2 mb-4 select-none">
       <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-md shadow-blue-500/20 text-white shrink-0">
@@ -161,7 +162,7 @@ export function NavItem({
              </kbd>
           )}
           {item.badge && (
-            <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary">
+            <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-medium rounded-full ${item.badgeClassName || 'bg-primary/10 text-primary'}`}>
               {item.badge}
             </span>
           )}
@@ -223,7 +224,7 @@ export function SidebarNav({
 
   return (
     <div className={`flex flex-col w-[260px] h-full bg-card/50 border-r border-border/50 p-3 font-sans ${className}`}>
-      <BrandHeader title={activeWorkspace || 'Browser Agent'} />
+      <BrandHeader title={activeWorkspace || 'Trendline'} />
 
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-4 mt-2">
         {navGroups.map((group, idx) => (

@@ -1049,7 +1049,7 @@ def synthesize_topics_from_news_and_trends(
     # and formulates high-precision Boolean search queries for each topic.
     print("")
     print("==================================================")
-    print("[3] Synthesizing News-Derived Topics & Boolean X Queries with Qwen3-14B")
+    print("[3] Synthesizing News-Derived Topics & Boolean X Queries with Strategic AI Model")
     print("==================================================")
 
     digest_sections_list = []

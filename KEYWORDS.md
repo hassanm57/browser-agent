@@ -39,7 +39,7 @@ Rather than relying on a single platform, the engine ingests signal from 6 targe
 
 ## 3. Parallel Extraction & Context Management (The 32k Limit Strategy)
 
-To respect the **32,768 context window** of the local model (`Qwen3-14B`) and avoid out-of-memory errors:
+To respect the **32,768 context window** of the local model (`Strategic AI Model`) and avoid out-of-memory errors:
 
 1. **Parallel Lightweight Workers**:
    - The configured news websites and RSS feeds are processed independently in parallel.
@@ -60,7 +60,7 @@ To respect the **32,768 context window** of the local model (`Qwen3-14B`) and av
 
 ---
 
-## 4. Synthesis & Reasoning Layer (Qwen3-14B)
+## 4. Synthesis & Reasoning Layer (Strategic AI Model)
 
 Once all 6 sources have been scraped and aggregated into `raw_intel_{country_slug}.json`, the consolidated digest is fed into the local LLM with strict instructions:
 
@@ -230,5 +230,5 @@ The final output is saved to `keywords.json`:
 
 1. **Build the Parallel Extractor**: Update `trends.py` to fetch from all 6 sources in parallel using lightweight headers, parsing out clean headline titles.
 2. **Store Raw Intermediary Intel**: Write all headlines to `raw_intel_{country_slug}.json`.
-3. **Execute Single LLM Synthesis**: Feed the combined digest to `Qwen3-14B` to produce the final filtered keyword list and Twitter boolean queries.
+3. **Execute Single LLM Synthesis**: Feed the combined digest to `Strategic AI Model` to produce the final filtered keyword list and Twitter boolean queries.
 4. **Save & Verify**: Verify output against `keywords.json`.

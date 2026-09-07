@@ -1,4 +1,4 @@
-// Type definitions for the Browser Agent Intelligence Dashboard
+// Type definitions for the Trendline Intelligence Dashboard
 
 export type NavigationTabType =
   | "dashboard"

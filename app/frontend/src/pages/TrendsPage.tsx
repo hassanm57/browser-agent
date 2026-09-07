@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { RawSourcesData } from "../types";
-import { Flame, Newspaper, ExternalLink, RefreshCw, Hash, Search, Filter } from "lucide-react";
+import { Flame, Newspaper, ExternalLink, RefreshCw, Hash, Search, Filter, Globe } from "lucide-react";
 
 interface TrendsPageProps {
   rawSourcesData: RawSourcesData | null;
@@ -11,6 +11,62 @@ interface NewsHeadlineEntry {
   headline_text: string;
   source_name: string;
   global_index: number;
+}
+
+function getExactNewsSourceWebsiteUrl(sourceNameString: string): string {
+  const lowercasedSource = sourceNameString.toLowerCase();
+  if (lowercasedSource.includes("defense news")) {
+    return "https://www.defensenews.com";
+  }
+  if (lowercasedSource.includes("the news") || lowercasedSource.includes("thenews")) {
+    return "https://www.thenews.com.pk/latest/category/world";
+  }
+  if (lowercasedSource.includes("dawn")) {
+    return "https://www.dawn.com";
+  }
+  if (lowercasedSource.includes("tribune")) {
+    return "https://tribune.com.pk";
+  }
+  if (lowercasedSource.includes("breaking defense")) {
+    return "https://breakingdefense.com";
+  }
+  if (lowercasedSource.includes("bbc")) {
+    return "https://www.bbc.com/news/world";
+  }
+  if (lowercasedSource.includes("reuters")) {
+    return "https://www.reuters.com/world";
+  }
+  if (lowercasedSource.includes("defense one")) {
+    return "https://www.defenseone.com";
+  }
+  if (lowercasedSource.includes("janes")) {
+    return "https://www.janes.com/defence-intelligence-insights/defence-news";
+  }
+  if (lowercasedSource.includes("foreign affairs")) {
+    if (lowercasedSource.includes("nuclear")) {
+      return "https://www.foreignaffairs.com/topics/nuclear-weapons-proliferation";
+    }
+    if (lowercasedSource.includes("war")) {
+      return "https://www.foreignaffairs.com/topics/war-military-strategy";
+    }
+    return "https://www.foreignaffairs.com/topics/defense-military";
+  }
+  if (lowercasedSource.includes("iiss")) {
+    if (lowercasedSource.includes("nuclear")) {
+      return "https://www.iiss.org/research/nuclear-arms-control-non-proliferation-and-disarmament";
+    }
+    return "https://www.iiss.org/research/defence-and-military-analysis";
+  }
+  if (lowercasedSource.includes("csis")) {
+    return "https://www.csis.org";
+  }
+  if (lowercasedSource.includes("atlantic council")) {
+    return "https://www.atlanticcouncil.org";
+  }
+  if (lowercasedSource.includes("diplomat")) {
+    return "https://thediplomat.com/category/security";
+  }
+  return "https://news.google.com";
 }
 
 export function TrendsPage(props: TrendsPageProps) {
@@ -97,18 +153,17 @@ export function TrendsPage(props: TrendsPageProps) {
     const headlineEntry = filteredHeadlinesList[renderIndex];
     const rankNumber = renderIndex + 1;
     const isTopThree = rankNumber <= 3;
-    const encodedHeadline = encodeURIComponent(headlineEntry.headline_text);
-    const googleSearchUrl = "https://www.google.com/search?q=" + encodedHeadline;
+    const exactSourceWebsiteUrl = getExactNewsSourceWebsiteUrl(headlineEntry.source_name);
 
     renderedHotNewsItems.push(
       <div
         key={headlineEntry.source_name + "_" + headlineEntry.global_index + "_" + renderIndex}
-        className="flex items-start justify-between p-3 rounded-lg bg-zinc-900/40 hover:bg-zinc-900/90 border border-zinc-800/80 group transition-all gap-3"
+        className="flex items-start justify-between p-3 rounded-xl bg-zinc-900/40 hover:bg-zinc-850/80 border border-zinc-800/80 group transition-all gap-3"
       >
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <span
             className={
-              "w-6 h-6 rounded flex items-center justify-center text-xs font-bold font-mono mt-0.5 shrink-0 " +
+              "w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold font-mono mt-0.5 shrink-0 " +
               (isTopThree
                 ? "bg-amber-500/20 text-amber-400"
                 : "bg-zinc-800 text-zinc-400")
@@ -116,27 +171,38 @@ export function TrendsPage(props: TrendsPageProps) {
           >
             {rankNumber}
           </span>
-          <div className="space-y-1 min-w-0">
+          <div className="space-y-1.5 min-w-0 flex-1">
             <p className="text-xs font-medium text-zinc-200 group-hover:text-amber-300 transition-colors leading-relaxed">
               {headlineEntry.headline_text}
             </p>
-            {isTopThree && (
-              <div className="flex items-center gap-2 pt-0.5">
-                <span className="flex items-center gap-1 text-[10px] text-amber-400 font-medium">
-                  <Flame className="w-3 h-3 fill-amber-500" />
+            <div className="flex items-center gap-2.5 pt-0.5 flex-wrap">
+              {isTopThree && (
+                <span className="flex items-center gap-1 text-[10px] text-amber-400 font-bold uppercase tracking-wider bg-amber-500/10 px-2 py-0.5 rounded-full">
+                  <Flame className="w-3 h-3 fill-amber-500 text-amber-500" />
                   Hot
                 </span>
-              </div>
-            )}
+              )}
+              <a
+                href={exactSourceWebsiteUrl}
+                target="_blank"
+                rel="noreferrer"
+                title={"Visit source: " + headlineEntry.source_name}
+                className="group/source inline-flex items-center gap-1 text-[10px] text-cyan-400 font-semibold drop-shadow-[0_0_6px_rgba(34,211,238,0.6)] hover:text-cyan-200 hover:underline transition-all"
+              >
+                <Globe className="w-3 h-3 text-cyan-400 shrink-0" />
+                <span className="truncate">{headlineEntry.source_name}</span>
+                <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
+              </a>
+            </div>
           </div>
         </div>
 
         <a
-          href={googleSearchUrl}
+          href={exactSourceWebsiteUrl}
           target="_blank"
           rel="noreferrer"
-          title="Search this headline online"
-          className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors shrink-0"
+          title={"Visit " + headlineEntry.source_name}
+          className="p-1.5 rounded-lg text-zinc-500 hover:text-cyan-300 hover:bg-cyan-500/15 transition-colors shrink-0 mt-0.5 cursor-pointer"
         >
           <ExternalLink className="w-3.5 h-3.5" />
         </a>

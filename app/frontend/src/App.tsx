@@ -800,6 +800,7 @@ export default function App() {
                 activeSourcesCount={activeSourcesCount}
                 availableCountries={availableCountries}
                 selectedCountries={selectedCountries}
+                sourcesList={sourcesList}
                 onSelectCountryOnly={handleSelectCountryOnly}
                 onStartPipeline={handleStartPipeline}
                 onClearDatabase={handleClearDatabase}

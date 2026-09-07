@@ -1,4 +1,4 @@
-import type { RawSourcesData, KeywordsData, PipelineRunRecord, NavigationTabType, CountryItem } from "../types";
+import type { RawSourcesData, KeywordsData, PipelineRunRecord, NavigationTabType, CountryItem, SourceItem } from "../types";
 import {
   Globe,
   Flame,
@@ -23,6 +23,7 @@ interface DashboardPageProps {
   activeSourcesCount: number;
   availableCountries: CountryItem[];
   selectedCountries: string[];
+  sourcesList?: SourceItem[];
   onSelectCountryOnly: (countryName: string) => void;
   onStartPipeline: () => void;
   onClearDatabase: () => void;
@@ -50,6 +51,96 @@ function formatDashboardDate(dateString?: string | null): string {
   hours = hours ? hours : 12;
 
   return `${day}-${month}-${year}, ${hours}:${minutes}${ampm}`;
+}
+
+function getExactNewsSourceWebsiteUrl(sourceNameString: string, sourcesList?: SourceItem[]): string {
+  // If configured sources list is available, look for an exact source entry first
+  if (sourcesList && sourcesList.length > 0) {
+    for (let sourceIndex = 0; sourceIndex < sourcesList.length; sourceIndex++) {
+      const configuredSource = sourcesList[sourceIndex];
+      if (configuredSource.name.toLowerCase() === sourceNameString.toLowerCase()) {
+        const configuredUrl = configuredSource.url;
+        // Check if the URL is an RSS XML feed, and if so redirect to the main publication website
+        if (configuredUrl.includes("defensenews.com")) {
+          return "https://www.defensenews.com";
+        }
+        if (configuredUrl.includes("dawn.com")) {
+          return "https://www.dawn.com";
+        }
+        if (configuredUrl.includes("breakingdefense.com")) {
+          return "https://breakingdefense.com";
+        }
+        if (configuredUrl.includes("defenseone.com")) {
+          return "https://www.defenseone.com";
+        }
+        if (
+          configuredUrl.includes("feeds.bbci.co.uk") ||
+          configuredUrl.includes("bbc.co.uk") ||
+          configuredUrl.includes("bbc.com")
+        ) {
+          return "https://www.bbc.com/news/world";
+        }
+        return configuredUrl;
+      }
+    }
+  }
+
+  // Fallback pattern matching for all known intelligence news outlets
+  const lowercasedSource = sourceNameString.toLowerCase();
+  if (lowercasedSource.includes("defense news")) {
+    return "https://www.defensenews.com";
+  }
+  if (lowercasedSource.includes("the news") || lowercasedSource.includes("thenews")) {
+    return "https://www.thenews.com.pk/latest/category/world";
+  }
+  if (lowercasedSource.includes("dawn")) {
+    return "https://www.dawn.com";
+  }
+  if (lowercasedSource.includes("tribune")) {
+    return "https://tribune.com.pk";
+  }
+  if (lowercasedSource.includes("breaking defense")) {
+    return "https://breakingdefense.com";
+  }
+  if (lowercasedSource.includes("bbc")) {
+    return "https://www.bbc.com/news/world";
+  }
+  if (lowercasedSource.includes("reuters")) {
+    return "https://www.reuters.com/world";
+  }
+  if (lowercasedSource.includes("defense one")) {
+    return "https://www.defenseone.com";
+  }
+  if (lowercasedSource.includes("janes")) {
+    return "https://www.janes.com/defence-intelligence-insights/defence-news";
+  }
+  if (lowercasedSource.includes("foreign affairs")) {
+    if (lowercasedSource.includes("nuclear")) {
+      return "https://www.foreignaffairs.com/topics/nuclear-weapons-proliferation";
+    }
+    if (lowercasedSource.includes("war")) {
+      return "https://www.foreignaffairs.com/topics/war-military-strategy";
+    }
+    return "https://www.foreignaffairs.com/topics/defense-military";
+  }
+  if (lowercasedSource.includes("iiss")) {
+    if (lowercasedSource.includes("nuclear")) {
+      return "https://www.iiss.org/research/nuclear-arms-control-non-proliferation-and-disarmament";
+    }
+    return "https://www.iiss.org/research/defence-and-military-analysis";
+  }
+  if (lowercasedSource.includes("csis")) {
+    return "https://www.csis.org";
+  }
+  if (lowercasedSource.includes("atlantic council")) {
+    return "https://www.atlanticcouncil.org";
+  }
+  if (lowercasedSource.includes("diplomat")) {
+    return "https://thediplomat.com/category/security";
+  }
+
+  // Generic fallback if unknown
+  return "https://news.google.com";
 }
 
 export function DashboardPage(props: DashboardPageProps) {
@@ -111,6 +202,7 @@ export function DashboardPage(props: DashboardPageProps) {
     headline_text: string;
     source_name: string;
     category_label: string;
+    source_url: string;
   }
 
   const curatedHotTopicsList: CuratedHotTopicItem[] = [];
@@ -154,10 +246,12 @@ export function DashboardPage(props: DashboardPageProps) {
       return;
     }
     registeredHeadlinesSet.add(cleanText);
+    const resolvedSourceWebsiteUrl = getExactNewsSourceWebsiteUrl(sourceName, props.sourcesList);
     curatedHotTopicsList.push({
       headline_text: cleanText,
       source_name: sourceName,
-      category_label: categoryLabel
+      category_label: categoryLabel,
+      source_url: resolvedSourceWebsiteUrl
     });
   }
 
@@ -249,7 +343,6 @@ export function DashboardPage(props: DashboardPageProps) {
   for (let podiumIndex = 0; podiumIndex < podiumItemCount; podiumIndex++) {
     const item = curatedHotTopicsList[podiumIndex];
     const rankNumber = podiumIndex + 1;
-    const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(item.headline_text);
 
     if (rankNumber === 1) {
       // 1st Place Podium (Gold Champion)
@@ -270,11 +363,11 @@ export function DashboardPage(props: DashboardPageProps) {
                 </span>
               </div>
               <a
-                href={searchUrl}
+                href={item.source_url}
                 target="_blank"
                 rel="noreferrer"
-                title="Search this headline on Google"
-                className="p-2 rounded-xl text-amber-400/80 hover:text-amber-200 hover:bg-amber-500/20 transition-all shrink-0"
+                title={"Visit " + item.source_name}
+                className="p-2 rounded-xl text-amber-400/80 hover:text-amber-200 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer"
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
@@ -283,9 +376,19 @@ export function DashboardPage(props: DashboardPageProps) {
               {item.headline_text}
             </p>
           </div>
-          <div className="pt-1 flex items-center justify-between text-[11px] text-amber-400/80 font-medium">
-            <span>Primary Focus Topic</span>
-            <span className="font-mono text-[10px] uppercase">Rank #1</span>
+          <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between gap-2 text-[11px]">
+            <a
+              href={item.source_url}
+              target="_blank"
+              rel="noreferrer"
+              title={"Visit source: " + item.source_name}
+              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.7)] hover:text-amber-100 hover:underline transition-all min-w-0"
+            >
+              <Globe className="w-3 h-3 text-amber-400 shrink-0" />
+              <span className="truncate">{item.source_name}</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
+            </a>
+            <span className="font-mono text-[10px] uppercase text-amber-400/80 font-bold shrink-0">Rank #1</span>
           </div>
         </div>
       );
@@ -308,11 +411,11 @@ export function DashboardPage(props: DashboardPageProps) {
                 </span>
               </div>
               <a
-                href={searchUrl}
+                href={item.source_url}
                 target="_blank"
                 rel="noreferrer"
-                title="Search this headline on Google"
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-500/20 transition-all shrink-0"
+                title={"Visit " + item.source_name}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-500/20 transition-all shrink-0 cursor-pointer"
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
@@ -321,9 +424,19 @@ export function DashboardPage(props: DashboardPageProps) {
               {item.headline_text}
             </p>
           </div>
-          <div className="pt-1 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-            <span>Secondary Focus Topic</span>
-            <span className="font-mono text-[10px] uppercase">Rank #2</span>
+          <div className="pt-2 border-t border-slate-400/20 flex items-center justify-between gap-2 text-[11px]">
+            <a
+              href={item.source_url}
+              target="_blank"
+              rel="noreferrer"
+              title={"Visit source: " + item.source_name}
+              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-200 drop-shadow-[0_0_8px_rgba(226,232,240,0.7)] hover:text-white hover:underline transition-all min-w-0"
+            >
+              <Globe className="w-3 h-3 text-slate-300 shrink-0" />
+              <span className="truncate">{item.source_name}</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
+            </a>
+            <span className="font-mono text-[10px] uppercase text-slate-400 font-bold shrink-0">Rank #2</span>
           </div>
         </div>
       );
@@ -346,11 +459,11 @@ export function DashboardPage(props: DashboardPageProps) {
                 </span>
               </div>
               <a
-                href={searchUrl}
+                href={item.source_url}
                 target="_blank"
                 rel="noreferrer"
-                title="Search this headline on Google"
-                className="p-2 rounded-xl text-amber-500/80 hover:text-amber-200 hover:bg-amber-700/20 transition-all shrink-0"
+                title={"Visit " + item.source_name}
+                className="p-2 rounded-xl text-amber-500/80 hover:text-amber-200 hover:bg-amber-700/20 transition-all shrink-0 cursor-pointer"
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
@@ -359,9 +472,19 @@ export function DashboardPage(props: DashboardPageProps) {
               {item.headline_text}
             </p>
           </div>
-          <div className="pt-1 flex items-center justify-between text-[11px] text-amber-500/80 font-medium">
-            <span>Tertiary Focus Topic</span>
-            <span className="font-mono text-[10px] uppercase">Rank #3</span>
+          <div className="pt-2 border-t border-amber-600/20 flex items-center justify-between gap-2 text-[11px]">
+            <a
+              href={item.source_url}
+              target="_blank"
+              rel="noreferrer"
+              title={"Visit source: " + item.source_name}
+              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] hover:text-amber-200 hover:underline transition-all min-w-0"
+            >
+              <Globe className="w-3 h-3 text-amber-500 shrink-0" />
+              <span className="truncate">{item.source_name}</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
+            </a>
+            <span className="font-mono text-[10px] uppercase text-amber-500/80 font-bold shrink-0">Rank #3</span>
           </div>
         </div>
       );
@@ -373,30 +496,44 @@ export function DashboardPage(props: DashboardPageProps) {
   for (let topicIndex = 3; topicIndex < curatedHotTopicsList.length; topicIndex++) {
     const item = curatedHotTopicsList[topicIndex];
     const rankNumber = topicIndex + 1;
-    const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(item.headline_text);
 
     renderedRemainingHotTopicCards.push(
       <div
         key={item.source_name + "_" + rankNumber}
         className="group relative flex items-center justify-between gap-3.5 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-850/70 shadow-md shadow-black/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.08)] transition-all duration-300"
       >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="w-7 h-7 rounded-xl bg-zinc-800/90 text-zinc-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <span className="w-7 h-7 rounded-xl bg-zinc-800/90 text-zinc-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform mt-0.5">
             {rankNumber}
           </span>
-          <p className="text-xs font-medium text-zinc-200 group-hover:text-zinc-100 transition-colors leading-relaxed line-clamp-2">
-            {item.headline_text}
-          </p>
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <p className="text-xs font-medium text-zinc-200 group-hover:text-zinc-100 transition-colors leading-relaxed line-clamp-2">
+              {item.headline_text}
+            </p>
+            <div>
+              <a
+                href={item.source_url}
+                target="_blank"
+                rel="noreferrer"
+                title={"Visit source: " + item.source_name}
+                className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-sky-400 drop-shadow-[0_0_6px_rgba(56,189,248,0.6)] hover:text-sky-200 hover:underline transition-all"
+              >
+                <Globe className="w-3 h-3 text-sky-400 shrink-0" />
+                <span className="truncate">{item.source_name}</span>
+                <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
+              </a>
+            </div>
+          </div>
         </div>
 
         <a
-          href={searchUrl}
+          href={item.source_url}
           target="_blank"
           rel="noreferrer"
-          title="Search this headline on Google"
-          className="p-1.5 rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors shrink-0"
+          title={"Visit " + item.source_name}
+          className="p-2 rounded-xl text-zinc-500 hover:text-sky-300 hover:bg-sky-500/15 transition-all shrink-0 self-center cursor-pointer"
         >
-          <ExternalLink className="w-3.5 h-3.5" />
+          <ExternalLink className="w-4 h-4" />
         </a>
       </div>
     );

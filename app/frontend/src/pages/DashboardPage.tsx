@@ -8,8 +8,12 @@ import {
   ArrowRight,
   Calendar,
   Sparkles,
-  Trash2
+  Trash2,
+  ExternalLink,
+  Newspaper,
+  Zap
 } from "lucide-react";
+import { Banner } from "@/components/ui/banner";
 
 interface DashboardPageProps {
   rawSourcesData: RawSourcesData | null;
@@ -25,7 +29,7 @@ interface DashboardPageProps {
   onNavigateTab: (targetTab: NavigationTabType) => void;
 }
 
-export function formatDashboardDate(dateString?: string | null): string {
+function formatDashboardDate(dateString?: string | null): string {
   if (!dateString) return "No runs executed yet";
   const dateObj = new Date(dateString);
   if (isNaN(dateObj.getTime())) return dateString;
@@ -50,7 +54,6 @@ export function formatDashboardDate(dateString?: string | null): string {
 export function DashboardPage(props: DashboardPageProps) {
   // Count trends discovered
   let totalTrendsCount = 0;
-  let topTrendsList: string[] = [];
   if (props.rawSourcesData) {
     if (
       props.rawSourcesData.x_native_explore &&
@@ -58,10 +61,8 @@ export function DashboardPage(props: DashboardPageProps) {
       props.rawSourcesData.x_native_explore.trends_observed.length > 0
     ) {
       totalTrendsCount = props.rawSourcesData.x_native_explore.trends_observed.length;
-      topTrendsList = props.rawSourcesData.x_native_explore.trends_observed.slice(0, 6);
     } else if (props.rawSourcesData.x_trends24_topics && props.rawSourcesData.x_trends24_topics.length > 0) {
       totalTrendsCount = props.rawSourcesData.x_trends24_topics.length;
-      topTrendsList = props.rawSourcesData.x_trends24_topics.slice(0, 6);
     }
   }
 
@@ -84,7 +85,7 @@ export function DashboardPage(props: DashboardPageProps) {
   // Count synthesized topics and total keywords count
   let totalTopicsCount = 0;
   let totalKeywordsCount = 0;
-  let sampleKeywordTerms: string[] = [];
+  const sampleKeywordTerms: string[] = [];
   if (props.keywordsData && props.keywordsData.topics) {
     totalTopicsCount = props.keywordsData.topics.length;
     for (let i = 0; i < props.keywordsData.topics.length; i++) {
@@ -98,6 +99,224 @@ export function DashboardPage(props: DashboardPageProps) {
         }
       }
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Top 10 Trending Hot Topics Curation:
+  // Requirements:
+  // - Take top 2 from Defense News RSS
+  // - Take 1 from The News International World
+  // - Take 1-2 from others to fill exactly 10 total
+  // ---------------------------------------------------------------------------
+  interface CuratedHotTopicItem {
+    headline_text: string;
+    source_name: string;
+    category_label: string;
+  }
+
+  const curatedHotTopicsList: CuratedHotTopicItem[] = [];
+  const registeredHeadlinesSet = new Set<string>();
+
+  const newsIntelMap =
+    props.rawSourcesData && props.rawSourcesData.news_sources_intel
+      ? props.rawSourcesData.news_sources_intel
+      : {};
+
+  // Filter out non-news site navigation lines
+  const webNavigationJunkWordsList = [
+    "subscription", "sign in", "login", "cookie", "privacy policy",
+    "terms of service", "about us", "contact us"
+  ];
+
+  function isGenuineNewsHeadline(candidateText: string): boolean {
+    const trimmedText = candidateText.trim();
+    if (trimmedText.length < 18) {
+      return false;
+    }
+    const lowerText = trimmedText.toLowerCase();
+    for (let wordIndex = 0; wordIndex < webNavigationJunkWordsList.length; wordIndex++) {
+      const junkWord = webNavigationJunkWordsList[wordIndex];
+      if (lowerText.includes(junkWord)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function attemptAddHotTopic(sourceName: string, candidateHeadline: string, categoryLabel: string) {
+    if (curatedHotTopicsList.length >= 10) {
+      return;
+    }
+    const cleanText = candidateHeadline.trim();
+    if (!isGenuineNewsHeadline(cleanText)) {
+      return;
+    }
+    if (registeredHeadlinesSet.has(cleanText)) {
+      return;
+    }
+    registeredHeadlinesSet.add(cleanText);
+    curatedHotTopicsList.push({
+      headline_text: cleanText,
+      source_name: sourceName,
+      category_label: categoryLabel
+    });
+  }
+
+  // 1. Identify Defense News RSS and take top 2 headlines
+  let defenseNewsSourceKey = "";
+  for (const candidateKey in newsIntelMap) {
+    if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
+      if (candidateKey.toLowerCase().includes("defense news")) {
+        defenseNewsSourceKey = candidateKey;
+        break;
+      }
+    }
+  }
+
+  if (defenseNewsSourceKey.length > 0) {
+    const defenseHeadlines = newsIntelMap[defenseNewsSourceKey] || [];
+    for (let index = 0; index < defenseHeadlines.length && curatedHotTopicsList.length < 2; index++) {
+      attemptAddHotTopic(defenseNewsSourceKey, defenseHeadlines[index], "Defense & Military");
+    }
+  }
+
+  // 2. Identify The News International World and take top 1 headline
+  let theNewsSourceKey = "";
+  for (const candidateKey in newsIntelMap) {
+    if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
+      const lowerCandidate = candidateKey.toLowerCase();
+      if (lowerCandidate.includes("the news") || lowerCandidate.includes("thenews")) {
+        theNewsSourceKey = candidateKey;
+        break;
+      }
+    }
+  }
+
+  if (theNewsSourceKey.length > 0) {
+    const theNewsHeadlines = newsIntelMap[theNewsSourceKey] || [];
+    for (let index = 0; index < theNewsHeadlines.length; index++) {
+      const beforeCount = curatedHotTopicsList.length;
+      attemptAddHotTopic(theNewsSourceKey, theNewsHeadlines[index], "International / Regional");
+      if (curatedHotTopicsList.length > beforeCount) {
+        break;
+      }
+    }
+  }
+
+  // 3. Take 1-2 from other sources to fill up to exactly 10 total
+  const remainingOtherSourceKeysList: string[] = [];
+  for (const candidateKey in newsIntelMap) {
+    if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
+      if (candidateKey !== defenseNewsSourceKey && candidateKey !== theNewsSourceKey) {
+        remainingOtherSourceKeysList.push(candidateKey);
+      }
+    }
+  }
+
+  // Pass 1: Take 1 from each remaining source
+  for (let otherIndex = 0; otherIndex < remainingOtherSourceKeysList.length; otherIndex++) {
+    if (curatedHotTopicsList.length >= 10) {
+      break;
+    }
+    const currentOtherKey = remainingOtherSourceKeysList[otherIndex];
+    const sourceHeadlines = newsIntelMap[currentOtherKey] || [];
+    for (let headlineIndex = 0; headlineIndex < sourceHeadlines.length; headlineIndex++) {
+      const beforeCount = curatedHotTopicsList.length;
+      attemptAddHotTopic(currentOtherKey, sourceHeadlines[headlineIndex], "Global Intel");
+      if (curatedHotTopicsList.length > beforeCount) {
+        break;
+      }
+    }
+  }
+
+  // Pass 2: If still under 10, take a 2nd from remaining sources
+  for (let otherIndex = 0; otherIndex < remainingOtherSourceKeysList.length; otherIndex++) {
+    if (curatedHotTopicsList.length >= 10) {
+      break;
+    }
+    const currentOtherKey = remainingOtherSourceKeysList[otherIndex];
+    const sourceHeadlines = newsIntelMap[currentOtherKey] || [];
+    for (let headlineIndex = 0; headlineIndex < sourceHeadlines.length; headlineIndex++) {
+      if (curatedHotTopicsList.length >= 10) {
+        break;
+      }
+      attemptAddHotTopic(currentOtherKey, sourceHeadlines[headlineIndex], "Global Intel");
+    }
+  }
+
+  // Render the Top 10 Hot Topics items using traditional for loop
+  const renderedHotTopicCards = [];
+  for (let topicIndex = 0; topicIndex < curatedHotTopicsList.length; topicIndex++) {
+    const item = curatedHotTopicsList[topicIndex];
+    const rankNumber = topicIndex + 1;
+    const isTopThree = rankNumber <= 3;
+    const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(item.headline_text);
+
+    let sourceBadgeStyle = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+    if (item.source_name.toLowerCase().includes("defense news")) {
+      sourceBadgeStyle = "bg-rose-500/10 text-rose-400 border-rose-500/25";
+    } else if (item.source_name.toLowerCase().includes("the news")) {
+      sourceBadgeStyle = "bg-emerald-500/10 text-emerald-400 border-emerald-500/25";
+    }
+
+    renderedHotTopicCards.push(
+      <div
+        key={item.source_name + "_" + rankNumber}
+        className={
+          "group relative flex items-start justify-between gap-3.5 p-4 rounded-2xl border transition-all duration-300 " +
+          (isTopThree
+            ? "bg-zinc-900/60 hover:bg-zinc-850/80 border-amber-500/25 hover:border-amber-500/40 hover:shadow-[0_0_25px_rgba(245,158,11,0.12)]"
+            : "bg-zinc-900/40 hover:bg-zinc-850/70 border-zinc-800/80 hover:border-zinc-700/80 hover:shadow-[0_0_20px_rgba(59,130,246,0.08)]")
+        }
+      >
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          {/* Rank Badge */}
+          <span
+            className={
+              "w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold font-mono shrink-0 transition-transform group-hover:scale-105 " +
+              (isTopThree
+                ? "bg-gradient-to-br from-amber-500/30 to-amber-600/10 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
+                : "bg-zinc-800/80 text-zinc-300 border border-zinc-700/50")
+            }
+          >
+            {rankNumber}
+          </span>
+
+          {/* Headline Content */}
+          <div className="space-y-1.5 min-w-0">
+            <p className="text-xs font-semibold text-zinc-200 group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-2">
+              {item.headline_text}
+            </p>
+
+            <div className="flex items-center gap-2 flex-wrap pt-0.5">
+              <span className={"text-[10px] px-2 py-0.5 rounded-full font-medium border " + sourceBadgeStyle}>
+                {item.source_name}
+              </span>
+              <span className="text-[10px] text-zinc-400 font-medium">
+                {item.category_label}
+              </span>
+              {isTopThree && (
+                <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-medium">
+                  <Flame className="w-3 h-3 fill-amber-500" />
+                  Hot
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Search Link */}
+        <a
+          href={searchUrl}
+          target="_blank"
+          rel="noreferrer"
+          title="Search this headline on Google"
+          className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors shrink-0"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    );
   }
 
   let activeScopeLabel = "Worldwide";
@@ -116,9 +335,27 @@ export function DashboardPage(props: DashboardPageProps) {
   const latestRun = props.recentRunsList.length > 0 ? props.recentRunsList[0] : null;
 
   return (
-    <div className="space-y-6 max-w-6xl py-2 animate-in fade-in-50 duration-300">
-      {/* Top Action & System Status Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40 select-none">
+    <div className="space-y-6 max-w-6xl py-1 animate-in fade-in-50 duration-300">
+      {/* Sleek Rainbow Banner */}
+      <Banner
+        id="dashboard-intelligence-status"
+        variant="rainbow"
+        height="2.75rem"
+        className="rounded-2xl border border-white/10 shadow-[0_0_25px_rgba(59,130,246,0.15)] overflow-hidden"
+      >
+        <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/30">
+            <Zap className="w-3 h-3" />
+            LIVE INTEL
+          </span>
+          <span>
+            Autonomous Agent Active — Curating real-time defense & breaking global intelligence via Qwen3-14B
+          </span>
+        </div>
+      </Banner>
+
+      {/* Top Action & System Controls Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-800/80 select-none">
         <div className="flex items-center gap-2.5">
           <button
             onClick={function () {
@@ -127,7 +364,7 @@ export function DashboardPage(props: DashboardPageProps) {
               }
             }}
             disabled={props.isPipelineActive}
-            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400 font-medium text-xs border border-red-500/25 hover:border-red-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40 shadow-xs"
+            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-medium text-xs border border-red-500/25 hover:border-red-500/40 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40"
             title="Clear all stored database runs and reset dashboard stats"
           >
             <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
@@ -146,7 +383,7 @@ export function DashboardPage(props: DashboardPageProps) {
               }
             }}
             disabled={props.isPipelineActive}
-            className="group relative inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-xs shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-50"
+            className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-50"
           >
             <Play className="w-3.5 h-3.5 fill-current transition-transform group-hover:scale-110" />
             <span>
@@ -160,12 +397,12 @@ export function DashboardPage(props: DashboardPageProps) {
             onClick={function () {
               props.onNavigateTab("tweets");
             }}
-            className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-card hover:bg-muted/40 text-foreground font-medium text-xs border border-border/70 hover:border-border hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shadow-xs"
+            className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-zinc-900/60 hover:bg-zinc-850 text-zinc-200 font-medium text-xs border border-zinc-800/80 hover:border-zinc-700 hover:shadow-[0_0_15px_rgba(139,92,246,0.15)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
           >
             <MessageSquare className="w-3.5 h-3.5 text-purple-400 transition-transform group-hover:scale-110" />
             <span>View Tweets</span>
             {totalTweetsCount > 0 && (
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-400">
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
                 {totalTweetsCount}
               </span>
             )}
@@ -175,12 +412,12 @@ export function DashboardPage(props: DashboardPageProps) {
             onClick={function () {
               props.onNavigateTab("keywords");
             }}
-            className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-card hover:bg-muted/40 text-foreground font-medium text-xs border border-border/70 hover:border-border hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shadow-xs"
+            className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-zinc-900/60 hover:bg-zinc-850 text-zinc-200 font-medium text-xs border border-zinc-800/80 hover:border-zinc-700 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
           >
             <Tags className="w-3.5 h-3.5 text-emerald-400 transition-transform group-hover:scale-110" />
             <span>View Keywords</span>
             {totalKeywordsCount > 0 && (
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400">
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 {totalKeywordsCount}
               </span>
             )}
@@ -189,21 +426,21 @@ export function DashboardPage(props: DashboardPageProps) {
       </div>
 
       {/* Target Scope & Country Quick Switcher Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-2xl bg-card/60 border border-border/50 shadow-xs backdrop-blur-sm select-none">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5 p-4 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-xl shadow-lg shadow-black/20 select-none">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/25 shadow-[0_0_15px_rgba(56,189,248,0.15)] shrink-0">
             <Globe className="w-4 h-4" />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-foreground">Target Intelligence Scope:</span>
+            <span className="text-xs font-semibold text-zinc-200">Intelligence Scope:</span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
               {activeScopeLabel}
             </span>
           </div>
         </div>
 
-        {/* Big, Sleek Scope Switcher Buttons */}
+        {/* Scope Switcher Buttons */}
         <div className="flex items-center flex-wrap gap-2">
           {["Worldwide", "United States", "China", "Russia", "United Kingdom", "Pakistan"].map(function (countryName) {
             const isCountryActive =
@@ -222,10 +459,10 @@ export function DashboardPage(props: DashboardPageProps) {
                 }}
                 disabled={props.isPipelineActive}
                 className={
-                  "text-xs px-3.5 py-2 rounded-xl font-medium transition-all duration-150 cursor-pointer disabled:opacity-50 " +
+                  "text-xs px-3.5 py-2 rounded-2xl font-medium transition-all duration-200 cursor-pointer disabled:opacity-50 " +
                   (isCountryActive
-                    ? "bg-sky-500 text-white shadow-sm font-semibold"
-                    : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/70")
+                    ? "bg-sky-500 text-white shadow-[0_0_18px_rgba(56,189,248,0.4)] font-semibold"
+                    : "bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800/80")
                 }
               >
                 {countryName}
@@ -236,7 +473,7 @@ export function DashboardPage(props: DashboardPageProps) {
             onClick={function () {
               props.onNavigateTab("pipeline");
             }}
-            className="text-xs px-3 py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors flex items-center gap-1 cursor-pointer font-medium"
+            className="text-xs px-3 py-2 rounded-2xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors flex items-center gap-1 cursor-pointer font-medium"
             title="Configure all countries in Pipeline tab"
           >
             <span>All Countries</span>
@@ -245,109 +482,142 @@ export function DashboardPage(props: DashboardPageProps) {
         </div>
       </div>
 
-      {/* 4 Stat Cards using Uiverse.io Component with Borders */}
+      {/* 4 Stat Cards with Smooth Glow and Rounded Edges */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 select-none">
         {/* Active Sources */}
-        <div className="uiverse-card hover:-translate-y-0.5 transition-all">
-          <div className="title">
-            <span style={{ backgroundColor: "#3b82f6" }}>
-              <Globe />
-            </span>
-            <p className="title-text">Active Sources</p>
-            <p className="percent" style={{ color: "#3b82f6" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1792 1792" fill="currentColor" height="14" width="14">
-                <path d="M1408 1216q0 26-19 45t-45 19h-896q-26 0-45-19t-19-45 19-45l448-448q19-19 45-19t45 19l448 448q19 19 19 45z" />
-              </svg>
-              100%
-            </p>
+        <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-blue-500/30 hover:shadow-[0_0_25px_rgba(59,130,246,0.12)] transition-all duration-300 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.2)]">
+                <Globe className="w-4 h-4" />
+              </span>
+              <p className="text-xs font-semibold text-zinc-300">Active Sources</p>
+            </div>
+            <span className="text-xs font-semibold text-blue-400 font-mono">100%</span>
           </div>
-          <div className="data">
-            <p>{props.activeSourcesCount}</p>
-            <div className="range">
-              <div className="fill" style={{ width: "85%", backgroundColor: "#3b82f6" }}></div>
+          <div className="space-y-2">
+            <p className="text-2xl font-bold text-zinc-100 font-mono">{props.activeSourcesCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+              <div className="h-full rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ width: "85%" }}></div>
             </div>
           </div>
         </div>
 
         {/* Trends Ingested */}
-        <div className="uiverse-card hover:-translate-y-0.5 transition-all">
-          <div className="title">
-            <span style={{ backgroundColor: "#f59e0b" }}>
-              <Flame />
-            </span>
-            <p className="title-text">Trends Ingested</p>
-            <p className="percent" style={{ color: "#f59e0b" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1792 1792" fill="currentColor" height="14" width="14">
-                <path d="M1408 1216q0 26-19 45t-45 19h-896q-26 0-45-19t-19-45 19-45l448-448q19-19 45-19t45 19l448 448q19 19 19 45z" />
-              </svg>
-              Live
-            </p>
+        <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-amber-500/30 hover:shadow-[0_0_25px_rgba(245,158,11,0.12)] transition-all duration-300 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                <Flame className="w-4 h-4" />
+              </span>
+              <p className="text-xs font-semibold text-zinc-300">Trends Ingested</p>
+            </div>
+            <span className="text-xs font-semibold text-amber-400 font-mono">Live</span>
           </div>
-          <div className="data">
-            <p>{totalTrendsCount}</p>
-            <div className="range">
-              <div className="fill" style={{ width: "70%", backgroundColor: "#f59e0b" }}></div>
+          <div className="space-y-2">
+            <p className="text-2xl font-bold text-zinc-100 font-mono">{totalTrendsCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+              <div className="h-full rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" style={{ width: "70%" }}></div>
             </div>
           </div>
         </div>
 
         {/* Tweets Mined */}
-        <div className="uiverse-card hover:-translate-y-0.5 transition-all">
-          <div className="title">
-            <span style={{ backgroundColor: "#8b5cf6" }}>
-              <MessageSquare />
-            </span>
-            <p className="title-text">Tweets Mined</p>
-            <p className="percent" style={{ color: "#8b5cf6" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1792 1792" fill="currentColor" height="14" width="14">
-                <path d="M1408 1216q0 26-19 45t-45 19h-896q-26 0-45-19t-19-45 19-45l448-448q19-19 45-19t45 19l448 448q19 19 19 45z" />
-              </svg>
-              Deep
-            </p>
+        <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-purple-500/30 hover:shadow-[0_0_25px_rgba(139,92,246,0.12)] transition-all duration-300 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-[0_0_12px_rgba(139,92,246,0.2)]">
+                <MessageSquare className="w-4 h-4" />
+              </span>
+              <p className="text-xs font-semibold text-zinc-300">Tweets Mined</p>
+            </div>
+            <span className="text-xs font-semibold text-purple-400 font-mono">Deep</span>
           </div>
-          <div className="data">
-            <p>{totalTweetsCount}</p>
-            <div className="range">
-              <div className="fill" style={{ width: "90%", backgroundColor: "#8b5cf6" }}></div>
+          <div className="space-y-2">
+            <p className="text-2xl font-bold text-zinc-100 font-mono">{totalTweetsCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+              <div className="h-full rounded-full bg-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ width: "90%" }}></div>
             </div>
           </div>
         </div>
 
         {/* Synthesized Keywords */}
-        <div className="uiverse-card hover:-translate-y-0.5 transition-all">
-          <div className="title">
-            <span style={{ backgroundColor: "#10B981" }}>
-              <Tags />
-            </span>
-            <p className="title-text">Synthesized Keywords</p>
-            <p className="percent" style={{ color: "#10B981" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1792 1792" fill="currentColor" height="14" width="14">
-                <path d="M1408 1216q0 26-19 45t-45 19h-896q-26 0-45-19t-19-45 19-45l448-448q19-19 45-19t45 19l448 448q19 19 19 45z" />
-              </svg>
-              {totalTopicsCount} Topics
-            </p>
+        <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-emerald-500/30 hover:shadow-[0_0_25px_rgba(16,185,129,0.12)] transition-all duration-300 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                <Tags className="w-4 h-4" />
+              </span>
+              <p className="text-xs font-semibold text-zinc-300">Synthesized Keywords</p>
+            </div>
+            <span className="text-xs font-semibold text-emerald-400 font-mono">{totalTopicsCount} Topics</span>
           </div>
-          <div className="data">
-            <p>{totalKeywordsCount}</p>
-            <div className="range">
-              <div className="fill" style={{ width: "100%", backgroundColor: "#10B981" }}></div>
+          <div className="space-y-2">
+            <p className="text-2xl font-bold text-zinc-100 font-mono">{totalKeywordsCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+              <div className="h-full rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" style={{ width: "100%" }}></div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Full-Width Latest Intelligence Ingestion Snapshot */}
-      <div className="w-full rounded-2xl bg-card border border-border/50 p-6 shadow-sm space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
+      {/* --------------------------------------------------------------------- */}
+      {/* PROMINENT SECTION: Top 10 Trending Hot Topics (Curated Cross-Outlet)  */}
+      {/* --------------------------------------------------------------------- */}
+      <div className="w-full rounded-3xl bg-zinc-900/50 border border-zinc-800/80 p-6 backdrop-blur-xl shadow-xl shadow-black/25 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 shadow-[0_0_18px_rgba(245,158,11,0.2)]">
+              <Flame className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-zinc-100">Top 10 Trending Hot Topics</h3>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/25 font-mono">
+                  {curatedHotTopicsList.length}/10 Active
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Targeted cross-outlet feed: Top 2 from Defense News RSS, 1 from The News International World, and global wire coverage.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => props.onNavigateTab("trends")}
+            className="text-xs text-amber-400 hover:text-amber-300 hover:underline font-medium flex items-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <span>Explore All Trending Topics</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* 10 Curated Cards in 2-Column Responsive Grid */}
+        {renderedHotTopicCards.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+            {renderedHotTopicCards}
+          </div>
+        ) : (
+          <div className="p-12 text-center text-xs text-zinc-500 bg-zinc-900/30 rounded-2xl border border-zinc-800 space-y-2">
+            <Newspaper className="w-8 h-8 text-zinc-600 mx-auto" />
+            <p className="text-zinc-300 font-semibold">No Hot Topics Available Yet</p>
+            <p className="text-zinc-500">Run the pipeline to ingest headlines from Defense News, The News International, and global wire feeds.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Full-Width Latest Intelligence Ingestion Snapshot */}
+      <div className="w-full rounded-3xl bg-zinc-900/40 border border-zinc-800/80 p-6 backdrop-blur-xl shadow-lg space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Latest Intelligence Ingestion</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="text-sm font-semibold text-zinc-100">Latest Intelligence Run Details</h3>
+              <p className="text-xs text-zinc-400">
                 {latestRun
-                  ? `Last ran on ${formatDashboardDate(latestRun.finished_at || latestRun.started_at)}`
+                  ? `Last executed on ${formatDashboardDate(latestRun.finished_at || latestRun.started_at)}`
                   : "No runs executed yet"}
               </p>
             </div>
@@ -357,10 +627,10 @@ export function DashboardPage(props: DashboardPageProps) {
             {latestRun && (
               <span
                 className={
-                  "text-[10px] font-mono px-2.5 py-1 rounded-full font-medium " +
+                  "text-[10px] font-mono px-3 py-1 rounded-full font-medium border " +
                   (latestRun.status === "completed"
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    : "bg-amber-500/10 text-amber-400 border border-amber-500/20")
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
+                    : "bg-amber-500/10 text-amber-400 border-amber-500/25 shadow-[0_0_10px_rgba(245,158,11,0.15)]")
                 }
               >
                 {latestRun.status.toUpperCase()}
@@ -370,55 +640,23 @@ export function DashboardPage(props: DashboardPageProps) {
               onClick={() => props.onNavigateTab("sources")}
               className="text-xs text-primary hover:underline font-medium flex items-center gap-1 cursor-pointer"
             >
-              <span>Sources ({props.activeSourcesCount})</span>
+              <span>Configured Sources ({props.activeSourcesCount})</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           </div>
         </div>
 
-        {/* Top Trends Discovered */}
-        <div>
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Discovered Trending Hashtags
-            </span>
-            <button
-              onClick={() => props.onNavigateTab("trends")}
-              className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
-            >
-              View all trends →
-            </button>
-          </div>
-          {topTrendsList.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {topTrendsList.map((trend, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => props.onNavigateTab("tweets")}
-                  className="px-3 py-1.5 rounded-xl text-xs bg-muted/40 hover:bg-primary/15 text-foreground hover:text-primary transition-colors border border-border/40 cursor-pointer font-medium"
-                >
-                  {trend}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground/70 italic">
-              No trends ingested yet. Run the pipeline to harvest trending hashtags.
-            </p>
-          )}
-        </div>
-
         {/* Extracted Keywords Preview */}
-        <div className="pt-2 border-t border-border/30">
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Extracted Keywords
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+              Strategic Synthesized Keywords Preview
             </span>
             <button
               onClick={() => props.onNavigateTab("keywords")}
-              className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
+              className="text-[11px] text-emerald-400 hover:underline font-medium cursor-pointer"
             >
-              Inspect keyword sets →
+              Inspect all 150 keywords →
             </button>
           </div>
           {sampleKeywordTerms.length > 0 ? (
@@ -426,59 +664,68 @@ export function DashboardPage(props: DashboardPageProps) {
               {sampleKeywordTerms.map((term, idx) => (
                 <span
                   key={idx}
-                  className="px-3 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.08)]"
                 >
                   {term}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground/70 italic">
-              Run the pipeline to generate targeted domain keywords.
+            <p className="text-xs text-zinc-500 italic">
+              Run the intelligence pipeline to generate strategic keywords via Qwen3-14B.
             </p>
           )}
         </div>
       </div>
 
-      {/* Sleek, Minimal Navigation Buttons (Subtext Removed) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 select-none">
+      {/* Sleek Navigation Cards with Rounded Edges & Smooth Glow */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 select-none">
         <button
           onClick={() => props.onNavigateTab("trends")}
-          className="p-4 rounded-2xl bg-card hover:bg-muted/40 border border-border/60 hover:border-border cursor-pointer transition-all duration-200 group shadow-xs flex items-center justify-between"
+          className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/70 border border-zinc-800/80 hover:border-amber-500/30 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/10 hover:shadow-[0_0_25px_rgba(245,158,11,0.1)] flex items-center justify-between"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Flame className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/25 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(245,158,11,0.15)]">
+              <Flame className="w-4 h-4" />
             </div>
-            <span className="text-xs font-semibold text-foreground">Trending Topics</span>
+            <div className="text-left">
+              <p className="text-xs font-semibold text-zinc-200 group-hover:text-amber-300 transition-colors">Trending Topics</p>
+              <p className="text-[10px] text-zinc-500">Live hot news & X explore</p>
+            </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
         </button>
 
         <button
           onClick={() => props.onNavigateTab("headlines")}
-          className="p-4 rounded-2xl bg-card hover:bg-muted/40 border border-border/60 hover:border-border cursor-pointer transition-all duration-200 group shadow-xs flex items-center justify-between"
+          className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/70 border border-zinc-800/80 hover:border-blue-500/30 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/10 hover:shadow-[0_0_25px_rgba(59,130,246,0.1)] flex items-center justify-between"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              <Globe className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/25 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(59,130,246,0.15)]">
+              <Globe className="w-4 h-4" />
             </div>
-            <span className="text-xs font-semibold text-foreground">News Headlines</span>
+            <div className="text-left">
+              <p className="text-xs font-semibold text-zinc-200 group-hover:text-blue-300 transition-colors">News Headlines</p>
+              <p className="text-[10px] text-zinc-500">All 17 authoritative media feeds</p>
+            </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
         </button>
 
         <button
           onClick={() => props.onNavigateTab("history")}
-          className="p-4 rounded-2xl bg-card hover:bg-muted/40 border border-border/60 hover:border-border cursor-pointer transition-all duration-200 group shadow-xs flex items-center justify-between"
+          className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/70 border border-zinc-800/80 hover:border-emerald-500/30 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/10 hover:shadow-[0_0_25px_rgba(16,185,129,0.1)] flex items-center justify-between"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Calendar className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+              <Calendar className="w-4 h-4" />
             </div>
-            <span className="text-xs font-semibold text-foreground">Run History</span>
+            <div className="text-left">
+              <p className="text-xs font-semibold text-zinc-200 group-hover:text-emerald-300 transition-colors">Run History</p>
+              <p className="text-[10px] text-zinc-500">Archived SQLite intelligence</p>
+            </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
         </button>
       </div>
     </div>

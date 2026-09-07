@@ -50,7 +50,7 @@ export function Banner({
       {...props}
       style={{ height: open ? height : '0' }}
       className={cn(
-        'sticky top-0 z-40 flex flex-row items-center justify-center bg-secondary px-4 text-center text-sm font-medium transition-all duration-300',
+        'sticky top-0 z-40 relative flex flex-row items-center justify-center bg-secondary px-4 text-center text-sm font-medium transition-all duration-300 overflow-hidden',
         variant === 'rainbow' && 'bg-background',
         !open && 'hidden',
         props.className,
@@ -73,7 +73,9 @@ export function Banner({
       ) : null}
 
       {variant === 'rainbow' ? <RainbowLayer /> : null}
-      {message || props.children}
+      <div className="relative z-10 flex items-center justify-center w-full">
+        {message || props.children}
+      </div>
       {id ? (
         <button
           type="button"
@@ -82,7 +84,7 @@ export function Banner({
           className={cn(
             buttonVariants({
               variant: 'ghost',
-              className: 'absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground',
+              className: 'absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground z-20',
               size: 'icon',
             }),
           )}
@@ -97,8 +99,8 @@ export function Banner({
 const RainbowLayer = () => {
   return (
     <>
-      <div className="absolute inset-0 z-[-1] rainbow-banner-gradient-1" />
-      <div className="absolute inset-0 z-[-1] rainbow-banner-gradient-2" />
+      <div className="absolute inset-0 pointer-events-none z-0 rainbow-banner-gradient-1" />
+      <div className="absolute inset-0 pointer-events-none z-0 rainbow-banner-gradient-2" />
     </>
   );
 };

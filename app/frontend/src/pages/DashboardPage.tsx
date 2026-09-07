@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { RawSourcesData, KeywordsData, PipelineRunRecord, NavigationTabType, CountryItem, SourceItem } from "../types";
 import {
   Globe,
@@ -142,6 +143,16 @@ function getExactNewsSourceWebsiteUrl(sourceNameString: string, sourcesList?: So
 }
 
 export function DashboardPage(props: DashboardPageProps) {
+  // Always clear any old dismissed state from localStorage to ensure rainbow banner is permanently active
+  useEffect(function () {
+    try {
+      localStorage.removeItem("banner-dashboard-intelligence-status");
+      document.documentElement.classList.remove("banner-dashboard-intelligence-status");
+    } catch {
+      // Ignore
+    }
+  }, []);
+
   // Count trends discovered
   let totalTrendsCount = 0;
   if (props.rawSourcesData) {
@@ -537,19 +548,18 @@ export function DashboardPage(props: DashboardPageProps) {
 
   return (
     <div className="space-y-6 max-w-6xl py-1 animate-in fade-in-50 duration-300 select-none">
-      {/* 1. Sleek Rainbow Banner */}
+      {/* 1. Sleek Rainbow Banner (Always on Top) */}
       <Banner
-        id="dashboard-intelligence-status"
         variant="rainbow"
-        height="2.75rem"
-        className="rounded-2xl border border-white/10 shadow-[0_0_25px_rgba(59,130,246,0.15)] overflow-hidden"
+        height="2.85rem"
+        className="rounded-2xl border border-white/10 shadow-[0_0_30px_rgba(59,130,246,0.2)] overflow-hidden"
       >
-        <div className="flex items-center gap-2 text-xs font-medium text-foreground">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary">
+        <div className="flex items-center gap-2.5 text-xs font-medium text-foreground">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/30 shadow-[0_0_10px_rgba(59,130,246,0.3)]">
             <Zap className="w-3 h-3" />
             LIVE INTEL
           </span>
-          <span>
+          <span className="font-semibold text-zinc-100">
             Autonomous Agent Active — Curating real-time defense & breaking global intelligence via Strategic AI Model
           </span>
         </div>

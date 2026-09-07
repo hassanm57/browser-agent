@@ -11,7 +11,8 @@ import {
   Trash2,
   ExternalLink,
   Newspaper,
-  Zap
+  Zap,
+  Hash
 } from "lucide-react";
 import { Banner } from "@/components/ui/banner";
 
@@ -242,65 +243,192 @@ export function DashboardPage(props: DashboardPageProps) {
     }
   }
 
-  // Render the Top 10 Hot Topics items using traditional for loop
-  const renderedHotTopicCards = [];
-  for (let topicIndex = 0; topicIndex < curatedHotTopicsList.length; topicIndex++) {
-    const item = curatedHotTopicsList[topicIndex];
-    const rankNumber = topicIndex + 1;
-    const isTopThree = rankNumber <= 3;
+  // Render the Top 3 Podium Hot Topics items using a traditional for loop
+  const renderedPodiumCards = [];
+  const podiumItemCount = Math.min(curatedHotTopicsList.length, 3);
+  for (let podiumIndex = 0; podiumIndex < podiumItemCount; podiumIndex++) {
+    const item = curatedHotTopicsList[podiumIndex];
+    const rankNumber = podiumIndex + 1;
     const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(item.headline_text);
 
-    renderedHotTopicCards.push(
-      <div
-        key={item.source_name + "_" + rankNumber}
-        className={
-          "group relative flex items-start justify-between gap-3.5 p-4 rounded-2xl border transition-all duration-300 " +
-          (isTopThree
-            ? "bg-zinc-900/60 hover:bg-zinc-850/80 border-amber-500/25 hover:border-amber-500/40 hover:shadow-[0_0_25px_rgba(245,158,11,0.12)]"
-            : "bg-zinc-900/40 hover:bg-zinc-850/70 border-zinc-800/80 hover:border-zinc-700/80 hover:shadow-[0_0_20px_rgba(59,130,246,0.08)]")
-        }
-      >
-        <div className="flex items-start gap-3 flex-1 min-w-0">
-          {/* Rank Badge */}
-          <span
-            className={
-              "w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold font-mono shrink-0 transition-transform group-hover:scale-105 " +
-              (isTopThree
-                ? "bg-gradient-to-br from-amber-500/30 to-amber-600/10 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
-                : "bg-zinc-800/80 text-zinc-300")
-            }
-          >
-            {rankNumber}
-          </span>
-
-          {/* Headline Content */}
-          <div className="space-y-1.5 min-w-0">
-            <p className="text-xs font-semibold text-zinc-200 group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-2">
-              {item.headline_text}
-            </p>
-
-            {isTopThree && (
-              <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-medium">
-                  <Flame className="w-3 h-3 fill-amber-500" />
+    if (rankNumber === 1) {
+      // 1st Place Podium (Gold Champion)
+      renderedPodiumCards.push(
+        <div
+          key={item.source_name + "_podium_" + rankNumber}
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-amber-500/15 via-zinc-900/80 to-zinc-950/90 hover:from-amber-500/25 shadow-xl shadow-amber-500/5 hover:shadow-[0_0_35px_rgba(245,158,11,0.22)] transition-all duration-300 gap-4"
+        >
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_18px_rgba(245,158,11,0.5)] shrink-0">
+                  1
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
+                  <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   Hot
                 </span>
               </div>
-            )}
+              <a
+                href={searchUrl}
+                target="_blank"
+                rel="noreferrer"
+                title="Search this headline on Google"
+                className="p-2 rounded-xl text-amber-400/80 hover:text-amber-200 hover:bg-amber-500/20 transition-all shrink-0"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+            <p className="text-sm font-bold text-zinc-100 group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-3">
+              {item.headline_text}
+            </p>
+          </div>
+          <div className="pt-1 flex items-center justify-between text-[11px] text-amber-400/80 font-medium">
+            <span>Primary Focus Topic</span>
+            <span className="font-mono text-[10px] uppercase">Rank #1</span>
           </div>
         </div>
+      );
+    } else if (rankNumber === 2) {
+      // 2nd Place Podium (Silver)
+      renderedPodiumCards.push(
+        <div
+          key={item.source_name + "_podium_" + rankNumber}
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-slate-400/15 via-zinc-900/80 to-zinc-950/90 hover:from-slate-400/25 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(148,163,184,0.18)] transition-all duration-300 gap-4"
+        >
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-slate-200 via-slate-300 to-zinc-400 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_15px_rgba(226,232,240,0.4)] shrink-0">
+                  2
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-200 bg-slate-400/20 px-2.5 py-0.5 rounded-full">
+                  <Flame className="w-3.5 h-3.5 fill-slate-300 text-slate-300" />
+                  Hot
+                </span>
+              </div>
+              <a
+                href={searchUrl}
+                target="_blank"
+                rel="noreferrer"
+                title="Search this headline on Google"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-500/20 transition-all shrink-0"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+            <p className="text-sm font-semibold text-zinc-100 group-hover:text-slate-200 transition-colors leading-relaxed line-clamp-3">
+              {item.headline_text}
+            </p>
+          </div>
+          <div className="pt-1 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+            <span>Secondary Focus Topic</span>
+            <span className="font-mono text-[10px] uppercase">Rank #2</span>
+          </div>
+        </div>
+      );
+    } else {
+      // 3rd Place Podium (Bronze)
+      renderedPodiumCards.push(
+        <div
+          key={item.source_name + "_podium_" + rankNumber}
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-amber-700/15 via-zinc-900/80 to-zinc-950/90 hover:from-amber-700/25 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(217,119,6,0.18)] transition-all duration-300 gap-4"
+        >
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-600 via-amber-700 to-orange-800 text-amber-100 font-black text-sm flex items-center justify-center shadow-[0_0_15px_rgba(217,119,6,0.4)] shrink-0">
+                  3
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-700/20 px-2.5 py-0.5 rounded-full">
+                  <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  Hot
+                </span>
+              </div>
+              <a
+                href={searchUrl}
+                target="_blank"
+                rel="noreferrer"
+                title="Search this headline on Google"
+                className="p-2 rounded-xl text-amber-500/80 hover:text-amber-200 hover:bg-amber-700/20 transition-all shrink-0"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+            <p className="text-sm font-semibold text-zinc-100 group-hover:text-amber-200 transition-colors leading-relaxed line-clamp-3">
+              {item.headline_text}
+            </p>
+          </div>
+          <div className="pt-1 flex items-center justify-between text-[11px] text-amber-500/80 font-medium">
+            <span>Tertiary Focus Topic</span>
+            <span className="font-mono text-[10px] uppercase">Rank #3</span>
+          </div>
+        </div>
+      );
+    }
+  }
 
-        {/* Quick Search Link */}
+  // Render Ranks 4 to 10 in a clean, compact 2-column grid using traditional for loop
+  const renderedRemainingHotTopicCards = [];
+  for (let topicIndex = 3; topicIndex < curatedHotTopicsList.length; topicIndex++) {
+    const item = curatedHotTopicsList[topicIndex];
+    const rankNumber = topicIndex + 1;
+    const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(item.headline_text);
+
+    renderedRemainingHotTopicCards.push(
+      <div
+        key={item.source_name + "_" + rankNumber}
+        className="group relative flex items-center justify-between gap-3.5 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-850/70 shadow-md shadow-black/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.08)] transition-all duration-300"
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="w-7 h-7 rounded-xl bg-zinc-800/90 text-zinc-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            {rankNumber}
+          </span>
+          <p className="text-xs font-medium text-zinc-200 group-hover:text-zinc-100 transition-colors leading-relaxed line-clamp-2">
+            {item.headline_text}
+          </p>
+        </div>
+
         <a
           href={searchUrl}
           target="_blank"
           rel="noreferrer"
           title="Search this headline on Google"
-          className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors shrink-0"
+          className="p-1.5 rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors shrink-0"
         >
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
+    );
+  }
+
+  // Render prominent keyword cards in a responsive grid using a traditional for loop
+  const renderedProminentKeywordCards = [];
+  for (let keywordIndex = 0; keywordIndex < sampleKeywordTerms.length; keywordIndex++) {
+    const termString = sampleKeywordTerms[keywordIndex];
+    const searchKeywordUrl = "https://www.google.com/search?q=" + encodeURIComponent(termString);
+
+    renderedProminentKeywordCards.push(
+      <a
+        key={"prominent_keyword_" + keywordIndex}
+        href={searchKeywordUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="group relative p-4 rounded-2xl bg-zinc-900/60 hover:bg-zinc-850/90 shadow-lg shadow-black/20 hover:shadow-[0_0_25px_rgba(16,185,129,0.18)] transition-all duration-300 flex flex-col justify-between gap-3 overflow-hidden select-none hover:-translate-y-0.5"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/15 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+            <Hash className="w-3 h-3" />
+            #{keywordIndex + 1}
+          </span>
+          <ExternalLink className="w-3.5 h-3.5 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-zinc-100 group-hover:text-emerald-300 transition-colors tracking-tight line-clamp-2">
+            {termString}
+          </p>
+        </div>
+      </a>
     );
   }
 
@@ -320,8 +448,8 @@ export function DashboardPage(props: DashboardPageProps) {
   const latestRun = props.recentRunsList.length > 0 ? props.recentRunsList[0] : null;
 
   return (
-    <div className="space-y-6 max-w-6xl py-1 animate-in fade-in-50 duration-300">
-      {/* Sleek Rainbow Banner */}
+    <div className="space-y-6 max-w-6xl py-1 animate-in fade-in-50 duration-300 select-none">
+      {/* 1. Sleek Rainbow Banner */}
       <Banner
         id="dashboard-intelligence-status"
         variant="rainbow"
@@ -339,216 +467,216 @@ export function DashboardPage(props: DashboardPageProps) {
         </div>
       </Banner>
 
-      {/* Top Action & System Controls Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-800/80 select-none">
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={function () {
-              if (window.confirm("Are you sure you want to clear all stored intelligence records? This will reset all counts and start completely fresh.")) {
-                props.onClearDatabase();
-              }
-            }}
-            disabled={props.isPipelineActive}
-            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-medium text-xs border border-red-500/25 hover:border-red-500/40 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40"
-            title="Clear all stored intelligence runs and reset dashboard stats"
-          >
-            <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
-            <span>Clear Stored Records</span>
-          </button>
-        </div>
-
-        {/* Action Buttons: Run Pipeline, View Tweets, View Keywords */}
-        <div className="flex items-center flex-wrap gap-3">
-          <button
-            onClick={function () {
-              if (props.selectedCountries && props.selectedCountries.length > 0) {
-                props.onStartPipeline();
-              } else {
-                props.onNavigateTab("pipeline");
-              }
-            }}
-            disabled={props.isPipelineActive}
-            className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-50"
-          >
-            <Play className="w-3.5 h-3.5 fill-current transition-transform group-hover:scale-110" />
-            <span>
-              {props.isPipelineActive
-                ? "Pipeline Running..."
-                : `Run Pipeline (${activeScopeLabel})`}
-            </span>
-          </button>
-
-          <button
-            onClick={function () {
-              props.onNavigateTab("tweets");
-            }}
-            className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-zinc-900/60 hover:bg-zinc-850 text-zinc-200 font-medium text-xs border border-zinc-800/80 hover:border-zinc-700 hover:shadow-[0_0_15px_rgba(139,92,246,0.15)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
-          >
-            <MessageSquare className="w-3.5 h-3.5 text-purple-400 transition-transform group-hover:scale-110" />
-            <span>View Tweets</span>
-            {totalTweetsCount > 0 && (
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 font-semibold">
-                {totalTweetsCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={function () {
-              props.onNavigateTab("keywords");
-            }}
-            className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-zinc-900/60 hover:bg-zinc-850 text-zinc-200 font-medium text-xs border border-zinc-800/80 hover:border-zinc-700 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
-          >
-            <Tags className="w-3.5 h-3.5 text-emerald-400 transition-transform group-hover:scale-110" />
-            <span>View Keywords</span>
-            {totalKeywordsCount > 0 && (
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">
-                {totalKeywordsCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Target Scope & Country Quick Switcher Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5 p-4 rounded-3xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-xl shadow-lg shadow-black/20 select-none">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-sky-500/10 text-sky-400 shadow-[0_0_15px_rgba(56,189,248,0.15)] shrink-0">
-            <Globe className="w-4 h-4" />
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-zinc-200">Intelligence Scope:</span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-sky-500/15 text-sky-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-              {activeScopeLabel}
-            </span>
-          </div>
-        </div>
-
-        {/* Scope Switcher Buttons */}
-        <div className="flex items-center flex-wrap gap-2">
-          {["Worldwide", "United States", "China", "Russia", "United Kingdom", "Pakistan"].map(function (countryName) {
-            const isCountryActive =
-              (countryName === "Worldwide" &&
-                (!props.selectedCountries ||
-                  props.selectedCountries.length === 0 ||
-                  (props.selectedCountries.length === 1 && props.selectedCountries[0] === "Worldwide"))) ||
-              (props.selectedCountries &&
-                props.selectedCountries.length === 1 &&
-                props.selectedCountries[0] === countryName);
-            return (
-              <button
-                key={countryName}
-                onClick={function () {
-                  props.onSelectCountryOnly(countryName);
-                }}
-                disabled={props.isPipelineActive}
-                className={
-                  "text-xs px-3.5 py-2 rounded-2xl font-medium transition-all duration-200 cursor-pointer disabled:opacity-50 " +
-                  (isCountryActive
-                    ? "bg-sky-500 text-white shadow-[0_0_18px_rgba(56,189,248,0.4)] font-semibold"
-                    : "bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800/80")
-                }
-              >
-                {countryName}
-              </button>
-            );
-          })}
-          <button
-            onClick={function () {
-              props.onNavigateTab("pipeline");
-            }}
-            className="text-xs px-3 py-2 rounded-2xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors flex items-center gap-1 cursor-pointer font-medium"
-            title="Configure all countries in Pipeline tab"
-          >
-            <span>All Countries</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-
-      {/* 4 Stat Cards with Smooth Glow and Rounded Edges */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 select-none">
+      {/* 2. Main Stat Boxes (Positioned directly under the rainbow banner) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Active Sources */}
-        <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-blue-500/30 hover:shadow-[0_0_25px_rgba(59,130,246,0.12)] transition-all duration-300 space-y-3">
+        <div className="p-5 rounded-3xl bg-gradient-to-b from-blue-500/10 via-zinc-900/60 to-zinc-900/40 hover:from-blue-500/20 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(59,130,246,0.18)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-blue-500/20 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.2)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-blue-500/20 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.25)]">
                 <Globe className="w-4 h-4" />
               </span>
               <p className="text-xs font-semibold text-zinc-300">Active Sources</p>
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-2xl font-bold text-zinc-100 font-mono">{props.activeSourcesCount}</p>
-            <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-              <div className="h-full rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ width: "85%" }}></div>
+            <p className="text-3xl font-extrabold text-zinc-100 font-mono tracking-tight">{props.activeSourcesCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+              <div className="h-full rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]" style={{ width: "85%" }}></div>
             </div>
           </div>
         </div>
 
         {/* Trends Ingested */}
-        <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-amber-500/30 hover:shadow-[0_0_25px_rgba(245,158,11,0.12)] transition-all duration-300 space-y-3">
+        <div className="p-5 rounded-3xl bg-gradient-to-b from-amber-500/10 via-zinc-900/60 to-zinc-900/40 hover:from-amber-500/20 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-500/20 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-500/20 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
                 <Flame className="w-4 h-4" />
               </span>
               <p className="text-xs font-semibold text-zinc-300">Trends Ingested</p>
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-2xl font-bold text-zinc-100 font-mono">{totalTrendsCount}</p>
-            <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-              <div className="h-full rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" style={{ width: "70%" }}></div>
+            <p className="text-3xl font-extrabold text-zinc-100 font-mono tracking-tight">{totalTrendsCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+              <div className="h-full rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]" style={{ width: "70%" }}></div>
             </div>
           </div>
         </div>
 
         {/* Tweets Mined */}
-        <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-purple-500/30 hover:shadow-[0_0_25px_rgba(139,92,246,0.12)] transition-all duration-300 space-y-3">
+        <div className="p-5 rounded-3xl bg-gradient-to-b from-purple-500/10 via-zinc-900/60 to-zinc-900/40 hover:from-purple-500/20 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(139,92,246,0.18)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.2)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.25)]">
                 <MessageSquare className="w-4 h-4" />
               </span>
               <p className="text-xs font-semibold text-zinc-300">Tweets Mined</p>
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-2xl font-bold text-zinc-100 font-mono">{totalTweetsCount}</p>
-            <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-              <div className="h-full rounded-full bg-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ width: "90%" }}></div>
+            <p className="text-3xl font-extrabold text-zinc-100 font-mono tracking-tight">{totalTweetsCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+              <div className="h-full rounded-full bg-purple-500 shadow-[0_0_10px_rgba(139,92,246,0.8)]" style={{ width: "90%" }}></div>
             </div>
           </div>
         </div>
 
         {/* Synthesized Keywords */}
-        <div className="p-5 rounded-3xl bg-zinc-900/40 hover:bg-zinc-850/60 border border-zinc-800/80 hover:border-emerald-500/30 hover:shadow-[0_0_25px_rgba(16,185,129,0.12)] transition-all duration-300 space-y-3">
+        <div className="p-5 rounded-3xl bg-gradient-to-b from-emerald-500/10 via-zinc-900/60 to-zinc-900/40 hover:from-emerald-500/20 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(16,185,129,0.18)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
                 <Tags className="w-4 h-4" />
               </span>
               <p className="text-xs font-semibold text-zinc-300">Synthesized Keywords</p>
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-2xl font-bold text-zinc-100 font-mono">{totalKeywordsCount}</p>
-            <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-              <div className="h-full rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" style={{ width: "100%" }}></div>
+            <p className="text-3xl font-extrabold text-zinc-100 font-mono tracking-tight">{totalKeywordsCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+              <div className="h-full rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" style={{ width: "100%" }}></div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* --------------------------------------------------------------------- */}
-      {/* PROMINENT SECTION: Top 10 Trending Hot Topics (Curated Cross-Outlet)  */}
-      {/* --------------------------------------------------------------------- */}
-      <div className="w-full rounded-3xl bg-zinc-900/50 border border-zinc-800/80 p-6 backdrop-blur-xl shadow-xl shadow-black/25 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
+      {/* 3. Intelligence Scope Setter & Action Controls Strip (NO border box completely) */}
+      <div className="w-full rounded-3xl bg-zinc-900/40 p-5 backdrop-blur-xl shadow-xl shadow-black/20 space-y-4">
+        {/* Top Row: Scope Selector with Country Pills */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 shadow-[0_0_18px_rgba(245,158,11,0.2)]">
+            <div className="p-2.5 rounded-2xl bg-sky-500/15 text-sky-400 shadow-[0_0_15px_rgba(56,189,248,0.2)] shrink-0">
+              <Globe className="w-4 h-4" />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-zinc-300">Intelligence Scope:</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-500/15 text-sky-300">
+                <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                {activeScopeLabel}
+              </span>
+            </div>
+          </div>
+
+          {/* Scope Switcher Buttons */}
+          <div className="flex items-center flex-wrap gap-2">
+            {["Worldwide", "United States", "China", "Russia", "United Kingdom", "Pakistan"].map(function (countryName) {
+              const isCountryActive =
+                (countryName === "Worldwide" &&
+                  (!props.selectedCountries ||
+                    props.selectedCountries.length === 0 ||
+                    (props.selectedCountries.length === 1 && props.selectedCountries[0] === "Worldwide"))) ||
+                (props.selectedCountries &&
+                  props.selectedCountries.length === 1 &&
+                  props.selectedCountries[0] === countryName);
+              return (
+                <button
+                  key={countryName}
+                  onClick={function () {
+                    props.onSelectCountryOnly(countryName);
+                  }}
+                  disabled={props.isPipelineActive}
+                  className={
+                    "text-xs px-3.5 py-2 rounded-2xl font-medium transition-all duration-200 cursor-pointer disabled:opacity-50 " +
+                    (isCountryActive
+                      ? "bg-sky-500 text-white shadow-[0_0_18px_rgba(56,189,248,0.4)] font-semibold"
+                      : "bg-zinc-850/80 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200")
+                  }
+                >
+                  {countryName}
+                </button>
+              );
+            })}
+            <button
+              onClick={function () {
+                props.onNavigateTab("pipeline");
+              }}
+              className="text-xs px-3 py-2 rounded-2xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors flex items-center gap-1 cursor-pointer font-medium"
+              title="Configure all countries in Pipeline tab"
+            >
+              <span>All Countries</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom Row: Unified Controls (Run Pipeline, View Tweets, View Keywords, Clear Stored Records) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800/40">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={function () {
+                if (window.confirm("Are you sure you want to clear all stored intelligence records? This will reset all counts and start completely fresh.")) {
+                  props.onClearDatabase();
+                }
+              }}
+              disabled={props.isPipelineActive}
+              className="group inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-medium text-xs shadow-md hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40"
+              title="Clear all stored intelligence runs and reset dashboard stats"
+            >
+              <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
+              <span>Clear Stored Records</span>
+            </button>
+          </div>
+
+          <div className="flex items-center flex-wrap gap-2.5">
+            <button
+              onClick={function () {
+                if (props.selectedCountries && props.selectedCountries.length > 0) {
+                  props.onStartPipeline();
+                } else {
+                  props.onNavigateTab("pipeline");
+                }
+              }}
+              disabled={props.isPipelineActive}
+              className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-50"
+            >
+              <Play className="w-3.5 h-3.5 fill-current transition-transform group-hover:scale-110" />
+              <span>
+                {props.isPipelineActive
+                  ? "Pipeline Running..."
+                  : `Run Pipeline (${activeScopeLabel})`}
+              </span>
+            </button>
+
+            <button
+              onClick={function () {
+                props.onNavigateTab("tweets");
+              }}
+              className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-zinc-850/80 hover:bg-zinc-800 text-zinc-200 font-medium text-xs shadow-md hover:shadow-[0_0_15px_rgba(139,92,246,0.18)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-purple-400 transition-transform group-hover:scale-110" />
+              <span>View Tweets</span>
+              {totalTweetsCount > 0 && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 font-semibold">
+                  {totalTweetsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={function () {
+                props.onNavigateTab("keywords");
+              }}
+              className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-zinc-850/80 hover:bg-zinc-800 text-zinc-200 font-medium text-xs shadow-md hover:shadow-[0_0_15px_rgba(16,185,129,0.18)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
+            >
+              <Tags className="w-3.5 h-3.5 text-emerald-400 transition-transform group-hover:scale-110" />
+              <span>View Keywords</span>
+              {totalKeywordsCount > 0 && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">
+                  {totalKeywordsCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Top 10 Trending Hot Topics (Podium Showcase for Top 3, NO outer border box) */}
+      <div className="w-full rounded-3xl bg-zinc-900/40 p-6 backdrop-blur-xl shadow-2xl shadow-black/30 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-amber-500/15 text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
               <Flame className="w-5 h-5" />
             </div>
             <div>
@@ -565,13 +693,27 @@ export function DashboardPage(props: DashboardPageProps) {
           </button>
         </div>
 
-        {/* 10 Curated Cards in 2-Column Responsive Grid */}
-        {renderedHotTopicCards.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
-            {renderedHotTopicCards}
+        {/* Podium Row for Top 3 Stories */}
+        {renderedPodiumCards.length > 0 ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4.5">
+              {renderedPodiumCards}
+            </div>
+
+            {/* Remaining Ranks 4 to 10 */}
+            {renderedRemainingHotTopicCards.length > 0 && (
+              <div className="pt-3 space-y-3">
+                <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">
+                  Additional Trending Stories (Ranks 4–10)
+                </span>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+                  {renderedRemainingHotTopicCards}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="p-12 text-center text-xs text-zinc-500 bg-zinc-900/30 rounded-2xl border border-zinc-800 space-y-2">
+          <div className="p-12 text-center text-xs text-zinc-500 bg-zinc-900/30 rounded-2xl space-y-2">
             <Newspaper className="w-8 h-8 text-zinc-600 mx-auto" />
             <p className="text-zinc-300 font-semibold">No Hot Topics Available Yet</p>
             <p className="text-zinc-500">Run the pipeline to ingest headlines from Defense News, The News International, and global wire feeds.</p>
@@ -579,11 +721,11 @@ export function DashboardPage(props: DashboardPageProps) {
         )}
       </div>
 
-      {/* Full-Width Latest Intelligence Ingestion Snapshot */}
-      <div className="w-full rounded-3xl bg-zinc-900/40 border border-zinc-800/80 p-6 backdrop-blur-xl shadow-lg space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
+      {/* 5. Latest Intelligence Run Details & Prominent Keywords Grid (NO outer border box) */}
+      <div className="w-full rounded-3xl bg-zinc-900/40 p-6 backdrop-blur-xl shadow-2xl shadow-black/30 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+            <div className="w-9 h-9 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shadow-[0_0_18px_rgba(59,130,246,0.2)]">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
@@ -619,39 +761,37 @@ export function DashboardPage(props: DashboardPageProps) {
           </div>
         </div>
 
-        {/* Extracted Keywords Preview */}
-        <div className="space-y-3">
+        {/* Prominent Keywords Grid */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-              Strategic Synthesized Keywords Preview
-            </span>
+            <div className="flex items-center gap-2">
+              <Tags className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+                Keywords
+              </span>
+            </div>
             <button
               onClick={() => props.onNavigateTab("keywords")}
-              className="text-[11px] text-emerald-400 hover:underline font-medium cursor-pointer"
+              className="text-[11px] text-emerald-400 hover:text-emerald-300 hover:underline font-medium cursor-pointer flex items-center gap-1"
             >
-              Inspect all 150 keywords →
+              <span>Inspect all keywords</span>
+              <ArrowRight className="w-3 h-3" />
             </button>
           </div>
-          {sampleKeywordTerms.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {sampleKeywordTerms.map((term, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/15 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.08)]"
-                >
-                  {term}
-                </span>
-              ))}
+
+          {renderedProminentKeywordCards.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
+              {renderedProminentKeywordCards}
             </div>
           ) : (
-            <p className="text-xs text-zinc-500 italic">
+            <p className="text-xs text-zinc-500 italic py-4">
               Run the intelligence pipeline to generate strategic keywords via Strategic AI Engine.
             </p>
           )}
         </div>
       </div>
 
-      {/* Sleek Navigation Cards with Rounded Edges & Smooth Glow (Outline removed) */}
+      {/* 6. Sleek Navigation Cards with Rounded Edges & Smooth Glow */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 select-none">
         <button
           onClick={() => props.onNavigateTab("trends")}

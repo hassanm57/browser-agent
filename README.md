@@ -15,8 +15,58 @@ Included is a modern **FastAPI** backend with real-time **WebSocket telemetry** 
 
 ---
 
+## 🔌 Core API Endpoints
+
+Quick REST reference to monitor pipeline status, trigger/cancel runs, retrieve curated top trends, and fetch synthesized intelligence keywords:
+
+### 1. Top Trends
+- **`GET /api/trends`** (aliases: `/api/trends/top`, `/api/pipeline/trends`)
+  - **Query parameters**: `limit` (integer, default: `10`, range: 1–50)
+  - **Description**: Returns curated top news stories categorized across Defense & Military, International / Regional, and Global Intel.
+  ```bash
+  curl http://localhost:8000/api/trends
+  curl "http://localhost:8000/api/trends?limit=5"
+  ```
+
+### 2. Synthesized Keywords
+- **`GET /api/keywords`** (alias: `/api/pipeline/keywords`)
+  - **Description**: Returns full structured JSON containing synthesized topics, boolean queries, category tags, terms, and sample tweets:
+    ```bash
+    curl http://localhost:8000/api/keywords
+    ```
+- **`GET /api/keywords?flat=true`**
+  - **Description**: Returns a clean flat array containing all unique keyword strings for simplified ingestion:
+    ```bash
+    curl "http://localhost:8000/api/keywords?flat=true"
+    ```
+- **`GET /api/keywords/csv`**
+  - **Description**: Direct CSV export formatted as `Topic Label,Category,Keyword Term` for spreadsheets:
+    ```bash
+    curl http://localhost:8000/api/keywords/csv -o keywords.csv
+    ```
+
+### 3. Pipeline Orchestration & Status
+- **`GET /api/pipeline/status`** (alias: `/api/status`)
+  - **Description**: Check whether the pipeline is currently running, current phase/step, progress percentage, and latest run record:
+    ```bash
+    curl http://localhost:8000/api/pipeline/status
+    ```
+- **`POST /api/pipeline/start`**
+  - **Description**: Trigger the intelligence gathering pipeline. Accepts an empty POST request or optional payload:
+    ```bash
+    curl -X POST http://localhost:8000/api/pipeline/start
+    ```
+- **`POST /api/pipeline/cancel`**
+  - **Description**: Abort and cancel active pipeline execution:
+    ```bash
+    curl -X POST http://localhost:8000/api/pipeline/cancel
+    ```
+
+---
+
 ## 📑 Table of Contents
 
+- [Core API Endpoints](#-core-api-endpoints)
 - [Key Capabilities](#-key-capabilities)
 - [System Architecture](#-system-architecture)
 - [Repository Structure](#-repository-structure)
@@ -272,6 +322,12 @@ The engine executes a **fail-safe hybrid workflow**:
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `GET` | `/api/health` | Service health status |
+| `GET` | `/api/pipeline/status` | Live pipeline progress, phase, and latest run record |
+| `POST` | `/api/pipeline/start` | Trigger pipeline execution via REST |
+| `POST` | `/api/pipeline/cancel` | Abort a running pipeline job |
+| `GET` | `/api/trends` | Curated top headlines (Defense, International, Global) |
+| `GET` | `/api/keywords` | Synthesized intelligence keywords & boolean queries |
+| `GET` | `/api/keywords/csv` | Download keywords directly as standard CSV format |
 | `GET` | `/api/countries` | List of target countries and tier rankings |
 | `GET` | `/api/sources` | Configured intelligence news and RSS sources |
 | `POST` | `/api/sources` | Add a new news outlet or RSS feed |
@@ -285,8 +341,6 @@ The engine executes a **fail-safe hybrid workflow**:
 | `GET` | `/api/runs/{id}/export` | Export keywords as `json` or `csv` |
 | `GET` | `/api/settings` | Read application settings from SQLite |
 | `PUT` | `/api/settings` | Update settings (LLM URL, model, browser flags) |
-| `POST` | `/api/pipeline/start` | Trigger pipeline execution via REST |
-| `POST` | `/api/pipeline/cancel` | Abort a running pipeline job |
 
 ### WebSocket Protocol (`ws://localhost:8000/ws/pipeline`)
 

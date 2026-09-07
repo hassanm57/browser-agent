@@ -347,12 +347,12 @@ export function DashboardPage(props: DashboardPageProps) {
       renderedPodiumCards.push(
         <div
           key={item.source_name + "_podium_" + rankNumber}
-          className="group relative flex flex-col justify-between p-4.5 rounded-3xl bg-gradient-to-b from-orange-500/25 via-amber-950/40 to-zinc-950/90 hover:from-orange-500/35 shadow-xl shadow-orange-500/10 hover:shadow-[0_0_35px_rgba(249,115,22,0.25)] transition-all duration-300 gap-3.5"
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-orange-500/25 via-amber-950/40 to-zinc-950/90 hover:from-orange-500/35 shadow-xl shadow-orange-500/10 hover:shadow-[0_0_35px_rgba(249,115,22,0.25)] transition-all duration-300 gap-4"
         >
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 text-zinc-950 font-black text-xs flex items-center justify-center shadow-[0_0_18px_rgba(249,115,22,0.6)] shrink-0">
+                <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_18px_rgba(249,115,22,0.6)] shrink-0">
                   1
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-300 bg-orange-500/20 px-2.5 py-0.5 rounded-full">
@@ -365,16 +365,16 @@ export function DashboardPage(props: DashboardPageProps) {
                 target="_blank"
                 rel="noreferrer"
                 title={"Visit " + item.source_name}
-                className="p-1.5 rounded-xl text-orange-400/80 hover:text-orange-200 hover:bg-orange-500/20 transition-all shrink-0 cursor-pointer"
+                className="p-2 rounded-xl text-orange-400/80 hover:text-orange-200 hover:bg-orange-500/20 transition-all shrink-0 cursor-pointer"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4" />
               </a>
             </div>
-            <p className="text-xs sm:text-sm font-bold text-zinc-100 group-hover:text-orange-300 transition-colors leading-relaxed line-clamp-3">
+            <p className="text-sm font-bold text-zinc-100 group-hover:text-orange-300 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
-          <div className="pt-2 border-t border-orange-500/20 flex items-center justify-between gap-2 text-[11px]">
+          <div className="pt-2.5 border-t border-orange-500/20 flex items-center justify-between gap-2 text-[11px]">
             <a
               href={item.source_url}
               target="_blank"
@@ -382,7 +382,7 @@ export function DashboardPage(props: DashboardPageProps) {
               title={"Visit source: " + item.source_name}
               className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-orange-300 drop-shadow-[0_0_8px_rgba(249,115,22,0.7)] hover:text-orange-100 hover:underline transition-all min-w-0"
             >
-              <Globe className="w-3 h-3 text-orange-400 shrink-0" />
+              <Globe className="w-3.5 h-3.5 text-orange-400 shrink-0" />
               <span className="truncate">{item.source_name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
             </a>
@@ -394,12 +394,12 @@ export function DashboardPage(props: DashboardPageProps) {
       renderedPodiumCards.push(
         <div
           key={item.source_name + "_podium_" + rankNumber}
-          className="group relative flex flex-col justify-between p-4.5 rounded-3xl bg-gradient-to-b from-amber-500/20 via-yellow-950/30 to-zinc-950/90 hover:from-amber-500/30 shadow-xl shadow-amber-500/10 hover:shadow-[0_0_30px_rgba(245,158,11,0.22)] transition-all duration-300 gap-3.5"
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-amber-500/20 via-yellow-950/30 to-zinc-950/90 hover:from-amber-500/30 shadow-xl shadow-amber-500/10 hover:shadow-[0_0_30px_rgba(245,158,11,0.22)] transition-all duration-300 gap-4"
         >
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-2xl bg-gradient-to-br from-yellow-400 via-amber-400 to-amber-500 text-zinc-950 font-black text-xs flex items-center justify-center shadow-[0_0_16px_rgba(245,158,11,0.5)] shrink-0">
+                <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-yellow-400 via-amber-400 to-amber-500 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_16px_rgba(245,158,11,0.5)] shrink-0">
                   2
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
@@ -412,16 +412,16 @@ export function DashboardPage(props: DashboardPageProps) {
                 target="_blank"
                 rel="noreferrer"
                 title={"Visit " + item.source_name}
-                className="p-1.5 rounded-xl text-amber-400/80 hover:text-amber-200 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer"
+                className="p-2 rounded-xl text-amber-400/80 hover:text-amber-200 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4" />
               </a>
             </div>
-            <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-3">
+            <p className="text-sm font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
-          <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between gap-2 text-[11px]">
+          <div className="pt-2.5 border-t border-amber-500/20 flex items-center justify-between gap-2 text-[11px]">
             <a
               href={item.source_url}
               target="_blank"
@@ -429,7 +429,7 @@ export function DashboardPage(props: DashboardPageProps) {
               title={"Visit source: " + item.source_name}
               className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] hover:text-amber-100 hover:underline transition-all min-w-0"
             >
-              <Globe className="w-3 h-3 text-amber-400 shrink-0" />
+              <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span className="truncate">{item.source_name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
             </a>
@@ -441,12 +441,12 @@ export function DashboardPage(props: DashboardPageProps) {
       renderedPodiumCards.push(
         <div
           key={item.source_name + "_podium_" + rankNumber}
-          className="group relative flex flex-col justify-between p-4.5 rounded-3xl bg-gradient-to-b from-yellow-300/15 via-zinc-900/80 to-zinc-950/90 hover:from-yellow-300/25 shadow-xl shadow-yellow-300/5 hover:shadow-[0_0_25px_rgba(250,204,21,0.2)] transition-all duration-300 gap-3.5"
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-yellow-300/15 via-zinc-900/80 to-zinc-950/90 hover:from-yellow-300/25 shadow-xl shadow-yellow-300/5 hover:shadow-[0_0_25px_rgba(250,204,21,0.2)] transition-all duration-300 gap-4"
         >
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 text-zinc-950 font-black text-xs flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.4)] shrink-0">
+                <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.4)] shrink-0">
                   3
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-yellow-200 bg-yellow-300/15 px-2.5 py-0.5 rounded-full">
@@ -459,16 +459,16 @@ export function DashboardPage(props: DashboardPageProps) {
                 target="_blank"
                 rel="noreferrer"
                 title={"Visit " + item.source_name}
-                className="p-1.5 rounded-xl text-yellow-300/80 hover:text-yellow-100 hover:bg-yellow-300/20 transition-all shrink-0 cursor-pointer"
+                className="p-2 rounded-xl text-yellow-300/80 hover:text-yellow-100 hover:bg-yellow-300/20 transition-all shrink-0 cursor-pointer"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4" />
               </a>
             </div>
-            <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-yellow-200 transition-colors leading-relaxed line-clamp-3">
+            <p className="text-sm font-semibold text-zinc-100 group-hover:text-yellow-200 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
-          <div className="pt-2 border-t border-yellow-400/20 flex items-center justify-between gap-2 text-[11px]">
+          <div className="pt-2.5 border-t border-yellow-400/20 flex items-center justify-between gap-2 text-[11px]">
             <a
               href={item.source_url}
               target="_blank"
@@ -476,7 +476,7 @@ export function DashboardPage(props: DashboardPageProps) {
               title={"Visit source: " + item.source_name}
               className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-yellow-200 drop-shadow-[0_0_8px_rgba(250,204,21,0.7)] hover:text-yellow-100 hover:underline transition-all min-w-0"
             >
-              <Globe className="w-3 h-3 text-yellow-300 shrink-0" />
+              <Globe className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
               <span className="truncate">{item.source_name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
             </a>
@@ -840,10 +840,10 @@ export function DashboardPage(props: DashboardPageProps) {
           </button>
         </div>
 
-        {/* Podium Row for Top 3 Stories (Restrained, focused width) */}
+        {/* Podium Row for Top 3 Stories - Spaced evenly across full width */}
         {renderedPodiumCards.length > 0 ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto w-full">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
               {renderedPodiumCards}
             </div>
 

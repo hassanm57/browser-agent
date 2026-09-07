@@ -62,9 +62,8 @@ async def run_single_country_pipeline(
         else:
             country_slug_name = target_country_name.strip().lower().replace(" ", "-")
 
-    country_display_label = "Worldwide" if len(country_slug_name) == 0 else f"{target_country_name} (Slug: {country_slug_name})"
-    await log_and_record("STEP", f"Starting intelligence pipeline for target: {country_display_label}")
-    await progress_callback_function("init", 1, 5, f"Initializing pipeline for {target_country_name}...", target_country_name)
+    await log_and_record("STEP", "Starting intelligence pipeline...")
+    await progress_callback_function("init", 1, 5, "Initializing intelligence pipeline...", "")
 
     # Check for user cancellation
     if cancellation_event.is_set():

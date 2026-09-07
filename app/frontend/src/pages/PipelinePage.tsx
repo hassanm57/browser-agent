@@ -1,16 +1,12 @@
-import { useState } from "react";
 import type { CountryItem, PipelineRunRecord } from "../types";
 import {
   Play,
   Square,
-  CheckSquare,
-  Square as EmptySquare,
   Globe,
   Loader2,
   AlertCircle,
   CheckCircle2,
   Clock,
-  Search,
   Flame,
   Radio,
   Cpu,
@@ -40,11 +36,11 @@ export function formatPipelineDate(dateString?: string | null): string {
 }
 
 interface PipelinePageProps {
-  availableCountries: CountryItem[];
-  selectedCountries: string[];
-  onToggleCountry: (countryName: string) => void;
-  onSelectAllCountries: () => void;
-  onDeselectAllCountries: () => void;
+  availableCountries?: CountryItem[];
+  selectedCountries?: string[];
+  onToggleCountry?: (countryName: string) => void;
+  onSelectAllCountries?: () => void;
+  onDeselectAllCountries?: () => void;
   pipelineStatus: "idle" | "running" | "completed" | "cancelled" | "error";
   currentPipelineStepMessage: string;
   pipelineProgressPercentage: number;
@@ -57,7 +53,6 @@ interface PipelinePageProps {
 }
 
 export function PipelinePage(props: PipelinePageProps) {
-  const [countrySearchFilter, setCountrySearchFilter] = useState("");
 
   const isPipelineActive = props.pipelineStatus === "running";
   const recentRuns = props.recentRunsList || [];
@@ -84,104 +79,6 @@ export function PipelinePage(props: PipelinePageProps) {
   }
 
   const activePhaseIndex = getPhaseStepIndex(props.currentPipelinePhase);
-
-  // Filter countries using traditional for loop
-  const filteredCountriesList: CountryItem[] = [];
-  const normalizedSearch = countrySearchFilter.trim().toLowerCase();
-
-  for (let countryIndex = 0; countryIndex < props.availableCountries.length; countryIndex++) {
-    const country = props.availableCountries[countryIndex];
-    const countrySlugValue = country.slug !== undefined ? country.slug : (country.trends24_slug || "");
-    if (
-      normalizedSearch.length === 0 ||
-      country.name.toLowerCase().includes(normalizedSearch) ||
-      countrySlugValue.toLowerCase().includes(normalizedSearch) ||
-      country.tier.toLowerCase().includes(normalizedSearch)
-    ) {
-      filteredCountriesList.push(country);
-    }
-  }
-
-  // Render country selection cards using traditional for loop
-  const renderedCountryCards = [];
-  for (let countryIndex = 0; countryIndex < filteredCountriesList.length; countryIndex++) {
-    const country = filteredCountriesList[countryIndex];
-    
-    // Check if country is currently selected using simple loop
-    let isSelected = false;
-    for (let selectedIndex = 0; selectedIndex < props.selectedCountries.length; selectedIndex++) {
-      if (props.selectedCountries[selectedIndex] === country.name) {
-        isSelected = true;
-        break;
-      }
-    }
-
-    const isThisCountryActive = isPipelineActive && props.activePipelineCountry === country.name;
-
-    let tierBadgeClass = "bg-muted/60 text-muted-foreground";
-    if (country.tier === "global") {
-      tierBadgeClass = "bg-sky-500/10 text-sky-400 font-medium border border-sky-500/30";
-    } else if (country.is_home) {
-      tierBadgeClass = "bg-emerald-500/10 text-emerald-400 font-medium border border-emerald-500/20";
-    } else if (country.tier === "UN P5") {
-      tierBadgeClass = "bg-blue-500/10 text-blue-400 font-medium border border-blue-500/20";
-    } else if (country.tier === "strategic") {
-      tierBadgeClass = "bg-purple-500/10 text-purple-400 font-medium border border-purple-500/20";
-    }
-
-    renderedCountryCards.push(
-      <div
-        key={country.name}
-        onClick={function () {
-          if (!isPipelineActive) {
-            props.onToggleCountry(country.name);
-          }
-        }}
-        className={
-          "p-3.5 rounded-xl border transition-all duration-200 select-none relative " +
-          (isThisCountryActive
-            ? "bg-primary/10 border-primary ring-2 ring-primary/40 shadow-md shadow-primary/10 animate-pulse"
-            : isSelected
-            ? "bg-primary/5 border-primary/40 shadow-xs text-foreground cursor-pointer hover:border-primary/60"
-            : "bg-card/40 border-border/50 hover:bg-card hover:border-border text-muted-foreground cursor-pointer")
-        }
-      >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <div className="text-muted-foreground">
-              {isSelected ? (
-                <CheckSquare className="w-4 h-4 text-primary" strokeWidth={2} />
-              ) : (
-                <EmptySquare className="w-4 h-4 text-muted-foreground/60" strokeWidth={1.75} />
-              )}
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                <span>{country.name}</span>
-                {isThisCountryActive && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] bg-primary text-primary-foreground font-mono font-medium">
-                    <Loader2 className="w-2.5 h-2.5 animate-spin" /> Mining
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] text-muted-foreground/80 font-mono">
-                {country.slug ? "/" + country.slug : (country.trends24_slug ? "/" + country.trends24_slug : "/global")}
-              </span>
-            </div>
-          </div>
-
-          <span
-            className={
-              "text-[9px] font-semibold px-2 py-0.5 rounded-full tracking-wide uppercase " +
-              tierBadgeClass
-            }
-          >
-            {country.tier}
-          </span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -235,18 +132,10 @@ export function PipelinePage(props: PipelinePageProps) {
           ) : (
             <button
               onClick={props.onStartPipeline}
-              disabled={props.selectedCountries.length === 0}
-              className={
-                "flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all " +
-                (props.selectedCountries.length > 0
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer"
-                  : "bg-muted text-muted-foreground cursor-not-allowed")
-              }
+              className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span>
-                Run Pipeline ({props.selectedCountries.length} {props.selectedCountries.length === 1 ? "Country" : "Countries"})
-              </span>
+              <span>Run Pipeline</span>
             </button>
           )}
         </div>
@@ -269,11 +158,6 @@ export function PipelinePage(props: PipelinePageProps) {
             <span className="text-xs font-medium text-foreground">
               Status: <span className="capitalize">{props.pipelineStatus}</span>
             </span>
-            {props.activePipelineCountry && isPipelineActive && (
-              <span className="text-xs text-primary font-mono font-medium">
-                • Target: {props.activePipelineCountry}
-              </span>
-            )}
           </div>
 
           <span className="text-xs font-mono font-medium text-primary">
@@ -341,65 +225,6 @@ export function PipelinePage(props: PipelinePageProps) {
         )}
       </div>
 
-      {/* Target Country Selection Grid */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <span>Target Countries</span>
-              <span className="text-xs font-mono text-muted-foreground font-normal">
-                ({props.selectedCountries.length} of {props.availableCountries.length} selected)
-              </span>
-            </h3>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Search Country Input */}
-            <div className="relative flex items-center">
-              <Search className="w-3 h-3 text-muted-foreground absolute left-2.5 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Filter countries..."
-                value={countrySearchFilter}
-                onChange={(e) => setCountrySearchFilter(e.target.value)}
-                disabled={isPipelineActive}
-                className="h-7 w-36 pl-8 pr-2.5 text-xs rounded-lg bg-card border border-border/60 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-all disabled:opacity-50"
-              />
-            </div>
-
-            <button
-              onClick={function () {
-                props.onDeselectAllCountries();
-                props.onToggleCountry("Worldwide");
-              }}
-              disabled={isPipelineActive}
-              className="text-[11px] px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-medium transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1"
-            >
-              <Globe className="w-3 h-3" />
-              <span>Worldwide Only</span>
-            </button>
-            <button
-              onClick={props.onSelectAllCountries}
-              disabled={isPipelineActive}
-              className="text-[11px] px-2.5 py-1 rounded-lg bg-card hover:bg-muted text-foreground border border-border/60 font-medium transition-colors cursor-pointer disabled:opacity-50"
-            >
-              Select All
-            </button>
-            <button
-              onClick={props.onDeselectAllCountries}
-              disabled={isPipelineActive}
-              className="text-[11px] px-2.5 py-1 rounded-lg bg-card hover:bg-muted text-muted-foreground border border-border/60 font-medium transition-colors cursor-pointer disabled:opacity-50"
-            >
-              Deselect All
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {renderedCountryCards}
-        </div>
-      </div>
-
       {/* Old Pipelines Execution History */}
       {recentRuns.length > 0 && (
         <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-sm space-y-3 select-none">
@@ -423,7 +248,7 @@ export function PipelinePage(props: PipelinePageProps) {
               >
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-[11px] text-muted-foreground/70">#{run.id}</span>
-                  <span className="font-semibold text-foreground">{run.country_name}</span>
+                  <span className="font-semibold text-foreground">Intelligence Run</span>
                   <span className="text-muted-foreground flex items-center gap-1">
                     <span>Ran on</span>
                     <strong className="text-foreground/90 font-medium font-mono">

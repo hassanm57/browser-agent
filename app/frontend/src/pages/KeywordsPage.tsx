@@ -176,7 +176,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "keywords_" + (props.keywordsData?.country || "export") + ".json";
+    link.download = "keywords_export.json";
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -198,7 +198,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "keywords_" + (props.keywordsData?.country || "export") + ".csv";
+    link.download = "keywords_export.csv";
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -422,7 +422,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-zinc-800/80">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-zinc-100 flex items-center gap-2">
-            <span>Synthesized Keywords — {props.keywordsData.country}</span>
+            <span>Synthesized Keywords</span>
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
             {topicsList.length} topics generated · {totalTermsSum} total keywords. Click any chip to edit inline.

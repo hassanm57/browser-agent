@@ -1080,14 +1080,14 @@ def synthesize_topics_from_news_and_trends(
 
     full_intel_digest_string = "\n".join(digest_sections_list)
 
-    system_and_user_prompt = f"""You are the Chief Worldwide Geopolitical & Defense Intelligence Specialist and Social Search Keyword Engineer.
-Analyze the following multi-source news and intelligence dossier for the target scope: {target_country_name} (Worldwide & International Strategic Scope).
+    system_and_user_prompt = f"""You are the Chief Geopolitical & Defense Intelligence Specialist and Social Search Keyword Engineer.
+Analyze the following multi-source news and intelligence dossier:
 
 INTELLIGENCE DOSSIER (GLOBAL HEADLINES, RSS FEEDS, VERIFIED DEFENSE CORRESPONDENTS & OSINT TWEETS, AND LIVE X EXPLORE TOPICS):
 {full_intel_digest_string}
 
 CORE MISSION OBJECTIVES:
-The primary directive is to synthesize hot, breaking, and critically important WORLDWIDE news topics and generate actionable keyword tracking matrices and precise Boolean search queries.
+The primary directive is to synthesize hot, breaking, and critically important defense and geopolitical news topics and generate actionable keyword tracking matrices and precise Boolean search queries.
 The topics MUST correlate with both the authoritative news headlines and the exclusive reporting/scoops from the verified defense correspondents and OSINT monitoring handles (including Pentagon correspondents Idrees Ali and Phil Stewart, BBC defense correspondent Jonathan Beale, Politico Europe defense reporter Jacopo Barigazzi, and OSINTdefender). Give high importance and weight to breaking defense developments, troop reviews, conflict escalation, military alliances, and defense pacts highlighted by these sources. Discard unrelated social gossip, memes, domestic partisan squabbles, entertainment, and sports. Focus on high-impact global coverage across Europe, North America, the Indo-Pacific, Middle East, and Eurasia.
 
 TOPIC SELECTION DIRECTIVES - STRICTLY PRIORITIZE:

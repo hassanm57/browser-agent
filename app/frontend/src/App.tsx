@@ -344,14 +344,14 @@ export default function App() {
       setPipelineStatus("running");
       setPipelineProgressPercentage(5);
       setCurrentPipelinePhase("init");
-      setActivePipelineCountry(selectedCountries.length > 0 ? selectedCountries[0] : "Worldwide");
+      setActivePipelineCountry(null);
       setCurrentPipelineStepMessage("Initializing browser and sources scraper...");
       setIsLogPanelOpen(true); // Open live log drawer so user sees everything transparently
 
       websocketRef.current.send(
         JSON.stringify({
           action: "start",
-          countries: selectedCountries
+          countries: ["Worldwide"]
         })
       );
     } else {
@@ -636,7 +636,7 @@ export default function App() {
   // Search items list for ⌘K quick jumps
   const searchablePages = [
     { id: "dashboard", label: "Dashboard", desc: "Overview stats and recent pipeline runs" },
-    { id: "pipeline", label: "Run Pipeline", desc: "Select countries and trigger autonomous scraping" },
+    { id: "pipeline", label: "Run Pipeline", desc: "Trigger autonomous intelligence pipeline" },
     { id: "trends", label: "Trending Topics", desc: "Hot news headlines and X.com explore trends" },
     { id: "headlines", label: "News Headlines", desc: "Ingested news headlines across all configured sources" },
     { id: "tweets", label: "Extracted Tweets", desc: "Live tweets mined directly from X.com search timelines" },
@@ -723,25 +723,6 @@ export default function App() {
               <kbd className="h-4 px-1 text-[10px] font-mono text-muted-foreground/60 bg-background/50 border border-border/50 rounded">
                 ⌘K
               </kbd>
-            </button>
-
-            {/* Active Intelligence Scope Badge */}
-            <button
-              onClick={function () {
-                setCurrentActiveTab("pipeline");
-              }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium tracking-wide bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 transition-all cursor-pointer"
-              title="Click to view or change country scope"
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>
-                Scope:{" "}
-                {selectedCountries.length === 0
-                  ? "Worldwide"
-                  : selectedCountries.length === 1
-                  ? selectedCountries[0]
-                  : `${selectedCountries.length} Countries`}
-              </span>
             </button>
 
             {/* Run status badge */}

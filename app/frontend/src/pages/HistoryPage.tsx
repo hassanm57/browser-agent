@@ -37,7 +37,6 @@ export function HistoryPage(props: HistoryPageProps) {
         }
       >
         <td className="py-3 px-4 font-mono text-zinc-400">#{runItem.id}</td>
-        <td className="py-3 px-4 font-semibold text-zinc-200">{runItem.country_name}</td>
         <td className="py-3 px-4">
           <span
             className={
@@ -105,7 +104,6 @@ export function HistoryPage(props: HistoryPageProps) {
             <thead>
               <tr className="border-b border-zinc-800/80 bg-zinc-950/60 text-[11px] font-semibold text-zinc-400">
                 <th className="py-3 px-4">Run ID</th>
-                <th className="py-3 px-4">Country</th>
                 <th className="py-3 px-4">Execution Status</th>
                 <th className="py-3 px-4">Started At</th>
                 <th className="py-3 px-4">Finished At</th>

@@ -272,7 +272,7 @@ export function TrendsPage(props: TrendsPageProps) {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-zinc-800/80">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-zinc-100 flex items-center gap-2">
-            <span>Trending Topics & Hot News — {props.rawSourcesData.country}</span>
+            <span>Trending Topics & Hot News</span>
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
             Latest hot news headlines extracted from verified news sources paired with live X.com explore trends.

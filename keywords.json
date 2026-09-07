@@ -1,7 +1,266 @@
 {
-  "generated_at": null,
+  "generated_at": "2026-09-07T13:06:19.472781",
   "country": "Worldwide",
-  "sources_consulted": [],
-  "total_topics": 0,
-  "topics": []
+  "sources_consulted": [
+    "x.com_native_explore_and_tweets",
+    "Dawn News",
+    "The Express Tribune",
+    "The News International World",
+    "Defense News RSS",
+    "Breaking Defense RSS",
+    "Foreign Affairs Defense & Military",
+    "Foreign Affairs Nuclear Proliferation",
+    "Foreign Affairs War & Strategy",
+    "BBC World News Wire RSS",
+    "Defense One Intelligence & Tech",
+    "Janes Defence News",
+    "Reuters World News",
+    "IISS Defence & Military Analysis",
+    "IISS Nuclear Arms Control",
+    "IISS Strategic Intelligence",
+    "CSIS Strategic & International Studies",
+    "Atlantic Council Geopolitics & Defense",
+    "Idrees Ali (Reuters Pentagon)",
+    "Phil Stewart (Reuters Defense)",
+    "Jacopo Barigazzi (Politico Defense)",
+    "Jonathan Beale (BBC Defense)",
+    "OSINTdefender (Global Conflicts)"
+  ],
+  "total_topics": 10,
+  "topics": [
+    {
+      "label": "U.S.-Iran Conflict Escalation and Naval Tensions",
+      "category": "defense",
+      "boolean_query": "(\"U.S.-Iran conflict\" OR \"Hormuz strikes\") (\"naval blockade\" OR \"ship attacks\")",
+      "terms": [
+        "U.S.-Iran conflict",
+        "Hormuz Strait",
+        "Iranian retaliation",
+        "USS Abraham Lincoln Thailand",
+        "CENTCOM blockade",
+        "ship attacks Hormuz",
+        "Iranian drone attacks",
+        "U.S. naval escorts",
+        "Strait of Hormuz security",
+        "Iranian retaliation casualties",
+        "U.S. military strikes Iran",
+        "naval standoff Gulf",
+        "Iranian ballistic missiles",
+        "U.S. carrier group deployments",
+        "#HormuzCrisis"
+      ],
+      "sample_tweets": [
+        "[The Current Pulse | @TheCurrentPulse | Sep 3] Sep 3 |scroll element (horizontal 0%)",
+        "[The Current Pulse | @TheCurrentPulse | Sep 3] Sep 3 🛑🛑 DID YOU KNOW?? 🛑🛑 🚨-DID YOU KNOW? The ongoing U.S.–Iran conflict escalated after Iranian forces launched attacks on commercial shipping and laid sea mines in the Strait of Hormuz. In response, the U.S. executed targeted airstrikes against Revolutionary Guard bases and",
+        "[Idrees Ali | @idreesali114 | Sep 2] Sep 2 No U.S. casualties so far from the Iranian retaliation, two US officials say. Quote Mario Nawfal"
+      ]
+    },
+    {
+      "label": "NATO Troop Review and European Defense Posture",
+      "category": "defense",
+      "boolean_query": "(\"NATO troop review\" OR \"Hegseth options\") (\"European defense\" OR \"Pentagon Europe\")",
+      "terms": [
+        "NATO troop review",
+        "Hegseth defense policy",
+        "European defense spending",
+        "Pentagon Europe strategy",
+        "NATO force posture",
+        "U.S. troop reductions Europe",
+        "NATO summit 2026",
+        "European military readiness",
+        "NATO rapid reaction forces",
+        "U.S. European command",
+        "NATO defense budget 2026",
+        "European military exercises",
+        "NATO Baltic security",
+        "U.S. troop withdrawal Europe",
+        "#NATO2026"
+      ],
+      "sample_tweets": [
+        "[Phil Stewart | @phildstewart | Aug 27] Aug 27 EXCLUSIVE: Pentagon's NATO review preparing troop options for Hegseth by November 6 5.1K",
+        "[Phil Stewart | @phildstewart | Aug 27] Aug 27 Scoop! - Reuters has seen the terms of reference for the Pentagon's troop review in NATO, which aims to decide how many forces will remain in Europe and where. Here are some key takeaways: 1) Moving fast: Hegseth will get at least four sets of options by Nov. 6. Options will"
+      ]
+    },
+    {
+      "label": "Trump's Foreign Policy and Military Directive Shifts",
+      "category": "politics",
+      "boolean_query": "(\"Trump military orders\" OR \"New America rename\") (\"South Korea exercises\" OR \"AfD victory\")",
+      "terms": [
+        "Trump military directives",
+        "New Mexico renamed New America",
+        "South Korea joint exercises reduction",
+        "AfD German election victory",
+        "Trump Iran policy 2026",
+        "U.S. troop reductions South Korea",
+        "Trump defense budget cuts",
+        "AfD far-right Germany",
+        "Trump military alliances",
+        "U.S. defense spending Trump",
+        "Trump NATO relations",
+        "New America name change",
+        "Trump military strategy 2026",
+        "#TrumpDefensePolicy"
+      ],
+      "sample_tweets": [
+        "[Phil Stewart | @phildstewart | Aug 10] Aug 10 (Reuters) - Israeli Prime Minister Benjamin Netanyahu restated his rejection of Donald Trump's latest Gaza plan in televised remarks to his right-wing government on Sunday, even as Israel's military has effectively halted attacks in the territory under pressure from the U.S."
+      ]
+    },
+    {
+      "label": "Ukraine War Dynamics and International Aid",
+      "category": "defense",
+      "boolean_query": "(\"Ukraine war\" OR \"Zelensky talks\") (\"U.S. aid\" OR \"autonomous weapons\")",
+      "terms": [
+        "Ukraine war 2026",
+        "Zelensky-U.S. envoys talks",
+        "U.S. Ukraine aid 2026",
+        "autonomous weapons ban",
+        "Ukraine drone warfare",
+        "Ukrainian Hornet munitions",
+        "NATO Ukraine support",
+        "Ukraine defense budget",
+        "U.S. Patriot missile sales",
+        "Ukraine-Russia frontlines",
+        "Ukraine military logistics",
+        "Ukraine cyber defense",
+        "Ukraine AI warfare",
+        "Ukraine military reforms",
+        "#UkraineWar2026"
+      ],
+      "sample_tweets": [
+        "[MENAFN Business | @MENAFN | Sep 2] Sep 2 #Select #Without #Human #Help #Time #Binding #USA #Russia #Biden #Ukraine #War #Palestine #Gaza #Israel dlvr.it/TVH1md"
+      ]
+    },
+    {
+      "label": "China-Russia Sanctions Circumvention and Tech Competition",
+      "category": "economic",
+      "boolean_query": "(\"China-Russia sanctions\" OR \"tech circumvention\") (\"AI warfare\" OR \"semiconductor exports\")",
+      "terms": [
+        "China-Russia sanctions evasion",
+        "U.S.-China tech competition",
+        "AI warfare China",
+        "semiconductor export controls",
+        "Russia-China military ties",
+        "sanctions circumvention networks",
+        "China-Russia defense pacts",
+        "U.S. AI export bans",
+        "China hypersonic missiles",
+        "Russia-China joint exercises",
+        "U.S. tech sanctions China",
+        "China-Russia energy deals",
+        "AI military applications",
+        "semiconductor supply chain",
+        "#TechWar2026"
+      ]
+    },
+    {
+      "label": "Military AI and Autonomous Weapon Systems",
+      "category": "defense",
+      "boolean_query": "(\"AI warfare\" OR \"autonomous drones\") (\"U.S. military\" OR \"UN lethal weapons\")",
+      "terms": [
+        "AI warfare U.S. military",
+        "autonomous drone swarms",
+        "UN lethal weapons ban",
+        "U.S. AI defense systems",
+        "autonomous weapon ethics",
+        "AI battlefield applications",
+        "U.S. military AI projects",
+        "autonomous drone regulations",
+        "AI cyber defense",
+        "U.S. AI warfare doctrine",
+        "autonomous missile systems",
+        "AI military logistics",
+        "U.S. AI procurement",
+        "autonomous combat drones",
+        "#AIWarfare"
+      ]
+    },
+    {
+      "label": "Middle East Security and Gulf Defense Pacts",
+      "category": "diplomacy",
+      "boolean_query": "(\"Gulf security\" OR \"Saudi-Iran tensions\") (\"Qatar Air Force One\" OR \"UAE defense\")",
+      "terms": [
+        "Gulf security alliances",
+        "Saudi-Iran tensions 2026",
+        "Qatar Air Force One donation",
+        "UAE military modernization",
+        "Gulf defense pacts",
+        "Saudi-Iran naval rivalry",
+        "UAE-Israel defense ties",
+        "Gulf energy security",
+        "Qatar-U.S. military cooperation",
+        "Gulf air defense systems",
+        "Saudi-Iran proxy wars",
+        "UAE military procurement",
+        "Gulf cyber defense",
+        "Qatar military base expansion",
+        "#GulfSecurity"
+      ]
+    },
+    {
+      "label": "U.S. Military Modernization and Weapon Procurement",
+      "category": "defense",
+      "boolean_query": "(\"Reaper successor\" OR \"laser production\") (\"U.S. defense budget\" OR \"TITAN system\")",
+      "terms": [
+        "U.S. Reaper drone replacement",
+        "Army laser production",
+        "TITAN defense system",
+        "U.S. defense budget 2026",
+        "Palantir TITAN contract",
+        "U.S. military procurement",
+        "Reaper drone upgrades",
+        "U.S. missile defense systems",
+        "Army nuclear reactors",
+        "U.S. drone swarms",
+        "TITAN production timeline",
+        "U.S. military AI integration",
+        "Reaper successor timeline",
+        "U.S. defense industrial base",
+        "#USMilitaryTech"
+      ]
+    },
+    {
+      "label": "Global Nuclear Proliferation and Deterrence Posture",
+      "category": "diplomacy",
+      "boolean_query": "(\"nuclear deterrence\" OR \"Iran nuclear deal\") (\"NATO nuclear umbrella\" OR \"China-U.S. arms race\")",
+      "terms": [
+        "NATO nuclear deterrence",
+        "Iran nuclear deal 2026",
+        "China-U.S. arms race",
+        "NATO nuclear umbrella",
+        "U.S. nuclear modernization",
+        "Iran nuclear enrichment",
+        "NATO nuclear posture review",
+        "China hypersonic missiles",
+        "U.S. nuclear arsenal upgrades",
+        "Nuclear deterrence strategy",
+        "Iran nuclear sanctions",
+        "NATO nuclear sharing",
+        "China-U.S. nuclear rivalry",
+        "Nuclear arms control 2026",
+        "#NuclearDeterrence"
+      ]
+    },
+    {
+      "label": "Aviation Security and Commercial Airline Incidents",
+      "category": "defense",
+      "boolean_query": "(\"Miami crash\" OR \"Amazon 767\") (\"FAA investigation\" OR \"aviation security\")",
+      "terms": [
+        "Miami International Airport crash",
+        "Amazon 767 incident",
+        "FAA aviation security",
+        "U.S. aviation safety",
+        "Miami crash investigation",
+        "Commercial airline safety",
+        "Aviation security protocols",
+        "Miami airport emergency response",
+        "FAA crash analysis",
+        "Aviation incident 2026",
+        "Commercial flight safety",
+        "Miami crash casualties",
+        "Aviation regulatory review",
+        "U.S. air traffic control",
+        "#AviationSafety"
+      ]
+    }
+  ]
 }

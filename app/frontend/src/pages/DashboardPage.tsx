@@ -51,9 +51,18 @@ export function DashboardPage(props: DashboardPageProps) {
   // Count trends discovered
   let totalTrendsCount = 0;
   let topTrendsList: string[] = [];
-  if (props.rawSourcesData && props.rawSourcesData.x_trends24_topics) {
-    totalTrendsCount = props.rawSourcesData.x_trends24_topics.length;
-    topTrendsList = props.rawSourcesData.x_trends24_topics.slice(0, 6);
+  if (props.rawSourcesData) {
+    if (
+      props.rawSourcesData.x_native_explore &&
+      props.rawSourcesData.x_native_explore.trends_observed &&
+      props.rawSourcesData.x_native_explore.trends_observed.length > 0
+    ) {
+      totalTrendsCount = props.rawSourcesData.x_native_explore.trends_observed.length;
+      topTrendsList = props.rawSourcesData.x_native_explore.trends_observed.slice(0, 6);
+    } else if (props.rawSourcesData.x_trends24_topics && props.rawSourcesData.x_trends24_topics.length > 0) {
+      totalTrendsCount = props.rawSourcesData.x_trends24_topics.length;
+      topTrendsList = props.rawSourcesData.x_trends24_topics.slice(0, 6);
+    }
   }
 
   // Count tweets extracted across all trends

@@ -55,11 +55,15 @@ async def run_single_country_pipeline(
     selected_country_data = trends.find_target_country_by_name(target_country_name, available_countries_list)
 
     if selected_country_data is not None:
-        country_slug_name = selected_country_data.get("trends24_slug", target_country_name.lower())
+        country_slug_name = selected_country_data.get("trends24_slug", "")
     else:
-        country_slug_name = target_country_name.strip().lower().replace(" ", "-")
+        if target_country_name.strip().lower() in ["worldwide", "global", "all"]:
+            country_slug_name = ""
+        else:
+            country_slug_name = target_country_name.strip().lower().replace(" ", "-")
 
-    await log_and_record("STEP", f"Starting intelligence pipeline for target country: {target_country_name} (Slug: {country_slug_name})")
+    country_display_label = "Worldwide" if len(country_slug_name) == 0 else f"{target_country_name} (Slug: {country_slug_name})"
+    await log_and_record("STEP", f"Starting intelligence pipeline for target: {country_display_label}")
     await progress_callback_function("init", 1, 6, f"Initializing pipeline for {target_country_name}...", target_country_name)
 
     # Check for user cancellation
@@ -85,6 +89,10 @@ async def run_single_country_pipeline(
         source_type = source_entry.get("type", "web")
 
         if not is_source_enabled:
+            continue
+
+        # Skip X/Twitter accounts in Phase 1 (they are scraped via the real Chrome browser in the browser phase)
+        if source_type in ["x_account", "twitter", "x"] or "x.com/" in source_url or "twitter.com/" in source_url:
             continue
 
         desktop_browser_headers = {
@@ -196,7 +204,8 @@ async def run_single_country_pipeline(
         return None
 
     # PHASE 2: Ingest ALL trends from Trends24, then filter for news-relevant trends
-    await log_and_record("STEP", f"[2/5] Ingesting all Trends24 topics and filtering for news-relevance ({country_slug_name})...")
+    t24_target_label = "Worldwide" if len(country_slug_name) == 0 else country_slug_name
+    await log_and_record("STEP", f"[2/5] Ingesting all Trends24 topics and filtering for news-relevance ({t24_target_label})...")
     await progress_callback_function("trends24", 3, 6, f"Capturing all Trends24 topics & filtering for {target_country_name}...", target_country_name)
     
     all_trends24_topics_list = []
@@ -221,41 +230,9 @@ async def run_single_country_pipeline(
         update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user after trends24")
         return None
 
-    # PHASE 3: Synthesize news-derived topics and high-precision Boolean X queries with Qwen3-14B
-    await log_and_record("STEP", "[3/5] Synthesizing news-derived topics & Boolean X queries (15 crisp keywords each) with Qwen3-14B...")
-    await progress_callback_function("llm_synthesis", 4, 6, f"Synthesizing 15 crisp keywords per topic for {target_country_name}...", target_country_name)
-
-    endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.12.121:8000/v1")
-    model_name = settings_dictionary.get("llm_model_name", "qwen3-14b")
-    timeout_seconds = int(settings_dictionary.get("llm_timeout_seconds", "180"))
-
-    await log_and_record("LLM", f"Synthesizing topics via {endpoint_url} (Model: {model_name}, Timeout: {timeout_seconds}s)...")
-
-    synthesized_topics_list = []
-    try:
-        loop = asyncio.get_event_loop()
-        synthesized_topics_list = await loop.run_in_executor(
-            None,
-            trends.synthesize_topics_from_news_and_trends,
-            target_country_name,
-            news_sources_intel_dictionary,
-            relevant_trends24_topics_list
-        )
-        await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} news-derived topics (15 crisp keywords each + Boolean queries).")
-        for topic_preview_index in range(min(3, len(synthesized_topics_list))):
-            preview_item = synthesized_topics_list[topic_preview_index]
-            await log_and_record("INFO", f"  Topic {topic_preview_index + 1}: {preview_item.get('label')} -> Boolean: {preview_item.get('boolean_query')}")
-    except Exception as llm_error:
-        await log_and_record("ERROR", f"LLM topic synthesis failed: {str(llm_error)}")
-
-    if cancellation_event.is_set():
-        await log_and_record("WARN", "Pipeline execution cancelled by user.")
-        update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user after LLM synthesis")
-        return None
-
-    # PHASE 4: Launch Chrome browser to mine latest tweets on X.com using the news-derived Boolean queries
-    await log_and_record("STEP", "[4/5] Mining latest tweets on X.com via news-derived Boolean queries (using &f=live)...")
-    await progress_callback_function("x_mining", 5, 6, f"Mining latest tweets for news queries for {target_country_name}...", target_country_name)
+    # PHASE 3: Launch Chrome browser to scrape configured X correspondent accounts and explore live trends
+    await log_and_record("STEP", f"[3/5] Launching Chrome browser to scrape configured X defense accounts & explore trends...")
+    await progress_callback_function("x_mining", 4, 6, f"Scraping correspondent accounts and X trends for {target_country_name}...", target_country_name)
 
     is_headless = settings_dictionary.get("headless_mode", "false") == "true"
     use_real_chrome = settings_dictionary.get("use_real_chrome", "true") == "true"
@@ -268,6 +245,7 @@ async def run_single_country_pipeline(
         "trends_observed": [],
         "sample_tweets_by_trend": {}
     }
+    curated_x_sources_tweets: Dict[str, List[str]] = {}
 
     browser_mode_string = "Headless" if is_headless else "Headful Visible Window"
     await log_and_record("BROWSER", f"Launching Chrome ({browser_mode_string}, RealProfile: {use_real_chrome})...")
@@ -279,12 +257,96 @@ async def run_single_country_pipeline(
 
     try:
         await browser_instance.start()
+
+        # Step 3A: Scrape latest 10-15 tweets from configured X correspondent & OSINT accounts
+        configured_x_sources_list = []
+        for source_item in configured_sources_list:
+            if source_item.get("enabled", True):
+                s_type = source_item.get("type", "web")
+                s_url = source_item.get("url", "")
+                if s_type in ["x_account", "twitter", "x"] or "x.com/" in s_url or "twitter.com/" in s_url:
+                    configured_x_sources_list.append(source_item)
+
+        if len(configured_x_sources_list) > 0:
+            await log_and_record("STEP", f"Scraping latest 10-15 tweets from {len(configured_x_sources_list)} defense correspondent & OSINT accounts...")
+            for x_source_index in range(len(configured_x_sources_list)):
+                if cancellation_event.is_set():
+                    break
+
+                x_source_entry = configured_x_sources_list[x_source_index]
+                account_name = x_source_entry.get("name", "X Source")
+                account_url = x_source_entry.get("url", "")
+
+                # Handle handle redirection e.g. BBCJonathanBeale -> bealejonathan
+                if "bbcjonathanbeale" in account_url.lower():
+                    account_url = "https://x.com/bealejonathan"
+
+                await log_and_record("BROWSER", f"[X Source {x_source_index + 1}/{len(configured_x_sources_list)}] Scraping latest tweets for: {account_name} ({account_url})")
+
+                try:
+                    await browser_instance.navigate_to(account_url)
+                    await asyncio.sleep(4)
+
+                    for hydration_attempt in range(5):
+                        page_state_text = await browser_instance.get_state_as_text()
+                        if len(page_state_text) > 400 and not page_state_text.strip().startswith("<svg"):
+                            break
+                        await asyncio.sleep(2)
+
+                    collected_account_tweets: List[str] = []
+                    for scroll_round in range(5):
+                        if cancellation_event.is_set():
+                            break
+
+                        page_state_text = await browser_instance.get_state_as_text()
+                        # Use 35-day window for specialized correspondent profiles
+                        fresh_account_tweets = trends.extract_tweets_from_article_chunks(page_state_text, max_days_window=35)
+
+                        for tweet_str in fresh_account_tweets:
+                            if tweet_str not in collected_account_tweets:
+                                collected_account_tweets.append(tweet_str)
+
+                        if len(collected_account_tweets) >= 15:
+                            break
+
+                        try:
+                            scroll_action = browser_instance.event_bus.dispatch(
+                                ScrollEvent(direction="down", amount=1200)
+                            )
+                            await scroll_action
+                            await asyncio.sleep(2)
+                        except Exception:
+                            break
+
+                    await log_and_record("SUCCESS", f"Captured {len(collected_account_tweets)} latest tweets from {account_name}.")
+                    curated_x_sources_tweets[account_name] = collected_account_tweets[:15]
+                    x_native_intel_dictionary["sample_tweets_by_trend"][account_name] = collected_account_tweets[:15]
+                except Exception as acc_scrape_err:
+                    await log_and_record("WARN", f"Notice: Error scraping {account_name}: {str(acc_scrape_err)}")
+
+        # Step 3B: Navigate to X Explore trending to observe active trends
         await log_and_record("BROWSER", "Navigating to https://x.com/explore/tabs/trending to observe active trends...")
         await browser_instance.navigate_to("https://x.com/explore/tabs/trending")
         await asyncio.sleep(4)
 
-        # Scroll down twice to ensure all ~30 active trends on X explore are loaded in the DOM
         trending_page_state_text = await browser_instance.get_state_as_text()
+        for hydration_attempt in range(5):
+            if len(trending_page_state_text) > 400 and not trending_page_state_text.strip().startswith("<svg"):
+                break
+            await asyncio.sleep(2)
+            trending_page_state_text = await browser_instance.get_state_as_text()
+
+        if len(trending_page_state_text) < 400 or trending_page_state_text.strip().startswith("<svg"):
+            search_seed = "defense" if target_country_name.strip().lower() in ["worldwide", "global"] else target_country_name
+            await browser_instance.navigate_to(f"https://x.com/search?q={urllib.parse.quote(search_seed)}")
+            await asyncio.sleep(3)
+            await browser_instance.navigate_to("https://x.com/explore/tabs/trending")
+            for hydration_attempt in range(5):
+                trending_page_state_text = await browser_instance.get_state_as_text()
+                if len(trending_page_state_text) > 400 and not trending_page_state_text.strip().startswith("<svg"):
+                    break
+                await asyncio.sleep(2)
+
         for scroll_index in range(2):
             try:
                 scroll_event_action = browser_instance.event_bus.dispatch(
@@ -297,7 +359,6 @@ async def run_single_country_pipeline(
             except Exception:
                 pass
 
-        # Extract trending hashtags and named topics using robust parser
         extracted_trend_names_list: List[str] = trends.extract_x_explore_trends(trending_page_state_text)
 
         ui_noise_blacklist = [
@@ -306,18 +367,22 @@ async def run_single_country_pipeline(
             "log in", "sign up", "trending in", "trending with", "show more"
         ]
 
-        # Merge in the latest freshly harvested trends24 topics
         for live_trend_item in relevant_trends24_topics_list:
             if live_trend_item not in extracted_trend_names_list:
                 extracted_trend_names_list.append(live_trend_item)
 
-        # Step 4A-2: Also navigate to https://x.com/explore/tabs/news to extract curated news headlines and events
+        # Step 3C: Navigate to X explore news tab
         await log_and_record("BROWSER", "Navigating to https://x.com/explore/tabs/news to extract live curated news topics...")
         try:
             await browser_instance.navigate_to("https://x.com/explore/tabs/news")
             await asyncio.sleep(4)
 
-            news_page_state_text = await browser_instance.get_state_as_text()
+            for hydration_attempt in range(5):
+                news_page_state_text = await browser_instance.get_state_as_text()
+                if len(news_page_state_text) > 400 and not news_page_state_text.strip().startswith("<svg"):
+                    break
+                await asyncio.sleep(2)
+
             raw_news_lines_list = news_page_state_text.split("\n")
             extracted_x_news_topics: List[str] = []
 
@@ -347,8 +412,6 @@ async def run_single_country_pipeline(
             if len(extracted_x_news_topics) > 0:
                 sample_news_str = ", ".join(extracted_x_news_topics[:5])
                 await log_and_record("SUCCESS", f"Extracted {len(extracted_x_news_topics)} relevant news topics from X news tab: {sample_news_str}")
-            else:
-                await log_and_record("INFO", "Processed X news tab (https://x.com/explore/tabs/news).")
         except Exception as news_tab_error:
             await log_and_record("WARN", f"Notice: Error navigating X news tab: {str(news_tab_error)}")
 
@@ -356,60 +419,44 @@ async def run_single_country_pipeline(
         sample_preview_str = ", ".join(extracted_trend_names_list[:6])
         await log_and_record("SUCCESS", f"Identified {len(extracted_trend_names_list)} total trends/news on X.com. Sample: {sample_preview_str}")
 
-        # Step 4A: Identify relevant defense & foreign policy trending topics and hashtags directly on X.com
+        # Step 3D: Identify relevant defense/strategic trending topics on X.com and mine top tweets
         relevant_x_trends_to_mine: List[str] = []
         for candidate_trend in extracted_trend_names_list:
             if trends.is_strategic_or_defense_trend(candidate_trend):
                 if candidate_trend not in relevant_x_trends_to_mine:
                     relevant_x_trends_to_mine.append(candidate_trend)
-                    if len(relevant_x_trends_to_mine) >= 8:
+                    if len(relevant_x_trends_to_mine) >= 5:
                         break
 
-        # Fallback to relevant Trends24 defense topics if X explore had few explicit defense topics/hashtags right now
-        if len(relevant_x_trends_to_mine) < 3:
-            for trend24_item in relevant_trends24_topics_list:
-                if trends.is_strategic_or_defense_trend(trend24_item):
-                    if trend24_item not in relevant_x_trends_to_mine:
-                        relevant_x_trends_to_mine.append(trend24_item)
-                        if len(relevant_x_trends_to_mine) >= 8:
-                            break
-
-        if len(relevant_x_trends_to_mine) > 0:
-            preview_trends_str = ", ".join(relevant_x_trends_to_mine)
-            await log_and_record("SUCCESS", f"Identified {len(relevant_x_trends_to_mine)} relevant defense/foreign policy topics & hashtags on X: {preview_trends_str}")
-        else:
-            await log_and_record("INFO", "No explicit defense topics or hashtags on X explore at this moment; proceeding to news Boolean queries.")
-
-        # Step 4B: Mine fresh Top tweets from each relevant X trending topic and hashtag (strictly staying in Top category)
         for trend_index in range(len(relevant_x_trends_to_mine)):
             if cancellation_event.is_set():
                 break
 
             current_trend_topic = relevant_x_trends_to_mine[trend_index]
             encoded_topic = urllib.parse.quote(current_trend_topic)
-            # Default search stays on the TOP category (NOT &f=live) as instructed
             trend_search_url = f"https://x.com/search?q={encoded_topic}"
 
             await log_and_record("BROWSER", f"[X Trend {trend_index + 1}/{len(relevant_x_trends_to_mine)}] Mining Top tweets for: {current_trend_topic}")
-
             try:
                 await browser_instance.navigate_to(trend_search_url)
                 await asyncio.sleep(4)
+                for hydration_attempt in range(5):
+                    page_state_text = await browser_instance.get_state_as_text()
+                    if len(page_state_text) > 400 and not page_state_text.strip().startswith("<svg"):
+                        break
+                    await asyncio.sleep(2)
 
                 collected_tweets_for_trend: List[str] = []
-
                 for scroll_round in range(max_scroll_rounds):
                     if cancellation_event.is_set():
                         break
 
                     page_state_text = await browser_instance.get_state_as_text()
-                    fresh_batch_tweets = trends.extract_tweets_from_article_chunks(page_state_text)
+                    fresh_batch_tweets = trends.extract_tweets_from_article_chunks(page_state_text, max_days_window=10)
 
                     for tweet_text in fresh_batch_tweets:
                         if tweet_text not in collected_tweets_for_trend:
                             collected_tweets_for_trend.append(tweet_text)
-
-                    await log_and_record("SCROLL", f"  Trend '{current_trend_topic}' scroll {scroll_round + 1}/{max_scroll_rounds}: {len(collected_tweets_for_trend)} fresh Top tweets collected")
 
                     if len(collected_tweets_for_trend) >= max_tweets_target:
                         break
@@ -428,7 +475,36 @@ async def run_single_country_pipeline(
             except Exception as trend_scrape_error:
                 await log_and_record("WARN", f"Notice: Error mining trend '{current_trend_topic}': {str(trend_scrape_error)}")
 
-        # Step 4C: Derive and mine news-derived Boolean queries synthesized from Phase 3 (also using Top category)
+        # PHASE 4: Synthesize news-derived topics & Boolean X queries with Qwen3-14B
+        # Passing curated_x_sources_tweets so correspondent scoops are fully accounted for in keywords!
+        await log_and_record("STEP", "[4/5] Synthesizing news + correspondent topics & Boolean X queries with Qwen3-14B...")
+        await progress_callback_function("llm_synthesis", 5, 6, f"Synthesizing 15 crisp keywords per topic for {target_country_name}...", target_country_name)
+
+        endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.12.121:8000/v1")
+        model_name = settings_dictionary.get("llm_model_name", "qwen3-14b")
+        timeout_seconds = int(settings_dictionary.get("llm_timeout_seconds", "180"))
+
+        await log_and_record("LLM", f"Synthesizing topics via {endpoint_url} (Model: {model_name}, Timeout: {timeout_seconds}s)...")
+
+        synthesized_topics_list = []
+        try:
+            loop = asyncio.get_event_loop()
+            synthesized_topics_list = await loop.run_in_executor(
+                None,
+                trends.synthesize_topics_from_news_and_trends,
+                target_country_name,
+                news_sources_intel_dictionary,
+                relevant_trends24_topics_list,
+                curated_x_sources_tweets
+            )
+            await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} topics (15 crisp keywords each + Boolean queries).")
+            for topic_preview_index in range(min(3, len(synthesized_topics_list))):
+                preview_item = synthesized_topics_list[topic_preview_index]
+                await log_and_record("INFO", f"  Topic {topic_preview_index + 1}: {preview_item.get('label')} -> Boolean: {preview_item.get('boolean_query')}")
+        except Exception as llm_error:
+            await log_and_record("ERROR", f"LLM topic synthesis failed: {str(llm_error)}")
+
+        # Step 4E: Mine Boolean queries on X.com (Top category) using same active browser session
         queries_to_mine_list: List[str] = []
         for topic_item in synthesized_topics_list:
             topic_query = topic_item.get("boolean_query", "").strip()
@@ -447,30 +523,30 @@ async def run_single_country_pipeline(
 
             current_mining_query = queries_to_mine_list[query_index]
             encoded_query = urllib.parse.quote(current_mining_query)
-            # Default search stays on Top category
             search_url = f"https://x.com/search?q={encoded_query}"
 
             await log_and_record("BROWSER", f"[Boolean Query {query_index + 1}/{len(queries_to_mine_list)}] Mining Top tweets for: {current_mining_query}")
-            
             try:
                 await browser_instance.navigate_to(search_url)
                 await asyncio.sleep(4)
 
-                collected_tweets_for_query: List[str] = []
+                for hydration_attempt in range(5):
+                    page_state_text = await browser_instance.get_state_as_text()
+                    if len(page_state_text) > 400 and not page_state_text.strip().startswith("<svg"):
+                        break
+                    await asyncio.sleep(2)
 
-                # Progressive scrolling loop
+                collected_tweets_for_query: List[str] = []
                 for scroll_round in range(max_scroll_rounds):
                     if cancellation_event.is_set():
                         break
 
                     page_state_text = await browser_instance.get_state_as_text()
-                    fresh_batch_tweets = trends.extract_tweets_from_article_chunks(page_state_text)
+                    fresh_batch_tweets = trends.extract_tweets_from_article_chunks(page_state_text, max_days_window=10)
 
                     for tweet_text in fresh_batch_tweets:
                         if tweet_text not in collected_tweets_for_query:
                             collected_tweets_for_query.append(tweet_text)
-
-                    await log_and_record("SCROLL", f"  Boolean query scroll {scroll_round + 1}/{max_scroll_rounds}: {len(collected_tweets_for_query)} fresh tweets accumulated")
 
                     if len(collected_tweets_for_query) >= max_tweets_target:
                         break
@@ -489,15 +565,44 @@ async def run_single_country_pipeline(
             except Exception as query_scrape_error:
                 await log_and_record("WARN", f"Notice: Error mining query '{current_mining_query}': {str(query_scrape_error)}")
 
-        # Attach mined tweets to matching synthesized topics
+        # Attach mined tweets and relevant correspondent tweets to matching synthesized topics
         sample_tweets_map = x_native_intel_dictionary.get("sample_tweets_by_trend", {})
         for topic_item in synthesized_topics_list:
             b_query = topic_item.get("boolean_query", "")
+            topic_label_lower = topic_item.get("label", "").lower()
+            topic_terms = [t.lower() for t in topic_item.get("terms", [])]
+
+            matched_topic_tweets = []
             if b_query in sample_tweets_map:
-                topic_item["sample_tweets"] = sample_tweets_map[b_query]
+                for tw in sample_tweets_map[b_query]:
+                    if tw not in matched_topic_tweets:
+                        matched_topic_tweets.append(tw)
+
+            # Check if any correspondent tweets correlate with this topic
+            for acc_name, acc_tweets in curated_x_sources_tweets.items():
+                for acc_tw in acc_tweets:
+                    acc_tw_lower = acc_tw.lower()
+                    is_correlated = False
+                    for term in topic_terms:
+                        if len(term) > 3 and term in acc_tw_lower:
+                            is_correlated = True
+                            break
+                    if not is_correlated:
+                        words = topic_label_lower.split()
+                        match_count = 0
+                        for w in words:
+                            if len(w) > 4 and w in acc_tw_lower:
+                                match_count += 1
+                        if match_count >= 2:
+                            is_correlated = True
+
+                    if is_correlated and acc_tw not in matched_topic_tweets:
+                        matched_topic_tweets.append(acc_tw)
+
+            if len(matched_topic_tweets) > 0:
+                topic_item["sample_tweets"] = matched_topic_tweets[:25]
 
     finally:
-        # We always close the browser session to release Chrome resources
         try:
             await browser_instance.close()
             await log_and_record("BROWSER", "Chrome browser session cleanly closed.")
@@ -520,6 +625,7 @@ async def run_single_country_pipeline(
         "relevant_trends24_topics": relevant_trends24_topics_list,
         "x_trends24_topics": relevant_trends24_topics_list,
         "news_sources_intel": news_sources_intel_dictionary,
+        "curated_x_sources_intel": curated_x_sources_tweets,
         "x_native_explore": x_native_intel_dictionary
     }
 

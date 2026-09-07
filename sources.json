@@ -117,6 +117,41 @@
     "type": "web",
     "url": "https://www.atlanticcouncil.org/",
     "enabled": true
+  },
+  {
+    "name": "Idrees Ali (Reuters Pentagon)",
+    "category": "defense_journalists",
+    "type": "x_account",
+    "url": "https://x.com/idreesali114",
+    "enabled": true
+  },
+  {
+    "name": "Phil Stewart (Reuters Defense)",
+    "category": "defense_journalists",
+    "type": "x_account",
+    "url": "https://x.com/phildstewart",
+    "enabled": true
+  },
+  {
+    "name": "Jacopo Barigazzi (Politico Defense)",
+    "category": "defense_journalists",
+    "type": "x_account",
+    "url": "https://x.com/JacopoBarigazzi",
+    "enabled": true
+  },
+  {
+    "name": "Jonathan Beale (BBC Defense)",
+    "category": "defense_journalists",
+    "type": "x_account",
+    "url": "https://x.com/bealejonathan",
+    "enabled": true
+  },
+  {
+    "name": "OSINTdefender (Global Conflicts)",
+    "category": "osint_defense",
+    "type": "x_account",
+    "url": "https://x.com/sentdefender",
+    "enabled": true
   }
 ]
 

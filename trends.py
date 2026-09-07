@@ -587,11 +587,11 @@ def extract_x_explore_trends(raw_page_state_text):
     return extracted_trend_names_list
 
 
-def validate_tweet_date_margin(cleaned_lines, reference_date=None):
-    # Strictly enforces a 10-day date margin: [Today - 10 days, Today].
+def validate_tweet_date_margin(cleaned_lines, reference_date=None, max_days_window=10):
+    # Enforces a date margin: [Today - max_days_window days, Today].
     # Rejects tweets from past historical years (2006 to previous year),
-    # relative dates older than 10 days (e.g. 11d, 30d), and older months outside the 10-day window.
-    # On the Top tab, enforces that a valid fresh timestamp within the last 10 days is detected.
+    # relative dates older than max_days_window days, and older months outside the window.
+    # On the Top tab or profile timeline, enforces that a valid fresh timestamp within the window is detected.
     if reference_date is None:
         reference_date = datetime.date.today()
 
@@ -604,9 +604,9 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None):
             if past_year_str in cleaned_lines[check_index]:
                 return False, ""
 
-    # Build the set of acceptable month-day strings for the last 10 days
+    # Build the set of acceptable month-day strings for the last max_days_window days
     acceptable_date_strings = []
-    for day_offset in range(11):
+    for day_offset in range(max_days_window + 1):
         target_day = reference_date - datetime.timedelta(days=day_offset)
         month_abbr = target_day.strftime("%b").lower()
         month_full = target_day.strftime("%B").lower()
@@ -634,11 +634,11 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None):
             detected_date_label = current_line
             return True, detected_date_label
 
-        # Relative days: "1d" through "10d"
+        # Relative days: "1d" through max_days_window
         day_match = re.match(r'^(\d+)d$', lower_line)
         if day_match:
             days_count = int(day_match.group(1))
-            if days_count <= 10:
+            if days_count <= max_days_window:
                 detected_date_label = current_line
                 return True, detected_date_label
             else:
@@ -659,7 +659,7 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None):
                     return True, part.strip()
                 day_submatch = re.match(r'^(\d+)d$', cleaned_part)
                 if day_submatch:
-                    if int(day_submatch.group(1)) <= 10:
+                    if int(day_submatch.group(1)) <= max_days_window:
                         return True, part.strip()
                     else:
                         return False, ""
@@ -679,7 +679,7 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None):
     return False, ""
 
 
-def extract_tweets_from_article_chunks(page_state_text):
+def extract_tweets_from_article_chunks(page_state_text, max_days_window=10):
     # In browser-use state text, each tweet is rendered inside an [ID]<article role=article /> container.
     # Splitting by article containers guarantees we only extract content belonging to individual tweets,
     # completely separating each tweet from other tweets and completely isolating from the right sidebar.
@@ -746,8 +746,8 @@ def extract_tweets_from_article_chunks(page_state_text):
             combined_body_text = " ".join(body_text_lines).strip()
             combined_body_text = combined_body_text.replace("<!-- SVG content collapsed -->", "").strip()
 
-            # Strictly enforce date margin: only tweets from Today down to 10 days ago
-            is_valid_date, detected_tweet_date = validate_tweet_date_margin(cleaned_lines)
+            # Strictly enforce date margin: only tweets from Today down to max_days_window days ago
+            is_valid_date, detected_tweet_date = validate_tweet_date_margin(cleaned_lines, max_days_window=max_days_window)
             if not is_valid_date:
                 continue
 
@@ -1052,9 +1052,15 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
     return x_native_intel_dictionary
 
 
-def synthesize_topics_from_news_and_trends(target_country_name, news_sources_intel_dictionary, relevant_trends_list):
+def synthesize_topics_from_news_and_trends(
+    target_country_name,
+    news_sources_intel_dictionary,
+    relevant_trends_list,
+    x_accounts_tweets_dictionary=None
+):
     # This function synthesizes 10 to 12 strategic topics directly from authoritative news headlines,
-    # enriched by confirmed news-relevant X trends, and formulates high-precision Boolean search queries for each topic.
+    # enriched by confirmed news-relevant X trends and verified defense correspondent & OSINT reporting,
+    # and formulates high-precision Boolean search queries for each topic.
     print("")
     print("==================================================")
     print("[3] Synthesizing News-Derived Topics & Boolean X Queries with Qwen3-14B")
@@ -1070,6 +1076,16 @@ def synthesize_topics_from_news_and_trends(target_country_name, news_sources_int
             for headline_index in range(len(headlines_list)):
                 digest_sections_list.append("• " + headlines_list[headline_index])
 
+    # Ingest verified defense correspondents and OSINT intelligence from X.com
+    if x_accounts_tweets_dictionary is not None and len(x_accounts_tweets_dictionary) > 0:
+        digest_sections_list.append(f"\n--- VERIFIED DEFENSE CORRESPONDENTS & OSINT ON X.COM (PENTAGON, BBC, POLITICO, REUTERS) ---")
+        for account_name_key in x_accounts_tweets_dictionary:
+            account_tweets_list = x_accounts_tweets_dictionary[account_name_key]
+            if len(account_tweets_list) > 0:
+                digest_sections_list.append(f"\n[Correspondent / OSINT Handle: {account_name_key.upper()}]")
+                for tweet_index in range(min(15, len(account_tweets_list))):
+                    digest_sections_list.append("• " + account_tweets_list[tweet_index])
+
     # Ingest confirmed news-relevant trending topics
     if len(relevant_trends_list) > 0:
         digest_sections_list.append(f"\n--- CONFIRMED NEWS-RELEVANT X TRENDS ({target_country_name.upper()}) ---")
@@ -1081,12 +1097,12 @@ def synthesize_topics_from_news_and_trends(target_country_name, news_sources_int
     system_and_user_prompt = f"""You are the Chief Worldwide Geopolitical & Defense Intelligence Specialist and Social Search Keyword Engineer.
 Analyze the following multi-source news and intelligence dossier for the target scope: {target_country_name} (Worldwide & International Strategic Scope).
 
-INTELLIGENCE DOSSIER (GLOBAL HEADLINES, RSS FEEDS, AND NEWS-RELEVANT TRENDS):
+INTELLIGENCE DOSSIER (GLOBAL HEADLINES, RSS FEEDS, VERIFIED DEFENSE CORRESPONDENTS & OSINT TWEETS, AND NEWS-RELEVANT TRENDS):
 {full_intel_digest_string}
 
 CORE MISSION OBJECTIVES:
 The primary directive is to synthesize hot, breaking, and critically important WORLDWIDE news topics and generate actionable keyword tracking matrices and precise Boolean search queries.
-The topics MUST BE DERIVED DIRECTLY FROM THE NEWS HEADLINES. Discard unrelated social gossip, memes, domestic partisan squabbles, entertainment, and sports. Focus on high-impact global coverage across Europe, North America, the Indo-Pacific, Middle East, and Eurasia.
+The topics MUST correlate with both the authoritative news headlines and the exclusive reporting/scoops from the verified defense correspondents and OSINT monitoring handles (including Pentagon correspondents Idrees Ali and Phil Stewart, BBC defense correspondent Jonathan Beale, Politico Europe defense reporter Jacopo Barigazzi, and OSINTdefender). Give high importance and weight to breaking defense developments, troop reviews, conflict escalation, military alliances, and defense pacts highlighted by these sources. Discard unrelated social gossip, memes, domestic partisan squabbles, entertainment, and sports. Focus on high-impact global coverage across Europe, North America, the Indo-Pacific, Middle East, and Eurasia.
 
 TOPIC SELECTION DIRECTIVES - STRICTLY PRIORITIZE:
 1. FOREIGN & GLOBAL POLICIES:
@@ -1224,7 +1240,7 @@ def run_country_hot_news_pipeline():
             argument_words_list.append(terminal_arguments_list[argument_index])
         requested_country_query = " ".join(argument_words_list)
     else:
-        requested_country_query = "pakistan"
+        requested_country_query = "worldwide"
 
     # Look up country details from countries.json
     available_countries_list = load_countries_configuration_file()

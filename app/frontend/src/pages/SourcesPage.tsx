@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { SourceItem } from "../types";
-import { Globe, Plus, Trash2, X, Rss } from "lucide-react";
+import { Globe, Plus, Trash2, X, Rss, AtSign } from "lucide-react";
 
 interface SourcesPageProps {
   sourcesList: SourceItem[];
@@ -16,7 +16,7 @@ export function SourcesPage(props: SourcesPageProps) {
   const [newType, setNewType] = useState("web");
   const [formErrorMessage, setFormErrorMessage] = useState("");
 
-  // Handle URL change with auto-detection of RSS feeds
+  // Handle URL change with auto-detection of RSS feeds and X accounts
   function handleUrlChange(event: React.ChangeEvent<HTMLInputElement>) {
     const enteredUrl = event.target.value;
     setNewUrl(enteredUrl);
@@ -24,6 +24,8 @@ export function SourcesPage(props: SourcesPageProps) {
     const lower = enteredUrl.toLowerCase();
     if (lower.includes("/rss") || lower.includes("/feed") || lower.endsWith(".xml")) {
       setNewType("rss");
+    } else if (lower.includes("x.com/") || lower.includes("twitter.com/")) {
+      setNewType("x_account");
     }
   }
 
@@ -66,6 +68,21 @@ export function SourcesPage(props: SourcesPageProps) {
   for (let sourceIndex = 0; sourceIndex < props.sourcesList.length; sourceIndex++) {
     const sourceItem = props.sourcesList[sourceIndex];
     const isRss = sourceItem.type === "rss";
+    const isXAccount = sourceItem.type === "x_account" || sourceItem.type === "twitter";
+
+    let iconElement = <Globe className="w-4 h-4" strokeWidth={1.75} />;
+    let iconBgClass = "bg-blue-500/10 text-blue-400";
+    let badgeClass = "bg-blue-500/10 text-blue-300";
+
+    if (isRss) {
+      iconElement = <Rss className="w-4 h-4" strokeWidth={1.75} />;
+      iconBgClass = "bg-amber-500/10 text-amber-400";
+      badgeClass = "bg-amber-500/10 text-amber-300";
+    } else if (isXAccount) {
+      iconElement = <AtSign className="w-4 h-4" strokeWidth={1.75} />;
+      iconBgClass = "bg-sky-500/10 text-sky-400";
+      badgeClass = "bg-sky-500/10 text-sky-300 border border-sky-500/20";
+    }
 
     renderedSourceRows.push(
       <div
@@ -76,12 +93,10 @@ export function SourcesPage(props: SourcesPageProps) {
           <div
             className={
               "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors " +
-              (isRss
-                ? "bg-amber-500/10 text-amber-400"
-                : "bg-blue-500/10 text-blue-400")
+              iconBgClass
             }
           >
-            {isRss ? <Rss className="w-4 h-4" strokeWidth={1.75} /> : <Globe className="w-4 h-4" strokeWidth={1.75} />}
+            {iconElement}
           </div>
 
           <div className="overflow-hidden">
@@ -90,9 +105,7 @@ export function SourcesPage(props: SourcesPageProps) {
               <span
                 className={
                   "text-[9px] px-1.5 py-0.2 rounded uppercase font-mono font-medium " +
-                  (isRss
-                    ? "bg-amber-500/10 text-amber-300"
-                    : "bg-blue-500/10 text-blue-300")
+                  badgeClass
                 }
               >
                 {sourceItem.type}
@@ -231,6 +244,7 @@ export function SourcesPage(props: SourcesPageProps) {
               >
                 <option value="web">Web Scraper</option>
                 <option value="rss">RSS Feed</option>
+                <option value="x_account">X / Twitter Account</option>
               </select>
             </div>
 

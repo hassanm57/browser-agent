@@ -499,8 +499,12 @@ export default function App() {
 
   // Count trends discovered
   let totalTrendsCount = 0;
-  if (rawSourcesData && rawSourcesData.x_trends24_topics) {
-    totalTrendsCount = rawSourcesData.x_trends24_topics.length;
+  if (rawSourcesData) {
+    if (rawSourcesData.x_native_explore && rawSourcesData.x_native_explore.trends_observed) {
+      totalTrendsCount = rawSourcesData.x_native_explore.trends_observed.length;
+    } else if (rawSourcesData.x_trends24_topics) {
+      totalTrendsCount = rawSourcesData.x_trends24_topics.length;
+    }
   }
 
   // Count news headlines ingested across all outlets
@@ -626,7 +630,7 @@ export default function App() {
   const searchablePages = [
     { id: "dashboard", label: "Dashboard", desc: "Overview stats and recent pipeline runs" },
     { id: "pipeline", label: "Run Pipeline", desc: "Select countries and trigger autonomous scraping" },
-    { id: "trends", label: "Trending Topics", desc: "Top hashtags from trends24 and X.com explore" },
+    { id: "trends", label: "Trending Topics", desc: "Hot news headlines and X.com explore trends" },
     { id: "headlines", label: "News Headlines", desc: "Ingested news headlines across all configured sources" },
     { id: "tweets", label: "Extracted Tweets", desc: "Live tweets mined directly from X.com search timelines" },
     { id: "keywords", label: "Synthesized Keywords", desc: "High-precision keywords generated via Qwen3-14B" },

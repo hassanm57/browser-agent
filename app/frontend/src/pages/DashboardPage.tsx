@@ -7,12 +7,10 @@ import {
   Play,
   ArrowRight,
   Calendar,
-  Sparkles,
   Trash2,
   ExternalLink,
   Newspaper,
-  Zap,
-  Hash
+  Zap
 } from "lucide-react";
 import { Banner } from "@/components/ui/banner";
 
@@ -182,8 +180,8 @@ export function DashboardPage(props: DashboardPageProps) {
       const topic = props.keywordsData.topics[i];
       if (topic.terms && topic.terms.length > 0) {
         totalKeywordsCount += topic.terms.length;
-        for (let j = 0; j < Math.min(topic.terms.length, 3); j++) {
-          if (sampleKeywordTerms.length < 8 && !sampleKeywordTerms.includes(topic.terms[j])) {
+        for (let j = 0; j < topic.terms.length; j++) {
+          if (sampleKeywordTerms.length < 10 && !sampleKeywordTerms.includes(topic.terms[j])) {
             sampleKeywordTerms.push(topic.terms[j]);
           }
         }
@@ -345,17 +343,64 @@ export function DashboardPage(props: DashboardPageProps) {
     const rankNumber = podiumIndex + 1;
 
     if (rankNumber === 1) {
-      // 1st Place Podium (Gold Champion)
+      // 1st Place Podium (Most orange / deep amber-orange gold)
       renderedPodiumCards.push(
         <div
           key={item.source_name + "_podium_" + rankNumber}
-          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-amber-500/15 via-zinc-900/80 to-zinc-950/90 hover:from-amber-500/25 shadow-xl shadow-amber-500/5 hover:shadow-[0_0_35px_rgba(245,158,11,0.22)] transition-all duration-300 gap-4"
+          className="group relative flex flex-col justify-between p-4.5 rounded-3xl bg-gradient-to-b from-orange-500/25 via-amber-950/40 to-zinc-950/90 hover:from-orange-500/35 shadow-xl shadow-orange-500/10 hover:shadow-[0_0_35px_rgba(249,115,22,0.25)] transition-all duration-300 gap-3.5"
         >
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_18px_rgba(245,158,11,0.5)] shrink-0">
+                <span className="w-8 h-8 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 text-zinc-950 font-black text-xs flex items-center justify-center shadow-[0_0_18px_rgba(249,115,22,0.6)] shrink-0">
                   1
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-300 bg-orange-500/20 px-2.5 py-0.5 rounded-full">
+                  <Flame className="w-3.5 h-3.5 fill-orange-400 text-orange-400" />
+                  Hot
+                </span>
+              </div>
+              <a
+                href={item.source_url}
+                target="_blank"
+                rel="noreferrer"
+                title={"Visit " + item.source_name}
+                className="p-1.5 rounded-xl text-orange-400/80 hover:text-orange-200 hover:bg-orange-500/20 transition-all shrink-0 cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+            <p className="text-xs sm:text-sm font-bold text-zinc-100 group-hover:text-orange-300 transition-colors leading-relaxed line-clamp-3">
+              {item.headline_text}
+            </p>
+          </div>
+          <div className="pt-2 border-t border-orange-500/20 flex items-center justify-between gap-2 text-[11px]">
+            <a
+              href={item.source_url}
+              target="_blank"
+              rel="noreferrer"
+              title={"Visit source: " + item.source_name}
+              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-orange-300 drop-shadow-[0_0_8px_rgba(249,115,22,0.7)] hover:text-orange-100 hover:underline transition-all min-w-0"
+            >
+              <Globe className="w-3 h-3 text-orange-400 shrink-0" />
+              <span className="truncate">{item.source_name}</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
+            </a>
+          </div>
+        </div>
+      );
+    } else if (rankNumber === 2) {
+      // 2nd Place Podium (Less orange, more yellow / pure warm gold)
+      renderedPodiumCards.push(
+        <div
+          key={item.source_name + "_podium_" + rankNumber}
+          className="group relative flex flex-col justify-between p-4.5 rounded-3xl bg-gradient-to-b from-amber-500/20 via-yellow-950/30 to-zinc-950/90 hover:from-amber-500/30 shadow-xl shadow-amber-500/10 hover:shadow-[0_0_30px_rgba(245,158,11,0.22)] transition-all duration-300 gap-3.5"
+        >
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-2xl bg-gradient-to-br from-yellow-400 via-amber-400 to-amber-500 text-zinc-950 font-black text-xs flex items-center justify-center shadow-[0_0_16px_rgba(245,158,11,0.5)] shrink-0">
+                  2
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
                   <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -367,12 +412,12 @@ export function DashboardPage(props: DashboardPageProps) {
                 target="_blank"
                 rel="noreferrer"
                 title={"Visit " + item.source_name}
-                className="p-2 rounded-xl text-amber-400/80 hover:text-amber-200 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer"
+                className="p-1.5 rounded-xl text-amber-400/80 hover:text-amber-200 hover:bg-amber-500/20 transition-all shrink-0 cursor-pointer"
               >
-                <ExternalLink className="w-4 h-4" />
+                <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
-            <p className="text-sm font-bold text-zinc-100 group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-3">
+            <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
@@ -382,79 +427,30 @@ export function DashboardPage(props: DashboardPageProps) {
               target="_blank"
               rel="noreferrer"
               title={"Visit source: " + item.source_name}
-              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.7)] hover:text-amber-100 hover:underline transition-all min-w-0"
+              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] hover:text-amber-100 hover:underline transition-all min-w-0"
             >
               <Globe className="w-3 h-3 text-amber-400 shrink-0" />
               <span className="truncate">{item.source_name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
             </a>
-            <span className="font-mono text-[10px] uppercase text-amber-400/80 font-bold shrink-0">Rank #1</span>
-          </div>
-        </div>
-      );
-    } else if (rankNumber === 2) {
-      // 2nd Place Podium (Silver)
-      renderedPodiumCards.push(
-        <div
-          key={item.source_name + "_podium_" + rankNumber}
-          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-slate-400/15 via-zinc-900/80 to-zinc-950/90 hover:from-slate-400/25 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(148,163,184,0.18)] transition-all duration-300 gap-4"
-        >
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-slate-200 via-slate-300 to-zinc-400 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_15px_rgba(226,232,240,0.4)] shrink-0">
-                  2
-                </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-200 bg-slate-400/20 px-2.5 py-0.5 rounded-full">
-                  <Flame className="w-3.5 h-3.5 fill-slate-300 text-slate-300" />
-                  Hot
-                </span>
-              </div>
-              <a
-                href={item.source_url}
-                target="_blank"
-                rel="noreferrer"
-                title={"Visit " + item.source_name}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-500/20 transition-all shrink-0 cursor-pointer"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
-            <p className="text-sm font-semibold text-zinc-100 group-hover:text-slate-200 transition-colors leading-relaxed line-clamp-3">
-              {item.headline_text}
-            </p>
-          </div>
-          <div className="pt-2 border-t border-slate-400/20 flex items-center justify-between gap-2 text-[11px]">
-            <a
-              href={item.source_url}
-              target="_blank"
-              rel="noreferrer"
-              title={"Visit source: " + item.source_name}
-              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-200 drop-shadow-[0_0_8px_rgba(226,232,240,0.7)] hover:text-white hover:underline transition-all min-w-0"
-            >
-              <Globe className="w-3 h-3 text-slate-300 shrink-0" />
-              <span className="truncate">{item.source_name}</span>
-              <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
-            </a>
-            <span className="font-mono text-[10px] uppercase text-slate-400 font-bold shrink-0">Rank #2</span>
           </div>
         </div>
       );
     } else {
-      // 3rd Place Podium (Bronze)
+      // 3rd Place Podium (Lighter yellow hue)
       renderedPodiumCards.push(
         <div
           key={item.source_name + "_podium_" + rankNumber}
-          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-amber-700/15 via-zinc-900/80 to-zinc-950/90 hover:from-amber-700/25 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(217,119,6,0.18)] transition-all duration-300 gap-4"
+          className="group relative flex flex-col justify-between p-4.5 rounded-3xl bg-gradient-to-b from-yellow-300/15 via-zinc-900/80 to-zinc-950/90 hover:from-yellow-300/25 shadow-xl shadow-yellow-300/5 hover:shadow-[0_0_25px_rgba(250,204,21,0.2)] transition-all duration-300 gap-3.5"
         >
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-600 via-amber-700 to-orange-800 text-amber-100 font-black text-sm flex items-center justify-center shadow-[0_0_15px_rgba(217,119,6,0.4)] shrink-0">
+                <span className="w-8 h-8 rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 text-zinc-950 font-black text-xs flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.4)] shrink-0">
                   3
                 </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-700/20 px-2.5 py-0.5 rounded-full">
-                  <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-yellow-200 bg-yellow-300/15 px-2.5 py-0.5 rounded-full">
+                  <Flame className="w-3.5 h-3.5 fill-yellow-300 text-yellow-300" />
                   Hot
                 </span>
               </div>
@@ -463,28 +459,27 @@ export function DashboardPage(props: DashboardPageProps) {
                 target="_blank"
                 rel="noreferrer"
                 title={"Visit " + item.source_name}
-                className="p-2 rounded-xl text-amber-500/80 hover:text-amber-200 hover:bg-amber-700/20 transition-all shrink-0 cursor-pointer"
+                className="p-1.5 rounded-xl text-yellow-300/80 hover:text-yellow-100 hover:bg-yellow-300/20 transition-all shrink-0 cursor-pointer"
               >
-                <ExternalLink className="w-4 h-4" />
+                <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
-            <p className="text-sm font-semibold text-zinc-100 group-hover:text-amber-200 transition-colors leading-relaxed line-clamp-3">
+            <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-yellow-200 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
-          <div className="pt-2 border-t border-amber-600/20 flex items-center justify-between gap-2 text-[11px]">
+          <div className="pt-2 border-t border-yellow-400/20 flex items-center justify-between gap-2 text-[11px]">
             <a
               href={item.source_url}
               target="_blank"
               rel="noreferrer"
               title={"Visit source: " + item.source_name}
-              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] hover:text-amber-200 hover:underline transition-all min-w-0"
+              className="group/source inline-flex items-center gap-1.5 text-[11px] font-semibold text-yellow-200 drop-shadow-[0_0_8px_rgba(250,204,21,0.7)] hover:text-yellow-100 hover:underline transition-all min-w-0"
             >
-              <Globe className="w-3 h-3 text-amber-500 shrink-0" />
+              <Globe className="w-3 h-3 text-yellow-300 shrink-0" />
               <span className="truncate">{item.source_name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
             </a>
-            <span className="font-mono text-[10px] uppercase text-amber-500/80 font-bold shrink-0">Rank #3</span>
           </div>
         </div>
       );
@@ -539,33 +534,18 @@ export function DashboardPage(props: DashboardPageProps) {
     );
   }
 
-  // Render prominent keyword cards in a responsive grid using a traditional for loop
+  // Render top 10 keywords as non-interactable, compact colored boxes fitting just around the text
   const renderedProminentKeywordCards = [];
   for (let keywordIndex = 0; keywordIndex < sampleKeywordTerms.length; keywordIndex++) {
     const termString = sampleKeywordTerms[keywordIndex];
-    const searchKeywordUrl = "https://www.google.com/search?q=" + encodeURIComponent(termString);
 
     renderedProminentKeywordCards.push(
-      <a
-        key={"prominent_keyword_" + keywordIndex}
-        href={searchKeywordUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="group relative p-4 rounded-2xl bg-zinc-900/60 hover:bg-zinc-850/90 shadow-lg shadow-black/20 hover:shadow-[0_0_25px_rgba(16,185,129,0.18)] transition-all duration-300 flex flex-col justify-between gap-3 overflow-hidden select-none hover:-translate-y-0.5"
+      <div
+        key={"keyword_box_" + keywordIndex}
+        className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-xs font-semibold shadow-[0_0_12px_rgba(16,185,129,0.18)] select-none tracking-wide"
       >
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/15 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-            <Hash className="w-3 h-3" />
-            #{keywordIndex + 1}
-          </span>
-          <ExternalLink className="w-3.5 h-3.5 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-zinc-100 group-hover:text-emerald-300 transition-colors tracking-tight line-clamp-2">
-            {termString}
-          </p>
-        </div>
-      </a>
+        <span>{termString}</span>
+      </div>
     );
   }
 
@@ -604,7 +584,37 @@ export function DashboardPage(props: DashboardPageProps) {
         </div>
       </Banner>
 
-      {/* 2. Main Stat Boxes (Positioned directly under the rainbow banner) */}
+      {/* Top Header Execution Timestamp (Prominent Text Size) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-zinc-300">
+          <Calendar className="w-5 h-5 text-primary shrink-0" />
+          <span>
+            Last executed on:{" "}
+            <strong className="text-zinc-100 font-bold">
+              {latestRun
+                ? formatDashboardDate(latestRun.finished_at || latestRun.started_at)
+                : "No runs executed yet"}
+            </strong>
+          </span>
+        </div>
+
+        {latestRun && (
+          <div className="flex items-center gap-2">
+            <span
+              className={
+                "text-xs font-mono px-3.5 py-1 rounded-full font-semibold " +
+                (latestRun.status === "completed"
+                  ? "bg-emerald-500/15 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                  : "bg-amber-500/15 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]")
+              }
+            >
+              {latestRun.status.toUpperCase()}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Main Stat Boxes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Active Sources */}
         <div className="p-5 rounded-3xl bg-gradient-to-b from-blue-500/10 via-zinc-900/60 to-zinc-900/40 hover:from-blue-500/20 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(59,130,246,0.18)] transition-all duration-300 space-y-3">
@@ -817,7 +827,7 @@ export function DashboardPage(props: DashboardPageProps) {
               <Flame className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-100">Top 10 Trending Hot Topics</h3>
+              <h3 className="text-base font-bold text-zinc-100">Top Trends</h3>
             </div>
           </div>
 
@@ -830,18 +840,18 @@ export function DashboardPage(props: DashboardPageProps) {
           </button>
         </div>
 
-        {/* Podium Row for Top 3 Stories */}
+        {/* Podium Row for Top 3 Stories (Restrained, focused width) */}
         {renderedPodiumCards.length > 0 ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4.5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto w-full">
               {renderedPodiumCards}
             </div>
 
-            {/* Remaining Ranks 4 to 10 */}
+            {/* Remaining Stories */}
             {renderedRemainingHotTopicCards.length > 0 && (
               <div className="pt-3 space-y-3">
                 <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">
-                  Additional Trending Stories (Ranks 4–10)
+                  Additional Trending Stories
                 </span>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
                   {renderedRemainingHotTopicCards}
@@ -858,74 +868,40 @@ export function DashboardPage(props: DashboardPageProps) {
         )}
       </div>
 
-      {/* 5. Latest Intelligence Run Details & Prominent Keywords Grid (NO outer border box) */}
-      <div className="w-full rounded-3xl bg-zinc-900/40 p-6 backdrop-blur-xl shadow-2xl shadow-black/30 space-y-6">
+      {/* 5. Keywords Section */}
+      <div className="w-full rounded-3xl bg-zinc-900/40 p-6 backdrop-blur-xl shadow-2xl shadow-black/30 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shadow-[0_0_18px_rgba(59,130,246,0.2)]">
-              <Sparkles className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shadow-[0_0_18px_rgba(16,185,129,0.25)]">
+              <Tags className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-zinc-100">Latest Intelligence Run Details</h3>
+              <h3 className="text-base font-bold text-zinc-100">Keywords</h3>
               <p className="text-xs text-zinc-400">
-                {latestRun
-                  ? `Last executed on ${formatDashboardDate(latestRun.finished_at || latestRun.started_at)}`
-                  : "No runs executed yet"}
+                Strategic AI synthesized intelligence keywords
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {latestRun && (
-              <span
-                className={
-                  "text-[10px] font-mono px-3 py-1 rounded-full font-medium " +
-                  (latestRun.status === "completed"
-                    ? "bg-emerald-500/15 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
-                    : "bg-amber-500/15 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.15)]")
-                }
-              >
-                {latestRun.status.toUpperCase()}
-              </span>
-            )}
-            <button
-              onClick={() => props.onNavigateTab("sources")}
-              className="text-xs text-primary hover:underline font-medium flex items-center gap-1 cursor-pointer"
-            >
-              <span>Configured Sources ({props.activeSourcesCount})</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
+          <button
+            onClick={() => props.onNavigateTab("keywords")}
+            className="text-xs text-emerald-400 hover:text-emerald-300 hover:underline font-medium cursor-pointer flex items-center gap-1.5 shrink-0"
+          >
+            <span>Inspect All Keywords ({totalKeywordsCount})</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {/* Prominent Keywords Grid */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Tags className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
-                Keywords
-              </span>
-            </div>
-            <button
-              onClick={() => props.onNavigateTab("keywords")}
-              className="text-[11px] text-emerald-400 hover:text-emerald-300 hover:underline font-medium cursor-pointer flex items-center gap-1"
-            >
-              <span>Inspect all keywords</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
+        {/* Compact Colored Keyword Boxes (Tight around text, non-interactable) */}
+        {renderedProminentKeywordCards.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2.5 pt-1">
+            {renderedProminentKeywordCards}
           </div>
-
-          {renderedProminentKeywordCards.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
-              {renderedProminentKeywordCards}
-            </div>
-          ) : (
-            <p className="text-xs text-zinc-500 italic py-4">
-              Run the intelligence pipeline to generate strategic keywords via Strategic AI Engine.
-            </p>
-          )}
-        </div>
+        ) : (
+          <p className="text-xs text-zinc-500 italic py-4">
+            Run the intelligence pipeline to generate strategic keywords via Strategic AI Engine.
+          </p>
+        )}
       </div>
 
       {/* 6. Sleek Navigation Cards with Rounded Edges & Smooth Glow */}

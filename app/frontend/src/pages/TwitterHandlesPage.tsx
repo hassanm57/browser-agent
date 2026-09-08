@@ -594,17 +594,23 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
                 <option value="replies">Most Comments</option>
               </select>
 
-              {/* 24h Only Toggle */}
+              {/* 24h Glowing Circle Toggle */}
               <button
+                type="button"
                 onClick={() => setIsWithin24HoursOnly(!isWithin24HoursOnly)}
+                title={isWithin24HoursOnly ? "Past 24 Hours (Active - click to show all)" : "Filter by Past 24 Hours"}
+                aria-label="Filter past 24 hours"
                 className={
-                  "px-2.5 py-1.5 rounded border text-xs font-medium transition-colors " +
+                  "relative flex items-center justify-center shrink-0 w-8 h-8 rounded-full text-[11px] font-bold transition-all " +
                   (isWithin24HoursOnly
-                    ? "border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
-                    : "border-border/50 text-muted-foreground hover:text-foreground")
+                    ? "bg-emerald-500/15 text-emerald-300 border border-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.55)] ring-2 ring-emerald-500/30"
+                    : "bg-card text-muted-foreground border border-border/50 hover:text-foreground hover:border-zinc-500")
                 }
               >
-                Past 24 Hours
+                {isWithin24HoursOnly && (
+                  <span className="animate-ping absolute inset-0 rounded-full bg-emerald-400/20 pointer-events-none" />
+                )}
+                <span className="relative z-10">24h</span>
               </button>
             </div>
           </div>

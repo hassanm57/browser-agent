@@ -10,7 +10,7 @@ __pycache__/
 .env
 .env.local
 .env.*.local
-
+R3_handles.pdf
 # Node & Frontend dependencies and builds
 node_modules/
 **/node_modules/**

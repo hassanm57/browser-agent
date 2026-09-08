@@ -50,7 +50,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
   // Tweets filters
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("All");
-  const [isWithin24HoursOnly, setIsWithin24HoursOnly] = useState<boolean>(false);
+  const [isWithin24HoursOnly, setIsWithin24HoursOnly] = useState<boolean>(true);
   const [sortByOption, setSortByOption] = useState<string>("time");
 
   // Handle management form state
@@ -84,6 +84,8 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       let queryUrl = backendUrl + "/api/twitter/tweets?sort_by=" + sortByOption;
       if (isWithin24HoursOnly) {
         queryUrl += "&within_24h_only=true";
+      } else {
+        queryUrl += "&within_24h_only=false";
       }
       if (selectedCategoryFilter !== "All") {
         queryUrl += "&category=" + encodeURIComponent(selectedCategoryFilter);

@@ -451,7 +451,7 @@ def delete_twitter_handle_endpoint(handle_identifier: int):
 def get_twitter_tweets_endpoint(
     handle: Optional[str] = None,
     category: Optional[str] = None,
-    within_24h_only: bool = False,
+    within_24h_only: bool = True,
     sort_by: str = "time",
     search: Optional[str] = None
 ):

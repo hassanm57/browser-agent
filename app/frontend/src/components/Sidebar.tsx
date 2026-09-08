@@ -39,7 +39,7 @@ export function Sidebar(props: SidebarProps) {
         { id: "headlines" as NavigationTabType, label: "News Headlines", icon: Newspaper },
         { id: "tweets" as NavigationTabType, label: "Extracted Tweets", icon: MessageSquare },
         { id: "keywords" as NavigationTabType, label: "Keywords", icon: Tags },
-        { id: "twitter_handles" as NavigationTabType, label: "Twitter Handles", icon: AtSign },
+        { id: "twitter_handles" as NavigationTabType, label: "Twitter Scraper", icon: AtSign },
       ]
     },
     {

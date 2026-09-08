@@ -18,6 +18,7 @@ import type { TwitterHandleItem, TwitterScrapedTweetItem, TwitterScrapeProgressI
 
 interface TwitterHandlesPageProps {
   backendApiBaseUrl: string;
+  onHandlesCountChange?: (count: number) => void;
 }
 
 export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
@@ -32,15 +33,15 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
   const [isLoadingHandles, setIsLoadingHandles] = useState<boolean>(false);
   const [isLoadingTweets, setIsLoadingTweets] = useState<boolean>(false);
 
-  // Scrape execution state
-  const [concurrencyLevel, setConcurrencyLevel] = useState<number>(3);
+  // Scrape execution state - 6 browser instances by default
+  const [concurrencyLevel, setConcurrencyLevel] = useState<number>(6);
   const [scrapeProgress, setScrapeProgress] = useState<TwitterScrapeProgressItem>({
     is_running: false,
     status: "idle",
     total_handles: 0,
     completed_handles: 0,
     total_tweets_collected: 0,
-    concurrency_level: 3,
+    concurrency_level: 6,
     active_workers: {},
     started_at: null,
     finished_at: null
@@ -65,6 +66,9 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       if (response.ok) {
         const data = await response.json();
         setHandlesList(data);
+        if (props.onHandlesCountChange) {
+          props.onHandlesCountChange(data.length);
+        }
       }
     } catch (fetchError) {
       console.error("Error fetching twitter handles:", fetchError);
@@ -257,64 +261,65 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
     renderedTweetCards.push(
       <div
         key={tweet.id}
-        className="p-4 rounded-lg border border-border/40 bg-card/40 hover:bg-card/70 transition-colors space-y-3"
+        className="p-3.5 rounded-lg border border-border/60 bg-card/60 hover:bg-card/90 hover:border-border transition-all space-y-2.5 flex flex-col justify-between shadow-xs"
       >
         {/* Tweet Header */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground text-sm">
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <span className="font-semibold text-foreground text-xs truncate">
               @{tweet.handle}
             </span>
             {tweet.author_display_name && tweet.author_display_name !== tweet.handle && (
-              <span className="text-zinc-400">({tweet.author_display_name})</span>
+              <span className="text-zinc-500 truncate max-w-[120px] hidden sm:inline">({tweet.author_display_name})</span>
             )}
-            <span>·</span>
-            <span>{tweet.tweet_timestamp_text}</span>
+            <span className="text-zinc-600">·</span>
+            <span className="shrink-0">{tweet.tweet_timestamp_text}</span>
             {tweet.is_within_24h && (
-              <span className="text-emerald-400 font-medium ml-1">24h</span>
+              <span className="text-emerald-400 font-medium text-[10px] px-1 py-0.5 rounded bg-emerald-500/10 shrink-0">24h</span>
             )}
           </div>
           <a
             href={"https://x.com/" + tweet.handle}
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-foreground flex items-center gap-1 transition-colors"
+            className="hover:text-foreground text-zinc-500 shrink-0 transition-colors p-0.5"
+            title="View on X"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="w-3 h-3" />
           </a>
         </div>
 
         {/* Tweet Content */}
-        <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
+        <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap line-clamp-5">
           {tweet.tweet_text}
         </p>
 
         {/* Minimal inline metrics row */}
-        <div className="flex items-center gap-6 pt-1 text-xs text-zinc-400">
-          <span className="flex items-center gap-1.5 hover:text-zinc-200 transition-colors">
-            <MessageCircle className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-4 pt-2 border-t border-border/30 text-[11px] text-muted-foreground mt-auto">
+          <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Replies">
+            <MessageCircle className="w-3 h-3" />
             {tweet.replies_count.toLocaleString()}
           </span>
-          <span className="flex items-center gap-1.5 hover:text-zinc-200 transition-colors">
-            <Repeat2 className="w-3.5 h-3.5" />
+          <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Reposts">
+            <Repeat2 className="w-3 h-3" />
             {tweet.reposts_count.toLocaleString()}
           </span>
-          <span className="flex items-center gap-1.5 hover:text-zinc-200 transition-colors">
-            <Heart className="w-3.5 h-3.5" />
+          <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Likes">
+            <Heart className="w-3 h-3" />
             {tweet.likes_count.toLocaleString()}
           </span>
-          <span className="flex items-center gap-1.5 hover:text-zinc-200 transition-colors">
-            <Eye className="w-3.5 h-3.5" />
+          <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Views">
+            <Eye className="w-3 h-3" />
             {tweet.views_count.toLocaleString()}
           </span>
           {tweet.bookmarks_count > 0 && (
-            <span className="flex items-center gap-1.5 hover:text-zinc-200 transition-colors">
-              <Bookmark className="w-3.5 h-3.5" />
+            <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Bookmarks">
+              <Bookmark className="w-3 h-3" />
               {tweet.bookmarks_count.toLocaleString()}
             </span>
           )}
           {tweet.handle_category && (
-            <span className="ml-auto text-[11px] text-zinc-400">
+            <span className="ml-auto text-[10px] text-zinc-500 truncate max-w-[90px]">
               {tweet.handle_category}
             </span>
           )}
@@ -427,14 +432,14 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
           <div className="flex items-center gap-2.5">
             <AtSign className="w-5 h-5 text-foreground" />
             <h1 className="text-xl font-semibold text-foreground tracking-tight">
-              Twitter Handles
+              Twitter Scraper
             </h1>
             <span className="text-xs text-muted-foreground ml-1">
               ({handlesList.length} handles)
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Parallel multi-browser scraper for past 24-hour handle posts and metrics.
+            Multi-browser tweet scraper
           </p>
         </div>
 
@@ -442,7 +447,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
         <div className="flex items-center gap-3">
           {/* Concurrency Selector */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>Workers:</span>
+            <span>Browsers:</span>
             <select
               value={concurrencyLevel}
               disabled={scrapeProgress.is_running}
@@ -454,6 +459,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               <option value={4}>4 browsers</option>
               <option value={5}>5 browsers</option>
               <option value={6}>6 browsers</option>
+              <option value={8}>8 browsers</option>
             </select>
           </div>
 
@@ -513,13 +519,6 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               }}
             />
           </div>
-
-          {/* Active Workers Row */}
-          {renderedActiveWorkers.length > 0 && (
-            <div className="pt-1 flex flex-wrap gap-2 text-zinc-400">
-              {renderedActiveWorkers}
-            </div>
-          )}
         </div>
       )}
 
@@ -618,12 +617,9 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             <div className="py-16 text-center border border-dashed border-border/40 rounded-lg text-xs text-muted-foreground space-y-2">
               <AtSign className="w-6 h-6 mx-auto text-zinc-600" />
               <p className="font-medium text-foreground">No scraped tweets available</p>
-              <p className="text-zinc-500">
-                Click "Run Scraper" above to fetch the past 24-hour posts across configured handles.
-              </p>
             </div>
           ) : (
-            <div className="space-y-3">{renderedTweetCards}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{renderedTweetCards}</div>
           )}
         </div>
       )}

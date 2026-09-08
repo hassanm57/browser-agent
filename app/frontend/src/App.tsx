@@ -77,6 +77,7 @@ export default function App() {
 
   const [rawSourcesData, setRawSourcesData] = useState<RawSourcesData | null>(null);
   const [keywordsData, setKeywordsData] = useState<KeywordsData | null>(null);
+  const [totalTwitterHandlesCount, setTotalTwitterHandlesCount] = useState<number>(0);
 
   const [currentSettings, setCurrentSettings] = useState<ApplicationSettings>({
     vllm_base_url: "http://10.13.12.121:8000/v1",
@@ -299,12 +300,28 @@ export default function App() {
       });
   }
 
+  function fetchTwitterHandlesCount() {
+    fetch(BACKEND_API_BASE_URL + "/api/twitter/handles")
+      .then(function (res) {
+        return res.json();
+      })
+      .then(function (handles) {
+        if (Array.isArray(handles)) {
+          setTotalTwitterHandlesCount(handles.length);
+        }
+      })
+      .catch(function (err) {
+        console.error("Failed to load twitter handles count", err);
+      });
+  }
+
   useEffect(function () {
     fetchCountries();
     fetchSources();
     fetchSettings();
     fetchRuns();
     fetchLatestData();
+    fetchTwitterHandlesCount();
   }, []);
 
   // Pipeline Country Toggle Handlers
@@ -555,7 +572,7 @@ export default function App() {
     headlines: "News Headlines",
     tweets: "Extracted Tweets",
     keywords: "Keywords",
-    twitter_handles: "Twitter Handles",
+    twitter_handles: "Twitter Scraper",
     sources: "Intel Sources",
     history: "Run History",
     settings: "Settings"
@@ -611,8 +628,10 @@ export default function App() {
         },
         {
           id: "twitter_handles",
-          title: "Twitter Handles",
+          title: "Twitter Scraper",
           icon: AtSign,
+          badge: totalTwitterHandlesCount > 0 ? String(totalTwitterHandlesCount) : undefined,
+          badgeClassName: "bg-sky-500/15 text-sky-400 font-semibold"
         },
       ]
     },
@@ -649,7 +668,7 @@ export default function App() {
     { id: "headlines", label: "News Headlines", desc: "Ingested news headlines across all configured sources" },
     { id: "tweets", label: "Extracted Tweets", desc: "Live tweets mined directly from X.com search timelines" },
     { id: "keywords", label: "Synthesized Keywords", desc: "High-precision keywords generated via Strategic AI Engine" },
-    { id: "twitter_handles", label: "Twitter Handles", desc: "Parallel scraping of defense and think tank handles" },
+    { id: "twitter_handles", label: "Twitter Scraper", desc: "Multi-browser tweet scraper" },
     { id: "sources", label: "Sources Management", desc: "Configure, toggle, and add news sites & RSS feeds" },
     { id: "history", label: "Run History", desc: "Inspect and export past intelligence pipeline runs" },
     { id: "settings", label: "Application Settings", desc: "Model server endpoint, browser options, and scraping thresholds" },
@@ -841,7 +860,10 @@ export default function App() {
           )}
 
           {currentActiveTab === "twitter_handles" && (
-            <TwitterHandlesPage backendApiBaseUrl={BACKEND_API_BASE_URL} />
+            <TwitterHandlesPage
+              backendApiBaseUrl={BACKEND_API_BASE_URL}
+              onHandlesCountChange={setTotalTwitterHandlesCount}
+            />
           )}
 
           {currentActiveTab === "sources" && (

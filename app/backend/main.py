@@ -87,7 +87,7 @@ class TwitterHandleUpdateModel(BaseModel):
 
 class TwitterScrapeStartRequest(BaseModel):
     handles: Optional[List[str]] = None
-    concurrency_level: Optional[int] = 3
+    concurrency_level: Optional[int] = 6
 
 # Active WebSocket connections list to broadcast live logs to the UI
 active_websocket_connections: List[WebSocket] = []
@@ -408,7 +408,7 @@ current_twitter_scrape_state: Dict[str, Any] = {
     "total_handles": 0,
     "completed_handles": 0,
     "total_tweets_collected": 0,
-    "concurrency_level": 3,
+    "concurrency_level": 6,
     "active_workers": {},
     "started_at": None,
     "finished_at": None
@@ -501,10 +501,10 @@ async def start_twitter_scrape_endpoint(payload: Optional[TwitterScrapeStartRequ
     if current_twitter_scrape_state["is_running"]:
         raise HTTPException(status_code=400, detail="A Twitter scrape pipeline is already actively running")
 
-    # Determine concurrency level (default 3, max 6)
-    concurrency_level = 3
+    # Determine concurrency level (default 6, max 8)
+    concurrency_level = 6
     if payload and payload.concurrency_level:
-        concurrency_level = max(1, min(6, payload.concurrency_level))
+        concurrency_level = max(1, min(8, payload.concurrency_level))
 
     # Determine handles to scrape
     handles_to_scrape = []

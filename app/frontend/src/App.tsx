@@ -15,7 +15,8 @@ import {
   MessageSquare,
   Tags,
   History,
-  Settings
+  Settings,
+  AtSign
 } from "lucide-react";
 import type {
   NavigationTabType,
@@ -38,6 +39,7 @@ import { KeywordsPage } from "./pages/KeywordsPage";
 import { SourcesPage } from "./pages/SourcesPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { TwitterHandlesPage } from "./pages/TwitterHandlesPage";
 
 const BACKEND_API_BASE_URL = "http://localhost:8000";
 const BACKEND_WEBSOCKET_URL = "ws://localhost:8000/ws/pipeline";
@@ -553,6 +555,7 @@ export default function App() {
     headlines: "News Headlines",
     tweets: "Extracted Tweets",
     keywords: "Keywords",
+    twitter_handles: "Twitter Handles",
     sources: "Intel Sources",
     history: "Run History",
     settings: "Settings"
@@ -606,6 +609,11 @@ export default function App() {
           badge: totalKeywordsCount > 0 ? String(totalKeywordsCount) : undefined,
           badgeClassName: "bg-amber-500/15 text-amber-300 font-semibold"
         },
+        {
+          id: "twitter_handles",
+          title: "Twitter Handles",
+          icon: AtSign,
+        },
       ]
     },
     {
@@ -641,6 +649,7 @@ export default function App() {
     { id: "headlines", label: "News Headlines", desc: "Ingested news headlines across all configured sources" },
     { id: "tweets", label: "Extracted Tweets", desc: "Live tweets mined directly from X.com search timelines" },
     { id: "keywords", label: "Synthesized Keywords", desc: "High-precision keywords generated via Strategic AI Engine" },
+    { id: "twitter_handles", label: "Twitter Handles", desc: "Parallel scraping of defense and think tank handles" },
     { id: "sources", label: "Sources Management", desc: "Configure, toggle, and add news sites & RSS feeds" },
     { id: "history", label: "Run History", desc: "Inspect and export past intelligence pipeline runs" },
     { id: "settings", label: "Application Settings", desc: "Model server endpoint, browser options, and scraping thresholds" },
@@ -829,6 +838,10 @@ export default function App() {
               onSaveKeywords={handleSaveKeywords}
               activeRunId={activeRunId}
             />
+          )}
+
+          {currentActiveTab === "twitter_handles" && (
+            <TwitterHandlesPage backendApiBaseUrl={BACKEND_API_BASE_URL} />
           )}
 
           {currentActiveTab === "sources" && (

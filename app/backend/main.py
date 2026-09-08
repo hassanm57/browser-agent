@@ -27,8 +27,16 @@ from app.backend.database import (
     delete_pipeline_run_by_id,
     clear_all_pipeline_runs,
     update_run_keywords_data,
-    mark_active_runs_cancelled
+    mark_active_runs_cancelled,
+    get_all_twitter_handles,
+    add_twitter_handle,
+    update_twitter_handle,
+    delete_twitter_handle,
+    get_latest_twitter_scrape_run,
+    get_all_scraped_tweets,
+    clear_all_scraped_tweets
 )
+from app.backend.twitter_handles_runner import run_parallel_twitter_handles_pipeline
 
 # Initialize the SQLite tables on startup
 initialize_database()
@@ -66,6 +74,20 @@ class SettingsUpdateModel(BaseModel):
 
 class KeywordsUpdateModel(BaseModel):
     keywords_data: Dict[str, Any]
+
+class TwitterHandleCreateModel(BaseModel):
+    handle: str
+    display_name: Optional[str] = ""
+    category: Optional[str] = "General"
+
+class TwitterHandleUpdateModel(BaseModel):
+    display_name: Optional[str] = ""
+    category: Optional[str] = "General"
+    is_active: bool = True
+
+class TwitterScrapeStartRequest(BaseModel):
+    handles: Optional[List[str]] = None
+    concurrency_level: Optional[int] = 3
 
 # Active WebSocket connections list to broadcast live logs to the UI
 active_websocket_connections: List[WebSocket] = []
@@ -375,6 +397,232 @@ def export_keywords(run_identifier: int, format: str = Query("json", enum=["json
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename=keywords_run_{run_identifier}.csv"}
     )
+
+# ----------------- TWITTER HANDLES & SCRAPING API -----------------
+
+current_running_twitter_scrape_task: Optional[asyncio.Task] = None
+twitter_scrape_cancellation_event: Optional[asyncio.Event] = None
+current_twitter_scrape_state: Dict[str, Any] = {
+    "is_running": False,
+    "status": "idle",
+    "total_handles": 0,
+    "completed_handles": 0,
+    "total_tweets_collected": 0,
+    "concurrency_level": 3,
+    "active_workers": {},
+    "started_at": None,
+    "finished_at": None
+}
+
+@app.get("/api/twitter/handles")
+def get_twitter_handles_endpoint():
+    # Returns all configured handles with their categories and status
+    handles = get_all_twitter_handles()
+    return handles
+
+@app.post("/api/twitter/handles")
+def create_twitter_handle_endpoint(payload: TwitterHandleCreateModel):
+    # Adds a new handle to the database
+    new_id = add_twitter_handle(
+        handle_string=payload.handle,
+        display_name_string=payload.display_name,
+        category_string=payload.category
+    )
+    return {"message": "Handle saved successfully", "id": new_id}
+
+@app.put("/api/twitter/handles/{handle_identifier}")
+def update_twitter_handle_endpoint(handle_identifier: int, payload: TwitterHandleUpdateModel):
+    # Updates a handle's category, display name, or active status
+    update_twitter_handle(
+        handle_identifier=handle_identifier,
+        display_name_string=payload.display_name,
+        category_string=payload.category,
+        is_active_boolean=payload.is_active
+    )
+    return {"message": "Handle updated successfully"}
+
+@app.delete("/api/twitter/handles/{handle_identifier}")
+def delete_twitter_handle_endpoint(handle_identifier: int):
+    # Deletes a handle from the database
+    delete_twitter_handle(handle_identifier)
+    return {"message": "Handle deleted successfully"}
+
+@app.get("/api/twitter/tweets")
+def get_twitter_tweets_endpoint(
+    handle: Optional[str] = None,
+    category: Optional[str] = None,
+    within_24h_only: bool = False,
+    sort_by: str = "time",
+    search: Optional[str] = None
+):
+    # Query scraped tweets with optional filters for handle, category, 24h, and sorting
+    tweets = get_all_scraped_tweets(
+        handle_filter_string=handle,
+        category_filter_string=category,
+        within_24h_only_boolean=within_24h_only,
+        sort_by_string=sort_by,
+        search_query_string=search
+    )
+    return tweets
+
+@app.delete("/api/twitter/tweets")
+def clear_twitter_tweets_endpoint():
+    # Deletes all recorded tweets and resets tweet counts
+    clear_all_scraped_tweets()
+    return {"message": "All scraped tweets cleared successfully"}
+
+@app.get("/api/twitter/scrape/status")
+def get_twitter_scrape_status_endpoint():
+    # Return active in-memory progress if currently running
+    if current_twitter_scrape_state["is_running"]:
+        return current_twitter_scrape_state
+
+    # Otherwise return latest completed/cancelled run from database
+    latest_run = get_latest_twitter_scrape_run()
+    if latest_run is not None:
+        return {
+            "is_running": False,
+            "status": latest_run["status"],
+            "total_handles": latest_run["total_handles"],
+            "completed_handles": latest_run["scraped_handles"],
+            "total_tweets_collected": latest_run["total_tweets_found"],
+            "concurrency_level": latest_run["concurrency_level"],
+            "active_workers": {},
+            "started_at": latest_run["started_at"],
+            "finished_at": latest_run["finished_at"]
+        }
+
+    return current_twitter_scrape_state
+
+@app.post("/api/twitter/scrape/start")
+async def start_twitter_scrape_endpoint(payload: Optional[TwitterScrapeStartRequest] = None):
+    global current_running_twitter_scrape_task, twitter_scrape_cancellation_event, current_twitter_scrape_state
+
+    if current_twitter_scrape_state["is_running"]:
+        raise HTTPException(status_code=400, detail="A Twitter scrape pipeline is already actively running")
+
+    # Determine concurrency level (default 3, max 6)
+    concurrency_level = 3
+    if payload and payload.concurrency_level:
+        concurrency_level = max(1, min(6, payload.concurrency_level))
+
+    # Determine handles to scrape
+    handles_to_scrape = []
+    if payload and payload.handles and len(payload.handles) > 0:
+        handles_to_scrape = payload.handles
+    else:
+        # Load all active handles from database
+        all_handles = get_all_twitter_handles()
+        for h_item in all_handles:
+            if h_item.get("is_active", True):
+                handles_to_scrape.append(h_item.get("handle"))
+
+    if len(handles_to_scrape) == 0:
+        raise HTTPException(status_code=400, detail="No active Twitter handles found to scrape")
+
+    twitter_scrape_cancellation_event = asyncio.Event()
+    current_time_iso = datetime.now().isoformat()
+
+    current_twitter_scrape_state["is_running"] = True
+    current_twitter_scrape_state["status"] = "running"
+    current_twitter_scrape_state["total_handles"] = len(handles_to_scrape)
+    current_twitter_scrape_state["completed_handles"] = 0
+    current_twitter_scrape_state["total_tweets_collected"] = 0
+    current_twitter_scrape_state["concurrency_level"] = concurrency_level
+    current_twitter_scrape_state["active_workers"] = {}
+    current_twitter_scrape_state["started_at"] = current_time_iso
+    current_twitter_scrape_state["finished_at"] = None
+
+    for w_idx in range(1, concurrency_level + 1):
+        current_twitter_scrape_state["active_workers"][str(w_idx)] = "Starting..."
+
+    async def log_callback(level_name: str, message_text: str):
+        timestamp_str = datetime.now().strftime("%H:%M:%S")
+        await broadcast_websocket_message({
+            "type": "twitter_scrape_log",
+            "level": level_name,
+            "timestamp": timestamp_str,
+            "message": message_text
+        })
+
+    async def progress_callback(progress_data: Dict[str, Any]):
+        current_twitter_scrape_state["completed_handles"] = progress_data.get("completed_handles", 0)
+        current_twitter_scrape_state["total_tweets_collected"] = progress_data.get("total_tweets_collected", 0)
+        current_twitter_scrape_state["active_workers"] = progress_data.get("active_workers", {})
+        await broadcast_websocket_message({
+            "type": "twitter_scrape_progress",
+            "data": progress_data
+        })
+
+    async def status_callback(status_name: str):
+        current_twitter_scrape_state["status"] = status_name
+        await broadcast_websocket_message({
+            "type": "twitter_scrape_status",
+            "status": status_name
+        })
+
+    async def tweet_saved_callback(tweet_data: Dict[str, Any]):
+        await broadcast_websocket_message({
+            "type": "twitter_scrape_tweet",
+            "tweet": tweet_data
+        })
+
+    async def background_runner_wrapper():
+        global current_running_twitter_scrape_task, current_twitter_scrape_state
+        try:
+            await run_parallel_twitter_handles_pipeline(
+                handles_to_scrape_list=handles_to_scrape,
+                concurrency_level=concurrency_level,
+                cancellation_event=twitter_scrape_cancellation_event,
+                log_callback=log_callback,
+                progress_callback=progress_callback,
+                status_callback=status_callback,
+                tweet_saved_callback=tweet_saved_callback
+            )
+        except Exception as unhandled_err:
+            current_twitter_scrape_state["status"] = "error"
+            await log_callback("ERROR", f"Twitter scraper error: {str(unhandled_err)}")
+            await status_callback("error")
+        finally:
+            current_twitter_scrape_state["is_running"] = False
+            current_twitter_scrape_state["finished_at"] = datetime.now().isoformat()
+            current_running_twitter_scrape_task = None
+
+    current_running_twitter_scrape_task = asyncio.create_task(background_runner_wrapper())
+
+    return {
+        "status": "started",
+        "total_handles": len(handles_to_scrape),
+        "concurrency_level": concurrency_level
+    }
+
+@app.post("/api/twitter/scrape/cancel")
+async def cancel_twitter_scrape_endpoint():
+    global current_running_twitter_scrape_task, twitter_scrape_cancellation_event, current_twitter_scrape_state
+
+    if twitter_scrape_cancellation_event is not None:
+        twitter_scrape_cancellation_event.set()
+
+    if current_running_twitter_scrape_task is not None and not current_running_twitter_scrape_task.done():
+        current_running_twitter_scrape_task.cancel()
+        current_running_twitter_scrape_task = None
+
+    current_twitter_scrape_state["is_running"] = False
+    current_twitter_scrape_state["status"] = "cancelled"
+    current_twitter_scrape_state["finished_at"] = datetime.now().isoformat()
+
+    await broadcast_websocket_message({
+        "type": "twitter_scrape_status",
+        "status": "cancelled"
+    })
+    await broadcast_websocket_message({
+        "type": "twitter_scrape_log",
+        "level": "WARN",
+        "timestamp": datetime.now().strftime("%H:%M:%S"),
+        "message": "Twitter scraper cancellation processed."
+    })
+
+    return {"status": "cancelled"}
 
 # ----------------- TRENDS & KEYWORDS HELPERS & ENDPOINTS -----------------
 

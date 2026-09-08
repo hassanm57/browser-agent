@@ -7,9 +7,52 @@ export type NavigationTabType =
   | "headlines"
   | "tweets"
   | "keywords"
+  | "twitter_handles"
   | "sources"
   | "history"
   | "settings";
+
+export interface TwitterHandleItem {
+  id: number;
+  handle: string;
+  display_name: string;
+  category: string;
+  is_active: boolean;
+  created_at: string;
+  last_scraped_at: string | null;
+  last_tweet_count: number;
+}
+
+export interface TwitterScrapedTweetItem {
+  id: number;
+  run_id: number | null;
+  handle: string;
+  author_display_name: string;
+  tweet_text: string;
+  tweet_timestamp_text: string;
+  tweet_time_iso: string;
+  is_within_24h: boolean;
+  views_count: number;
+  likes_count: number;
+  reposts_count: number;
+  replies_count: number;
+  bookmarks_count: number;
+  tweet_url: string;
+  scraped_at: string;
+  handle_category?: string;
+}
+
+export interface TwitterScrapeProgressItem {
+  is_running: boolean;
+  status: "idle" | "running" | "completed" | "cancelled" | "error";
+  total_handles: number;
+  completed_handles: number;
+  total_tweets_collected: number;
+  concurrency_level: number;
+  active_workers: Record<string, string>;
+  started_at: string | null;
+  finished_at: string | null;
+}
 
 export interface CountryItem {
   name: string;

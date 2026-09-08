@@ -567,7 +567,7 @@ def update_handle_last_tweet_count(handle_string, tweets_count):
     connection.close()
 
 
-def get_all_scraped_tweets(handle_filter_string=None, category_filter_string=None, within_24h_only_boolean=False, sort_by_string="time", search_query_string=""):
+def get_all_scraped_tweets(handle_filter_string=None, category_filter_string=None, within_24h_only_boolean=False, sort_by_string="views", search_query_string=""):
     connection = get_database_connection()
     cursor = connection.cursor()
 

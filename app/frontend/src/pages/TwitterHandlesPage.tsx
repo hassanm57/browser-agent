@@ -51,7 +51,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("All");
   const [isWithin24HoursOnly, setIsWithin24HoursOnly] = useState<boolean>(true);
-  const [sortByOption, setSortByOption] = useState<string>("time");
+  const [sortByOption, setSortByOption] = useState<string>("views");
 
   // Handle management form state
   const [newHandleInput, setNewHandleInput] = useState<string>("");
@@ -587,9 +587,9 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
                 onChange={(e) => setSortByOption(e.target.value)}
                 className="bg-card border border-border/50 rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none"
               >
+                <option value="views">Most Views</option>
                 <option value="time">Newest First</option>
                 <option value="likes">Most Likes</option>
-                <option value="views">Most Views</option>
                 <option value="reposts">Most Reposts</option>
                 <option value="replies">Most Comments</option>
               </select>

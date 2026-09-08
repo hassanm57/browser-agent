@@ -452,7 +452,7 @@ def get_twitter_tweets_endpoint(
     handle: Optional[str] = None,
     category: Optional[str] = None,
     within_24h_only: bool = True,
-    sort_by: str = "time",
+    sort_by: str = "views",
     search: Optional[str] = None
 ):
     # Query scraped tweets with optional filters for handle, category, 24h, and sorting

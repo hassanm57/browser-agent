@@ -85,10 +85,13 @@ Quick REST reference to monitor pipeline status, trigger/cancel runs, retrieve c
     curl -X POST http://localhost:8000/api/twitter/scrape/cancel
     ```
 - **`GET /api/twitter/tweets`**
-  - **Query parameters**: `handle`, `category`, `within_24h_only` (boolean, default: `true`), `sort_by` (`time` | `likes` | `reposts` | `views`), `search`
-  - **Description**: Retrieve harvested tweets with engagement metrics (likes, reposts, replies, views, bookmarks) and filtering (defaults to posts from the past 24 hours):
+  - **Query parameters**: `handle`, `category`, `within_24h_only` (boolean, default: `true`), `sort_by` (`views` | `time` | `likes` | `reposts` | `replies`, default: `views`), `search`
+  - **Description**: Retrieve harvested tweets with engagement metrics (likes, reposts, replies, views, bookmarks) and filtering (defaults to posts from the past 24 hours sorted by most views):
     ```bash
-    # Get scraped tweets from the past 24 hours (default)
+    # Get scraped tweets from the past 24 hours sorted by highest views (default)
+    curl "http://localhost:8000/api/twitter/tweets"
+
+    # Sort by newest timestamp first
     curl "http://localhost:8000/api/twitter/tweets?sort_by=time"
 
     # Fetch all scraped tweets regardless of 24h window

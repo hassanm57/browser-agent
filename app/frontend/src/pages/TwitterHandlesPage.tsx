@@ -495,7 +495,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
         </div>
 
         {/* Tweet Content */}
-        <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap line-clamp-5">
+        <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
           {tweet.tweet_text}
         </p>
 

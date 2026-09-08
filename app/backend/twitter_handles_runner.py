@@ -2,7 +2,9 @@ import asyncio
 import os
 import sys
 import re
+import json
 import datetime
+from datetime import datetime as dt_class, timezone
 from typing import List, Dict, Any, Callable, Optional
 
 # Ensure project root is in sys.path
@@ -352,19 +354,153 @@ async def expand_all_show_more_buttons(browser_instance: Browser):
     try:
         current_page = await browser_instance.get_current_page()
         await current_page.evaluate("""
-            const candidateButtons = Array.from(document.querySelectorAll('button, div[role="button"], span'));
-            for (const btn of candidateButtons) {
-                const buttonText = (btn.innerText || '').trim();
-                if (buttonText === 'Show more' || buttonText === 'Show this thread') {
-                    try {
-                        btn.click();
-                    } catch(e) {}
+            () => {
+                const candidateButtons = Array.from(document.querySelectorAll('button, div[role="button"]'));
+                for (const btn of candidateButtons) {
+                    const buttonText = (btn.innerText || '').trim();
+                    if (buttonText === 'Show more' || buttonText === 'Show this thread') {
+                        try {
+                            btn.click();
+                        } catch(e) {}
+                    }
                 }
             }
         """)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.4)
     except Exception:
         pass
+
+
+async def extract_tweets_directly_from_dom(
+    browser_instance: Browser,
+    clean_handle: str
+) -> List[Dict[str, Any]]:
+    # Extracts clean, full, untruncated tweets directly from X's DOM elements
+    try:
+        current_page = await browser_instance.get_current_page()
+        raw_json_string = await current_page.evaluate("""
+            () => {
+                const articles = Array.from(document.querySelectorAll('article[data-testid="tweet"], article'));
+                const results = [];
+                
+                for (const art of articles) {
+                    const textElement = art.querySelector('[data-testid="tweetText"]');
+                    if (!textElement) continue;
+                    const tweetText = (textElement.innerText || '').trim();
+                    if (!tweetText || tweetText.length < 5) continue;
+                    
+                    const timeElement = art.querySelector('time');
+                    const timestampText = timeElement ? (timeElement.innerText || '').trim() : '';
+                    const datetimeIso = timeElement ? (timeElement.getAttribute('datetime') || '') : '';
+                    
+                    let tweetUrl = '';
+                    const link = art.querySelector('a[href*="/status/"]');
+                    if (link) {
+                        const href = link.getAttribute('href') || '';
+                        tweetUrl = href.startsWith('http') ? href : ('https://x.com' + href);
+                    }
+                    
+                    let authorDisplayName = '';
+                    let authorHandle = '';
+                    const userHeader = art.querySelector('[data-testid="User-Name"]');
+                    if (userHeader) {
+                        const lines = (userHeader.innerText || '').split('\\n').map(s => s.trim()).filter(Boolean);
+                        if (lines.length > 0) authorDisplayName = lines[0];
+                        for (const lineStr of lines) {
+                            if (lineStr.startsWith('@')) {
+                                authorHandle = lineStr.replace('@', '');
+                                break;
+                            }
+                        }
+                    }
+                    
+                    const group = art.querySelector('div[role="group"]');
+                    const ariaLabel = group ? (group.getAttribute('aria-label') || '') : '';
+                    
+                    function parseMetric(pattern, str) {
+                        const m = str.match(pattern);
+                        if (!m) return 0;
+                        let val = m[1].replace(/,/g, '').trim().toLowerCase();
+                        if (val.endsWith('k')) return Math.round(parseFloat(val) * 1000);
+                        if (val.endsWith('m')) return Math.round(parseFloat(val) * 1000000);
+                        if (val.endsWith('b')) return Math.round(parseFloat(val) * 1000000000);
+                        return parseInt(val, 10) || 0;
+                    }
+                    
+                    const repliesCount = parseMetric(/(\\d+[\\d,\\.]*[kmb]?)\\s+repl/i, ariaLabel);
+                    const repostsCount = parseMetric(/(\\d+[\\d,\\.]*[kmb]?)\\s+repost/i, ariaLabel);
+                    const likesCount = parseMetric(/(\\d+[\\d,\\.]*[kmb]?)\\s+like/i, ariaLabel);
+                    const bookmarksCount = parseMetric(/(\\d+[\\d,\\.]*[kmb]?)\\s+bookmark/i, ariaLabel);
+                    const viewsCount = parseMetric(/(\\d+[\\d,\\.]*[kmb]?)\\s+view/i, ariaLabel);
+                    
+                    results.push({
+                        handle: authorHandle || "",
+                        author_display_name: authorDisplayName || "",
+                        tweet_text: tweetText,
+                        tweet_timestamp_text: timestampText,
+                        tweet_time_iso: datetimeIso,
+                        tweet_url: tweetUrl,
+                        views_count: viewsCount,
+                        likes_count: likesCount,
+                        reposts_count: repostsCount,
+                        replies_count: repliesCount,
+                        bookmarks_count: bookmarksCount
+                    });
+                }
+                return JSON.stringify(results);
+            }
+        """)
+
+        parsed_items = json.loads(raw_json_string) if raw_json_string else []
+        clean_results = []
+        current_utc_now = dt_class.now(timezone.utc)
+
+        for item in parsed_items:
+            tweet_text = item.get("tweet_text", "").strip()
+            if not tweet_text:
+                continue
+
+            time_text = item.get("tweet_timestamp_text", "")
+            time_iso = item.get("tweet_time_iso", "")
+
+            # Check 24h classification accurately
+            is_within_24h = False
+            if time_iso:
+                try:
+                    iso_clean = time_iso.replace("Z", "+00:00")
+                    tweet_datetime = dt_class.fromisoformat(iso_clean)
+                    age_seconds = (current_utc_now - tweet_datetime).total_seconds()
+                    if 0 <= age_seconds <= (25 * 3600):
+                        is_within_24h = True
+                    else:
+                        is_within_24h = False
+                except Exception:
+                    is_within_24h = check_if_timestamp_is_within_past_24_hours(time_text)
+            else:
+                is_within_24h = check_if_timestamp_is_within_past_24_hours(time_text)
+
+            handle_name = item.get("handle") or clean_handle
+            author_name = item.get("author_display_name") or handle_name
+            tweet_url = item.get("tweet_url") or f"https://x.com/{clean_handle}"
+
+            clean_results.append({
+                "handle": handle_name,
+                "author_display_name": author_name,
+                "tweet_text": tweet_text,
+                "tweet_timestamp_text": time_text if time_text else "Recent",
+                "tweet_time_iso": time_iso if time_iso else dt_class.now().isoformat(),
+                "is_within_24h": is_within_24h,
+                "views_count": item.get("views_count", 0),
+                "likes_count": item.get("likes_count", 0),
+                "reposts_count": item.get("reposts_count", 0),
+                "replies_count": item.get("replies_count", 0),
+                "bookmarks_count": item.get("bookmarks_count", 0),
+                "tweet_url": tweet_url
+            })
+
+        return clean_results
+    except Exception:
+        return []
 
 
 async def scrape_single_handle_with_browser(
@@ -404,14 +540,20 @@ async def scrape_single_handle_with_browser(
 
         # Expand any truncated tweets on the page by clicking 'Show more'
         await expand_all_show_more_buttons(browser_instance)
-        page_state_text = await browser_instance.get_state_as_text()
 
         all_collected_tweets_for_handle: List[Dict[str, Any]] = []
 
-        # First pass extraction
-        first_batch = extract_detailed_tweets_from_page_chunks(page_state_text, clean_handle)
-        for tweet_item in first_batch:
-            all_collected_tweets_for_handle.append(tweet_item)
+        # First pass extraction directly from DOM elements
+        dom_batch = await extract_tweets_directly_from_dom(browser_instance, clean_handle)
+        if len(dom_batch) > 0:
+            for tweet_item in dom_batch:
+                all_collected_tweets_for_handle.append(tweet_item)
+        else:
+            # Fallback to page state text parsing if DOM returned 0
+            page_state_text = await browser_instance.get_state_as_text()
+            first_batch = extract_detailed_tweets_from_page_chunks(page_state_text, clean_handle)
+            for tweet_item in first_batch:
+                all_collected_tweets_for_handle.append(tweet_item)
 
         # Scroll down 3 times to load up to 24 tweets
         for scroll_round in range(3):
@@ -428,13 +570,18 @@ async def scrape_single_handle_with_browser(
                 # Expand any 'Show more' buttons revealed after scrolling
                 await expand_all_show_more_buttons(browser_instance)
 
-                updated_page_text = await browser_instance.get_state_as_text()
-                new_batch = extract_detailed_tweets_from_page_chunks(updated_page_text, clean_handle)
+                new_batch = await extract_tweets_directly_from_dom(browser_instance, clean_handle)
+                if len(new_batch) == 0:
+                    updated_page_text = await browser_instance.get_state_as_text()
+                    new_batch = extract_detailed_tweets_from_page_chunks(updated_page_text, clean_handle)
 
                 for candidate_tweet in new_batch:
                     is_duplicate = False
                     for existing_tweet in all_collected_tweets_for_handle:
-                        if existing_tweet["tweet_text"] == candidate_tweet["tweet_text"]:
+                        if (
+                            (candidate_tweet.get("tweet_url") and existing_tweet.get("tweet_url") == candidate_tweet.get("tweet_url"))
+                            or existing_tweet["tweet_text"] == candidate_tweet["tweet_text"]
+                        ):
                             is_duplicate = True
                             break
                     if not is_duplicate:

@@ -15,7 +15,10 @@ import {
   Plus,
   X,
   Copy,
-  Check
+  Check,
+  Clock,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 import type { TwitterHandleItem, TwitterScrapedTweetItem, TwitterScrapeProgressItem } from "../types";
 
@@ -64,6 +67,9 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
   // Scraper launch state & re-run confirmation modal
   const [isStartingScrape, setIsStartingScrape] = useState<boolean>(false);
   const [isConfirmingRerunModalOpen, setIsConfirmingRerunModalOpen] = useState<boolean>(false);
+
+  // Live elapsed time tracking in seconds
+  const [liveElapsedSeconds, setLiveElapsedSeconds] = useState<number>(0);
 
   // Handle management form state
   const [newHandleInput, setNewHandleInput] = useState<string>("");
@@ -254,6 +260,86 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
     };
   }, [scrapeProgress.is_running, isStartingScrape]);
 
+  // Live elapsed timer that increments every second while scraping is active,
+  // or updates to the final elapsed duration when the scrape run finishes
+  useEffect(() => {
+    let timerIntervalId: any = null;
+
+    if (scrapeProgress.is_running && scrapeProgress.started_at) {
+      const updateRunningTimer = () => {
+        const startMillis = new Date(scrapeProgress.started_at!).getTime();
+        const currentMillis = Date.now();
+        const secondsDifference = Math.max(0, Math.floor((currentMillis - startMillis) / 1000));
+        setLiveElapsedSeconds(secondsDifference);
+      };
+
+      updateRunningTimer();
+      timerIntervalId = setInterval(updateRunningTimer, 1000);
+    } else if (scrapeProgress.started_at && scrapeProgress.finished_at) {
+      const startMillis = new Date(scrapeProgress.started_at).getTime();
+      const finishMillis = new Date(scrapeProgress.finished_at).getTime();
+      const totalSeconds = Math.max(0, Math.floor((finishMillis - startMillis) / 1000));
+      setLiveElapsedSeconds(totalSeconds);
+    } else if (scrapeProgress.elapsed_seconds !== undefined && scrapeProgress.elapsed_seconds > 0) {
+      setLiveElapsedSeconds(scrapeProgress.elapsed_seconds);
+    }
+
+    return () => {
+      if (timerIntervalId) {
+        clearInterval(timerIntervalId);
+      }
+    };
+  }, [
+    scrapeProgress.is_running,
+    scrapeProgress.started_at,
+    scrapeProgress.finished_at,
+    scrapeProgress.elapsed_seconds
+  ]);
+
+  // Helper function to format seconds into digital clock display: mm:ss or hh:mm:ss
+  const formatStopwatchDisplay = (totalSecondsCount: number): string => {
+    if (totalSecondsCount < 0) {
+      return "00:00";
+    }
+
+    const hoursCount = Math.floor(totalSecondsCount / 3600);
+    const remainingSecondsAfterHours = totalSecondsCount % 3600;
+    const minutesCount = Math.floor(remainingSecondsAfterHours / 60);
+    const secondsCount = remainingSecondsAfterHours % 60;
+
+    const paddedMinutes = String(minutesCount).padStart(2, "0");
+    const paddedSeconds = String(secondsCount).padStart(2, "0");
+
+    if (hoursCount > 0) {
+      const paddedHours = String(hoursCount).padStart(2, "0");
+      return paddedHours + ":" + paddedMinutes + ":" + paddedSeconds;
+    }
+
+    return paddedMinutes + ":" + paddedSeconds;
+  };
+
+  // Helper function to format seconds into readable text: e.g. "4m 32s" or "45s"
+  const formatElapsedDurationText = (totalSecondsCount: number): string => {
+    if (totalSecondsCount <= 0) {
+      return "0s";
+    }
+
+    const hoursCount = Math.floor(totalSecondsCount / 3600);
+    const remainingSecondsAfterHours = totalSecondsCount % 3600;
+    const minutesCount = Math.floor(remainingSecondsAfterHours / 60);
+    const secondsCount = remainingSecondsAfterHours % 60;
+
+    if (hoursCount > 0) {
+      return hoursCount + "h " + minutesCount + "m " + secondsCount + "s";
+    }
+
+    if (minutesCount > 0) {
+      return minutesCount + "m " + secondsCount + "s";
+    }
+
+    return secondsCount + "s";
+  };
+
   // Close modals when user presses the Escape key
   useEffect(() => {
     const handleEscapeKeyDown = (keyboardEvent: KeyboardEvent) => {
@@ -294,6 +380,8 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
     for (let workerIndexNumber = 1; workerIndexNumber <= concurrencyLevel; workerIndexNumber++) {
       initialWorkersMap[String(workerIndexNumber)] = "Launching Chrome...";
     }
+
+    setLiveElapsedSeconds(0);
 
     setScrapeProgress({
       is_running: true,
@@ -646,8 +734,17 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               ({handlesList.length} handles)
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Multi-browser tweet scraper
+          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+            <span>Multi-browser tweet scraper</span>
+            {!scrapeProgress.is_running && scrapeProgress.finished_at && liveElapsedSeconds > 0 && (
+              <>
+                <span>•</span>
+                <span className="flex items-center gap-1 text-zinc-400">
+                  <Clock className="w-3 h-3 text-zinc-500" />
+                  Last run: {formatElapsedDurationText(liveElapsedSeconds)} total elapsed
+                </span>
+              </>
+            )}
           </p>
         </div>
 
@@ -709,7 +806,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
         </div>
       </div>
 
-      {/* Live Scraping Progress Banner */}
+      {/* Live Scraping Progress Banner with real-time Elapsed Time */}
       {scrapeProgress.is_running && (
         <div className="p-3.5 rounded-lg border border-border/40 bg-card/60 space-y-2.5 text-xs">
           <div className="flex items-center justify-between text-muted-foreground">
@@ -719,10 +816,16 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
                 ? "Launching " + (scrapeProgress.concurrency_level || 6) + " parallel browser instances..."
                 : "Scraping in progress..."}
             </span>
-            <span>
-              {scrapeProgress.completed_handles} / {scrapeProgress.total_handles} handles (
-              {scrapeProgress.total_tweets_collected} tweets)
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1.5 text-zinc-300 font-mono text-[11px] bg-zinc-800/80 border border-zinc-700/60 px-2 py-0.5 rounded">
+                <Clock className="w-3 h-3 text-blue-400 animate-pulse" />
+                <span>Elapsed: {formatStopwatchDisplay(liveElapsedSeconds)}</span>
+              </span>
+              <span>
+                {scrapeProgress.completed_handles} / {scrapeProgress.total_handles} handles (
+                {scrapeProgress.total_tweets_collected} tweets)
+              </span>
+            </div>
           </div>
 
           {/* Slim progress bar with minimum visual progress while starting */}
@@ -748,6 +851,31 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               {renderedActiveWorkers}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Completed or Cancelled Scrape Summary Banner with Total Time Elapsed */}
+      {!scrapeProgress.is_running && scrapeProgress.finished_at && liveElapsedSeconds > 0 && (
+        <div className="p-3 rounded-lg border border-border/40 bg-card/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            {scrapeProgress.status === "completed" ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+            )}
+            <span className="text-foreground font-medium">
+              {scrapeProgress.status === "completed"
+                ? "Scrape pipeline finished"
+                : "Scrape pipeline stopped"}
+            </span>
+            <span className="text-muted-foreground">
+              ({scrapeProgress.completed_handles} of {scrapeProgress.total_handles} handles, {scrapeProgress.total_tweets_collected} tweets extracted)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-zinc-300 font-mono text-[11px] bg-zinc-800/80 border border-zinc-700/60 px-2.5 py-1 rounded">
+            <Clock className="w-3 h-3 text-zinc-400" />
+            <span>Total Time Elapsed: {formatElapsedDurationText(liveElapsedSeconds)}</span>
+          </div>
         </div>
       )}
 

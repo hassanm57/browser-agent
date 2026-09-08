@@ -475,11 +475,29 @@ def clear_twitter_tweets_endpoint():
 def get_twitter_scrape_status_endpoint():
     # Return active in-memory progress if currently running
     if current_twitter_scrape_state["is_running"]:
-        return current_twitter_scrape_state
+        elapsed_seconds = 0
+        if current_twitter_scrape_state.get("started_at"):
+            try:
+                start_datetime = datetime.fromisoformat(current_twitter_scrape_state["started_at"])
+                elapsed_seconds = max(0, int((datetime.now() - start_datetime).total_seconds()))
+            except Exception:
+                pass
+        return {
+            **current_twitter_scrape_state,
+            "elapsed_seconds": elapsed_seconds
+        }
 
     # Otherwise return latest completed/cancelled run from database
     latest_run = get_latest_twitter_scrape_run()
     if latest_run is not None:
+        elapsed_seconds = 0
+        if latest_run["started_at"] and latest_run["finished_at"]:
+            try:
+                start_datetime = datetime.fromisoformat(latest_run["started_at"])
+                end_datetime = datetime.fromisoformat(latest_run["finished_at"])
+                elapsed_seconds = max(0, int((end_datetime - start_datetime).total_seconds()))
+            except Exception:
+                pass
         return {
             "is_running": False,
             "status": latest_run["status"],
@@ -489,7 +507,8 @@ def get_twitter_scrape_status_endpoint():
             "concurrency_level": latest_run["concurrency_level"],
             "active_workers": {},
             "started_at": latest_run["started_at"],
-            "finished_at": latest_run["finished_at"]
+            "finished_at": latest_run["finished_at"],
+            "elapsed_seconds": elapsed_seconds
         }
 
     return current_twitter_scrape_state

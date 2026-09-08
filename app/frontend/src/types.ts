@@ -52,6 +52,7 @@ export interface TwitterScrapeProgressItem {
   active_workers: Record<string, string>;
   started_at: string | null;
   finished_at: string | null;
+  elapsed_seconds?: number;
 }
 
 export interface CountryItem {

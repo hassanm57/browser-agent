@@ -77,7 +77,7 @@ export default function App() {
 
   const [rawSourcesData, setRawSourcesData] = useState<RawSourcesData | null>(null);
   const [keywordsData, setKeywordsData] = useState<KeywordsData | null>(null);
-  const [totalTwitterHandlesCount, setTotalTwitterHandlesCount] = useState<number>(0);
+  const [totalScrapedTweetsCount, setTotalScrapedTweetsCount] = useState<number>(0);
 
   const [currentSettings, setCurrentSettings] = useState<ApplicationSettings>({
     vllm_base_url: "http://10.13.12.121:8000/v1",
@@ -300,18 +300,18 @@ export default function App() {
       });
   }
 
-  function fetchTwitterHandlesCount() {
-    fetch(BACKEND_API_BASE_URL + "/api/twitter/handles")
+  function fetchScrapedTweetsCount() {
+    fetch(BACKEND_API_BASE_URL + "/api/twitter/tweets?within_24h_only=false")
       .then(function (res) {
         return res.json();
       })
-      .then(function (handles) {
-        if (Array.isArray(handles)) {
-          setTotalTwitterHandlesCount(handles.length);
+      .then(function (tweets) {
+        if (Array.isArray(tweets)) {
+          setTotalScrapedTweetsCount(tweets.length);
         }
       })
       .catch(function (err) {
-        console.error("Failed to load twitter handles count", err);
+        console.error("Failed to load scraped tweets count", err);
       });
   }
 
@@ -321,7 +321,7 @@ export default function App() {
     fetchSettings();
     fetchRuns();
     fetchLatestData();
-    fetchTwitterHandlesCount();
+    fetchScrapedTweetsCount();
   }, []);
 
   // Pipeline Country Toggle Handlers
@@ -630,7 +630,7 @@ export default function App() {
           id: "twitter_handles",
           title: "Twitter Scraper",
           icon: AtSign,
-          badge: totalTwitterHandlesCount > 0 ? String(totalTwitterHandlesCount) : undefined,
+          badge: totalScrapedTweetsCount > 0 ? String(totalScrapedTweetsCount) : undefined,
           badgeClassName: "bg-sky-500/15 text-sky-400 font-semibold"
         },
       ]
@@ -862,7 +862,7 @@ export default function App() {
           {currentActiveTab === "twitter_handles" && (
             <TwitterHandlesPage
               backendApiBaseUrl={BACKEND_API_BASE_URL}
-              onHandlesCountChange={setTotalTwitterHandlesCount}
+              onTweetsCountChange={setTotalScrapedTweetsCount}
             />
           )}
 

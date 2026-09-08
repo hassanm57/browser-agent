@@ -19,6 +19,7 @@ import type { TwitterHandleItem, TwitterScrapedTweetItem, TwitterScrapeProgressI
 interface TwitterHandlesPageProps {
   backendApiBaseUrl: string;
   onHandlesCountChange?: (count: number) => void;
+  onTweetsCountChange?: (count: number) => void;
 }
 
 export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
@@ -98,6 +99,21 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       if (response.ok) {
         const data = await response.json();
         setTweetsList(data);
+      }
+
+      // Keep parent tab badge in sync with total scraped tweets count
+      if (props.onTweetsCountChange) {
+        try {
+          const totalCountResponse = await fetch(backendUrl + "/api/twitter/tweets?within_24h_only=false");
+          if (totalCountResponse.ok) {
+            const allTweetsData = await totalCountResponse.json();
+            if (Array.isArray(allTweetsData)) {
+              props.onTweetsCountChange(allTweetsData.length);
+            }
+          }
+        } catch (countError) {
+          // Non-critical background count sync error
+        }
       }
     } catch (fetchError) {
       console.error("Error fetching scraped tweets:", fetchError);
@@ -184,6 +200,9 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
     try {
       await fetch(backendUrl + "/api/twitter/tweets", { method: "DELETE" });
       setTweetsList([]);
+      if (props.onTweetsCountChange) {
+        props.onTweetsCountChange(0);
+      }
       fetchHandlesList();
       fetchScrapeStatus();
     } catch (clearError) {

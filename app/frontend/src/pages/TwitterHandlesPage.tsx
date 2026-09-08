@@ -298,26 +298,26 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
 
         {/* Minimal inline metrics row */}
         <div className="flex items-center gap-4 pt-2 border-t border-border/30 text-[11px] text-muted-foreground mt-auto">
-          <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Replies">
-            <MessageCircle className="w-3 h-3" />
-            {tweet.replies_count.toLocaleString()}
+          <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Replies">
+            <MessageCircle className="w-3 h-3 text-sky-400 fill-sky-400/20 drop-shadow-[0_0_5px_rgba(56,189,248,0.7)]" />
+            <span className="text-zinc-400 font-medium">{tweet.replies_count.toLocaleString()}</span>
           </span>
-          <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Reposts">
-            <Repeat2 className="w-3 h-3" />
-            {tweet.reposts_count.toLocaleString()}
+          <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Reposts">
+            <Repeat2 className="w-3.5 h-3.5 text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.7)]" />
+            <span className="text-zinc-400 font-medium">{tweet.reposts_count.toLocaleString()}</span>
           </span>
-          <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Likes">
-            <Heart className="w-3 h-3" />
-            {tweet.likes_count.toLocaleString()}
+          <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Likes">
+            <Heart className="w-3 h-3 text-rose-400 fill-rose-400/25 drop-shadow-[0_0_5px_rgba(244,63,94,0.75)]" />
+            <span className="text-zinc-400 font-medium">{tweet.likes_count.toLocaleString()}</span>
           </span>
-          <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Views">
-            <Eye className="w-3 h-3" />
-            {tweet.views_count.toLocaleString()}
+          <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Views">
+            <Eye className="w-3 h-3 text-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.65)]" />
+            <span className="text-zinc-400 font-medium">{tweet.views_count.toLocaleString()}</span>
           </span>
           {tweet.bookmarks_count > 0 && (
-            <span className="flex items-center gap-1 hover:text-foreground transition-colors" title="Bookmarks">
-              <Bookmark className="w-3 h-3" />
-              {tweet.bookmarks_count.toLocaleString()}
+            <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Bookmarks">
+              <Bookmark className="w-3 h-3 text-amber-400 fill-amber-400/25 drop-shadow-[0_0_5px_rgba(251,191,36,0.75)]" />
+              <span className="text-zinc-400 font-medium">{tweet.bookmarks_count.toLocaleString()}</span>
             </span>
           )}
           {tweet.handle_category && (

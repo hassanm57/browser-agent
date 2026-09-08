@@ -62,6 +62,71 @@ Quick REST reference to monitor pipeline status, trigger/cancel runs, retrieve c
     curl -X POST http://localhost:8000/api/pipeline/cancel
     ```
 
+### 4. Twitter Scraper (Multi-Browser Parallel Engine)
+- **`GET /api/twitter/scrape/status`**
+  - **Description**: Inspect active multi-browser worker state, current handle assignments, progress counts, and completion status:
+    ```bash
+    curl http://localhost:8000/api/twitter/scrape/status
+    ```
+- **`POST /api/twitter/scrape/start`**
+  - **Description**: Launch parallel headless Chrome instances (default: 6 browsers, max: 8) to scrape recent posts across all configured handles or an explicit list:
+    ```bash
+    # Start with default 6 parallel browsers across all active handles
+    curl -X POST http://localhost:8000/api/twitter/scrape/start
+
+    # Or specify custom concurrency and targeted handles
+    curl -X POST http://localhost:8000/api/twitter/scrape/start \
+      -H "Content-Type: application/json" \
+      -d '{"concurrency_level": 6, "handles": ["CSIS", "orfonline", "ISSIslamabad"]}'
+    ```
+- **`POST /api/twitter/scrape/cancel`**
+  - **Description**: Abort active parallel browser scraping and cleanly terminate headless Chrome instances:
+    ```bash
+    curl -X POST http://localhost:8000/api/twitter/scrape/cancel
+    ```
+- **`GET /api/twitter/tweets`**
+  - **Query parameters**: `handle`, `category`, `within_24h_only` (boolean), `sort_by` (`time` | `likes` | `reposts` | `views`), `search`
+  - **Description**: Retrieve harvested tweets with engagement metrics (likes, reposts, replies, views, bookmarks) and filtering:
+    ```bash
+    # Get all scraped tweets sorted by most recent
+    curl "http://localhost:8000/api/twitter/tweets?sort_by=time"
+
+    # Filter for posts published within the past 24 hours
+    curl "http://localhost:8000/api/twitter/tweets?within_24h_only=true"
+
+    # Filter by category and sort by highest likes
+    curl "http://localhost:8000/api/twitter/tweets?category=Pakistan&sort_by=likes"
+    ```
+- **`DELETE /api/twitter/tweets`**
+  - **Description**: Clear all scraped tweets from the database and reset tweet counts:
+    ```bash
+    curl -X DELETE http://localhost:8000/api/twitter/tweets
+    ```
+- **`GET /api/twitter/handles`**
+  - **Description**: Fetch all configured Twitter handles categorized across Pakistan, India Think Tanks, and Global Think Tanks:
+    ```bash
+    curl http://localhost:8000/api/twitter/handles
+    ```
+- **`POST /api/twitter/handles`**
+  - **Description**: Dynamically register a new Twitter handle:
+    ```bash
+    curl -X POST http://localhost:8000/api/twitter/handles \
+      -H "Content-Type: application/json" \
+      -d '{"handle": "RANDCorporation", "display_name": "RAND Corporation", "category": "Global Think Tanks"}'
+    ```
+- **`PUT /api/twitter/handles/{id}`**
+  - **Description**: Update handle metadata or toggle active status:
+    ```bash
+    curl -X PUT http://localhost:8000/api/twitter/handles/1 \
+      -H "Content-Type: application/json" \
+      -d '{"is_active": false}'
+    ```
+- **`DELETE /api/twitter/handles/{id}`**
+  - **Description**: Remove a handle from the tracking list:
+    ```bash
+    curl -X DELETE http://localhost:8000/api/twitter/handles/1
+    ```
+
 ---
 
 ## 📑 Table of Contents
@@ -341,6 +406,15 @@ The engine executes a **fail-safe hybrid workflow**:
 | `GET` | `/api/runs/{id}/export` | Export keywords as `json` or `csv` |
 | `GET` | `/api/settings` | Read application settings from SQLite |
 | `PUT` | `/api/settings` | Update settings (LLM URL, model, browser flags) |
+| `GET` | `/api/twitter/handles` | List all configured Twitter handles & categories |
+| `POST` | `/api/twitter/handles` | Add a new Twitter handle to track |
+| `PUT` | `/api/twitter/handles/{id}` | Update or toggle active state for a Twitter handle |
+| `DELETE` | `/api/twitter/handles/{id}` | Delete a Twitter handle from the list |
+| `GET` | `/api/twitter/tweets` | Retrieve scraped tweets with engagement metrics and filters |
+| `DELETE` | `/api/twitter/tweets` | Clear all scraped tweets from SQLite |
+| `GET` | `/api/twitter/scrape/status` | Current parallel scraping status, worker activity, and metrics |
+| `POST` | `/api/twitter/scrape/start` | Launch multi-browser parallel scrape (default 6 browsers) |
+| `POST` | `/api/twitter/scrape/cancel` | Abort active Twitter scraper job and close browsers |
 
 ### WebSocket Protocol (`ws://localhost:8000/ws/pipeline`)
 

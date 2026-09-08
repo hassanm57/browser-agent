@@ -47,165 +47,119 @@ def check_if_timestamp_is_within_past_24_hours(timestamp_text: str) -> bool:
     # Checks if the post was made within the last 24 hours
     if not timestamp_text:
         return False
-    lower_text = timestamp_text.strip().lower()
+def check_if_timestamp_is_within_past_24_hours(timestamp_text: str) -> bool:
+    if not timestamp_text:
+        return False
 
-    # Any post timestamped in seconds or minutes is within 24 hours
-    if lower_text.endswith("m") or lower_text.endswith("s") or "min" in lower_text or "sec" in lower_text or "now" in lower_text:
+    clean_text = timestamp_text.strip().lower()
+
+    # Historical years (2006 up to previous year) are definitively NOT in the past 24 hours
+    current_year_number = datetime.datetime.now().year
+    for past_year_int in range(2006, current_year_number):
+        if str(past_year_int) in clean_text:
+            return False
+
+    # Relative seconds or minutes: e.g. '45s', '12m', '15 mins ago'
+    seconds_or_minutes_match = re.match(r'^(\d+)[sm]$', clean_text)
+    if seconds_or_minutes_match:
         return True
 
-    # Check for hour indicators like '16h' or '2 hours ago'
-    if "hour" in lower_text:
+    # Relative hours: e.g. '18h', '24h'
+    hours_match = re.match(r'^(\d+)h$', clean_text)
+    if hours_match:
+        hour_integer = int(hours_match.group(1))
+        return hour_integer <= 24
+
+    # Literal keywords
+    if clean_text in ["now", "just now", "yesterday"]:
         return True
-    if lower_text.endswith("h"):
-        hour_string_part = lower_text[:-1]
-        if hour_string_part.isdigit():
-            hour_integer = int(hour_string_part)
-            if hour_integer <= 24:
+
+    # Multi-word relative strings
+    hours_ago_match = re.match(r'^(\d+)\s+hours?\s+ago$', clean_text)
+    if hours_ago_match:
+        hour_integer = int(hours_ago_match.group(1))
+        return hour_integer <= 24
+
+    minutes_ago_match = re.match(r'^(\d+)\s+(mins?|minutes?)\s+ago$', clean_text)
+    if minutes_ago_match:
+        return True
+
+    # Absolute dates (e.g. 'Sep 8', 'Sep 7') - only true if matching today or yesterday
+    today_date = datetime.datetime.now().date()
+    yesterday_date = today_date - datetime.timedelta(days=1)
+
+    for target_date in [today_date, yesterday_date]:
+        month_abbreviation = target_date.strftime("%b").lower()
+        day_number_string = str(target_date.day)
+        day_padded_string = target_date.strftime("%d")
+
+        date_patterns_list = [
+            f"{month_abbreviation} {day_number_string}",
+            f"{month_abbreviation} {day_padded_string}",
+            f"{day_number_string} {month_abbreviation}",
+            f"{day_padded_string} {month_abbreviation}"
+        ]
+
+        for date_pattern in date_patterns_list:
+            if date_pattern in clean_text:
+                year_match = re.search(r'\b\d{4}\b', clean_text)
+                if year_match:
+                    return str(target_date.year) in clean_text
                 return True
-            else:
-                return False
-
-    # Check for yesterday
-    if "yesterday" in lower_text:
-        return True
 
     return False
 
 
 def extract_detailed_tweets_from_page_chunks(page_state_text: str, target_handle: str) -> List[Dict[str, Any]]:
-    # In browser-use state text, each tweet is isolated inside an [ID]<article role=article /> container
     article_chunks = re.split(r'\[\d+\]<article\s+role=article\s*/>', page_state_text)
     extracted_tweets_list = []
 
-    sidebar_and_action_stop_signals = [
-        "replies,", "reposts,", "likes,", "views", "reply", "repost", "like", "bookmark", "share post",
-        "play video", "search timeline", "who to follow", "what's happening", "people from anyone",
-        "search filters", "trending now", "trending in", "live on x", "show more", "terms privacy"
-    ]
-
-    # Chunk index 0 is always header navigation, so we start from index 1
     for chunk_index in range(1, len(article_chunks)):
         current_chunk_text = article_chunks[chunk_index]
-        raw_lines = current_chunk_text.split("\n")
 
-        cleaned_lines = []
-        for line_index in range(len(raw_lines)):
-            cleaned_line = trends.clean_dom_tags_and_markdown(raw_lines[line_index].strip())
-            if len(cleaned_line) > 0:
-                cleaned_lines.append(cleaned_line)
+        # Step 1: Isolate the tweet content by cleanly cutting off before the metrics container (role=group)
+        if "role=group" in current_chunk_text:
+            group_position_index = current_chunk_text.find("role=group")
+            line_break_before_group = current_chunk_text.rfind("\n", 0, group_position_index)
+            if line_break_before_group != -1:
+                content_part_text = current_chunk_text[:line_break_before_group]
+            else:
+                content_part_text = current_chunk_text[:group_position_index]
+        else:
+            content_part_text = current_chunk_text
 
-        user_handle_string = ""
-        author_display_name = ""
-        handle_line_index = -1
-        timestamp_text_found = ""
-
-        # Scan for author handle and display name
-        for line_index in range(len(cleaned_lines)):
-            line_candidate = cleaned_lines[line_index]
-            if line_candidate.startswith("@") and " " not in line_candidate:
-                user_handle_string = line_candidate
-                handle_line_index = line_index
-                if line_index > 0:
-                    potential_author = cleaned_lines[line_index - 1]
-                    if not potential_author.startswith("@") and len(potential_author) < 50:
-                        author_display_name = potential_author
-                break
-
-        # Fallback to target handle if handle was not parsed
-        if not user_handle_string:
-            user_handle_string = f"@{target_handle}"
-
-        # Extract timestamp: look for relative time or date line near handle
-        for line_index in range(len(cleaned_lines)):
-            line_str = cleaned_lines[line_index]
-            lower_line = line_str.lower()
-            if lower_line.endswith("h") and lower_line[:-1].isdigit():
-                timestamp_text_found = line_str
-                break
-            elif lower_line.endswith("m") and lower_line[:-1].isdigit():
-                timestamp_text_found = line_str
-                break
-            elif lower_line.endswith("s") and lower_line[:-1].isdigit():
-                timestamp_text_found = line_str
-                break
-            elif "ago" in lower_line or "yesterday" in lower_line:
-                timestamp_text_found = line_str
-                break
-            elif any(month_name in lower_line for month_name in ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]):
-                if len(line_str) < 20:
-                    timestamp_text_found = line_str
-
-        # Extract tweet body lines
-        body_text_lines = []
-        start_index = handle_line_index + 1 if handle_line_index != -1 else 0
-
-        for body_index in range(start_index, len(cleaned_lines)):
-            current_body_line = cleaned_lines[body_index]
-            lower_body_line = current_body_line.lower()
-
-            # Stop collecting if we hit metrics groups or sidebar widgets
-            has_stop_signal = False
-            for stop_signal in sidebar_and_action_stop_signals:
-                if stop_signal in lower_body_line:
-                    has_stop_signal = True
-                    break
-            if has_stop_signal:
-                break
-
-            # Stop if another handle appears
-            if current_body_line.startswith("@") and " " not in current_body_line:
-                break
-
-            # Skip single dot separators or timestamps
-            if current_body_line == "·" or current_body_line == timestamp_text_found:
-                continue
-
-            body_text_lines.append(current_body_line)
-
-        combined_body_text = " ".join(body_text_lines).strip()
-        combined_body_text = combined_body_text.replace("<!-- SVG content collapsed -->", "").strip()
-
-        # Must have at least 15 characters of real body text to be considered a valid tweet
-        if len(combined_body_text) < 15:
-            continue
-
-        # Ignore generic follow prompts
-        if combined_body_text.lower().startswith("follow ") and len(combined_body_text) < 40:
-            continue
-
-        # Extract metrics: replies, reposts, likes, bookmarks, views
+        # Step 2: Extract engagement metrics (replies, reposts, likes, views, bookmarks)
         replies_count = 0
         reposts_count = 0
         likes_count = 0
         bookmarks_count = 0
         views_count = 0
 
-        # Method 1: Check group aria-label (e.g. 'aria-label=1 reply, 11 reposts, 21 likes, 2 bookmarks, 1191 views role=group')
         group_match = re.search(r'aria-label=([^\n>]+role=group)', current_chunk_text, re.IGNORECASE)
         if group_match:
-            group_content = group_match.group(1).lower()
+            group_content_string = group_match.group(1).lower()
 
-            replies_match = re.search(r'(\d+[\d,\.]*k?m?)\s+repl', group_content)
+            replies_match = re.search(r'(\d+[\d,\.]*k?m?)\s+repl', group_content_string)
             if replies_match:
                 replies_count = convert_metric_string_to_number(replies_match.group(1))
 
-            reposts_match = re.search(r'(\d+[\d,\.]*k?m?)\s+repost', group_content)
+            reposts_match = re.search(r'(\d+[\d,\.]*k?m?)\s+repost', group_content_string)
             if reposts_match:
                 reposts_count = convert_metric_string_to_number(reposts_match.group(1))
 
-            likes_match = re.search(r'(\d+[\d,\.]*k?m?)\s+like', group_content)
+            likes_match = re.search(r'(\d+[\d,\.]*k?m?)\s+like', group_content_string)
             if likes_match:
                 likes_count = convert_metric_string_to_number(likes_match.group(1))
 
-            bookmarks_match = re.search(r'(\d+[\d,\.]*k?m?)\s+bookmark', group_content)
+            bookmarks_match = re.search(r'(\d+[\d,\.]*k?m?)\s+bookmark', group_content_string)
             if bookmarks_match:
                 bookmarks_count = convert_metric_string_to_number(bookmarks_match.group(1))
 
-            views_match = re.search(r'(\d+[\d,\.]*k?m?)\s+view', group_content)
+            views_match = re.search(r'(\d+[\d,\.]*k?m?)\s+view', group_content_string)
             if views_match:
                 views_count = convert_metric_string_to_number(views_match.group(1))
 
-        # Method 2: Fallback individual button labels if group didn't match
+        # Fallback individual button labels
         if replies_count == 0:
             btn_replies = re.search(r'aria-label=(\d+[\d,\.]*k?m?)\s+repl', current_chunk_text, re.IGNORECASE)
             if btn_replies:
@@ -226,9 +180,146 @@ def extract_detailed_tweets_from_page_chunks(page_state_text: str, target_handle
             if btn_views:
                 views_count = convert_metric_string_to_number(btn_views.group(1))
 
+        # Step 3: Extract timestamp accurately
+        timestamp_text_found = ""
+
+        # Method A: Link aria-label with relative token or date
+        time_link_match = re.search(
+            r'<a\s+[^>]*aria-label="?([a-zA-Z]{3}\s+\d{1,2}(?:,\s+\d{4})?|\d+[smh])"?\s+role=link',
+            content_part_text,
+            re.IGNORECASE
+        )
+        if time_link_match:
+            timestamp_text_found = time_link_match.group(1).strip()
+
+        # Split cleaned lines from content_part_text
+        raw_lines = content_part_text.split("\n")
+        cleaned_lines = []
+        for line_index in range(len(raw_lines)):
+            cleaned_line = trends.clean_dom_tags_and_markdown(raw_lines[line_index].strip())
+            if len(cleaned_line) > 0:
+                cleaned_lines.append(cleaned_line)
+
+        # Scan for author handle and display name
+        user_handle_string = ""
+        author_display_name = ""
+        handle_line_index = -1
+
+        for line_index in range(len(cleaned_lines)):
+            line_candidate = cleaned_lines[line_index]
+            if line_candidate.startswith("@") and " " not in line_candidate:
+                user_handle_string = line_candidate
+                handle_line_index = line_index
+                if line_index > 0:
+                    potential_author = cleaned_lines[line_index - 1]
+                    if (not potential_author.startswith("@") and 
+                        len(potential_author) < 50 and 
+                        potential_author.lower() not in ["pinned", "pinned post"]):
+                        author_display_name = potential_author
+                break
+
+        if not user_handle_string:
+            user_handle_string = f"@{target_handle}"
+
+        # Method B: Scan lines near author handle for explicit timestamp format
+        if not timestamp_text_found:
+            for line_index in range(min(12, len(cleaned_lines))):
+                line_str = cleaned_lines[line_index]
+                lower_line = line_str.lower()
+                if len(line_str) > 25:
+                    continue
+
+                if re.match(r'^\d+[smh]$', lower_line):
+                    timestamp_text_found = line_str
+                    break
+                elif re.match(r'^(yesterday|now)$', lower_line):
+                    timestamp_text_found = line_str
+                    break
+                elif re.match(r'^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}(?:,\s+\d{4})?$', line_str, re.IGNORECASE):
+                    timestamp_text_found = line_str
+                    break
+                elif "·" in line_str:
+                    sub_tokens = line_str.split("·")
+                    for sub_token in sub_tokens:
+                        cleaned_sub_token = sub_token.strip()
+                        if re.match(r'^\d+[smh]$', cleaned_sub_token.lower()):
+                            timestamp_text_found = cleaned_sub_token
+                            break
+                        elif re.match(r'^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}(?:,\s+\d{4})?$', cleaned_sub_token, re.IGNORECASE):
+                            timestamp_text_found = cleaned_sub_token
+                            break
+                    if timestamp_text_found:
+                        break
+
+        # Step 4: Extract tweet body lines
+        body_text_lines = []
+        start_index = handle_line_index + 1 if handle_line_index != -1 else 0
+
+        header_noise_words = [
+            "pinned", "pinned post", "more", "grok actions", "show more",
+            "show this thread", "·", "translate post", "translated from"
+        ]
+
+        for body_index in range(start_index, len(cleaned_lines)):
+            current_body_line = cleaned_lines[body_index]
+            lower_body_line = current_body_line.lower()
+
+            if current_body_line == timestamp_text_found:
+                continue
+            if current_body_line in header_noise_words:
+                continue
+            if lower_body_line in header_noise_words:
+                continue
+
+            # Stop if another handle or follow recommendation appears
+            if current_body_line.startswith("@") and " " not in current_body_line:
+                break
+            if lower_body_line.startswith("follow @"):
+                break
+
+            # Skip standalone metric numbers e.g. "15 28 41K" or "10 20 7.5K" or "26"
+            if re.match(r'^(\d+[\d,\.]*[KMBkmb]?\s*)+$', current_body_line):
+                continue
+
+            # Skip trailing preview domain cards e.g. "youtube.com" or "stimson.org"
+            if re.match(r'^[a-zA-Z0-9-]+\.(?:com|org|net|edu|gov|pk|in|uk|io)\b', lower_body_line) and len(current_body_line) < 35:
+                continue
+
+            body_text_lines.append(current_body_line)
+
+        combined_body_text = " ".join(body_text_lines).strip()
+        combined_body_text = combined_body_text.replace("<!-- SVG content collapsed -->", "").strip()
+
+        # Step 5: Clean leaked date prefixes or trailing domain cards
+        date_prefix_match = re.match(r'^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}(?:,\s+\d{4})?\s*', combined_body_text, re.IGNORECASE)
+        if date_prefix_match:
+            if not timestamp_text_found or timestamp_text_found == "Recent":
+                timestamp_text_found = date_prefix_match.group(0).strip()
+            combined_body_text = combined_body_text[date_prefix_match.end():].strip()
+
+        # Strip trailing metric counter sequences at the end of the text
+        combined_body_text = re.sub(r'\s+(\d+[\d,\.]*[KMBkmb]?\s*){1,5}$', '', combined_body_text).strip()
+
+        # Strip trailing date + domain card attached to the end of the text
+        combined_body_text = re.sub(
+            r'\s+(?:24h\s+)?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}(?:,\s+\d{4})?(\s+[a-zA-Z0-9-]+\.(?:com|org|net|edu|gov|pk|in|uk|io))?$',
+            '',
+            combined_body_text,
+            flags=re.IGNORECASE
+        ).strip()
+        combined_body_text = re.sub(
+            r'\s+[a-zA-Z0-9-]+\.(?:com|org|net|edu|gov|pk|in|uk|io)$',
+            '',
+            combined_body_text,
+            flags=re.IGNORECASE
+        ).strip()
+
+        if len(combined_body_text) < 15:
+            continue
+
+        # Final 24h classification check
         is_within_24h = check_if_timestamp_is_within_past_24_hours(timestamp_text_found)
 
-        # Assemble the clean tweet record
         tweet_record = {
             "handle": target_handle.lstrip("@"),
             "author_display_name": author_display_name if author_display_name else target_handle,
@@ -243,7 +334,7 @@ def extract_detailed_tweets_from_page_chunks(page_state_text: str, target_handle
             "tweet_url": f"https://x.com/{target_handle.lstrip('@')}"
         }
 
-        # Avoid duplicates within the same scraping round
+        # Deduplicate within this scraping run
         is_already_added = False
         for existing_tweet in extracted_tweets_list:
             if existing_tweet["tweet_text"] == tweet_record["tweet_text"]:
@@ -254,6 +345,26 @@ def extract_detailed_tweets_from_page_chunks(page_state_text: str, target_handle
             extracted_tweets_list.append(tweet_record)
 
     return extracted_tweets_list
+
+
+async def expand_all_show_more_buttons(browser_instance: Browser):
+    # Clicks all visible 'Show more' buttons on the page so long-form tweets are fully revealed for extraction
+    try:
+        current_page = await browser_instance.get_current_page()
+        await current_page.evaluate("""
+            const candidateButtons = Array.from(document.querySelectorAll('button, div[role="button"], span'));
+            for (const btn of candidateButtons) {
+                const buttonText = (btn.innerText || '').trim();
+                if (buttonText === 'Show more' || buttonText === 'Show this thread') {
+                    try {
+                        btn.click();
+                    } catch(e) {}
+                }
+            }
+        """)
+        await asyncio.sleep(0.5)
+    except Exception:
+        pass
 
 
 async def scrape_single_handle_with_browser(
@@ -291,6 +402,10 @@ async def scrape_single_handle_with_browser(
             await log_callback("WARN", f"[Worker {worker_index}] Account @{clean_handle} does not exist or is suspended.")
             return []
 
+        # Expand any truncated tweets on the page by clicking 'Show more'
+        await expand_all_show_more_buttons(browser_instance)
+        page_state_text = await browser_instance.get_state_as_text()
+
         all_collected_tweets_for_handle: List[Dict[str, Any]] = []
 
         # First pass extraction
@@ -309,6 +424,9 @@ async def scrape_single_handle_with_browser(
                 )
                 await scroll_action
                 await asyncio.sleep(2.5)
+
+                # Expand any 'Show more' buttons revealed after scrolling
+                await expand_all_show_more_buttons(browser_instance)
 
                 updated_page_text = await browser_instance.get_state_as_text()
                 new_batch = extract_detailed_tweets_from_page_chunks(updated_page_text, clean_handle)

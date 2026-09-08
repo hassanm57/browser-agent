@@ -12,7 +12,10 @@ import {
   Heart,
   Eye,
   Bookmark,
-  Plus
+  Plus,
+  X,
+  Copy,
+  Check
 } from "lucide-react";
 import type { TwitterHandleItem, TwitterScrapedTweetItem, TwitterScrapeProgressItem } from "../types";
 
@@ -53,6 +56,10 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("All");
   const [isWithin24HoursOnly, setIsWithin24HoursOnly] = useState<boolean>(true);
   const [sortByOption, setSortByOption] = useState<string>("views");
+
+  // Modal state for viewing a single tweet in full detail
+  const [selectedTweetForModal, setSelectedTweetForModal] = useState<TwitterScrapedTweetItem | null>(null);
+  const [hasCopiedModalText, setHasCopiedModalText] = useState<boolean>(false);
 
   // Handle management form state
   const [newHandleInput, setNewHandleInput] = useState<string>("");
@@ -163,6 +170,34 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       }
     };
   }, [scrapeProgress.is_running]);
+
+  // Close tweet modal when user presses the Escape key
+  useEffect(() => {
+    const handleEscapeKeyDown = (keyboardEvent: KeyboardEvent) => {
+      if (keyboardEvent.key === "Escape") {
+        setSelectedTweetForModal(null);
+      }
+    };
+    window.addEventListener("keydown", handleEscapeKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleEscapeKeyDown);
+    };
+  }, []);
+
+  // Copy tweet text to clipboard
+  const handleCopyTweetText = async () => {
+    if (selectedTweetForModal !== null) {
+      try {
+        await navigator.clipboard.writeText(selectedTweetForModal.tweet_text);
+        setHasCopiedModalText(true);
+        setTimeout(() => {
+          setHasCopiedModalText(false);
+        }, 2000);
+      } catch (copyError) {
+        console.error("Failed to copy tweet text to clipboard:", copyError);
+      }
+    }
+  };
 
   // Start parallel scraping
   const handleStartScraping = async () => {
@@ -282,12 +317,16 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
     renderedTweetCards.push(
       <div
         key={tweet.id}
-        className="p-3.5 rounded-lg border border-border/60 bg-card/60 hover:bg-card/90 hover:border-border transition-all space-y-2.5 flex flex-col justify-between shadow-xs"
+        onClick={() => {
+          setSelectedTweetForModal(tweet);
+          setHasCopiedModalText(false);
+        }}
+        className="p-3.5 rounded-lg border border-border/60 bg-card/60 hover:bg-card/90 hover:border-zinc-500/60 transition-all space-y-2.5 flex flex-col justify-between shadow-xs cursor-pointer group"
       >
         {/* Tweet Header */}
         <div className="flex items-center justify-between text-[11px] text-muted-foreground">
           <div className="flex items-center gap-1.5 overflow-hidden">
-            <span className="font-semibold text-foreground text-xs truncate">
+            <span className="font-semibold text-foreground text-xs truncate group-hover:text-blue-400 transition-colors">
               @{tweet.handle}
             </span>
             {tweet.author_display_name && tweet.author_display_name !== tweet.handle && (
@@ -303,6 +342,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             href={"https://x.com/" + tweet.handle}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(clickEvent) => clickEvent.stopPropagation()}
             className="hover:text-foreground text-zinc-500 shrink-0 transition-colors p-0.5"
             title="View on X"
           >
@@ -716,6 +756,155 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Interactive Full Tweet Modal */}
+      {selectedTweetForModal !== null && (
+        <div
+          onClick={() => setSelectedTweetForModal(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4"
+        >
+          <div
+            onClick={(modalClickEvent) => modalClickEvent.stopPropagation()}
+            className="relative w-full max-w-2xl bg-zinc-950 border border-zinc-700/80 rounded-xl shadow-2xl p-6 space-y-4 max-h-[88vh] flex flex-col text-foreground animate-in fade-in zoom-in-95 duration-150"
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 pb-3 border-b border-border/50">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-xs text-foreground shrink-0 border border-zinc-700">
+                  {selectedTweetForModal.handle.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-semibold text-sm text-foreground">
+                      @{selectedTweetForModal.handle}
+                    </span>
+                    {selectedTweetForModal.author_display_name &&
+                      selectedTweetForModal.author_display_name !== selectedTweetForModal.handle && (
+                        <span className="text-xs text-muted-foreground">
+                          ({selectedTweetForModal.author_display_name})
+                        </span>
+                      )}
+                    {selectedTweetForModal.is_within_24h && (
+                      <span className="text-emerald-400 font-medium text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+                        24h
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-zinc-500 flex items-center gap-1.5 mt-0.5">
+                    <span>{selectedTweetForModal.tweet_timestamp_text}</span>
+                    {selectedTweetForModal.handle_category && (
+                      <>
+                        <span>·</span>
+                        <span>{selectedTweetForModal.handle_category}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleCopyTweetText}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border/60 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-foreground transition-colors cursor-pointer"
+                  title="Copy tweet text"
+                >
+                  {hasCopiedModalText ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-400">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+
+                <a
+                  href={"https://x.com/" + selectedTweetForModal.handle}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border/60 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-foreground transition-colors"
+                  title="Open on X"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>Open on X</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedTweetForModal(null)}
+                  className="p-1.5 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-foreground transition-colors ml-1 cursor-pointer"
+                  title="Close (Esc)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body - Full Un-truncated Tweet Text */}
+            <div className="overflow-y-auto pr-2 py-1 max-h-[55vh] select-text selection:bg-zinc-700 selection:text-white">
+              <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap font-normal">
+                {selectedTweetForModal.tweet_text}
+              </p>
+            </div>
+
+            {/* Modal Footer - Engagement Metrics */}
+            <div className="pt-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-5 flex-wrap">
+                <span className="flex items-center gap-1.5" title="Replies">
+                  <MessageCircle className="w-3.5 h-3.5 text-sky-400 fill-sky-400/20 drop-shadow-[0_0_6px_rgba(56,189,248,0.7)]" />
+                  <span className="text-zinc-300 font-semibold">
+                    {selectedTweetForModal.replies_count.toLocaleString()}
+                  </span>
+                  <span className="text-zinc-500 text-[11px] hidden sm:inline">replies</span>
+                </span>
+
+                <span className="flex items-center gap-1.5" title="Reposts">
+                  <Repeat2 className="w-4 h-4 text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
+                  <span className="text-zinc-300 font-semibold">
+                    {selectedTweetForModal.reposts_count.toLocaleString()}
+                  </span>
+                  <span className="text-zinc-500 text-[11px] hidden sm:inline">reposts</span>
+                </span>
+
+                <span className="flex items-center gap-1.5" title="Likes">
+                  <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/25 drop-shadow-[0_0_6px_rgba(244,63,94,0.75)]" />
+                  <span className="text-zinc-300 font-semibold">
+                    {selectedTweetForModal.likes_count.toLocaleString()}
+                  </span>
+                  <span className="text-zinc-500 text-[11px] hidden sm:inline">likes</span>
+                </span>
+
+                <span className="flex items-center gap-1.5" title="Views">
+                  <Eye className="w-3.5 h-3.5 text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.65)]" />
+                  <span className="text-zinc-300 font-semibold">
+                    {selectedTweetForModal.views_count.toLocaleString()}
+                  </span>
+                  <span className="text-zinc-500 text-[11px] hidden sm:inline">views</span>
+                </span>
+
+                {selectedTweetForModal.bookmarks_count > 0 && (
+                  <span className="flex items-center gap-1.5" title="Bookmarks">
+                    <Bookmark className="w-3.5 h-3.5 text-amber-400 fill-amber-400/25 drop-shadow-[0_0_6px_rgba(251,191,36,0.75)]" />
+                    <span className="text-zinc-300 font-semibold">
+                      {selectedTweetForModal.bookmarks_count.toLocaleString()}
+                    </span>
+                    <span className="text-zinc-500 text-[11px] hidden sm:inline">bookmarks</span>
+                  </span>
+                )}
+              </div>
+
+              <span className="text-[11px] text-zinc-500 hidden md:inline">
+                Press <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-400">Esc</kbd> to close
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </div>

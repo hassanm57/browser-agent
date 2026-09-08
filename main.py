@@ -105,6 +105,12 @@ async def run_browser_task():
         use_vision=False,
         # Limit DOM elements size so web pages do not exceed context window limits
         max_clickable_elements_length=8000,
+        # Instruct agent to expand full tweet text by clicking Show more
+        extend_system_message=(
+            "When extracting or reading tweets on X.com (Twitter), always check if any tweet contains "
+            "a 'Show more' button or link. Always click 'Show more' so the full tweet expands and you "
+            "can read and extract the complete, unabbreviated text."
+        ),
     )
 
     # Execute the agent task

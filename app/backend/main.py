@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import re
 import asyncio
 import urllib.parse
 from datetime import datetime
@@ -422,21 +423,35 @@ def get_twitter_handles_endpoint():
 
 @app.post("/api/twitter/handles")
 def create_twitter_handle_endpoint(payload: TwitterHandleCreateModel):
-    # Adds a new handle to the database
+    # Adds a new handle to the database with validation
+    cleaned_handle = payload.handle.strip().lstrip("@")
+    if not re.match(r'^[A-Za-z0-9_]{1,50}$', cleaned_handle):
+        raise HTTPException(status_code=400, detail="Invalid Twitter handle format. Use letters, numbers, and underscores only (max 50 chars).")
+
+    clean_display_name = re.sub(r'<[^>]*>', '', payload.display_name or "").strip()[:100]
+    clean_category = re.sub(r'[^a-zA-Z0-9\s\-]', '', payload.category or "General").strip()[:50]
+    if len(clean_category) == 0:
+        clean_category = "General"
+
     new_id = add_twitter_handle(
-        handle_string=payload.handle,
-        display_name_string=payload.display_name,
-        category_string=payload.category
+        handle_string=cleaned_handle,
+        display_name_string=clean_display_name,
+        category_string=clean_category
     )
     return {"message": "Handle saved successfully", "id": new_id}
 
 @app.put("/api/twitter/handles/{handle_identifier}")
 def update_twitter_handle_endpoint(handle_identifier: int, payload: TwitterHandleUpdateModel):
     # Updates a handle's category, display name, or active status
+    clean_display_name = re.sub(r'<[^>]*>', '', payload.display_name or "").strip()[:100]
+    clean_category = re.sub(r'[^a-zA-Z0-9\s\-]', '', payload.category or "General").strip()[:50]
+    if len(clean_category) == 0:
+        clean_category = "General"
+
     update_twitter_handle(
         handle_identifier=handle_identifier,
-        display_name_string=payload.display_name,
-        category_string=payload.category,
+        display_name_string=clean_display_name,
+        category_string=clean_category,
         is_active_boolean=payload.is_active
     )
     return {"message": "Handle updated successfully"}
@@ -1097,12 +1112,36 @@ async def send_result_to_websockets(result_dictionary: Dict[str, Any]):
         "data": result_dictionary
     })
 
+def sanitize_backend_country_name(raw_country_name: str) -> str:
+    # Sanitizes country input to prevent prompt injection and header manipulation
+    if not raw_country_name:
+        return "Worldwide"
+    clean_country = str(raw_country_name).strip()
+    clean_country = clean_country.replace("\n", " ").replace("\r", " ").replace("\t", " ")
+    clean_country = re.sub(r'[^a-zA-Z0-9\s\-\(\)]', '', clean_country)
+    clean_country = " ".join(clean_country.split())
+    if len(clean_country) > 60:
+        clean_country = clean_country[:60].strip()
+    if len(clean_country) == 0:
+        clean_country = "Worldwide"
+    return clean_country
+
+
 async def trigger_pipeline_job(countries_list: List[str]):
     global current_running_pipeline_task, pipeline_cancellation_event
 
     if current_running_pipeline_task is not None and not current_running_pipeline_task.done():
         await send_log_to_websockets("WARN", "A pipeline execution is already in progress.")
         return {"status": "already_running"}
+
+    # Sanitize country names to defend against indirect prompt injections
+    sanitized_countries_list: List[str] = []
+    for raw_country in countries_list:
+        clean_country = sanitize_backend_country_name(raw_country)
+        if clean_country not in sanitized_countries_list:
+            sanitized_countries_list.append(clean_country)
+    if len(sanitized_countries_list) == 0:
+        sanitized_countries_list = ["Worldwide"]
 
     pipeline_cancellation_event = asyncio.Event()
 
@@ -1117,7 +1156,7 @@ async def trigger_pipeline_job(countries_list: List[str]):
 
         try:
             await run_multi_country_pipeline_orchestrator(
-                selected_countries_list=countries_list,
+                selected_countries_list=sanitized_countries_list,
                 log_callback_function=send_log_to_websockets,
                 progress_callback_function=send_progress_to_websockets,
                 status_callback_function=send_status_to_websockets,

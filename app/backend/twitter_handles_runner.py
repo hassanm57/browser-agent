@@ -465,6 +465,8 @@ async def parallel_scraper_worker(
     tweet_saved_callback: Callable[[Dict[str, Any]], Any]
 ):
     # Each parallel worker manages its own headless browser instance
+    shared_progress_dictionary["active_workers"][str(worker_index)] = "Launching Chrome..."
+    await progress_callback(shared_progress_dictionary)
     await log_callback("INFO", f"[Worker {worker_index}] Initializing headless Chrome session...")
 
     browser_instance = None
@@ -472,6 +474,8 @@ async def parallel_scraper_worker(
         # Browser.from_system_chrome(headless=True) copies profile to isolated temp directory
         browser_instance = Browser.from_system_chrome(headless=True)
         await browser_instance.start()
+        shared_progress_dictionary["active_workers"][str(worker_index)] = "Browser ready"
+        await progress_callback(shared_progress_dictionary)
         await log_callback("SUCCESS", f"[Worker {worker_index}] Headless Chrome ready.")
 
         while not handle_queue.empty():

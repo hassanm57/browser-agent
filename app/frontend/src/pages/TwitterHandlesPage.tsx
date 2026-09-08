@@ -61,6 +61,10 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
   const [selectedTweetForModal, setSelectedTweetForModal] = useState<TwitterScrapedTweetItem | null>(null);
   const [hasCopiedModalText, setHasCopiedModalText] = useState<boolean>(false);
 
+  // Scraper launch state & re-run confirmation modal
+  const [isStartingScrape, setIsStartingScrape] = useState<boolean>(false);
+  const [isConfirmingRerunModalOpen, setIsConfirmingRerunModalOpen] = useState<boolean>(false);
+
   // Handle management form state
   const [newHandleInput, setNewHandleInput] = useState<string>("");
   const [newCategoryInput, setNewCategoryInput] = useState<string>("Pakistan");
@@ -154,28 +158,108 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
     fetchTweetsList();
   }, [sortByOption, isWithin24HoursOnly, selectedCategoryFilter, searchQuery]);
 
-  // Poll status while scraping is running
+  // Live WebSocket connection for real-time twitter scraper events
+  useEffect(() => {
+    let socketInstance: WebSocket | null = null;
+    let shouldKeepReconnecting = true;
+    let reconnectTimerId: any = null;
+
+    const setupScrapeWebSocket = () => {
+      try {
+        const websocketUrl = backendUrl.replace(/^http/, "ws") + "/ws/pipeline";
+        socketInstance = new WebSocket(websocketUrl);
+
+        socketInstance.onmessage = (messageEvent) => {
+          try {
+            const parsedData = JSON.parse(messageEvent.data);
+            if (parsedData.type === "twitter_scrape_progress" && parsedData.data) {
+              const progressPayload = parsedData.data;
+              setScrapeProgress((previousProgress) => ({
+                ...previousProgress,
+                is_running: true,
+                status: "running",
+                completed_handles:
+                  progressPayload.completed_handles !== undefined
+                    ? progressPayload.completed_handles
+                    : previousProgress.completed_handles,
+                total_tweets_collected:
+                  progressPayload.total_tweets_collected !== undefined
+                    ? progressPayload.total_tweets_collected
+                    : previousProgress.total_tweets_collected,
+                active_workers: progressPayload.active_workers || previousProgress.active_workers,
+                total_handles: progressPayload.total_handles || previousProgress.total_handles
+              }));
+              setIsStartingScrape(false);
+            } else if (parsedData.type === "twitter_scrape_status") {
+              const newStatusString = parsedData.status;
+              if (
+                newStatusString === "completed" ||
+                newStatusString === "cancelled" ||
+                newStatusString === "error"
+              ) {
+                setIsStartingScrape(false);
+                fetchScrapeStatus();
+                fetchTweetsList();
+                fetchHandlesList();
+              }
+            } else if (parsedData.type === "twitter_scrape_tweet") {
+              fetchTweetsList();
+            }
+          } catch (jsonParseError) {
+            // Ignore parse errors on non-json stream frames
+          }
+        };
+
+        socketInstance.onclose = () => {
+          if (shouldKeepReconnecting) {
+            reconnectTimerId = setTimeout(setupScrapeWebSocket, 3000);
+          }
+        };
+
+        socketInstance.onerror = () => {
+          // Fall back gracefully to background polling
+        };
+      } catch (connectionError) {
+        console.error("Error connecting to scraper WebSocket:", connectionError);
+      }
+    };
+
+    setupScrapeWebSocket();
+
+    return () => {
+      shouldKeepReconnecting = false;
+      if (reconnectTimerId) {
+        clearTimeout(reconnectTimerId);
+      }
+      if (socketInstance) {
+        socketInstance.close();
+      }
+    };
+  }, [backendUrl]);
+
+  // Fast poll status while scraping is actively running or launching
   useEffect(() => {
     let pollingIntervalId: any = null;
-    if (scrapeProgress.is_running) {
+    if (scrapeProgress.is_running || isStartingScrape) {
       pollingIntervalId = setInterval(() => {
         fetchScrapeStatus();
         fetchTweetsList();
         fetchHandlesList();
-      }, 3000);
+      }, 1500);
     }
     return () => {
       if (pollingIntervalId) {
         clearInterval(pollingIntervalId);
       }
     };
-  }, [scrapeProgress.is_running]);
+  }, [scrapeProgress.is_running, isStartingScrape]);
 
-  // Close tweet modal when user presses the Escape key
+  // Close modals when user presses the Escape key
   useEffect(() => {
     const handleEscapeKeyDown = (keyboardEvent: KeyboardEvent) => {
       if (keyboardEvent.key === "Escape") {
         setSelectedTweetForModal(null);
+        setIsConfirmingRerunModalOpen(false);
       }
     };
     window.addEventListener("keydown", handleEscapeKeyDown);
@@ -199,8 +283,30 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
     }
   };
 
-  // Start parallel scraping
-  const handleStartScraping = async () => {
+  // Perform the actual HTTP POST request to launch the scraper
+  const executeStartScraping = async () => {
+    setIsStartingScrape(true);
+    setIsConfirmingRerunModalOpen(false);
+
+    // Optimistically update progress so the UI immediately reveals the running banner & disabled button
+    const optimisticTotalHandles = handlesList.length > 0 ? handlesList.length : 80;
+    const initialWorkersMap: Record<string, string> = {};
+    for (let workerIndexNumber = 1; workerIndexNumber <= concurrencyLevel; workerIndexNumber++) {
+      initialWorkersMap[String(workerIndexNumber)] = "Launching Chrome...";
+    }
+
+    setScrapeProgress({
+      is_running: true,
+      status: "starting",
+      total_handles: optimisticTotalHandles,
+      completed_handles: 0,
+      total_tweets_collected: tweetsList.length,
+      concurrency_level: concurrencyLevel,
+      active_workers: initialWorkersMap,
+      started_at: new Date().toISOString(),
+      finished_at: null
+    });
+
     try {
       const response = await fetch(backendUrl + "/api/twitter/scrape/start", {
         method: "POST",
@@ -209,12 +315,50 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
           concurrency_level: concurrencyLevel
         })
       });
+
       if (response.ok) {
-        fetchScrapeStatus();
+        const startResult = await response.json();
+        setScrapeProgress(startResult);
+      } else {
+        await fetchScrapeStatus();
       }
     } catch (startError) {
       console.error("Error starting twitter scrape:", startError);
+    } finally {
+      setIsStartingScrape(false);
     }
+  };
+
+  // Triggered when user clicks Run / Re-run Scraper button
+  const handleStartScrapingClick = () => {
+    // If scraper is already running or launching, do nothing
+    if (scrapeProgress.is_running || isStartingScrape) {
+      return;
+    }
+
+    // If we already ran it and have results, show graceful confirmation modal with choices
+    if (tweetsList.length > 0) {
+      setIsConfirmingRerunModalOpen(true);
+      return;
+    }
+
+    // Otherwise, launch scraping immediately
+    executeStartScraping();
+  };
+
+  // Re-run option: clear previous tweets first, then start scraping fresh
+  const handleClearAndRunFresh = async () => {
+    setIsConfirmingRerunModalOpen(false);
+    try {
+      await fetch(backendUrl + "/api/twitter/tweets", { method: "DELETE" });
+      setTweetsList([]);
+      if (props.onTweetsCountChange) {
+        props.onTweetsCountChange(0);
+      }
+    } catch (clearErr) {
+      console.error("Error clearing tweets before fresh run:", clearErr);
+    }
+    executeStartScraping();
   };
 
   // Cancel running scrape
@@ -455,9 +599,12 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       const workerId = workerKeys[w];
       const currentTask = scrapeProgress.active_workers[workerId];
       renderedActiveWorkers.push(
-        <span key={workerId} className="text-xs text-zinc-400">
-          Worker {workerId}: <span className="text-foreground font-medium">{currentTask}</span>
-          {w < workerKeys.length - 1 ? "  ·  " : ""}
+        <span
+          key={workerId}
+          className="inline-flex items-center gap-1.5 text-[11px] text-zinc-300 bg-zinc-900/80 border border-border/40 px-2 py-0.5 rounded"
+        >
+          <span className="text-zinc-500 font-mono text-[10px]">W{workerId}:</span>
+          <span className="text-foreground font-medium truncate max-w-[140px]">{currentTask}</span>
         </span>
       );
     }
@@ -524,29 +671,37 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             </select>
           </div>
 
-          {/* Start / Cancel Scrape Buttons */}
+          {/* Start / Cancel / Launching Scrape Buttons */}
           {scrapeProgress.is_running ? (
             <button
               onClick={handleCancelScraping}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 transition-colors cursor-pointer"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
               Cancel
             </button>
+          ) : isStartingScrape ? (
+            <button
+              disabled
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700 opacity-90 cursor-not-allowed"
+            >
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+              Launching...
+            </button>
           ) : (
             <button
-              onClick={handleStartScraping}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors"
+              onClick={handleStartScrapingClick}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
-              Run Scraper
+              {tweetsList.length > 0 ? "Re-run Scraper" : "Run Scraper"}
             </button>
           )}
 
           <button
             onClick={handleClearTweets}
-            disabled={scrapeProgress.is_running || tweetsList.length === 0}
-            className="text-xs text-muted-foreground hover:text-rose-400 transition-colors px-2 py-1 disabled:opacity-40"
+            disabled={scrapeProgress.is_running || isStartingScrape || tweetsList.length === 0}
+            className="text-xs text-muted-foreground hover:text-rose-400 transition-colors px-2 py-1 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
             title="Clear all scraped tweets"
           >
             Clear Tweets
@@ -556,11 +711,13 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
 
       {/* Live Scraping Progress Banner */}
       {scrapeProgress.is_running && (
-        <div className="p-3.5 rounded-lg border border-border/40 bg-card/60 space-y-2 text-xs">
+        <div className="p-3.5 rounded-lg border border-border/40 bg-card/60 space-y-2.5 text-xs">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="flex items-center gap-2 font-medium text-foreground">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              Scraping in progress...
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+              {scrapeProgress.completed_handles === 0
+                ? "Launching " + (scrapeProgress.concurrency_level || 6) + " parallel browser instances..."
+                : "Scraping in progress..."}
             </span>
             <span>
               {scrapeProgress.completed_handles} / {scrapeProgress.total_handles} handles (
@@ -568,18 +725,29 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             </span>
           </div>
 
-          {/* Slim progress bar */}
+          {/* Slim progress bar with minimum visual progress while starting */}
           <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
             <div
               className="bg-foreground h-1.5 rounded-full transition-all duration-300"
               style={{
                 width:
                   scrapeProgress.total_handles > 0
-                    ? `${(scrapeProgress.completed_handles / scrapeProgress.total_handles) * 100}%`
-                    : "0%"
+                    ? `${Math.max(
+                        scrapeProgress.completed_handles === 0 ? 4 : 0,
+                        (scrapeProgress.completed_handles / scrapeProgress.total_handles) * 100
+                      )}%`
+                    : "4%"
               }}
             />
           </div>
+
+          {/* Active worker statuses */}
+          {renderedActiveWorkers.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/30 text-[11px] text-zinc-400">
+              <span className="text-zinc-500 font-medium shrink-0">Workers:</span>
+              {renderedActiveWorkers}
+            </div>
+          )}
         </div>
       )}
 
@@ -903,6 +1071,87 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               <span className="text-[11px] text-zinc-500 hidden md:inline">
                 Press <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-400">Esc</kbd> to close
               </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Re-run Confirmation Modal */}
+      {isConfirmingRerunModalOpen && (
+        <div
+          onClick={() => setIsConfirmingRerunModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4"
+        >
+          <div
+            onClick={(modalEvent) => modalEvent.stopPropagation()}
+            className="relative w-full max-w-md bg-zinc-950 border border-zinc-700/80 rounded-xl shadow-2xl p-5 space-y-4 text-foreground animate-in fade-in zoom-in-95 duration-150"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-zinc-300" />
+                <h3 className="font-semibold text-sm text-foreground">Re-run Twitter Scraper</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsConfirmingRerunModalOpen(false)}
+                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-foreground transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Explanation */}
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              You already have <strong className="text-foreground font-semibold">{tweetsList.length} scraped tweets</strong> across <strong className="text-foreground font-semibold">{handlesList.length} handles</strong>.
+              How would you like to run the scraper?
+            </p>
+
+            {/* Options */}
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => executeStartScraping()}
+                className="w-full flex flex-col items-start p-3 rounded-lg border border-border/60 bg-zinc-900/80 hover:bg-zinc-800 hover:border-zinc-500 transition-all text-left group cursor-pointer"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xs font-semibold text-foreground group-hover:text-blue-400 transition-colors">
+                    Refresh All Handles (Recommended)
+                  </span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium">Keep Existing</span>
+                </div>
+                <span className="text-[11px] text-zinc-400 mt-1">
+                  Updates views, likes, and repost counts for existing tweets, and collects any new tweets posted.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClearAndRunFresh}
+                className="w-full flex flex-col items-start p-3 rounded-lg border border-rose-500/20 bg-rose-950/10 hover:bg-rose-950/20 hover:border-rose-500/40 transition-all text-left group cursor-pointer"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xs font-semibold text-rose-300 group-hover:text-rose-200 transition-colors">
+                    Clear & Run Fresh
+                  </span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 font-medium">Wipe & Scrape</span>
+                </div>
+                <span className="text-[11px] text-zinc-400 mt-1">
+                  Clears previous tweets from the database and runs a fresh scrape from scratch across all handles.
+                </span>
+              </button>
+            </div>
+
+            {/* Footer / Cancel */}
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setIsConfirmingRerunModalOpen(false)}
+                className="px-3 py-1.5 rounded-md text-xs font-medium border border-border/60 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-foreground transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

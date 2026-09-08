@@ -44,7 +44,7 @@ export interface TwitterScrapedTweetItem {
 
 export interface TwitterScrapeProgressItem {
   is_running: boolean;
-  status: "idle" | "running" | "completed" | "cancelled" | "error";
+  status: "idle" | "starting" | "running" | "completed" | "cancelled" | "error";
   total_handles: number;
   completed_handles: number;
   total_tweets_collected: number;

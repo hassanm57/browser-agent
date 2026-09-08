@@ -543,6 +543,28 @@ def insert_scraped_tweet(tweet_data_dictionary):
             time_iso_string, is_within_24h_int, views_int, likes_int,
             reposts_int, replies_int, bookmarks_int, url_string, current_time_iso
         ))
+    else:
+        # Gracefully refresh engagement metrics and 24h classification when re-scraping
+        existing_tweet_id = existing_tweet_row["id"]
+        cursor.execute("""
+            UPDATE twitter_scraped_tweets
+            SET run_id = ?,
+                author_display_name = ?,
+                tweet_timestamp_text = ?,
+                is_within_24h = ?,
+                views_count = ?,
+                likes_count = ?,
+                reposts_count = ?,
+                replies_count = ?,
+                bookmarks_count = ?,
+                scraped_at = ?
+            WHERE id = ?
+        """, (
+            run_identifier, author_name_string, timestamp_text_string,
+            is_within_24h_int, views_int, likes_int,
+            reposts_int, replies_int, bookmarks_int, current_time_iso,
+            existing_tweet_id
+        ))
 
     # Update handle metadata with latest scraping timestamp
     cursor.execute("""

@@ -499,7 +499,11 @@ async def start_twitter_scrape_endpoint(payload: Optional[TwitterScrapeStartRequ
     global current_running_twitter_scrape_task, twitter_scrape_cancellation_event, current_twitter_scrape_state
 
     if current_twitter_scrape_state["is_running"]:
-        raise HTTPException(status_code=400, detail="A Twitter scrape pipeline is already actively running")
+        return {
+            "status": "already_running",
+            "message": "A Twitter scrape pipeline is already actively running.",
+            **current_twitter_scrape_state
+        }
 
     # Determine concurrency level (default 6, max 8)
     concurrency_level = 6
@@ -592,8 +596,7 @@ async def start_twitter_scrape_endpoint(payload: Optional[TwitterScrapeStartRequ
 
     return {
         "status": "started",
-        "total_handles": len(handles_to_scrape),
-        "concurrency_level": concurrency_level
+        **current_twitter_scrape_state
     }
 
 @app.post("/api/twitter/scrape/cancel")

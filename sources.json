@@ -152,6 +152,132 @@
     "type": "x_account",
     "url": "https://x.com/sentdefender",
     "enabled": true
+  },
+  {
+    "name": "IAEA News Centre",
+    "category": "geopolitics_strategy",
+    "type": "rss",
+    "url": "https://www.iaea.org/feeds/news",
+    "enabled": true
+  },
+  {
+    "name": "Arms Control Association",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.armscontrol.org/",
+    "enabled": true
+  },
+  {
+    "name": "SIPRI Recent Research & News",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.sipri.org/news",
+    "enabled": true
+  },
+  {
+    "name": "Carnegie Nuclear Policy Program",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://carnegieendowment.org/programs/nuclear-policy",
+    "enabled": true
+  },
+  {
+    "name": "Stimson Center Strategic Analysis",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://www.stimson.org/",
+    "enabled": true
+  },
+  {
+    "name": "UNODA Disarmament Affairs",
+    "category": "geopolitics_strategy",
+    "type": "web",
+    "url": "https://disarmament.un.org/",
+    "enabled": true
+  },
+  {
+    "name": "IDRW Indian Defence Research Wing",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://idrw.org/feed/",
+    "enabled": true
+  },
+  {
+    "name": "Livefist Defence",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://www.livefistdefence.com/feed/",
+    "enabled": true
+  },
+  {
+    "name": "Quwa Defence News",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://quwa.org/feed/",
+    "enabled": true
+  },
+  {
+    "name": "US Dept of Defense Official News",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://www.defense.gov/DesktopModules/ArticleCS/RSS.ashx?ContentType=1&Site=945&max=10",
+    "enabled": true
+  },
+  {
+    "name": "Air & Space Forces Magazine",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://www.airandspaceforces.com/feed/",
+    "enabled": true
+  },
+  {
+    "name": "Naval News Global",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://www.navalnews.com/feed/",
+    "enabled": true
+  },
+  {
+    "name": "USNI News (U.S. Naval Institute)",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://news.usni.org/feed",
+    "enabled": true
+  },
+  {
+    "name": "War on the Rocks Strategy & Defense",
+    "category": "geopolitics_strategy",
+    "type": "rss",
+    "url": "https://warontherocks.com/feed/",
+    "enabled": true
+  },
+  {
+    "name": "The Diplomat Asia-Pacific Defense",
+    "category": "geopolitics_strategy",
+    "type": "rss",
+    "url": "https://thediplomat.com/feed/",
+    "enabled": true
+  },
+  {
+    "name": "The Hindu International",
+    "category": "national_regional",
+    "type": "rss",
+    "url": "https://www.thehindu.com/news/international/feeder/default.rss",
+    "enabled": true
+  },
+  {
+    "name": "Al Jazeera English RSS",
+    "category": "wire_services",
+    "type": "rss",
+    "url": "https://www.aljazeera.com/xml/rss/all.xml",
+    "enabled": true
+  },
+  {
+    "name": "Geo News World",
+    "category": "national_regional",
+    "type": "rss",
+    "url": "https://www.geo.tv/rss/1/5",
+    "enabled": true
   }
 ]
 

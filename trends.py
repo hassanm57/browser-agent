@@ -239,12 +239,39 @@ def fetch_headlines_from_configured_sources(sources_list):
                             continue
 
                         if heading_text not in extracted_headlines_list:
-                            # If it's a specialized defense or geopolitical think tank, all articles are relevant
+                            # If it comes from a specialized defense, strategic affairs, or think tank domain, all articles are relevant
                             lower_text = heading_text.lower()
-                            is_relevant = True
-                            if any(d in source_url for d in ["foreignaffairs.com", "janes.com", "csis.org", "atlanticcouncil.org", "iiss.org", "defensenews.com", "breakingdefense.com", "defenseone.com"]):
-                                is_relevant = True
-                            elif any(k in lower_text for k in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "court", "forces", "treaty", "pact", "russia", "border", "missile", "defense", "defence", "nato", "taiwan", "ukraine", "hormuz", "sanctions"]):
+                            specialized_defense_domains = [
+                                "foreignaffairs.com", "janes.com", "csis.org", "atlanticcouncil.org",
+                                "iiss.org", "defensenews.com", "breakingdefense.com", "defenseone.com",
+                                "armscontrol.org", "sipri.org", "carnegieendowment.org", "stimson.org",
+                                "disarmament.un.org", "idrw.org", "livefistdefence.com", "quwa.org",
+                                "defense.gov", "airandspaceforces.com", "navalnews.com", "usni.org",
+                                "warontherocks.com", "thediplomat.com", "iaea.org"
+                            ]
+
+                            is_from_specialized_domain = False
+                            for domain_item in specialized_defense_domains:
+                                if domain_item in source_url:
+                                    is_from_specialized_domain = True
+                                    break
+
+                            general_strategic_keywords = [
+                                "pakistan", "army", "military", "strike", "attack", "iran", "israel",
+                                "china", "us", "trump", "navy", "security", "court", "forces", "treaty",
+                                "pact", "russia", "border", "missile", "defense", "defence", "nato",
+                                "taiwan", "ukraine", "hormuz", "sanctions", "nuclear", "warhead",
+                                "proliferation", "deterrence", "doctrine", "disarmament", "iaea",
+                                "bmd", "hypersonic", "drone", "uav", "cbm", "air force"
+                            ]
+
+                            has_strategic_keyword = False
+                            for keyword_item in general_strategic_keywords:
+                                if keyword_item in lower_text:
+                                    has_strategic_keyword = True
+                                    break
+
+                            if is_from_specialized_domain or has_strategic_keyword:
                                 is_relevant = True
                             else:
                                 is_relevant = False
@@ -374,6 +401,32 @@ STRATEGIC_DEFENSE_INDICATORS = [
     # Security & intelligence agencies
     "security", "national security", "homeland security", "border security",
     "intelligence", "isi", "raw", "cia", "mossad", "mi6",
+
+    # Nuclear doctrine, deterrence strategy & strategic stability
+    "nuclear doctrine", "no first use", "nfu", "first strike", "second strike",
+    "nuclear triad", "tactical nuclear", "nuclear umbrella", "extended deterrence",
+    "nuclear sharing", "credible minimum deterrence", "strategic stability",
+
+    # Arms control treaties, non-proliferation & export control regimes
+    "arms control", "new start", "ctbt", "npt", "fissile material", "fmct",
+    "nuclear disarmament", "non-proliferation", "safeguards", "iaea",
+    "nuclear suppliers group", "nsg", "mtcr", "wassenaar", "export control",
+
+    # Ballistic missile defense (BMD) & interceptor systems
+    "bmd", "ballistic missile defense", "aegis", "gbi", "ground-based interceptor",
+    "interceptor", "arrow 3", "david's sling",
+
+    # Space warfare, ASAT & emerging strategic technologies
+    "asat", "anti-satellite", "space force", "space domain", "directed energy",
+    "laser weapon", "quantum radar", "hypersonic glide",
+
+    # Advanced unmanned systems, loitering munitions & counter-UAS
+    "loitering munition", "kamikaze drone", "fpv drone", "counter-uas", "c-uas",
+    "drone swarm", "loyal wingman",
+
+    # Confidence-building measures (CBMs), risk reduction & crisis management
+    "confidence building", "cbm", "hotline", "deconfliction", "risk reduction",
+    "nuclear risk",
 
     # Historic defense & war commemorations
     "defence day", "defense day", "yom-e-difa", "september 6", "6 september",
@@ -1293,6 +1346,13 @@ TOPIC SELECTION DIRECTIVES - STRICTLY PRIORITIZE:
 5. REGIONAL CONFLICT FLASHPOINTS & MARITIME CHOKEPOINTS:
    - Freedom of navigation operations, strait security (Hormuz, Bab-el-Mandeb, Malacca, Taiwan Strait, Black Sea).
    - Border security operations, cross-border escalation dynamics, and counter-terrorism military campaigns.
+
+6. NUCLEAR DOCTRINE, ARMS CONTROL & STRATEGIC STABILITY:
+   - Nuclear doctrine shifts, credible minimum deterrence, no-first-use debates, and nuclear triad modernizations.
+   - Arms control treaty compliance, CTBT, NPT review processes, and FMCT negotiations.
+   - Missile test notifications, MTCR compliance, ballistic missile defense (BMD) tracking, and export control regimes.
+   - IAEA safeguards inspections, nuclear facility monitoring, and non-proliferation alerts.
+   - Confidence-building measures (CBMs), military crisis hotlines, and strategic nuclear risk reduction.
 
 KEYWORD & BOOLEAN QUERY REQUIREMENTS:
 1. Generate between 10 to 12 distinct, high-priority strategic topics based on the ingested news.

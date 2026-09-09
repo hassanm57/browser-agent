@@ -121,11 +121,39 @@ async def run_single_country_pipeline(
                         raw_text = header_tag.get_text()
                         clean_title = trends.clean_dom_tags_and_markdown(raw_text)
                         if len(clean_title) > 25 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
+                            # If it comes from a specialized defense, strategic affairs, or think tank domain, all articles are relevant
                             lower_title = clean_title.lower()
-                            is_relevant = True
-                            if any(d in source_url for d in ["foreignaffairs.com", "janes.com", "csis.org", "atlanticcouncil.org", "iiss.org", "defensenews.com", "breakingdefense.com", "defenseone.com"]):
-                                is_relevant = True
-                            elif any(k in lower_title for k in ["pakistan", "army", "military", "strike", "attack", "iran", "israel", "china", "us", "trump", "navy", "security", "court", "forces", "treaty", "pact", "russia", "border", "missile", "defense", "defence", "nato", "taiwan", "ukraine", "hormuz", "sanctions"]):
+                            specialized_defense_domains = [
+                                "foreignaffairs.com", "janes.com", "csis.org", "atlanticcouncil.org",
+                                "iiss.org", "defensenews.com", "breakingdefense.com", "defenseone.com",
+                                "armscontrol.org", "sipri.org", "carnegieendowment.org", "stimson.org",
+                                "disarmament.un.org", "idrw.org", "livefistdefence.com", "quwa.org",
+                                "defense.gov", "airandspaceforces.com", "navalnews.com", "usni.org",
+                                "warontherocks.com", "thediplomat.com", "iaea.org"
+                            ]
+
+                            is_from_specialized_domain = False
+                            for domain_item in specialized_defense_domains:
+                                if domain_item in source_url:
+                                    is_from_specialized_domain = True
+                                    break
+
+                            general_strategic_keywords = [
+                                "pakistan", "army", "military", "strike", "attack", "iran", "israel",
+                                "china", "us", "trump", "navy", "security", "court", "forces", "treaty",
+                                "pact", "russia", "border", "missile", "defense", "defence", "nato",
+                                "taiwan", "ukraine", "hormuz", "sanctions", "nuclear", "warhead",
+                                "proliferation", "deterrence", "doctrine", "disarmament", "iaea",
+                                "bmd", "hypersonic", "drone", "uav", "cbm", "air force"
+                            ]
+
+                            has_strategic_keyword = False
+                            for keyword_item in general_strategic_keywords:
+                                if keyword_item in lower_title:
+                                    has_strategic_keyword = True
+                                    break
+
+                            if is_from_specialized_domain or has_strategic_keyword:
                                 is_relevant = True
                             else:
                                 is_relevant = False

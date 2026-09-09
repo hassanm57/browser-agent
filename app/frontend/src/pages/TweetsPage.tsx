@@ -16,10 +16,10 @@ export function TweetsPage(props: TweetsPageProps) {
     !props.rawSourcesData.x_native_explore.sample_tweets_by_trend
   ) {
     return (
-      <div className="p-12 text-center text-zinc-500 space-y-3">
-        <MessageSquare className="w-8 h-8 text-zinc-600 mx-auto" />
-        <h3 className="text-sm font-semibold text-zinc-300">No Mined Tweets Available</h3>
-        <p className="text-xs text-zinc-500 max-w-md mx-auto">
+      <div className="p-12 text-center text-muted-foreground space-y-3">
+        <MessageSquare className="w-8 h-8 text-muted-foreground/60 mx-auto" />
+        <h3 className="text-sm font-semibold text-foreground">No Mined Tweets Available</h3>
+        <p className="text-xs text-muted-foreground max-w-md mx-auto">
           Execute the intelligence pipeline to run browser-use deep timeline scrolling and mine real tweets.
         </p>
       </div>
@@ -106,7 +106,7 @@ export function TweetsPage(props: TweetsPageProps) {
       renderedTweetCards.push(
         <div
           key={trendName + "_tweet_" + tweetIndex}
-          className="p-4 rounded-lg bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-all space-y-2.5"
+          className="p-4 rounded-lg bg-card border border-border hover:border-border/80 transition-all space-y-2.5 shadow-xs"
         >
           {/* Tweet Author Row */}
           <div className="flex items-center justify-between">
@@ -115,10 +115,10 @@ export function TweetsPage(props: TweetsPageProps) {
                 {userInitial}
               </div>
               <div>
-                <div className="text-xs font-semibold text-zinc-100 flex items-center gap-1.5">
+                <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                   <span>{parsedTweet.authorName}</span>
                 </div>
-                <div className="text-[11px] text-zinc-500 font-mono">
+                <div className="text-[11px] text-muted-foreground font-mono">
                   {parsedTweet.authorHandle}
                 </div>
               </div>
@@ -128,7 +128,7 @@ export function TweetsPage(props: TweetsPageProps) {
               href={"https://x.com/search?q=" + encodeURIComponent(trendName)}
               target="_blank"
               rel="noreferrer"
-              className="text-zinc-500 hover:text-blue-400 transition-colors p-1"
+              className="text-muted-foreground hover:text-blue-500 transition-colors p-1"
               title="Search this trend on X"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -136,13 +136,13 @@ export function TweetsPage(props: TweetsPageProps) {
           </div>
 
           {/* Tweet Body (supports right-to-left Urdu / Arabic and English) */}
-          <p className="text-xs text-zinc-200 leading-relaxed whitespace-pre-wrap dir-auto">
+          <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap dir-auto">
             {parsedTweet.bodyText}
           </p>
 
           {/* Trend Tag Pill */}
           <div className="pt-1 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-400 bg-blue-950/40 border border-blue-800/50 px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-500 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full">
               <Hash className="w-3 h-3" />
               {trendName.replace("#", "")}
             </span>
@@ -154,24 +154,24 @@ export function TweetsPage(props: TweetsPageProps) {
     renderedTrendSections.push(
       <div
         key={trendName}
-        className="rounded-lg bg-zinc-950 border border-zinc-800/80 overflow-hidden"
+        className="rounded-lg bg-card border border-border overflow-hidden shadow-xs"
       >
         {/* Accordion Bar */}
         <div
           onClick={function () {
             toggleTrendExpansion(trendName);
           }}
-          className="p-3.5 bg-zinc-900/70 border-b border-zinc-800/80 flex items-center justify-between cursor-pointer hover:bg-zinc-850 transition-colors select-none"
+          className="p-3.5 bg-muted/40 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/70 transition-colors select-none"
         >
           <div className="flex items-center gap-2.5">
-            <MessageSquare className="w-4 h-4 text-blue-400" />
-            <span className="text-xs font-bold text-zinc-200">{trendName}</span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-mono">
+            <MessageSquare className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+            <span className="text-xs font-bold text-foreground">{trendName}</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-mono">
               {tweetsForThisTrend.length} tweets
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-zinc-400">
+          <div className="flex items-center gap-2 text-muted-foreground">
             {isExpanded ? (
               <ChevronUp className="w-4 h-4" />
             ) : (
@@ -182,11 +182,11 @@ export function TweetsPage(props: TweetsPageProps) {
 
         {/* Tweets Grid */}
         {isExpanded && (
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-black/20">
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-muted/20">
             {renderedTweetCards.length > 0 ? (
               renderedTweetCards
             ) : (
-              <div className="col-span-2 p-6 text-center text-xs text-zinc-500">
+              <div className="col-span-2 p-6 text-center text-xs text-muted-foreground">
                 No tweets extracted for this trend.
               </div>
             )}
@@ -199,12 +199,12 @@ export function TweetsPage(props: TweetsPageProps) {
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-zinc-800/80">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-border">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-zinc-100 flex items-center gap-2">
+          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <span>Extracted Tweets</span>
           </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {trendNamesList.length} trending hashtags mined · {overallTweetCount} genuine tweets parsed from X timelines.
           </p>
         </div>

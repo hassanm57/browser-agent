@@ -553,21 +553,21 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
           setSelectedTweetForModal(tweet);
           setHasCopiedModalText(false);
         }}
-        className="p-3.5 rounded-lg border border-border/60 bg-card/60 hover:bg-card/90 hover:border-zinc-500/60 transition-all space-y-2.5 flex flex-col justify-between shadow-xs cursor-pointer group"
+        className="p-3.5 rounded-lg border border-border/60 bg-card/60 hover:bg-card/90 hover:border-border transition-all space-y-2.5 flex flex-col justify-between shadow-xs cursor-pointer group"
       >
         {/* Tweet Header */}
         <div className="flex items-center justify-between text-[11px] text-muted-foreground">
           <div className="flex items-center gap-1.5 overflow-hidden">
-            <span className="font-semibold text-foreground text-xs truncate group-hover:text-blue-400 transition-colors">
+            <span className="font-semibold text-foreground text-xs truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               @{tweet.handle}
             </span>
             {tweet.author_display_name && tweet.author_display_name !== tweet.handle && (
-              <span className="text-zinc-500 truncate max-w-[120px] hidden sm:inline">({tweet.author_display_name})</span>
+              <span className="text-muted-foreground truncate max-w-[120px] hidden sm:inline">({tweet.author_display_name})</span>
             )}
-            <span className="text-zinc-600">·</span>
+            <span className="text-muted-foreground">·</span>
             <span className="shrink-0">{tweet.tweet_timestamp_text}</span>
             {tweet.is_within_24h && (
-              <span className="text-emerald-400 font-medium text-[10px] px-1 py-0.5 rounded bg-emerald-500/10 shrink-0">24h</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] px-1 py-0.5 rounded bg-emerald-500/10 shrink-0">24h</span>
             )}
           </div>
           <a
@@ -575,7 +575,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(clickEvent) => clickEvent.stopPropagation()}
-            className="hover:text-foreground text-zinc-500 shrink-0 transition-colors p-0.5"
+            className="hover:text-foreground text-muted-foreground shrink-0 transition-colors p-0.5"
             title="View on X"
           >
             <ExternalLink className="w-3 h-3" />
@@ -583,36 +583,36 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
         </div>
 
         {/* Tweet Content */}
-        <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
+        <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap break-words">
           {tweet.tweet_text}
         </p>
 
         {/* Minimal inline metrics row */}
         <div className="flex items-center gap-4 pt-2 border-t border-border/30 text-[11px] text-muted-foreground mt-auto">
           <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Replies">
-            <MessageCircle className="w-3 h-3 text-sky-400 fill-sky-400/20 drop-shadow-[0_0_5px_rgba(56,189,248,0.7)]" />
-            <span className="text-zinc-400 font-medium">{tweet.replies_count.toLocaleString()}</span>
+            <MessageCircle className="w-3 h-3 text-sky-500 dark:text-sky-400 fill-sky-500/20 dark:fill-sky-400/20" />
+            <span className="text-foreground/80 font-medium">{tweet.replies_count.toLocaleString()}</span>
           </span>
           <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Reposts">
-            <Repeat2 className="w-3.5 h-3.5 text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.7)]" />
-            <span className="text-zinc-400 font-medium">{tweet.reposts_count.toLocaleString()}</span>
+            <Repeat2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+            <span className="text-foreground/80 font-medium">{tweet.reposts_count.toLocaleString()}</span>
           </span>
           <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Likes">
-            <Heart className="w-3 h-3 text-rose-400 fill-rose-400/25 drop-shadow-[0_0_5px_rgba(244,63,94,0.75)]" />
-            <span className="text-zinc-400 font-medium">{tweet.likes_count.toLocaleString()}</span>
+            <Heart className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 fill-rose-500/25 dark:fill-rose-400/25" />
+            <span className="text-foreground/80 font-medium">{tweet.likes_count.toLocaleString()}</span>
           </span>
           <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Views">
-            <Eye className="w-3 h-3 text-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.65)]" />
-            <span className="text-zinc-400 font-medium">{tweet.views_count.toLocaleString()}</span>
+            <Eye className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+            <span className="text-foreground/80 font-medium">{tweet.views_count.toLocaleString()}</span>
           </span>
           {tweet.bookmarks_count > 0 && (
             <span className="flex items-center gap-1.5 hover:text-foreground transition-colors" title="Bookmarks">
-              <Bookmark className="w-3 h-3 text-amber-400 fill-amber-400/25 drop-shadow-[0_0_5px_rgba(251,191,36,0.75)]" />
-              <span className="text-zinc-400 font-medium">{tweet.bookmarks_count.toLocaleString()}</span>
+              <Bookmark className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 fill-amber-500/25 dark:fill-amber-400/25" />
+              <span className="text-foreground/80 font-medium">{tweet.bookmarks_count.toLocaleString()}</span>
             </span>
           )}
           {tweet.handle_category && (
-            <span className="ml-auto text-[10px] text-zinc-500 truncate max-w-[90px]">
+            <span className="ml-auto text-[10px] text-muted-foreground truncate max-w-[90px]">
               {tweet.handle_category}
             </span>
           )}
@@ -648,7 +648,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
         </td>
         <td className="py-2.5 px-3 text-muted-foreground">
           {hItem.last_tweet_count > 0 ? (
-            <span className="text-zinc-300 font-medium">{hItem.last_tweet_count} tweets</span>
+            <span className="text-foreground/90 font-medium">{hItem.last_tweet_count} tweets</span>
           ) : (
             "—"
           )}
@@ -659,8 +659,8 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             className={
               "px-2 py-0.5 rounded text-[11px] font-medium border transition-colors " +
               (hItem.is_active
-                ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
-                : "border-zinc-700 text-zinc-500 bg-zinc-800/40")
+                ? "border-emerald-500/30 text-emerald-500 dark:text-emerald-400 bg-emerald-500/10"
+                : "border-border text-muted-foreground bg-muted/40")
             }
           >
             {hItem.is_active ? "Active" : "Disabled"}
@@ -669,7 +669,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
         <td className="py-2.5 px-3 text-right">
           <button
             onClick={() => handleDeleteHandle(hItem.id)}
-            className="text-zinc-500 hover:text-rose-400 transition-colors p-1"
+            className="text-muted-foreground hover:text-rose-500 transition-colors p-1 cursor-pointer"
             title="Delete handle"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -689,9 +689,9 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       renderedActiveWorkers.push(
         <span
           key={workerId}
-          className="inline-flex items-center gap-1.5 text-[11px] text-zinc-300 bg-zinc-900/80 border border-border/40 px-2 py-0.5 rounded"
+          className="inline-flex items-center gap-1.5 text-[11px] text-foreground/90 bg-muted/70 border border-border/60 px-2 py-0.5 rounded"
         >
-          <span className="text-zinc-500 font-mono text-[10px]">W{workerId}:</span>
+          <span className="text-muted-foreground font-mono text-[10px]">W{workerId}:</span>
           <span className="text-foreground font-medium truncate max-w-[140px]">{currentTask}</span>
         </span>
       );
@@ -709,9 +709,9 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
         key={categoryName}
         onClick={() => setSelectedHandleCategoryFilter(categoryName)}
         className={
-          "px-2.5 py-1 rounded text-xs transition-colors " +
+          "px-2.5 py-1 rounded text-xs transition-colors cursor-pointer " +
           (isSelected
-            ? "bg-zinc-800 text-foreground font-medium"
+            ? "bg-muted text-foreground font-medium border border-border/60"
             : "text-muted-foreground hover:text-foreground")
         }
       >
@@ -780,15 +780,15 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
           ) : isStartingScrape ? (
             <button
               disabled
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700 opacity-90 cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-muted text-muted-foreground border border-border opacity-90 cursor-not-allowed"
             >
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-500" />
               Launching...
             </button>
           ) : (
             <button
               onClick={handleStartScrapingClick}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors cursor-pointer shadow-xs"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               {tweetsList.length > 0 ? "Re-run Scraper" : "Run Scraper"}
@@ -798,7 +798,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
           <button
             onClick={handleClearTweets}
             disabled={scrapeProgress.is_running || isStartingScrape || tweetsList.length === 0}
-            className="text-xs text-muted-foreground hover:text-rose-400 transition-colors px-2 py-1 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+            className="text-xs text-muted-foreground hover:text-rose-500 transition-colors px-2 py-1 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
             title="Clear all scraped tweets"
           >
             Clear Tweets
@@ -808,17 +808,17 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
 
       {/* Live Scraping Progress Banner with real-time Elapsed Time */}
       {scrapeProgress.is_running && (
-        <div className="p-3.5 rounded-lg border border-border/40 bg-card/60 space-y-2.5 text-xs">
+        <div className="p-3.5 rounded-lg border border-border/60 bg-card/90 space-y-2.5 text-xs shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="flex items-center gap-2 font-medium text-foreground">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-500" />
               {scrapeProgress.completed_handles === 0
                 ? "Launching " + (scrapeProgress.concurrency_level || 6) + " parallel browser instances..."
                 : "Scraping in progress..."}
             </span>
             <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 text-zinc-300 font-mono text-[11px] bg-zinc-800/80 border border-zinc-700/60 px-2 py-0.5 rounded">
-                <Clock className="w-3 h-3 text-blue-400 animate-pulse" />
+              <span className="flex items-center gap-1.5 text-foreground font-mono text-[11px] bg-muted border border-border/60 px-2 py-0.5 rounded">
+                <Clock className="w-3 h-3 text-blue-500 animate-pulse" />
                 <span>Elapsed: {formatStopwatchDisplay(liveElapsedSeconds)}</span>
               </span>
               <span>
@@ -829,9 +829,9 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
           </div>
 
           {/* Slim progress bar with minimum visual progress while starting */}
-          <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
             <div
-              className="bg-foreground h-1.5 rounded-full transition-all duration-300"
+              className="bg-primary h-1.5 rounded-full transition-all duration-300"
               style={{
                 width:
                   scrapeProgress.total_handles > 0
@@ -846,8 +846,8 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
 
           {/* Active worker statuses */}
           {renderedActiveWorkers.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/30 text-[11px] text-zinc-400">
-              <span className="text-zinc-500 font-medium shrink-0">Workers:</span>
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/30 text-[11px] text-muted-foreground">
+              <span className="text-muted-foreground font-medium shrink-0">Workers:</span>
               {renderedActiveWorkers}
             </div>
           )}
@@ -856,12 +856,12 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
 
       {/* Completed or Cancelled Scrape Summary Banner with Total Time Elapsed */}
       {!scrapeProgress.is_running && scrapeProgress.finished_at && liveElapsedSeconds > 0 && (
-        <div className="p-3 rounded-lg border border-border/40 bg-card/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="p-3 rounded-lg border border-border/60 bg-card/90 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs">
           <div className="flex items-center gap-2">
             {scrapeProgress.status === "completed" ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
             )}
             <span className="text-foreground font-medium">
               {scrapeProgress.status === "completed"
@@ -872,8 +872,8 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               ({scrapeProgress.completed_handles} of {scrapeProgress.total_handles} handles, {scrapeProgress.total_tweets_collected} tweets extracted)
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-zinc-300 font-mono text-[11px] bg-zinc-800/80 border border-zinc-700/60 px-2.5 py-1 rounded">
-            <Clock className="w-3 h-3 text-zinc-400" />
+          <div className="flex items-center gap-1.5 text-foreground font-mono text-[11px] bg-muted border border-border/60 px-2.5 py-1 rounded">
+            <Clock className="w-3 h-3 text-muted-foreground" />
             <span>Total Time Elapsed: {formatElapsedDurationText(liveElapsedSeconds)}</span>
           </div>
         </div>
@@ -1059,16 +1059,16 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       {selectedTweetForModal !== null && (
         <div
           onClick={() => setSelectedTweetForModal(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
         >
           <div
             onClick={(modalClickEvent) => modalClickEvent.stopPropagation()}
-            className="relative w-full max-w-2xl bg-zinc-950 border border-zinc-700/80 rounded-xl shadow-2xl p-6 space-y-4 max-h-[88vh] flex flex-col text-foreground animate-in fade-in zoom-in-95 duration-150"
+            className="relative w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl p-6 space-y-4 max-h-[88vh] flex flex-col text-foreground animate-in fade-in zoom-in-95 duration-150"
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between gap-4 pb-3 border-b border-border/50">
+            <div className="flex items-start justify-between gap-4 pb-3 border-b border-border/60">
               <div className="flex items-center gap-2.5 flex-wrap">
-                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-xs text-foreground shrink-0 border border-zinc-700">
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-bold text-xs text-foreground shrink-0 border border-border">
                   {selectedTweetForModal.handle.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -1083,12 +1083,12 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
                         </span>
                       )}
                     {selectedTweetForModal.is_within_24h && (
-                      <span className="text-emerald-400 font-medium text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 shrink-0">
                         24h
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-zinc-500 flex items-center gap-1.5 mt-0.5">
+                  <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
                     <span>{selectedTweetForModal.tweet_timestamp_text}</span>
                     {selectedTweetForModal.handle_category && (
                       <>
@@ -1105,17 +1105,17 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
                 <button
                   type="button"
                   onClick={handleCopyTweetText}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border/60 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-foreground transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border bg-muted/60 hover:bg-muted text-foreground transition-colors cursor-pointer"
                   title="Copy tweet text"
                 >
                   {hasCopiedModalText ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied!</span>
+                      <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                      <span className="text-emerald-600 dark:text-emerald-400">Copied!</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                      <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                       <span>Copy</span>
                     </>
                   )}
@@ -1125,17 +1125,17 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
                   href={"https://x.com/" + selectedTweetForModal.handle}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border/60 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-foreground transition-colors"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border bg-muted/60 hover:bg-muted text-foreground transition-colors"
                   title="Open on X"
                 >
-                  <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Open on X</span>
                 </a>
 
                 <button
                   type="button"
                   onClick={() => setSelectedTweetForModal(null)}
-                  className="p-1.5 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-foreground transition-colors ml-1 cursor-pointer"
+                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors ml-1 cursor-pointer"
                   title="Close (Esc)"
                 >
                   <X className="w-4 h-4" />
@@ -1144,60 +1144,60 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             </div>
 
             {/* Modal Body - Full Un-truncated Tweet Text */}
-            <div className="overflow-y-auto pr-2 py-1 max-h-[55vh] select-text selection:bg-zinc-700 selection:text-white">
-              <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap font-normal">
+            <div className="overflow-y-auto pr-2 py-1 max-h-[55vh] select-text">
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-normal">
                 {selectedTweetForModal.tweet_text}
               </p>
             </div>
 
             {/* Modal Footer - Engagement Metrics */}
-            <div className="pt-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+            <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-5 flex-wrap">
                 <span className="flex items-center gap-1.5" title="Replies">
-                  <MessageCircle className="w-3.5 h-3.5 text-sky-400 fill-sky-400/20 drop-shadow-[0_0_6px_rgba(56,189,248,0.7)]" />
-                  <span className="text-zinc-300 font-semibold">
+                  <MessageCircle className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 fill-sky-500/20 dark:fill-sky-400/20" />
+                  <span className="text-foreground font-semibold">
                     {selectedTweetForModal.replies_count.toLocaleString()}
                   </span>
-                  <span className="text-zinc-500 text-[11px] hidden sm:inline">replies</span>
+                  <span className="text-muted-foreground text-[11px] hidden sm:inline">replies</span>
                 </span>
 
                 <span className="flex items-center gap-1.5" title="Reposts">
-                  <Repeat2 className="w-4 h-4 text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
-                  <span className="text-zinc-300 font-semibold">
+                  <Repeat2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                  <span className="text-foreground font-semibold">
                     {selectedTweetForModal.reposts_count.toLocaleString()}
                   </span>
-                  <span className="text-zinc-500 text-[11px] hidden sm:inline">reposts</span>
+                  <span className="text-muted-foreground text-[11px] hidden sm:inline">reposts</span>
                 </span>
 
                 <span className="flex items-center gap-1.5" title="Likes">
-                  <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/25 drop-shadow-[0_0_6px_rgba(244,63,94,0.75)]" />
-                  <span className="text-zinc-300 font-semibold">
+                  <Heart className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 fill-rose-500/25 dark:fill-rose-400/25" />
+                  <span className="text-foreground font-semibold">
                     {selectedTweetForModal.likes_count.toLocaleString()}
                   </span>
-                  <span className="text-zinc-500 text-[11px] hidden sm:inline">likes</span>
+                  <span className="text-muted-foreground text-[11px] hidden sm:inline">likes</span>
                 </span>
 
                 <span className="flex items-center gap-1.5" title="Views">
-                  <Eye className="w-3.5 h-3.5 text-blue-400 drop-shadow-[0_0_6px_rgba(96,165,250,0.65)]" />
-                  <span className="text-zinc-300 font-semibold">
+                  <Eye className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+                  <span className="text-foreground font-semibold">
                     {selectedTweetForModal.views_count.toLocaleString()}
                   </span>
-                  <span className="text-zinc-500 text-[11px] hidden sm:inline">views</span>
+                  <span className="text-muted-foreground text-[11px] hidden sm:inline">views</span>
                 </span>
 
                 {selectedTweetForModal.bookmarks_count > 0 && (
                   <span className="flex items-center gap-1.5" title="Bookmarks">
-                    <Bookmark className="w-3.5 h-3.5 text-amber-400 fill-amber-400/25 drop-shadow-[0_0_6px_rgba(251,191,36,0.75)]" />
-                    <span className="text-zinc-300 font-semibold">
+                    <Bookmark className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 fill-amber-500/25 dark:fill-amber-400/25" />
+                    <span className="text-foreground font-semibold">
                       {selectedTweetForModal.bookmarks_count.toLocaleString()}
                     </span>
-                    <span className="text-zinc-500 text-[11px] hidden sm:inline">bookmarks</span>
+                    <span className="text-muted-foreground text-[11px] hidden sm:inline">bookmarks</span>
                   </span>
                 )}
               </div>
 
-              <span className="text-[11px] text-zinc-500 hidden md:inline">
-                Press <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-400">Esc</kbd> to close
+              <span className="text-[11px] text-muted-foreground hidden md:inline">
+                Press <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] text-muted-foreground font-mono">Esc</kbd> to close
               </span>
             </div>
           </div>
@@ -1208,22 +1208,22 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       {isConfirmingRerunModalOpen && (
         <div
           onClick={() => setIsConfirmingRerunModalOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
         >
           <div
             onClick={(modalEvent) => modalEvent.stopPropagation()}
-            className="relative w-full max-w-md bg-zinc-950 border border-zinc-700/80 rounded-xl shadow-2xl p-5 space-y-4 text-foreground animate-in fade-in zoom-in-95 duration-150"
+            className="relative w-full max-w-md bg-card border border-border rounded-xl shadow-2xl p-5 space-y-4 text-foreground animate-in fade-in zoom-in-95 duration-150"
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-border/40">
+            <div className="flex items-center justify-between pb-2 border-b border-border/60">
               <div className="flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 text-zinc-300" />
+                <RefreshCw className="w-4 h-4 text-foreground" />
                 <h3 className="font-semibold text-sm text-foreground">Re-run Twitter Scraper</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsConfirmingRerunModalOpen(false)}
-                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-foreground transition-colors cursor-pointer"
+                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 title="Close"
               >
                 <X className="w-4 h-4" />
@@ -1231,7 +1231,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             </div>
 
             {/* Explanation */}
-            <p className="text-xs text-zinc-300 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               You already have <strong className="text-foreground font-semibold">{tweetsList.length} scraped tweets</strong> across <strong className="text-foreground font-semibold">{handlesList.length} handles</strong>.
               How would you like to run the scraper?
             </p>
@@ -1241,15 +1241,15 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               <button
                 type="button"
                 onClick={() => executeStartScraping()}
-                className="w-full flex flex-col items-start p-3 rounded-lg border border-border/60 bg-zinc-900/80 hover:bg-zinc-800 hover:border-zinc-500 transition-all text-left group cursor-pointer"
+                className="w-full flex flex-col items-start p-3 rounded-lg border border-border bg-muted/40 hover:bg-muted hover:border-border transition-all text-left group cursor-pointer"
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-foreground group-hover:text-blue-400 transition-colors">
+                  <span className="text-xs font-semibold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     Refresh All Handles (Recommended)
                   </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium">Keep Existing</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">Keep Existing</span>
                 </div>
-                <span className="text-[11px] text-zinc-400 mt-1">
+                <span className="text-[11px] text-muted-foreground mt-1">
                   Updates views, likes, and repost counts for existing tweets, and collects any new tweets posted.
                 </span>
               </button>
@@ -1257,15 +1257,15 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               <button
                 type="button"
                 onClick={handleClearAndRunFresh}
-                className="w-full flex flex-col items-start p-3 rounded-lg border border-rose-500/20 bg-rose-950/10 hover:bg-rose-950/20 hover:border-rose-500/40 transition-all text-left group cursor-pointer"
+                className="w-full flex flex-col items-start p-3 rounded-lg border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 hover:border-rose-500/50 transition-all text-left group cursor-pointer"
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-rose-300 group-hover:text-rose-200 transition-colors">
+                  <span className="text-xs font-semibold text-rose-600 dark:text-rose-300 group-hover:text-rose-700 dark:group-hover:text-rose-200 transition-colors">
                     Clear & Run Fresh
                   </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 font-medium">Wipe & Scrape</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-600 dark:text-rose-300 font-medium">Wipe & Scrape</span>
                 </div>
-                <span className="text-[11px] text-zinc-400 mt-1">
+                <span className="text-[11px] text-muted-foreground mt-1">
                   Clears previous tweets from the database and runs a fresh scrape from scratch across all handles.
                 </span>
               </button>
@@ -1276,7 +1276,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               <button
                 type="button"
                 onClick={() => setIsConfirmingRerunModalOpen(false)}
-                className="px-3 py-1.5 rounded-md text-xs font-medium border border-border/60 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-foreground transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-md text-xs font-medium border border-border bg-muted/60 hover:bg-muted text-foreground transition-colors cursor-pointer"
               >
                 Cancel
               </button>

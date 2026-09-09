@@ -119,7 +119,7 @@ export function Sidebar(props: SidebarProps) {
 
     renderedNavGroups.push(
       <div key={currentGroup.heading} className="flex flex-col gap-0.5">
-        <span className="px-2.5 mb-1 text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">
+        <span className="px-2.5 mb-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
           {currentGroup.heading}
         </span>
         <div className="space-y-0.5">{renderedItemsInGroup}</div>
@@ -128,14 +128,14 @@ export function Sidebar(props: SidebarProps) {
   }
 
   return (
-    <aside className="w-60 h-screen shrink-0 overflow-hidden bg-zinc-950/80 backdrop-blur-md border-r border-zinc-850 flex flex-col justify-between select-none">
+    <aside className="w-60 h-screen shrink-0 overflow-hidden bg-card/80 backdrop-blur-md border-r border-border flex flex-col justify-between select-none">
       {/* Top Header / Clean Brand Indicator */}
       <div>
-        <div className="h-14 px-4 border-b border-zinc-850/80 flex items-center gap-2.5">
+        <div className="h-14 px-4 border-b border-border/80 flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-600 via-yellow-500 to-amber-400 flex items-center justify-center text-zinc-950 shadow-md shadow-amber-500/25 ring-1 ring-amber-400/40 shrink-0">
             <TrendingUp className="w-4 h-4 text-zinc-950" strokeWidth={2.5} />
           </div>
-          <span className="text-sm font-semibold text-zinc-100 tracking-tight">
+          <span className="text-sm font-semibold text-foreground tracking-tight">
             Trendline
           </span>
         </div>
@@ -147,18 +147,18 @@ export function Sidebar(props: SidebarProps) {
       </div>
 
       {/* Bottom Live Logs Toggle */}
-      <div className="p-3 border-t border-zinc-850/80">
+      <div className="p-3 border-t border-border/80">
         <button
           onClick={props.onToggleLogPanel}
           className={
-            "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 " +
+            "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 cursor-pointer " +
             (props.isLogPanelOpen
-              ? "bg-blue-500/15 text-blue-400 font-medium"
-              : "text-zinc-400 hover:text-zinc-100 hover:bg-white/5")
+              ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 font-medium"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50")
           }
         >
           <div className="flex items-center gap-2.5">
-            <Terminal className="w-4 h-4 text-blue-400" strokeWidth={1.75} />
+            <Terminal className="w-4 h-4 text-blue-600 dark:text-blue-400" strokeWidth={1.75} />
             <span className="tracking-tight">Live Telemetry</span>
           </div>
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>

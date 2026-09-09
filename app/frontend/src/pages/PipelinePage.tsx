@@ -95,7 +95,7 @@ export function PipelinePage(props: PipelinePageProps) {
                 (isPipelineActive
                   ? "bg-primary/15 text-primary animate-pulse border border-primary/20"
                   : latestRun && latestRun.status === "completed"
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                   : "bg-muted text-muted-foreground border border-border/40")
               }
             >
@@ -124,7 +124,7 @@ export function PipelinePage(props: PipelinePageProps) {
           {isPipelineActive ? (
             <button
               onClick={props.onCancelPipeline}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
               <span>Cancel Pipeline</span>
@@ -132,7 +132,7 @@ export function PipelinePage(props: PipelinePageProps) {
           ) : (
             <button
               onClick={props.onStartPipeline}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold shadow-xs transition-all bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>Run Pipeline</span>
@@ -149,9 +149,9 @@ export function PipelinePage(props: PipelinePageProps) {
             {isPipelineActive ? (
               <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
             ) : props.pipelineStatus === "completed" ? (
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             ) : props.pipelineStatus === "cancelled" ? (
-              <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             ) : (
               <Radio className="w-3.5 h-3.5 text-muted-foreground" />
             )}
@@ -199,7 +199,7 @@ export function PipelinePage(props: PipelinePageProps) {
                   {isCurrent ? (
                     <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
                   ) : isCompleted ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   ) : (
                     <PhaseIcon className="w-3.5 h-3.5 text-muted-foreground/60" />
                   )}
@@ -227,7 +227,7 @@ export function PipelinePage(props: PipelinePageProps) {
 
       {/* Old Pipelines Execution History */}
       {recentRuns.length > 0 && (
-        <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-sm space-y-3 select-none">
+        <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-xs space-y-3 select-none">
           <div className="flex items-center justify-between border-b border-border/40 pb-3">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-muted-foreground" />
@@ -261,10 +261,10 @@ export function PipelinePage(props: PipelinePageProps) {
                     className={
                       "text-[10px] font-mono px-2.5 py-0.5 rounded-full font-medium " +
                       (run.status === "completed"
-                        ? "bg-emerald-500/15 text-emerald-400"
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                         : run.status === "running"
                         ? "bg-primary/15 text-primary"
-                        : "bg-amber-500/15 text-amber-400")
+                        : "bg-amber-500/15 text-amber-600 dark:text-amber-400")
                     }
                   >
                     {run.status.toUpperCase()}

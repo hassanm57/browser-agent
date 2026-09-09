@@ -5,6 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trendline — Intelligence Dashboard</title>
+    <script>
+      (function() {
+        var savedTheme = localStorage.getItem('trendline_theme');
+        if (savedTheme === 'light') {
+          document.documentElement.classList.add('light');
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

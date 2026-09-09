@@ -362,7 +362,7 @@ export function DashboardPage(props: DashboardPageProps) {
           target="_blank"
           rel="noreferrer"
           title={"Visit " + item.source_name}
-          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-orange-500/25 via-amber-950/40 to-zinc-950/90 hover:from-orange-500/35 shadow-xl shadow-orange-500/10 hover:shadow-[0_0_35px_rgba(249,115,22,0.25)] transition-all duration-300 gap-4 cursor-pointer select-none"
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-orange-500/15 via-orange-50/70 to-card border border-orange-500/30 hover:from-orange-500/25 dark:from-orange-500/25 dark:via-amber-950/40 dark:to-zinc-950/90 dark:hover:from-orange-500/35 dark:border-orange-500/20 shadow-md shadow-orange-500/5 hover:shadow-[0_0_35px_rgba(249,115,22,0.2)] transition-all duration-300 gap-4 cursor-pointer select-none"
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -370,26 +370,26 @@ export function DashboardPage(props: DashboardPageProps) {
                 <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_18px_rgba(249,115,22,0.6)] shrink-0">
                   1
                 </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-300 bg-orange-500/20 px-2.5 py-0.5 rounded-full">
-                  <Flame className="w-3.5 h-3.5 fill-orange-400 text-orange-400" />
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-700 dark:text-orange-300 bg-orange-500/20 px-2.5 py-0.5 rounded-full">
+                  <Flame className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
                   Hot
                 </span>
               </div>
               <div
-                className="p-2 rounded-xl text-orange-400/80 group-hover:text-orange-200 group-hover:bg-orange-500/20 transition-all shrink-0"
+                className="p-2 rounded-xl text-orange-600 dark:text-orange-400/80 group-hover:text-orange-800 dark:group-hover:text-orange-200 group-hover:bg-orange-500/20 transition-all shrink-0"
               >
                 <ExternalLink className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-sm font-bold text-zinc-100 group-hover:text-orange-300 transition-colors leading-relaxed line-clamp-3">
+            <p className="text-sm font-bold text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-300 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
           <div className="pt-2.5 border-t border-orange-500/20 flex items-center justify-between gap-2 text-[11px]">
             <div
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-orange-300 drop-shadow-[0_0_8px_rgba(249,115,22,0.7)] group-hover:text-orange-100 group-hover:underline transition-all min-w-0"
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-orange-600 dark:text-orange-300 dark:drop-shadow-[0_0_8px_rgba(249,115,22,0.7)] group-hover:text-orange-700 dark:group-hover:text-orange-100 group-hover:underline transition-all min-w-0"
             >
-              <Globe className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+              <Globe className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 shrink-0" />
               <span className="truncate">{item.source_name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100 shrink-0" />
             </div>
@@ -405,7 +405,7 @@ export function DashboardPage(props: DashboardPageProps) {
           target="_blank"
           rel="noreferrer"
           title={"Visit " + item.source_name}
-          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-amber-500/20 via-yellow-950/30 to-zinc-950/90 hover:from-amber-500/30 shadow-xl shadow-amber-500/10 hover:shadow-[0_0_30px_rgba(245,158,11,0.22)] transition-all duration-300 gap-4 cursor-pointer select-none"
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-amber-500/15 via-amber-50/70 to-card border border-amber-500/30 hover:from-amber-500/25 dark:from-amber-500/20 dark:via-yellow-950/30 dark:to-zinc-950/90 dark:hover:from-amber-500/30 dark:border-amber-500/20 shadow-md shadow-amber-500/5 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] transition-all duration-300 gap-4 cursor-pointer select-none"
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -413,26 +413,26 @@ export function DashboardPage(props: DashboardPageProps) {
                 <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-yellow-400 via-amber-400 to-amber-500 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_16px_rgba(245,158,11,0.5)] shrink-0">
                   2
                 </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
-                  <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
+                  <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                   Hot
                 </span>
               </div>
               <div
-                className="p-2 rounded-xl text-amber-400/80 group-hover:text-amber-200 group-hover:bg-amber-500/20 transition-all shrink-0"
+                className="p-2 rounded-xl text-amber-600 dark:text-amber-400/80 group-hover:text-amber-800 dark:group-hover:text-amber-200 group-hover:bg-amber-500/20 transition-all shrink-0"
               >
                 <ExternalLink className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-sm font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-3">
+            <p className="text-sm font-semibold text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
           <div className="pt-2.5 border-t border-amber-500/20 flex items-center justify-between gap-2 text-[11px]">
             <div
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] group-hover:text-amber-100 group-hover:underline transition-all min-w-0"
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-300 dark:drop-shadow-[0_0_8px_rgba(245,158,11,0.7)] group-hover:text-amber-700 dark:group-hover:text-amber-100 group-hover:underline transition-all min-w-0"
             >
-              <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <Globe className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
               <span className="truncate">{item.source_name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100 shrink-0" />
             </div>
@@ -448,7 +448,7 @@ export function DashboardPage(props: DashboardPageProps) {
           target="_blank"
           rel="noreferrer"
           title={"Visit " + item.source_name}
-          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-yellow-300/15 via-zinc-900/80 to-zinc-950/90 hover:from-yellow-300/25 shadow-xl shadow-yellow-300/5 hover:shadow-[0_0_25px_rgba(250,204,21,0.2)] transition-all duration-300 gap-4 cursor-pointer select-none"
+          className="group relative flex flex-col justify-between p-5 rounded-3xl bg-gradient-to-b from-yellow-400/15 via-yellow-50/70 to-card border border-yellow-500/30 hover:from-yellow-400/25 dark:from-yellow-300/15 dark:via-zinc-900/80 dark:to-zinc-950/90 dark:hover:from-yellow-300/25 dark:border-yellow-400/20 shadow-md shadow-yellow-500/5 hover:shadow-[0_0_25px_rgba(250,204,21,0.2)] transition-all duration-300 gap-4 cursor-pointer select-none"
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -456,26 +456,26 @@ export function DashboardPage(props: DashboardPageProps) {
                 <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-yellow-200 via-yellow-300 to-amber-300 text-zinc-950 font-black text-sm flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.4)] shrink-0">
                   3
                 </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-yellow-200 bg-yellow-300/15 px-2.5 py-0.5 rounded-full">
-                  <Flame className="w-3.5 h-3.5 fill-yellow-300 text-yellow-300" />
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-yellow-800 dark:text-yellow-200 bg-yellow-400/20 dark:bg-yellow-300/15 px-2.5 py-0.5 rounded-full">
+                  <Flame className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500 dark:fill-yellow-300 dark:text-yellow-300" />
                   Hot
                 </span>
               </div>
               <div
-                className="p-2 rounded-xl text-yellow-300/80 group-hover:text-yellow-100 group-hover:bg-yellow-300/20 transition-all shrink-0"
+                className="p-2 rounded-xl text-yellow-600 dark:text-yellow-300/80 group-hover:text-yellow-800 dark:group-hover:text-yellow-100 group-hover:bg-yellow-300/20 transition-all shrink-0"
               >
                 <ExternalLink className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-sm font-semibold text-zinc-100 group-hover:text-yellow-200 transition-colors leading-relaxed line-clamp-3">
+            <p className="text-sm font-semibold text-foreground group-hover:text-yellow-700 dark:group-hover:text-yellow-200 transition-colors leading-relaxed line-clamp-3">
               {item.headline_text}
             </p>
           </div>
-          <div className="pt-2.5 border-t border-yellow-400/20 flex items-center justify-between gap-2 text-[11px]">
+          <div className="pt-2.5 border-t border-yellow-500/20 flex items-center justify-between gap-2 text-[11px]">
             <div
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-yellow-200 drop-shadow-[0_0_8px_rgba(250,204,21,0.7)] group-hover:text-yellow-100 group-hover:underline transition-all min-w-0"
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-yellow-700 dark:text-yellow-200 dark:drop-shadow-[0_0_8px_rgba(250,204,21,0.7)] group-hover:text-yellow-800 dark:group-hover:text-yellow-100 group-hover:underline transition-all min-w-0"
             >
-              <Globe className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
+              <Globe className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-300 shrink-0" />
               <span className="truncate">{item.source_name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100 shrink-0" />
             </div>
@@ -498,21 +498,21 @@ export function DashboardPage(props: DashboardPageProps) {
         target="_blank"
         rel="noreferrer"
         title={"Visit " + item.source_name}
-        className="group relative flex items-center justify-between gap-3.5 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-850/70 shadow-md shadow-black/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.08)] transition-all duration-300 cursor-pointer select-none"
+        className="group relative flex items-center justify-between gap-3.5 p-4 rounded-2xl bg-card hover:bg-muted/60 border border-border/70 dark:bg-zinc-900/40 dark:hover:bg-zinc-850/70 dark:border-border/30 shadow-xs hover:shadow-md transition-all duration-300 cursor-pointer select-none"
       >
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <span className="w-7 h-7 rounded-xl bg-zinc-800/90 text-zinc-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform mt-0.5">
+          <span className="w-7 h-7 rounded-xl bg-muted text-muted-foreground dark:bg-zinc-800/90 dark:text-zinc-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform mt-0.5">
             {rankNumber}
           </span>
           <div className="space-y-1.5 flex-1 min-w-0">
-            <p className="text-xs font-medium text-zinc-200 group-hover:text-zinc-100 transition-colors leading-relaxed line-clamp-2">
+            <p className="text-xs font-medium text-foreground group-hover:text-primary dark:text-zinc-200 dark:group-hover:text-zinc-100 transition-colors leading-relaxed line-clamp-2">
               {item.headline_text}
             </p>
             <div>
               <div
-                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-sky-400 drop-shadow-[0_0_6px_rgba(56,189,248,0.6)] group-hover:text-sky-200 group-hover:underline transition-all"
+                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-sky-600 dark:text-sky-400 dark:drop-shadow-[0_0_6px_rgba(56,189,248,0.6)] group-hover:text-sky-700 dark:group-hover:text-sky-200 group-hover:underline transition-all"
               >
-                <Globe className="w-3 h-3 text-sky-400 shrink-0" />
+                <Globe className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
                 <span className="truncate">{item.source_name}</span>
                 <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover:opacity-100 shrink-0" />
               </div>
@@ -521,7 +521,7 @@ export function DashboardPage(props: DashboardPageProps) {
         </div>
 
         <div
-          className="p-2 rounded-xl text-zinc-500 group-hover:text-sky-300 group-hover:bg-sky-500/15 transition-all shrink-0 self-center"
+          className="p-2 rounded-xl text-muted-foreground group-hover:text-sky-600 dark:group-hover:text-sky-300 group-hover:bg-sky-500/15 transition-all shrink-0 self-center"
         >
           <ExternalLink className="w-4 h-4" />
         </div>
@@ -552,14 +552,14 @@ export function DashboardPage(props: DashboardPageProps) {
       <Banner
         variant="rainbow"
         height="2.85rem"
-        className="rounded-2xl border border-white/10 shadow-[0_0_30px_rgba(59,130,246,0.2)] overflow-hidden"
+        className="rounded-2xl border border-border/40 dark:border-white/10 shadow-[0_0_30px_rgba(59,130,246,0.15)] overflow-hidden"
       >
         <div className="flex items-center gap-2.5 text-xs font-medium text-foreground">
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/30 shadow-[0_0_10px_rgba(59,130,246,0.3)]">
             <Zap className="w-3 h-3" />
             LIVE INTEL
           </span>
-          <span className="font-semibold text-zinc-100">
+          <span className="font-semibold text-foreground dark:text-zinc-100">
             Autonomous Agent Active — Curating real-time defense & breaking global intelligence via Strategic AI Model
           </span>
         </div>
@@ -567,11 +567,11 @@ export function DashboardPage(props: DashboardPageProps) {
 
       {/* Top Header Execution Timestamp (Prominent Text Size) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-zinc-300">
+        <div className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-muted-foreground">
           <Calendar className="w-5 h-5 text-primary shrink-0" />
           <span>
             Last executed on:{" "}
-            <strong className="text-zinc-100 font-bold">
+            <strong className="text-foreground font-bold">
               {latestRun
                 ? formatDashboardDate(latestRun.finished_at || latestRun.started_at)
                 : "No runs executed yet"}
@@ -585,8 +585,8 @@ export function DashboardPage(props: DashboardPageProps) {
               className={
                 "text-xs font-mono px-3.5 py-1 rounded-full font-semibold " +
                 (latestRun.status === "completed"
-                  ? "bg-emerald-500/15 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
-                  : "bg-amber-500/15 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]")
+                  ? "bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                  : "bg-amber-500/15 text-amber-500 dark:text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]")
               }
             >
               {latestRun.status.toUpperCase()}
@@ -600,7 +600,7 @@ export function DashboardPage(props: DashboardPageProps) {
               }
             }}
             disabled={props.isPipelineActive}
-            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 font-medium text-xs shadow-md hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40"
+            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 border border-red-500/20 font-medium text-xs shadow-md hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer disabled:opacity-40"
             title="Clear all stored intelligence runs and reset dashboard stats"
           >
             <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
@@ -625,72 +625,72 @@ export function DashboardPage(props: DashboardPageProps) {
       {/* 2. Main Stat Boxes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Active Sources */}
-        <div className="p-5 rounded-3xl bg-gradient-to-b from-blue-500/10 via-zinc-900/60 to-zinc-900/40 hover:from-blue-500/20 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(59,130,246,0.18)] transition-all duration-300 space-y-3">
+        <div className="p-5 rounded-3xl bg-gradient-to-b from-blue-500/10 via-card to-card border border-border/70 hover:from-blue-500/15 dark:from-blue-500/10 dark:via-zinc-900/60 dark:to-zinc-900/40 dark:border-transparent shadow-xs hover:shadow-md dark:shadow-xl dark:shadow-black/20 hover:shadow-[0_0_30px_rgba(59,130,246,0.18)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-blue-500/20 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.25)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-blue-500/20 text-blue-500 dark:text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.25)]">
                 <Globe className="w-4 h-4" />
               </span>
-              <p className="text-xs font-semibold text-zinc-300">Active Sources</p>
+              <p className="text-xs font-semibold text-muted-foreground">Active Sources</p>
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-3xl font-extrabold text-zinc-100 font-mono tracking-tight">{props.activeSourcesCount}</p>
-            <div className="w-full h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+            <p className="text-3xl font-extrabold text-foreground font-mono tracking-tight">{props.activeSourcesCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-muted dark:bg-zinc-800/80 overflow-hidden">
               <div className="h-full rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]" style={{ width: "85%" }}></div>
             </div>
           </div>
         </div>
 
         {/* Trends Ingested */}
-        <div className="p-5 rounded-3xl bg-gradient-to-b from-amber-500/10 via-zinc-900/60 to-zinc-900/40 hover:from-amber-500/20 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)] transition-all duration-300 space-y-3">
+        <div className="p-5 rounded-3xl bg-gradient-to-b from-amber-500/10 via-card to-card border border-border/70 hover:from-amber-500/15 dark:from-amber-500/10 dark:via-zinc-900/60 dark:to-zinc-900/40 dark:border-transparent shadow-xs hover:shadow-md dark:shadow-xl dark:shadow-black/20 hover:shadow-[0_0_30px_rgba(245,158,11,0.18)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-500/20 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-500/20 text-amber-500 dark:text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
                 <Flame className="w-4 h-4" />
               </span>
-              <p className="text-xs font-semibold text-zinc-300">Trends Ingested</p>
+              <p className="text-xs font-semibold text-muted-foreground">Trends Ingested</p>
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-3xl font-extrabold text-zinc-100 font-mono tracking-tight">{totalTrendsCount}</p>
-            <div className="w-full h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+            <p className="text-3xl font-extrabold text-foreground font-mono tracking-tight">{totalTrendsCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-muted dark:bg-zinc-800/80 overflow-hidden">
               <div className="h-full rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]" style={{ width: "70%" }}></div>
             </div>
           </div>
         </div>
 
         {/* Tweets Mined */}
-        <div className="p-5 rounded-3xl bg-gradient-to-b from-purple-500/10 via-zinc-900/60 to-zinc-900/40 hover:from-purple-500/20 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(139,92,246,0.18)] transition-all duration-300 space-y-3">
+        <div className="p-5 rounded-3xl bg-gradient-to-b from-purple-500/10 via-card to-card border border-border/70 hover:from-purple-500/15 dark:from-purple-500/10 dark:via-zinc-900/60 dark:to-zinc-900/40 dark:border-transparent shadow-xs hover:shadow-md dark:shadow-xl dark:shadow-black/20 hover:shadow-[0_0_30px_rgba(139,92,246,0.18)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.25)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-500 dark:text-purple-400 shadow-[0_0_12px_rgba(139,92,246,0.25)]">
                 <MessageSquare className="w-4 h-4" />
               </span>
-              <p className="text-xs font-semibold text-zinc-300">Tweets Mined</p>
+              <p className="text-xs font-semibold text-muted-foreground">Tweets Mined</p>
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-3xl font-extrabold text-zinc-100 font-mono tracking-tight">{totalTweetsCount}</p>
-            <div className="w-full h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+            <p className="text-3xl font-extrabold text-foreground font-mono tracking-tight">{totalTweetsCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-muted dark:bg-zinc-800/80 overflow-hidden">
               <div className="h-full rounded-full bg-purple-500 shadow-[0_0_10px_rgba(139,92,246,0.8)]" style={{ width: "90%" }}></div>
             </div>
           </div>
         </div>
 
         {/* Synthesized Keywords */}
-        <div className="p-5 rounded-3xl bg-gradient-to-b from-emerald-500/10 via-zinc-900/60 to-zinc-900/40 hover:from-emerald-500/20 shadow-xl shadow-black/20 hover:shadow-[0_0_30px_rgba(16,185,129,0.18)] transition-all duration-300 space-y-3">
+        <div className="p-5 rounded-3xl bg-gradient-to-b from-emerald-500/10 via-card to-card border border-border/70 hover:from-emerald-500/15 dark:from-emerald-500/10 dark:via-zinc-900/60 dark:to-zinc-900/40 dark:border-transparent shadow-xs hover:shadow-md dark:shadow-xl dark:shadow-black/20 hover:shadow-[0_0_30px_rgba(16,185,129,0.18)] transition-all duration-300 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+              <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
                 <Tags className="w-4 h-4" />
               </span>
-              <p className="text-xs font-semibold text-zinc-300">Synthesized Keywords</p>
+              <p className="text-xs font-semibold text-muted-foreground">Synthesized Keywords</p>
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-3xl font-extrabold text-zinc-100 font-mono tracking-tight">{totalKeywordsCount}</p>
-            <div className="w-full h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+            <p className="text-3xl font-extrabold text-foreground font-mono tracking-tight">{totalKeywordsCount}</p>
+            <div className="w-full h-1.5 rounded-full bg-muted dark:bg-zinc-800/80 overflow-hidden">
               <div className="h-full rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" style={{ width: "100%" }}></div>
             </div>
           </div>
@@ -698,20 +698,20 @@ export function DashboardPage(props: DashboardPageProps) {
       </div>
 
       {/* 3. Top 10 Trending Hot Topics (Podium Showcase for Top 3, NO outer border box) */}
-      <div className="w-full rounded-3xl bg-zinc-900/40 p-6 backdrop-blur-xl shadow-2xl shadow-black/30 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-4">
+      <div className="w-full rounded-3xl bg-card border border-border/60 dark:bg-zinc-900/40 dark:border-none p-6 backdrop-blur-xl shadow-xs dark:shadow-2xl dark:shadow-black/30 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 dark:border-zinc-800/40 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/15 text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
+            <div className="p-2.5 rounded-2xl bg-amber-500/15 text-amber-500 dark:text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
               <Flame className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-100">Top Trends</h3>
+              <h3 className="text-base font-bold text-foreground">Top Trends</h3>
             </div>
           </div>
 
           <button
             onClick={() => props.onNavigateTab("trends")}
-            className="text-xs text-amber-400 hover:text-amber-300 hover:underline font-medium flex items-center gap-1.5 cursor-pointer shrink-0"
+            className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline font-medium flex items-center gap-1.5 cursor-pointer shrink-0"
           >
             <span>Explore All Trending Topics</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -728,7 +728,7 @@ export function DashboardPage(props: DashboardPageProps) {
             {/* Remaining Stories */}
             {renderedRemainingHotTopicCards.length > 0 && (
               <div className="pt-3 space-y-3">
-                <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                   Additional Trending Stories
                 </span>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
@@ -738,24 +738,24 @@ export function DashboardPage(props: DashboardPageProps) {
             )}
           </div>
         ) : (
-          <div className="p-12 text-center text-xs text-zinc-500 bg-zinc-900/30 rounded-2xl space-y-2">
-            <Newspaper className="w-8 h-8 text-zinc-600 mx-auto" />
-            <p className="text-zinc-300 font-semibold">No Hot Topics Available Yet</p>
-            <p className="text-zinc-500">Run the pipeline to ingest headlines from Defense News, The News International, and global wire feeds.</p>
+          <div className="p-12 text-center text-xs text-muted-foreground bg-muted/30 rounded-2xl space-y-2 border border-border/50">
+            <Newspaper className="w-8 h-8 text-muted-foreground/60 mx-auto" />
+            <p className="text-foreground font-semibold">No Hot Topics Available Yet</p>
+            <p className="text-muted-foreground">Run the pipeline to ingest headlines from Defense News, The News International, and global wire feeds.</p>
           </div>
         )}
       </div>
 
       {/* 4. Keywords Section */}
-      <div className="w-full rounded-3xl bg-zinc-900/40 p-6 backdrop-blur-xl shadow-2xl shadow-black/30 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-4">
+      <div className="w-full rounded-3xl bg-card border border-border/60 dark:bg-zinc-900/40 dark:border-none p-6 backdrop-blur-xl shadow-xs dark:shadow-2xl dark:shadow-black/30 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 dark:border-zinc-800/40 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shadow-[0_0_18px_rgba(16,185,129,0.25)]">
+            <div className="w-9 h-9 rounded-2xl bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shadow-[0_0_18px_rgba(16,185,129,0.25)]">
               <Tags className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-100">Keywords</h3>
-              <p className="text-xs text-zinc-400">
+              <h3 className="text-base font-bold text-foreground">Keywords</h3>
+              <p className="text-xs text-muted-foreground">
                 Strategic AI synthesized intelligence keywords
               </p>
             </div>
@@ -763,7 +763,7 @@ export function DashboardPage(props: DashboardPageProps) {
 
           <button
             onClick={() => props.onNavigateTab("keywords")}
-            className="text-xs text-emerald-400 hover:text-emerald-300 hover:underline font-medium cursor-pointer flex items-center gap-1.5 shrink-0"
+            className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline font-medium cursor-pointer flex items-center gap-1.5 shrink-0"
           >
             <span>Inspect All Keywords ({totalKeywordsCount})</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -776,7 +776,7 @@ export function DashboardPage(props: DashboardPageProps) {
             {renderedProminentKeywordCards}
           </div>
         ) : (
-          <p className="text-xs text-zinc-500 italic py-4">
+          <p className="text-xs text-muted-foreground italic py-4">
             Run the intelligence pipeline to generate strategic keywords via Strategic AI Engine.
           </p>
         )}
@@ -786,50 +786,50 @@ export function DashboardPage(props: DashboardPageProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 select-none">
         <button
           onClick={() => props.onNavigateTab("trends")}
-          className="p-5 rounded-3xl bg-zinc-900/60 hover:bg-zinc-850/90 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/20 hover:shadow-[0_0_25px_rgba(245,158,11,0.15)] flex items-center justify-between"
+          className="p-5 rounded-3xl bg-card hover:bg-muted/60 border border-border/60 dark:bg-zinc-900/60 dark:hover:bg-zinc-850/90 cursor-pointer transition-all duration-300 group shadow-xs dark:shadow-lg dark:shadow-black/20 hover:shadow-[0_0_25px_rgba(245,158,11,0.15)] flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/15 text-amber-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(245,158,11,0.15)]">
+            <div className="p-2.5 rounded-2xl bg-amber-500/15 text-amber-500 dark:text-amber-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(245,158,11,0.15)]">
               <Flame className="w-4 h-4" />
             </div>
             <div className="text-left">
-              <p className="text-xs font-semibold text-zinc-200 group-hover:text-amber-300 transition-colors">Trending Topics</p>
-              <p className="text-[10px] text-zinc-500">Live hot news & X explore</p>
+              <p className="text-xs font-semibold text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">Trending Topics</p>
+              <p className="text-[10px] text-muted-foreground">Live hot news & X explore</p>
             </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
         </button>
 
         <button
           onClick={() => props.onNavigateTab("headlines")}
-          className="p-5 rounded-3xl bg-zinc-900/60 hover:bg-zinc-850/90 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/20 hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] flex items-center justify-between"
+          className="p-5 rounded-3xl bg-card hover:bg-muted/60 border border-border/60 dark:bg-zinc-900/60 dark:hover:bg-zinc-850/90 cursor-pointer transition-all duration-300 group shadow-xs dark:shadow-lg dark:shadow-black/20 hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-blue-500/15 text-blue-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(59,130,246,0.15)]">
+            <div className="p-2.5 rounded-2xl bg-blue-500/15 text-blue-500 dark:text-blue-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(59,130,246,0.15)]">
               <Globe className="w-4 h-4" />
             </div>
             <div className="text-left">
-              <p className="text-xs font-semibold text-zinc-200 group-hover:text-blue-300 transition-colors">News Headlines</p>
-              <p className="text-[10px] text-zinc-500">All 17 authoritative media feeds</p>
+              <p className="text-xs font-semibold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">News Headlines</p>
+              <p className="text-[10px] text-muted-foreground">All 17 authoritative media feeds</p>
             </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
         </button>
 
         <button
           onClick={() => props.onNavigateTab("history")}
-          className="p-5 rounded-3xl bg-zinc-900/60 hover:bg-zinc-850/90 cursor-pointer transition-all duration-300 group shadow-lg shadow-black/20 hover:shadow-[0_0_25px_rgba(16,185,129,0.15)] flex items-center justify-between"
+          className="p-5 rounded-3xl bg-card hover:bg-muted/60 border border-border/60 dark:bg-zinc-900/60 dark:hover:bg-zinc-850/90 cursor-pointer transition-all duration-300 group shadow-xs dark:shadow-lg dark:shadow-black/20 hover:shadow-[0_0_25px_rgba(16,185,129,0.15)] flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-emerald-500/15 text-emerald-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(16,185,129,0.15)]">
               <Calendar className="w-4 h-4" />
             </div>
             <div className="text-left">
-              <p className="text-xs font-semibold text-zinc-200 group-hover:text-emerald-300 transition-colors">Run History</p>
-              <p className="text-[10px] text-zinc-500">Archived Intelligence History</p>
+              <p className="text-xs font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">Run History</p>
+              <p className="text-[10px] text-muted-foreground">Archived Intelligence History</p>
             </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
         </button>
       </div>
     </div>

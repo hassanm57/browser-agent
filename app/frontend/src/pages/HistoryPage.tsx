@@ -11,10 +11,10 @@ interface HistoryPageProps {
 export function HistoryPage(props: HistoryPageProps) {
   if (props.runsList.length === 0) {
     return (
-      <div className="p-12 text-center text-zinc-500 space-y-3">
-        <History className="w-8 h-8 text-zinc-600 mx-auto" />
-        <h3 className="text-sm font-semibold text-zinc-300">No Execution History</h3>
-        <p className="text-xs text-zinc-500 max-w-md mx-auto">
+      <div className="p-12 text-center text-muted-foreground space-y-3">
+        <History className="w-8 h-8 text-muted-foreground mx-auto" />
+        <h3 className="text-sm font-semibold text-foreground">No Execution History</h3>
+        <p className="text-xs text-muted-foreground max-w-md mx-auto">
           Completed and cancelled pipeline executions will be permanently stored in your local storage and listed here.
         </p>
       </div>
@@ -32,28 +32,28 @@ export function HistoryPage(props: HistoryPageProps) {
       <tr
         key={runItem.id}
         className={
-          "border-b border-zinc-800/60 hover:bg-zinc-900/60 text-xs transition-colors " +
-          (isCurrentActiveRun ? "bg-blue-950/20" : "")
+          "border-b border-border/60 hover:bg-muted/50 text-xs transition-colors " +
+          (isCurrentActiveRun ? "bg-blue-500/10" : "")
         }
       >
-        <td className="py-3 px-4 font-mono text-zinc-400">#{runItem.id}</td>
+        <td className="py-3 px-4 font-mono text-muted-foreground">#{runItem.id}</td>
         <td className="py-3 px-4">
           <span
             className={
               "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium " +
               (isSuccess
-                ? "bg-emerald-500/15 text-emerald-400"
-                : "bg-red-500/15 text-red-400")
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                : "bg-red-500/15 text-red-600 dark:text-red-400")
             }
           >
             {isSuccess ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
             {runItem.status}
           </span>
         </td>
-        <td className="py-3 px-4 text-zinc-400 font-mono text-[11px]">
+        <td className="py-3 px-4 text-muted-foreground font-mono text-[11px]">
           {runItem.started_at ? runItem.started_at.replace("T", " ").slice(0, 19) : "—"}
         </td>
-        <td className="py-3 px-4 text-zinc-400 font-mono text-[11px]">
+        <td className="py-3 px-4 text-muted-foreground font-mono text-[11px]">
           {runItem.finished_at ? runItem.finished_at.replace("T", " ").slice(0, 19) : "—"}
         </td>
         <td className="py-3 px-4 text-right">
@@ -62,7 +62,7 @@ export function HistoryPage(props: HistoryPageProps) {
               onClick={function () {
                 props.onSelectRun(runItem.id);
               }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-medium transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-muted hover:bg-muted/80 text-foreground border border-border/60 text-[11px] font-medium transition-colors cursor-pointer"
               title="Load full data from this run"
             >
               <Eye className="w-3 h-3" />
@@ -72,7 +72,7 @@ export function HistoryPage(props: HistoryPageProps) {
               onClick={function () {
                 props.onDeleteRun(runItem.id);
               }}
-              className="p-1 rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+              className="p-1 rounded text-muted-foreground hover:text-red-500 hover:bg-muted transition-colors cursor-pointer"
               title="Delete record"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -86,23 +86,23 @@ export function HistoryPage(props: HistoryPageProps) {
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-zinc-800/80">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-border/80">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-zinc-100">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">
             Pipeline Run History
           </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Archived intelligence extractions stored in local records. Click Inspect on any row to view its data.
           </p>
         </div>
       </div>
 
       {/* Table Container */}
-      <div className="rounded-lg bg-zinc-900/50 border border-zinc-800/80 overflow-hidden">
+      <div className="rounded-lg bg-card border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-zinc-800/80 bg-zinc-950/60 text-[11px] font-semibold text-zinc-400">
+              <tr className="border-b border-border/80 bg-muted/60 text-[11px] font-semibold text-muted-foreground">
                 <th className="py-3 px-4">Run ID</th>
                 <th className="py-3 px-4">Execution Status</th>
                 <th className="py-3 px-4">Started At</th>

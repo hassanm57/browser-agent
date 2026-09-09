@@ -172,27 +172,27 @@ export function LogPanel(props: LogPanelProps) {
   for (let logIndex = 0; logIndex < filteredLogsArray.length; logIndex++) {
     const logItem = filteredLogsArray[logIndex];
 
-    let badgeColorClass = "text-zinc-400 bg-zinc-800/60 border-zinc-700/60";
+    let badgeColorClass = "text-zinc-600 bg-zinc-100 border-zinc-200 dark:text-zinc-400 dark:bg-zinc-800/60 dark:border-zinc-700/60";
     if (logItem.level === "STEP") {
-      badgeColorClass = "text-blue-400 bg-blue-950/50 border-blue-800/60";
+      badgeColorClass = "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/50 dark:border-blue-800/60";
     } else if (logItem.level === "SUCCESS") {
-      badgeColorClass = "text-emerald-400 bg-emerald-950/50 border-emerald-800/60";
+      badgeColorClass = "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/50 dark:border-emerald-800/60";
     } else if (logItem.level === "WARN") {
-      badgeColorClass = "text-amber-400 bg-amber-950/50 border-amber-800/60";
+      badgeColorClass = "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/50 dark:border-amber-800/60";
     } else if (logItem.level === "ERROR") {
-      badgeColorClass = "text-red-400 bg-red-950/50 border-red-800/60";
+      badgeColorClass = "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/50 dark:border-red-800/60";
     } else if (logItem.level === "BROWSER") {
-      badgeColorClass = "text-purple-400 bg-purple-950/50 border-purple-800/60";
+      badgeColorClass = "text-purple-600 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-950/50 dark:border-purple-800/60";
     } else if (logItem.level === "SCROLL") {
-      badgeColorClass = "text-cyan-400 bg-cyan-950/50 border-cyan-800/60";
+      badgeColorClass = "text-cyan-600 bg-cyan-50 border-cyan-200 dark:text-cyan-400 dark:bg-cyan-950/50 dark:border-cyan-800/60";
     } else if (logItem.level === "LLM") {
-      badgeColorClass = "text-orange-400 bg-orange-950/50 border-orange-800/60";
+      badgeColorClass = "text-orange-600 bg-orange-50 border-orange-200 dark:text-orange-400 dark:bg-orange-950/50 dark:border-orange-800/60";
     }
 
     renderedLogRows.push(
       <div
         key={logItem.id}
-        className="flex items-start gap-2.5 py-1 px-3 hover:bg-white/[0.04] font-mono text-[11px] leading-relaxed transition-colors group"
+        className="flex items-start gap-2.5 py-1 px-3 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] font-mono text-[11px] leading-relaxed transition-colors group"
       >
         <span className="text-muted-foreground/60 shrink-0 select-none text-[10px] pt-0.5">
           {logItem.timestamp}
@@ -205,7 +205,7 @@ export function LogPanel(props: LogPanelProps) {
         >
           {logItem.level}
         </span>
-        <span className="text-zinc-200 break-all whitespace-pre-wrap flex-1 group-hover:text-white">
+        <span className="text-foreground/90 break-all whitespace-pre-wrap flex-1 group-hover:text-foreground">
           {logItem.message}
         </span>
       </div>

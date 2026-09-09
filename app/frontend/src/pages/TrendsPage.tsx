@@ -76,10 +76,10 @@ export function TrendsPage(props: TrendsPageProps) {
 
   if (!props.rawSourcesData) {
     return (
-      <div className="p-12 text-center text-zinc-500 space-y-3">
-        <Flame className="w-8 h-8 text-zinc-600 mx-auto" />
-        <h3 className="text-sm font-semibold text-zinc-300">No Trends Data Available</h3>
-        <p className="text-xs text-zinc-500 max-w-md mx-auto">
+      <div className="p-12 text-center text-muted-foreground space-y-3">
+        <Flame className="w-8 h-8 text-muted-foreground/60 mx-auto" />
+        <h3 className="text-sm font-semibold text-foreground">No Trends Data Available</h3>
+        <p className="text-xs text-muted-foreground max-w-md mx-auto">
           Execute the pipeline or select a historical run from the Run History tab to view discovered trending topics and hot news.
         </p>
       </div>
@@ -158,26 +158,26 @@ export function TrendsPage(props: TrendsPageProps) {
     renderedHotNewsItems.push(
       <div
         key={headlineEntry.source_name + "_" + headlineEntry.global_index + "_" + renderIndex}
-        className="flex items-start justify-between p-3 rounded-xl bg-zinc-900/40 hover:bg-zinc-850/80 border border-zinc-800/80 group transition-all gap-3"
+        className="flex items-start justify-between p-3 rounded-xl bg-card hover:bg-muted/60 border border-border/70 group transition-all gap-3 shadow-xs"
       >
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <span
             className={
               "w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold font-mono mt-0.5 shrink-0 " +
               (isTopThree
-                ? "bg-amber-500/20 text-amber-400"
-                : "bg-zinc-800 text-zinc-400")
+                ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+                : "bg-muted text-muted-foreground")
             }
           >
             {rankNumber}
           </span>
           <div className="space-y-1.5 min-w-0 flex-1">
-            <p className="text-xs font-medium text-zinc-200 group-hover:text-amber-300 transition-colors leading-relaxed">
+            <p className="text-xs font-medium text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors leading-relaxed">
               {headlineEntry.headline_text}
             </p>
             <div className="flex items-center gap-2.5 pt-0.5 flex-wrap">
               {isTopThree && (
-                <span className="flex items-center gap-1 text-[10px] text-amber-400 font-bold uppercase tracking-wider bg-amber-500/10 px-2 py-0.5 rounded-full">
+                <span className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider bg-amber-500/10 px-2 py-0.5 rounded-full">
                   <Flame className="w-3 h-3 fill-amber-500 text-amber-500" />
                   Hot
                 </span>
@@ -187,9 +187,9 @@ export function TrendsPage(props: TrendsPageProps) {
                 target="_blank"
                 rel="noreferrer"
                 title={"Visit source: " + headlineEntry.source_name}
-                className="group/source inline-flex items-center gap-1 text-[10px] text-cyan-400 font-semibold drop-shadow-[0_0_6px_rgba(34,211,238,0.6)] hover:text-cyan-200 hover:underline transition-all"
+                className="group/source inline-flex items-center gap-1 text-[10px] text-cyan-600 dark:text-cyan-400 font-semibold hover:text-cyan-700 dark:hover:text-cyan-200 hover:underline transition-all"
               >
-                <Globe className="w-3 h-3 text-cyan-400 shrink-0" />
+                <Globe className="w-3 h-3 text-cyan-600 dark:text-cyan-400 shrink-0" />
                 <span className="truncate">{headlineEntry.source_name}</span>
                 <ExternalLink className="w-2.5 h-2.5 opacity-70 group-hover/source:opacity-100 shrink-0" />
               </a>
@@ -202,7 +202,7 @@ export function TrendsPage(props: TrendsPageProps) {
           target="_blank"
           rel="noreferrer"
           title={"Visit " + headlineEntry.source_name}
-          className="p-1.5 rounded-lg text-zinc-500 hover:text-cyan-300 hover:bg-cyan-500/15 transition-colors shrink-0 mt-0.5 cursor-pointer"
+          className="p-1.5 rounded-lg text-muted-foreground hover:text-cyan-600 dark:hover:text-cyan-300 hover:bg-cyan-500/15 transition-colors shrink-0 mt-0.5 cursor-pointer"
         >
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
@@ -213,7 +213,7 @@ export function TrendsPage(props: TrendsPageProps) {
   // Build options for source selector using traditional for loop
   const renderedSourceDropdownOptions = [];
   renderedSourceDropdownOptions.push(
-    <option key="ALL" value="ALL" className="bg-zinc-900 text-zinc-200">
+    <option key="ALL" value="ALL" className="bg-card text-foreground">
       All Sources ({allFlattenedHeadlinesList.length})
     </option>
   );
@@ -223,7 +223,7 @@ export function TrendsPage(props: TrendsPageProps) {
     const headlinesCount = (newsIntelMap[sourceName] || []).length;
 
     renderedSourceDropdownOptions.push(
-      <option key={sourceName} value={sourceName} className="bg-zinc-900 text-zinc-200">
+      <option key={sourceName} value={sourceName} className="bg-card text-foreground">
         {sourceName} ({headlinesCount})
       </option>
     );
@@ -248,20 +248,20 @@ export function TrendsPage(props: TrendsPageProps) {
         href={"https://x.com/search?q=" + encodedTopic + "&f=live"}
         target="_blank"
         rel="noreferrer"
-        className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/40 hover:bg-zinc-900/90 border border-zinc-800/80 group transition-all"
+        className="flex items-center justify-between p-3 rounded-lg bg-card hover:bg-muted/60 border border-border/70 group transition-all shadow-xs"
       >
         <div className="flex items-center gap-3">
-          <span className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold font-mono bg-blue-950/40 text-blue-400 border border-blue-800/40">
+          <span className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold font-mono bg-blue-500/15 text-blue-500 dark:text-blue-400 border border-blue-500/25">
             {rankNumber}
           </span>
-          <span className="text-xs font-medium text-zinc-200 group-hover:text-blue-400 transition-colors flex items-center gap-1">
+          <span className="text-xs font-medium text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center gap-1">
             {exploreText.startsWith("#") ? (
-              <Hash className="w-3.5 h-3.5 text-blue-400" />
+              <Hash className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
             ) : null}
             {exploreText}
           </span>
         </div>
-        <ExternalLink className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-300 transition-colors" />
+        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
       </a>
     );
   }
@@ -269,19 +269,19 @@ export function TrendsPage(props: TrendsPageProps) {
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-zinc-800/80">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-border">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-zinc-100 flex items-center gap-2">
+          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <span>Trending Topics & Hot News</span>
           </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Latest hot news headlines extracted from verified news sources paired with live X.com explore trends.
           </p>
         </div>
 
         <button
           onClick={props.onRefreshData}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-foreground text-xs font-medium border border-border transition-colors cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Refresh</span>
@@ -295,23 +295,23 @@ export function TrendsPage(props: TrendsPageProps) {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div className="flex items-center gap-2">
               <Flame className="w-4 h-4 text-amber-500" />
-              <h3 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">
                 Trending Hot News
               </h3>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 font-mono">
                 {filteredHeadlinesList.length} articles
               </span>
             </div>
 
             {/* Source Outlet Dropdown Filter */}
             <div className="flex items-center gap-1.5">
-              <Filter className="w-3 h-3 text-zinc-400" />
+              <Filter className="w-3 h-3 text-muted-foreground" />
               <select
                 value={selectedSourceFilter}
                 onChange={function (event) {
                   setSelectedSourceFilter(event.target.value);
                 }}
-                className="text-xs bg-zinc-900 border border-zinc-800 text-zinc-300 rounded px-2 py-1 outline-none focus:border-amber-500/50"
+                className="text-xs bg-background border border-border text-foreground rounded px-2 py-1 outline-none focus:border-amber-500/50"
               >
                 {renderedSourceDropdownOptions}
               </select>
@@ -320,7 +320,7 @@ export function TrendsPage(props: TrendsPageProps) {
 
           {/* Quick Search Input */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchQueryFilter}
@@ -328,7 +328,7 @@ export function TrendsPage(props: TrendsPageProps) {
                 setSearchQueryFilter(event.target.value);
               }}
               placeholder="Filter headlines by keyword..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg bg-zinc-900/60 border border-zinc-800 text-zinc-200 placeholder-zinc-500 outline-none focus:border-zinc-700 transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
             />
           </div>
 
@@ -337,8 +337,8 @@ export function TrendsPage(props: TrendsPageProps) {
             {renderedHotNewsItems.length > 0 ? (
               renderedHotNewsItems
             ) : (
-              <div className="p-8 text-center text-xs text-zinc-500 bg-zinc-900/30 rounded-lg border border-zinc-800 space-y-2">
-                <Newspaper className="w-6 h-6 text-zinc-600 mx-auto" />
+              <div className="p-8 text-center text-xs text-muted-foreground bg-muted/30 rounded-lg border border-border/60 space-y-2">
+                <Newspaper className="w-6 h-6 text-muted-foreground/60 mx-auto" />
                 <p>No matching news headlines found.</p>
                 {searchQueryFilter.length > 0 && (
                   <button
@@ -346,7 +346,7 @@ export function TrendsPage(props: TrendsPageProps) {
                       setSearchQueryFilter("");
                       setSelectedSourceFilter("ALL");
                     }}
-                    className="text-[11px] text-amber-400 hover:underline cursor-pointer"
+                    className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
                   >
                     Clear filters
                   </button>
@@ -359,18 +359,18 @@ export function TrendsPage(props: TrendsPageProps) {
         {/* X.com Native Explore Section */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-              <Hash className="w-4 h-4 text-blue-400" />
+            <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+              <Hash className="w-4 h-4 text-blue-500 dark:text-blue-400" />
               <span>X.com Native Explore ({xExploreTopicsList.length})</span>
             </h3>
-            <span className="text-[10px] text-zinc-500 font-mono">Mined in browser</span>
+            <span className="text-[10px] text-muted-foreground font-mono">Mined in browser</span>
           </div>
 
           <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
             {renderedExploreItems.length > 0 ? (
               renderedExploreItems
             ) : (
-              <div className="p-4 text-xs text-zinc-500 bg-zinc-900/30 rounded border border-zinc-800">
+              <div className="p-4 text-xs text-muted-foreground bg-muted/30 rounded border border-border/60">
                 No X.com native explore trends recorded.
               </div>
             )}

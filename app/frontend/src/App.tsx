@@ -16,7 +16,9 @@ import {
   Tags,
   History,
   Settings,
-  AtSign
+  AtSign,
+  Sun,
+  Moon
 } from "lucide-react";
 import type {
   NavigationTabType,
@@ -52,6 +54,38 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLogPanelOpen, setIsLogPanelOpen] = useState(false);
+
+  // Theme state: "dark" or "light"
+  const [currentTheme, setCurrentTheme] = useState<"dark" | "light">(function () {
+    const savedThemeFromStorage = localStorage.getItem("trendline_theme");
+    if (savedThemeFromStorage === "light") {
+      return "light";
+    }
+    return "dark";
+  });
+
+  // Apply theme to document element and persist to localStorage
+  useEffect(function () {
+    if (currentTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+      document.documentElement.style.colorScheme = "dark";
+      localStorage.setItem("trendline_theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+      document.documentElement.style.colorScheme = "light";
+      localStorage.setItem("trendline_theme", "light");
+    }
+  }, [currentTheme]);
+
+  function handleToggleTheme() {
+    if (currentTheme === "dark") {
+      setCurrentTheme("light");
+    } else {
+      setCurrentTheme("dark");
+    }
+  }
 
   // Global ⌘K shortcut listener
   useEffect(() => {
@@ -795,6 +829,23 @@ export default function App() {
               <span className="hidden sm:inline">Logs</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5"></span>
             </button>
+
+            {/* Theme Mode Toggle (Light / Dark) */}
+            <button
+              onClick={handleToggleTheme}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-200 cursor-pointer"
+              title={currentTheme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label="Toggle theme mode"
+            >
+              {currentTheme === "dark" ? (
+                <Sun className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />
+              ) : (
+                <Moon className="w-3.5 h-3.5 text-slate-700 dark:text-zinc-300" strokeWidth={1.75} />
+              )}
+              <span className="hidden sm:inline">
+                {currentTheme === "dark" ? "Light" : "Dark"}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -888,6 +939,8 @@ export default function App() {
               <SettingsPage
                 currentSettings={currentSettings}
                 onSaveSettings={handleSaveSettings}
+                currentTheme={currentTheme}
+                onToggleTheme={handleToggleTheme}
               />
             )}
           </div>

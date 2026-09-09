@@ -20,10 +20,10 @@ export function KeywordsPage(props: KeywordsPageProps) {
 
   if (!props.keywordsData || !props.keywordsData.topics) {
     return (
-      <div className="p-12 text-center text-zinc-500 space-y-3">
-        <Tags className="w-8 h-8 text-zinc-600 mx-auto" />
-        <h3 className="text-sm font-semibold text-zinc-300">No Keywords Synthesized</h3>
-        <p className="text-xs text-zinc-500 max-w-md mx-auto">
+      <div className="p-12 text-center text-muted-foreground space-y-3">
+        <Tags className="w-8 h-8 text-muted-foreground mx-auto" />
+        <h3 className="text-sm font-semibold text-foreground">No Keywords Synthesized</h3>
+        <p className="text-xs text-muted-foreground max-w-md mx-auto">
           Execute the intelligence pipeline to run LLM topic synthesis and generate high-recall search keywords.
         </p>
       </div>
@@ -226,7 +226,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
         renderedKeywordChips.push(
           <div
             key={topicItem.label + "_chip_edit_" + termIndex}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-950 border border-blue-500"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-500/15 border border-blue-500"
           >
             <input
               type="text"
@@ -243,13 +243,13 @@ export function KeywordsPage(props: KeywordsPageProps) {
                 }
               }}
               autoFocus
-              className="bg-transparent text-xs text-white outline-none w-28"
+              className="bg-transparent text-xs text-foreground outline-none w-28"
             />
             <button
               onClick={function () {
                 handleSaveEditedKeyword(topicIndex, termIndex);
               }}
-              className="text-emerald-400 hover:text-emerald-300"
+              className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
             >
               <Check className="w-3 h-3" />
             </button>
@@ -259,7 +259,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
         renderedKeywordChips.push(
           <div
             key={topicItem.label + "_chip_" + termIndex}
-            className="group/chip inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs text-zinc-200 transition-all select-none"
+            className="group/chip inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-card border border-border hover:border-border/80 text-xs text-foreground hover:bg-muted/40 transition-all select-none"
           >
             <span
               onClick={function () {
@@ -267,7 +267,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
                 setEditingKeywordIndex(termIndex);
                 setEditingKeywordText(termString);
               }}
-              className="cursor-pointer hover:text-blue-300"
+              className="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
               title="Click to edit keyword"
             >
               {termString}
@@ -276,7 +276,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
               onClick={function () {
                 handleRemoveKeyword(topicIndex, termIndex);
               }}
-              className="text-zinc-500 hover:text-red-400 opacity-60 group-hover/chip:opacity-100 transition-opacity"
+              className="text-muted-foreground hover:text-red-500 opacity-60 group-hover/chip:opacity-100 transition-opacity"
               title="Delete keyword"
             >
               <X className="w-3 h-3" />
@@ -291,17 +291,17 @@ export function KeywordsPage(props: KeywordsPageProps) {
     renderedTopicCards.push(
       <div
         key={topicItem.label + "_" + topicIndex}
-        className="rounded-lg bg-zinc-950 border border-zinc-800/80 overflow-hidden space-y-3 p-4"
+        className="rounded-lg bg-card border border-border overflow-hidden space-y-3 p-4"
       >
         {/* Topic Card Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-zinc-800/60">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-border/60">
           <div className="flex items-center gap-2.5">
-            <span className="w-6 h-6 rounded-md bg-blue-950/40 text-blue-400 border border-blue-900/50 flex items-center justify-center text-xs font-bold font-mono">
+            <span className="w-6 h-6 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center text-xs font-bold font-mono">
               {topicIndex + 1}
             </span>
             <div>
-              <h3 className="text-xs font-bold text-zinc-100">{topicItem.label}</h3>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-850 text-zinc-400 uppercase font-mono tracking-wider">
+              <h3 className="text-xs font-bold text-foreground">{topicItem.label}</h3>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase font-mono tracking-wider">
                 {topicItem.category}
               </span>
             </div>
@@ -312,7 +312,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
               onClick={function () {
                 handleDeleteTopic(topicIndex);
               }}
-              className="flex items-center gap-1 text-[11px] text-zinc-500 hover:text-red-400 px-2 py-1 rounded hover:bg-zinc-900 transition-colors"
+              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-red-500 px-2 py-1 rounded hover:bg-muted transition-colors cursor-pointer"
               title="Delete topic"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -323,12 +323,12 @@ export function KeywordsPage(props: KeywordsPageProps) {
 
         {/* News-Derived Boolean Query Banner */}
         {topicItem.boolean_query ? (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2.5 rounded-md bg-zinc-900/60 border border-zinc-800/80">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2.5 rounded-md bg-muted/40 border border-border/80">
             <div className="flex items-center gap-2 overflow-hidden">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0">
                 Boolean Query
               </span>
-              <span className="text-xs font-mono text-zinc-300 truncate select-all">
+              <span className="text-xs font-mono text-foreground truncate select-all">
                 {topicItem.boolean_query}
               </span>
             </div>
@@ -338,7 +338,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
                 onClick={function () {
                   navigator.clipboard.writeText(topicItem.boolean_query || "");
                 }}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                 title="Copy Boolean query"
               >
                 <Copy className="w-3 h-3" />
@@ -348,7 +348,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
                 href={"https://x.com/search?q=" + encodeURIComponent(topicItem.boolean_query) + "&f=live"}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-blue-400 hover:text-blue-300 hover:bg-blue-950/40 border border-blue-900/40 transition-colors"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-500/10 border border-blue-500/30 transition-colors"
                 title="Search Latest on X.com"
               >
                 <ExternalLink className="w-3 h-3" />
@@ -364,7 +364,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
 
           {/* Add Keyword Form / Button */}
           {isAddingToThisTopic ? (
-            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-900 border border-zinc-700">
+            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-card border border-border">
               <input
                 type="text"
                 placeholder="Type keyword..."
@@ -380,13 +380,13 @@ export function KeywordsPage(props: KeywordsPageProps) {
                   }
                 }}
                 autoFocus
-                className="bg-transparent text-xs text-zinc-200 outline-none w-32"
+                className="bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none w-32"
               />
               <button
                 onClick={function () {
                   handleAddKeyword(topicIndex);
                 }}
-                className="text-blue-400 hover:text-blue-300"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
                 <Check className="w-3.5 h-3.5" />
               </button>
@@ -394,7 +394,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
                 onClick={function () {
                   setTopicAddingKeywordIndex(null);
                 }}
-                className="text-zinc-500 hover:text-zinc-300"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -405,7 +405,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
                 setTopicAddingKeywordIndex(topicIndex);
                 setNewKeywordInputText("");
               }}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-dashed border-zinc-750 hover:border-zinc-500 text-xs text-zinc-400 hover:text-zinc-200 transition-colors select-none"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-dashed border-border hover:border-border/80 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors select-none cursor-pointer"
             >
               <Plus className="w-3 h-3" />
               <span>Add Keyword</span>
@@ -419,12 +419,12 @@ export function KeywordsPage(props: KeywordsPageProps) {
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-zinc-800/80">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-border/80">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-zinc-100 flex items-center gap-2">
+          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <span>Synthesized Keywords</span>
           </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {topicsList.length} topics generated · {totalTermsSum} total keywords. Click any chip to edit inline.
           </p>
         </div>
@@ -433,14 +433,14 @@ export function KeywordsPage(props: KeywordsPageProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={handleExportJson}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-foreground border border-border/60 text-xs font-semibold transition-colors shadow-xs cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export JSON</span>
           </button>
           <button
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-foreground border border-border/60 text-xs font-semibold transition-colors shadow-xs cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>

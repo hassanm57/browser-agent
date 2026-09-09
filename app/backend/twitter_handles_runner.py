@@ -27,7 +27,7 @@ from app.backend.database import (
 )
 
 
-def convert_metric_string_to_number(raw_metric_text: str) -> int:
+def convert_metric_string_to_number(raw_metric_text: str) -> int: # ensures that metrics like '1.2K', '2.5M', or '1,234' are converted to integers
     # Converts abbreviations like '1.2K' or '2.5M' or '1,234' into pure integers
     if not raw_metric_text:
         return 0

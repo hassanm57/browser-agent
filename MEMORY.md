@@ -98,6 +98,9 @@ When adding features or modifying code in this repository, strictly adhere to th
    - Use long, fully spelled out, descriptive variable and function names (e.g., `task_words_list`, `is_headless_mode_enabled`).
    - Write simple comments explaining *why* something is done, not *what* the syntax is doing.
 
+4. **Git Commits**:
+   - Always run `git commit -m` with an appropriate, descriptive message after completing every code change.
+
 ---
 
 ## 5. Technical Pitfalls & Hardware Notes

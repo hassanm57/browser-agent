@@ -275,32 +275,72 @@ browser-agent/
 
 ---
 
-## 🚀 Installation & Setup
+## 🚀 Quick Start (Automated Setup)
 
-### 1. Clone Repository & Setup Python Environment
+After cloning the repository, you can set up the complete environment (virtual environment, Python dependencies, frontend packages, database, and `.env`) using a single script:
+
+### On Ubuntu / Debian / Linux
 
 ```bash
 git clone https://github.com/hassanm57/browser-agent.git
 cd browser-agent
 
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
+# 1. Run automated setup (creates .venv, installs pip & npm dependencies, initializes database)
+./scripts/setup_ubuntu.sh
 
-# Install core and backend dependencies
+# 2. Launch both backend & frontend together
+./scripts/run_ubuntu.sh
+```
+
+### On Windows
+
+```cmd
+git clone https://github.com/hassanm57/browser-agent.git
+cd browser-agent
+
+:: 1. Run automated setup
+scripts\setup_windows.bat
+
+:: 2. Launch both backend & frontend together
+scripts\run_windows.bat
+```
+
+*Or with Windows PowerShell:*
+```powershell
+.\scripts\setup_windows.ps1
+.\scripts\run_windows.ps1
+```
+
+---
+
+## 🛠️ Manual Installation & Setup
+
+If you prefer manual setup:
+
+### 1. Python Environment
+
+```bash
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install all dependencies
 pip install -r requirements.txt
-pip install -r app/backend/requirements.txt
 ```
 
 ### 2. Configure Environment Variables (`.env`)
 
-Create a `.env` file in the project root:
+Copy the example configuration:
+```bash
+cp .env.example .env
+```
 
+Review the `.env` settings:
 ```env
-# Local Model Endpoint (OpenAI-compatible)
+# Local Model Endpoint (OpenAI-compatible vLLM / llama.cpp)
 VLLM_BASE_URL=http://10.13.12.121:8000/v1
 VLLM_API_KEY=EMPTY
-LLM_MODEL=strategic-ai-model
+LLM_MODEL=qwen3-14b
 
 # Browser Configuration
 HEADLESS=false          # Set to true to run Chrome silently in the background

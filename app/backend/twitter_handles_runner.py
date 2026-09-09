@@ -49,9 +49,6 @@ def check_if_timestamp_is_within_past_24_hours(timestamp_text: str) -> bool:
     # Checks if the post was made within the last 24 hours
     if not timestamp_text:
         return False
-def check_if_timestamp_is_within_past_24_hours(timestamp_text: str) -> bool:
-    if not timestamp_text:
-        return False
 
     clean_text = timestamp_text.strip().lower()
 
@@ -202,6 +199,16 @@ def extract_detailed_tweets_from_page_chunks(page_state_text: str, target_handle
             if len(cleaned_line) > 0:
                 cleaned_lines.append(cleaned_line)
 
+        # Check whether this chunk is a pinned post
+        is_pinned_chunk = False
+        lower_chunk_prefix = current_chunk_text[:350].lower()
+        if "pinned" in lower_chunk_prefix:
+            is_pinned_chunk = True
+        for early_line in cleaned_lines[:4]:
+            if early_line.lower() in ["pinned", "pinned post", "pinned tweet"]:
+                is_pinned_chunk = True
+                break
+
         # Scan for author handle and display name
         user_handle_string = ""
         author_display_name = ""
@@ -328,6 +335,7 @@ def extract_detailed_tweets_from_page_chunks(page_state_text: str, target_handle
             "tweet_text": combined_body_text,
             "tweet_timestamp_text": timestamp_text_found if timestamp_text_found else "Recent",
             "is_within_24h": is_within_24h,
+            "is_pinned": is_pinned_chunk,
             "replies_count": replies_count,
             "reposts_count": reposts_count,
             "likes_count": likes_count,
@@ -433,6 +441,25 @@ async def extract_tweets_directly_from_dom(
                     const bookmarksCount = parseMetric(/(\\d+[\\d,\\.]*[kmb]?)\\s+bookmark/i, ariaLabel);
                     const viewsCount = parseMetric(/(\\d+[\\d,\\.]*[kmb]?)\\s+view/i, ariaLabel);
                     
+                    let isPinned = false;
+                    const socialContext = art.querySelector('[data-testid="socialContext"]');
+                    if (socialContext) {
+                        const socialText = (socialContext.innerText || '').toLowerCase();
+                        if (socialText.includes('pinned')) {
+                            isPinned = true;
+                        }
+                    }
+                    if (!isPinned) {
+                        const allSpans = Array.from(art.querySelectorAll('span'));
+                        for (const sp of allSpans) {
+                            const spanText = (sp.innerText || '').trim().toLowerCase();
+                            if (spanText === 'pinned' || spanText === 'pinned post' || spanText === 'pinned tweet') {
+                                isPinned = true;
+                                break;
+                            }
+                        }
+                    }
+
                     results.push({
                         handle: authorHandle || "",
                         author_display_name: authorDisplayName || "",
@@ -440,6 +467,7 @@ async def extract_tweets_directly_from_dom(
                         tweet_timestamp_text: timestampText,
                         tweet_time_iso: datetimeIso,
                         tweet_url: tweetUrl,
+                        is_pinned: isPinned,
                         views_count: viewsCount,
                         likes_count: likesCount,
                         reposts_count: repostsCount,
@@ -490,6 +518,7 @@ async def extract_tweets_directly_from_dom(
                 "tweet_timestamp_text": time_text if time_text else "Recent",
                 "tweet_time_iso": time_iso if time_iso else dt_class.now().isoformat(),
                 "is_within_24h": is_within_24h,
+                "is_pinned": bool(item.get("is_pinned", False)),
                 "views_count": item.get("views_count", 0),
                 "likes_count": item.get("likes_count", 0),
                 "reposts_count": item.get("reposts_count", 0),
@@ -541,59 +570,102 @@ async def scrape_single_handle_with_browser(
         # Expand any truncated tweets on the page by clicking 'Show more'
         await expand_all_show_more_buttons(browser_instance)
 
-        all_collected_tweets_for_handle: List[Dict[str, Any]] = []
-
-        # First pass extraction directly from DOM elements
+        # Step 1: Extract tweets from the initial viewport without scrolling
+        initial_raw_tweets_list: List[Dict[str, Any]] = []
         dom_batch = await extract_tweets_directly_from_dom(browser_instance, clean_handle)
         if len(dom_batch) > 0:
             for tweet_item in dom_batch:
-                all_collected_tweets_for_handle.append(tweet_item)
+                initial_raw_tweets_list.append(tweet_item)
         else:
-            # Fallback to page state text parsing if DOM returned 0
+            # Fallback to page state text parsing if DOM returned 0 items
             page_state_text = await browser_instance.get_state_as_text()
             first_batch = extract_detailed_tweets_from_page_chunks(page_state_text, clean_handle)
             for tweet_item in first_batch:
-                all_collected_tweets_for_handle.append(tweet_item)
+                initial_raw_tweets_list.append(tweet_item)
 
-        # Scroll down 3 times to load up to 24 tweets
-        for scroll_round in range(3):
-            if len(all_collected_tweets_for_handle) >= 24:
+        # Step 2: Filter for valid non-pinned tweets within the past 24 hours
+        fresh_24h_tweets_list: List[Dict[str, Any]] = []
+        has_seen_older_tweet = False
+
+        for tweet_candidate in initial_raw_tweets_list:
+            # We skip pinned tweets because pinned posts can be from months or years ago
+            is_pinned = tweet_candidate.get("is_pinned", False)
+            if is_pinned:
+                continue
+
+            # Check if this tweet was posted within the past 24 hours
+            is_within_24h = tweet_candidate.get("is_within_24h", False)
+            if is_within_24h:
+                # Deduplicate within this handle's collection
+                is_already_present = False
+                for collected_tweet in fresh_24h_tweets_list:
+                    same_url = tweet_candidate.get("tweet_url") and collected_tweet.get("tweet_url") == tweet_candidate.get("tweet_url")
+                    same_text = collected_tweet.get("tweet_text") == tweet_candidate.get("tweet_text")
+                    if same_url or same_text:
+                        is_already_present = True
+                        break
+
+                if not is_already_present:
+                    fresh_24h_tweets_list.append(tweet_candidate)
+                    # We only need the top 2-3 tweets from the past 24 hours
+                    if len(fresh_24h_tweets_list) >= 3:
+                        break
+            else:
+                # Since Twitter profile timelines are sorted chronologically (newest at top),
+                # once we encounter a non-pinned tweet older than 24 hours, all subsequent tweets
+                # further down the timeline will also be older than 24 hours.
+                has_seen_older_tweet = True
                 break
 
+        # Step 3: Only if we have at least 1 recent tweet but fewer than 3, and have not yet seen an older tweet,
+        # perform at most ONE small scroll to capture any 2nd or 3rd tweet in the 24-hour window
+        if len(fresh_24h_tweets_list) > 0 and len(fresh_24h_tweets_list) < 3 and not has_seen_older_tweet:
             try:
+                # Small single scroll to reveal immediate next tweet
                 scroll_action = browser_instance.event_bus.dispatch(
-                    ScrollEvent(direction="down", amount=1400)
+                    ScrollEvent(direction="down", amount=800)
                 )
                 await scroll_action
-                await asyncio.sleep(2.5)
+                await asyncio.sleep(1.5)
 
-                # Expand any 'Show more' buttons revealed after scrolling
                 await expand_all_show_more_buttons(browser_instance)
 
-                new_batch = await extract_tweets_directly_from_dom(browser_instance, clean_handle)
-                if len(new_batch) == 0:
+                second_dom_batch = await extract_tweets_directly_from_dom(browser_instance, clean_handle)
+                if len(second_dom_batch) == 0:
                     updated_page_text = await browser_instance.get_state_as_text()
-                    new_batch = extract_detailed_tweets_from_page_chunks(updated_page_text, clean_handle)
+                    second_dom_batch = extract_detailed_tweets_from_page_chunks(updated_page_text, clean_handle)
 
-                for candidate_tweet in new_batch:
-                    is_duplicate = False
-                    for existing_tweet in all_collected_tweets_for_handle:
-                        if (
-                            (candidate_tweet.get("tweet_url") and existing_tweet.get("tweet_url") == candidate_tweet.get("tweet_url"))
-                            or existing_tweet["tweet_text"] == candidate_tweet["tweet_text"]
-                        ):
-                            is_duplicate = True
-                            break
-                    if not is_duplicate:
-                        all_collected_tweets_for_handle.append(candidate_tweet)
+                for candidate_tweet in second_dom_batch:
+                    if candidate_tweet.get("is_pinned", False):
+                        continue
+
+                    if candidate_tweet.get("is_within_24h", False):
+                        is_already_present = False
+                        for collected_tweet in fresh_24h_tweets_list:
+                            same_url = candidate_tweet.get("tweet_url") and collected_tweet.get("tweet_url") == candidate_tweet.get("tweet_url")
+                            same_text = collected_tweet.get("tweet_text") == candidate_tweet.get("tweet_text")
+                            if same_url or same_text:
+                                is_already_present = True
+                                break
+
+                        if not is_already_present:
+                            fresh_24h_tweets_list.append(candidate_tweet)
+                            if len(fresh_24h_tweets_list) >= 3:
+                                break
+                    else:
+                        break
 
             except Exception as scroll_error:
-                await log_callback("WARN", f"[Worker {worker_index}] Scroll error on @{clean_handle}: {str(scroll_error)}")
-                break
+                await log_callback("WARN", f"[Worker {worker_index}] Minor scroll error on @{clean_handle}: {str(scroll_error)}")
 
-        # Limit to 24 most recent tweets as requested
-        trimmed_tweets_list = all_collected_tweets_for_handle[:24]
-        await log_callback("SUCCESS", f"[Worker {worker_index}] Scraped {len(trimmed_tweets_list)} tweets from @{clean_handle}")
+        # Step 4: Keep at most the top 2-3 tweets from the past 24 hours
+        trimmed_tweets_list = fresh_24h_tweets_list[:3]
+
+        if len(trimmed_tweets_list) > 0:
+            await log_callback("SUCCESS", f"[Worker {worker_index}] Scraped {len(trimmed_tweets_list)} fresh (24h) tweet(s) from @{clean_handle}")
+        else:
+            await log_callback("INFO", f"[Worker {worker_index}] No tweets in past 24h for @{clean_handle}")
+
         return trimmed_tweets_list
 
     except Exception as navigation_error:

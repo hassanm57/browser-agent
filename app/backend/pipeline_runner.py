@@ -202,8 +202,7 @@ async def run_single_country_pipeline(
         update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user during news ingestion")
         return None
 
-    # Empty placeholder lists for backward compatibility in storage
-    all_trends24_topics_list = []
+    all_trends24_topics_list = [] # empty placeholders for future use if trends24.com scraping is implemented
     relevant_trends24_topics_list = []
 
     # PHASE 2: Launch Chrome browser to scrape configured X defense accounts and explore live trends

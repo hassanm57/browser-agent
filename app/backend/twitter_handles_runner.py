@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import json
+import random
 import datetime
 from datetime import datetime as dt_class, timezone
 from typing import List, Dict, Any, Callable, Optional
@@ -750,6 +751,28 @@ async def parallel_scraper_worker(
             await progress_callback(shared_progress_dictionary)
             handle_queue.task_done()
 
+            # Anti-ban protection: add a randomized 10 to 20 seconds delay between handles
+            # so X.com does not trigger automated bot detection or account rate limits
+            if not handle_queue.empty() and not cancellation_event.is_set():
+                cooling_delay_seconds = round(random.uniform(10.0, 20.0), 1)
+                shared_progress_dictionary["active_workers"][str(worker_index)] = f"Cooling down ({cooling_delay_seconds}s)"
+                await progress_callback(shared_progress_dictionary)
+                await log_callback(
+                    "INFO",
+                    f"[Worker {worker_index}] Spacing out next request by {cooling_delay_seconds}s to avoid bot triggers..."
+                )
+
+                # Sleep in 1-second steps to remain responsive to user cancellation
+                elapsed_delay_seconds = 0.0
+                while elapsed_delay_seconds < cooling_delay_seconds:
+                    if cancellation_event.is_set():
+                        break
+                    await asyncio.sleep(1.0)
+                    elapsed_delay_seconds = elapsed_delay_seconds + 1.0
+
+                shared_progress_dictionary["active_workers"][str(worker_index)] = "Idle"
+                await progress_callback(shared_progress_dictionary)
+
     except Exception as worker_exception:
         await log_callback("ERROR", f"[Worker {worker_index}] Fatal error: {str(worker_exception)}")
 
@@ -853,9 +876,26 @@ async def run_parallel_twitter_handles_pipeline(
     if not is_x_authenticated:
         await actual_log("WARN", "Proceeding with scraping, but X.com is not logged in. Feeds may be restricted.")
 
-    # Launch N parallel worker tasks
+    # Launch N parallel worker tasks, staggering each browser launch by a few seconds to avoid simultaneous spike
     worker_tasks_list = []
     for worker_index in range(1, concurrency_level + 1):
+        if cancellation_event.is_set():
+            break
+
+        # Stagger browser instance launches by a few seconds so instances do not hit X.com at the exact same second
+        if worker_index > 1:
+            launch_stagger_delay = round(random.uniform(3.0, 6.0), 1)
+            await actual_log("INFO", f"Staggering worker {worker_index} browser launch by {launch_stagger_delay}s...")
+            elapsed_stagger = 0.0
+            while elapsed_stagger < launch_stagger_delay:
+                if cancellation_event.is_set():
+                    break
+                await asyncio.sleep(1.0)
+                elapsed_stagger = elapsed_stagger + 1.0
+
+        if cancellation_event.is_set():
+            break
+
         task = asyncio.create_task(
             parallel_scraper_worker(
                 worker_index=worker_index,

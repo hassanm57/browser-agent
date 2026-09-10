@@ -878,6 +878,88 @@ def find_system_chrome_user_data_path() -> str:
     return ""
 
 
+def find_system_chrome_executable_path() -> str:
+    # We find the real Google Chrome executable on the system so browser-use
+    # launches the actual Google Chrome browser rather than Playwright Chromium.
+    # This ensures that on Windows, Chrome can decrypt cookies via Windows DPAPI.
+    
+    # Check browser-use built-in helper first
+    try:
+        from browser_use.browser.chrome import find_chrome_executable
+        detected_executable_path = find_chrome_executable()
+        if detected_executable_path is not None and os.path.exists(detected_executable_path):
+            return str(detected_executable_path)
+    except Exception:
+        pass
+
+    # Check standard filesystem paths across operating systems
+    candidate_executable_paths_list = []
+    
+    if sys.platform == "win32":
+        local_app_data_directory = os.environ.get("LOCALAPPDATA", "")
+        program_files_directory = os.environ.get("PROGRAMFILES", "C:\\Program Files")
+        program_files_x86_directory = os.environ.get("PROGRAMFILES(X86)", "C:\\Program Files (x86)")
+        
+        # Check standard Google Chrome installation paths on Windows
+        candidate_executable_paths_list.append(os.path.join(program_files_directory, "Google", "Chrome", "Application", "chrome.exe"))
+        candidate_executable_paths_list.append(os.path.join(program_files_x86_directory, "Google", "Chrome", "Application", "chrome.exe"))
+        if len(local_app_data_directory) > 0:
+            candidate_executable_paths_list.append(os.path.join(local_app_data_directory, "Google", "Chrome", "Application", "chrome.exe"))
+            
+        # Check Microsoft Edge on Windows as a fallback
+        candidate_executable_paths_list.append(os.path.join(program_files_x86_directory, "Microsoft", "Edge", "Application", "msedge.exe"))
+        candidate_executable_paths_list.append(os.path.join(program_files_directory, "Microsoft", "Edge", "Application", "msedge.exe"))
+        if len(local_app_data_directory) > 0:
+            candidate_executable_paths_list.append(os.path.join(local_app_data_directory, "Microsoft", "Edge", "Application", "msedge.exe"))
+            
+    elif sys.platform == "darwin":
+        candidate_executable_paths_list.append("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+        candidate_executable_paths_list.append("/Applications/Chromium.app/Contents/MacOS/Chromium")
+        candidate_executable_paths_list.append("/Applications/Brave Browser.app/Contents/MacOS/Brave Browser")
+        
+    elif sys.platform.startswith("linux"):
+        candidate_binary_names_list = ["google-chrome", "google-chrome-stable", "chromium-browser", "chromium"]
+        for binary_name_item in candidate_binary_names_list:
+            resolved_binary_path = shutil.which(binary_name_item)
+            if resolved_binary_path is not None:
+                return resolved_binary_path
+
+    for candidate_path_item in candidate_executable_paths_list:
+        if os.path.exists(candidate_path_item):
+            return candidate_path_item
+
+    return ""
+
+
+def find_existing_cookie_file_path(base_profile_path: str) -> str:
+    # On Windows Chrome (v96+), cookies are stored in Default/Network/Cookies.
+    # On macOS, Linux, and older Chrome, cookies are stored in Default/Cookies.
+    # This helper checks all possible locations and returns whichever exists.
+    if not base_profile_path or not os.path.exists(base_profile_path):
+        return ""
+        
+    # If the path provided is directly an existing Cookies file, return it
+    if os.path.isfile(base_profile_path):
+        return base_profile_path
+
+    candidate_cookie_paths_list = [
+        # Check Default/Network/Cookies (Windows Chrome v96+)
+        os.path.join(base_profile_path, "Default", "Network", "Cookies"),
+        # Check Default/Cookies (Standard macOS and Linux path)
+        os.path.join(base_profile_path, "Default", "Cookies"),
+        # Check Network/Cookies (if base_profile_path is already the Default directory)
+        os.path.join(base_profile_path, "Network", "Cookies"),
+        # Check Cookies directly in the given folder
+        os.path.join(base_profile_path, "Cookies")
+    ]
+
+    for candidate_cookie_path in candidate_cookie_paths_list:
+        if os.path.exists(candidate_cookie_path) and os.path.isfile(candidate_cookie_path):
+            return candidate_cookie_path
+
+    return ""
+
+
 def seed_profile_from_system_chrome(target_profile_path: str) -> bool:
     # Safely seeds the target profile with essential cookie and session decryption files
     # from the user's system Chrome without copying gigabytes of caches or causing lock errors.
@@ -885,50 +967,71 @@ def seed_profile_from_system_chrome(target_profile_path: str) -> bool:
     if not system_chrome_path or not os.path.exists(system_chrome_path):
         return False
 
-    target_default_dir = os.path.join(target_profile_path, "Default")
-    os.makedirs(target_default_dir, exist_ok=True)
+    target_default_directory = os.path.join(target_profile_path, "Default")
+    target_network_directory = os.path.join(target_default_directory, "Network")
+    os.makedirs(target_default_directory, exist_ok=True)
+    os.makedirs(target_network_directory, exist_ok=True)
 
     # 1. Copy Local State (contains the OS encryption key needed to decrypt Chrome cookies)
-    system_local_state = os.path.join(system_chrome_path, "Local State")
-    target_local_state = os.path.join(target_profile_path, "Local State")
-    if os.path.exists(system_local_state):
+    system_local_state_file_path = os.path.join(system_chrome_path, "Local State")
+    target_local_state_file_path = os.path.join(target_profile_path, "Local State")
+    if os.path.exists(system_local_state_file_path):
         try:
-            shutil.copy2(system_local_state, target_local_state)
+            shutil.copy2(system_local_state_file_path, target_local_state_file_path)
         except Exception:
             pass
 
-    # 2. Copy Default/Cookies (SQLite DB with all active website logins)
-    system_default_dir = os.path.join(system_chrome_path, "Default")
-    system_cookies = os.path.join(system_default_dir, "Cookies")
-    target_cookies = os.path.join(target_default_dir, "Cookies")
-    if os.path.exists(system_cookies):
+    # 2. Find cookies in system Chrome:
+    # Windows Chrome stores cookies in Default/Network/Cookies.
+    # macOS/Linux Chrome stores cookies in Default/Cookies.
+    system_default_directory = os.path.join(system_chrome_path, "Default")
+    source_cookie_file_path = find_existing_cookie_file_path(system_chrome_path)
+    
+    if len(source_cookie_file_path) > 0 and os.path.exists(source_cookie_file_path):
+        # We copy the cookies SQLite file to BOTH target/Default/Cookies AND target/Default/Network/Cookies
+        # This guarantees that whether Chrome looks in the legacy or new path on Windows or Mac, it will find it.
+        target_default_cookies_file_path = os.path.join(target_default_directory, "Cookies")
+        target_network_cookies_file_path = os.path.join(target_network_directory, "Cookies")
         try:
-            shutil.copy2(system_cookies, target_cookies)
+            shutil.copy2(source_cookie_file_path, target_default_cookies_file_path)
+        except Exception:
+            pass
+        try:
+            shutil.copy2(source_cookie_file_path, target_network_cookies_file_path)
         except Exception:
             pass
 
-    # 3. Copy other auth-related files if present
-    extra_auth_files = ["Cookies-journal", "Login Data", "Web Data"]
-    for file_name in extra_auth_files:
-        src_file = os.path.join(system_default_dir, file_name)
-        dst_file = os.path.join(target_default_dir, file_name)
-        if os.path.exists(src_file):
+    # 3. Copy other auth-related files if present (in both Default and Default/Network)
+    extra_auth_file_names_list = [
+        "Cookies-journal",
+        "Cookies-wal",
+        "Cookies-shm",
+        "Login Data",
+        "Login Data-journal",
+        "Web Data",
+        "Web Data-journal"
+    ]
+    for auth_file_name in extra_auth_file_names_list:
+        # Check source Default/ directory
+        source_default_auth_file_path = os.path.join(system_default_directory, auth_file_name)
+        if os.path.exists(source_default_auth_file_path):
             try:
-                shutil.copy2(src_file, dst_file)
+                shutil.copy2(source_default_auth_file_path, os.path.join(target_default_directory, auth_file_name))
+            except Exception:
+                pass
+        # Check source Default/Network/ directory
+        source_network_auth_file_path = os.path.join(system_default_directory, "Network", auth_file_name)
+        if os.path.exists(source_network_auth_file_path):
+            try:
+                shutil.copy2(source_network_auth_file_path, os.path.join(target_network_directory, auth_file_name))
             except Exception:
                 pass
 
-    # Check Network/Cookies in case system Chrome uses the newer Network subfolder
-    system_network_cookies = os.path.join(system_default_dir, "Network", "Cookies")
-    if os.path.exists(system_network_cookies):
-        target_network_dir = os.path.join(target_default_dir, "Network")
-        os.makedirs(target_network_dir, exist_ok=True)
-        try:
-            shutil.copy2(system_network_cookies, os.path.join(target_network_dir, "Cookies"))
-        except Exception:
-            pass
-
-    return os.path.exists(target_cookies)
+    # Verify that at least one of the cookie locations was successfully created in target
+    target_default_cookies_path_check = os.path.join(target_default_directory, "Cookies")
+    target_network_cookies_path_check = os.path.join(target_network_directory, "Cookies")
+    has_seeded_cookies = os.path.exists(target_default_cookies_path_check) or os.path.exists(target_network_cookies_path_check)
+    return has_seeded_cookies
 
 
 async def create_resilient_browser_instance(
@@ -942,9 +1045,9 @@ async def create_resilient_browser_instance(
     # while allowing independent Chrome windows to run simultaneously.
     dedicated_profile_path = get_persistent_profile_path(profile_directory_name)
 
-    # Check if target profile already has Cookies. If not, seed from system Chrome
-    target_cookies_path = os.path.join(dedicated_profile_path, "Default", "Cookies")
-    if not os.path.exists(target_cookies_path):
+    # Check if target profile already has Cookies in either location. If not, seed from system Chrome
+    existing_cookie_path = find_existing_cookie_file_path(dedicated_profile_path)
+    if len(existing_cookie_path) == 0:
         did_seed = seed_profile_from_system_chrome(dedicated_profile_path)
         if did_seed and log_callback_function is not None:
             try:
@@ -952,11 +1055,18 @@ async def create_resilient_browser_instance(
             except Exception:
                 pass
 
-    # Launch Chrome directly pointing to our dedicated persistent profile directory
-    browser_instance = Browser(
-        headless=is_headless_mode,
-        user_data_dir=dedicated_profile_path
-    )
+    # Detect real Google Chrome executable on the system so we use Chrome rather than Playwright Chromium.
+    # On Windows, using chrome.exe allows Chrome to decrypt user cookies via Windows DPAPI.
+    system_chrome_executable_path = find_system_chrome_executable_path()
+
+    browser_configuration_parameters = {
+        "headless": is_headless_mode,
+        "user_data_dir": dedicated_profile_path
+    }
+    if len(system_chrome_executable_path) > 0 and os.path.exists(system_chrome_executable_path):
+        browser_configuration_parameters["executable_path"] = system_chrome_executable_path
+
+    browser_instance = Browser(**browser_configuration_parameters)
     return browser_instance
 
 
@@ -996,18 +1106,43 @@ async def check_is_x_logged_in(browser_instance: Browser) -> bool:
 
 
 def check_sqlite_has_x_auth_token(cookies_sqlite_path: str) -> bool:
-    # Directly checks the SQLite database for the auth_token cookie
-    if not os.path.exists(cookies_sqlite_path):
+    # Directly checks the SQLite database for the auth_token cookie.
+    # Handles both direct path to Cookies file or a base directory containing Cookies.
+    resolved_cookie_file_path = ""
+    if os.path.isfile(cookies_sqlite_path):
+        resolved_cookie_file_path = cookies_sqlite_path
+    elif os.path.isdir(cookies_sqlite_path):
+        resolved_cookie_file_path = find_existing_cookie_file_path(cookies_sqlite_path)
+    else:
+        resolved_cookie_file_path = find_existing_cookie_file_path(cookies_sqlite_path)
+
+    if len(resolved_cookie_file_path) == 0 or not os.path.exists(resolved_cookie_file_path):
         return False
+
     try:
-        connection = sqlite3.connect(f"file:{cookies_sqlite_path}?mode=ro", uri=True)
+        connection = sqlite3.connect(f"file:{resolved_cookie_file_path}?mode=ro", uri=True)
         cursor = connection.cursor()
         cursor.execute("SELECT name FROM cookies WHERE (host_key = '.x.com' OR host_key = '.twitter.com') AND name = 'auth_token'")
         found_row = cursor.fetchone()
         connection.close()
         return found_row is not None
     except Exception:
-        return False
+        # If locked by a running Chrome process (common on Windows), copy to a temporary read file and check
+        try:
+            temporary_check_path = resolved_cookie_file_path + ".temp_read_check"
+            shutil.copy2(resolved_cookie_file_path, temporary_check_path)
+            temp_connection = sqlite3.connect(f"file:{temporary_check_path}?mode=ro", uri=True)
+            temp_cursor = temp_connection.cursor()
+            temp_cursor.execute("SELECT name FROM cookies WHERE (host_key = '.x.com' OR host_key = '.twitter.com') AND name = 'auth_token'")
+            found_row = temp_cursor.fetchone()
+            temp_connection.close()
+            try:
+                os.remove(temporary_check_path)
+            except Exception:
+                pass
+            return found_row is not None
+        except Exception:
+            return False
 
 
 def open_system_browser_to_url(target_url: str = "https://x.com/login") -> None:
@@ -1020,7 +1155,15 @@ def open_system_browser_to_url(target_url: str = "https://x.com/login") -> None:
             except Exception:
                 subprocess.Popen(["open", target_url])
         elif sys.platform == "win32":
-            # On Windows, try start command
+            # On Windows, try launching the real chrome.exe directly so the user logs in using Chrome
+            system_chrome_executable = find_system_chrome_executable_path()
+            if len(system_chrome_executable) > 0 and os.path.exists(system_chrome_executable):
+                try:
+                    subprocess.Popen([system_chrome_executable, target_url])
+                    return
+                except Exception:
+                    pass
+            # Fallback to default Windows handler
             try:
                 os.startfile(target_url)
             except Exception:
@@ -1064,10 +1207,10 @@ async def ensure_x_logged_in_or_prompt_user(
 
     # Check if system Chrome has the login cookies and can be seeded immediately
     system_chrome_user_data = find_system_chrome_user_data_path()
-    system_cookies_path = os.path.join(system_chrome_user_data, "Default", "Cookies") if system_chrome_user_data else ""
+    system_cookies_path = find_existing_cookie_file_path(system_chrome_user_data) if system_chrome_user_data else ""
     agent_profile_path = get_persistent_profile_path("agent_profile")
 
-    if system_cookies_path and check_sqlite_has_x_auth_token(system_cookies_path):
+    if len(system_cookies_path) > 0 and check_sqlite_has_x_auth_token(system_cookies_path):
         seed_profile_from_system_chrome(agent_profile_path)
         await log_callback_function("SUCCESS", "X.com login detected from system Chrome and transferred seamlessly.")
         return True
@@ -1092,7 +1235,8 @@ async def ensure_x_logged_in_or_prompt_user(
         elapsed_seconds = elapsed_seconds + poll_interval_seconds
 
         # Check A: Did login cookies appear in system Chrome?
-        if system_cookies_path and check_sqlite_has_x_auth_token(system_cookies_path):
+        current_system_cookies_path = find_existing_cookie_file_path(system_chrome_user_data) if system_chrome_user_data else ""
+        if len(current_system_cookies_path) > 0 and check_sqlite_has_x_auth_token(current_system_cookies_path):
             seed_profile_from_system_chrome(agent_profile_path)
             await log_callback_function("SUCCESS", "X.com login successfully detected from system browser! Continuing pipeline...")
             await asyncio.sleep(2)
@@ -1123,47 +1267,58 @@ def sync_agent_profile_to_worker_profile(source_profile_name: str, target_profil
     source_path = get_persistent_profile_path(source_profile_name)
     target_path = get_persistent_profile_path(target_profile_name)
 
-    source_cookies = os.path.join(source_path, "Default", "Cookies")
     target_default_dir = os.path.join(target_path, "Default")
+    target_network_dir = os.path.join(target_default_dir, "Network")
     os.makedirs(target_default_dir, exist_ok=True)
+    os.makedirs(target_network_dir, exist_ok=True)
 
-    if os.path.exists(source_cookies):
-        # 1. Copy Local State (OS decryption key)
-        source_local_state = os.path.join(source_path, "Local State")
-        target_local_state = os.path.join(target_path, "Local State")
-        if os.path.exists(source_local_state):
-            try:
-                shutil.copy2(source_local_state, target_local_state)
-            except Exception:
-                pass
-
-        # 2. Copy Default/Cookies (SQLite DB with all active logins)
-        target_cookies = os.path.join(target_default_dir, "Cookies")
+    # 1. Copy Local State (OS decryption key)
+    source_local_state = os.path.join(source_path, "Local State")
+    target_local_state = os.path.join(target_path, "Local State")
+    if os.path.exists(source_local_state):
         try:
-            shutil.copy2(source_cookies, target_cookies)
+            shutil.copy2(source_local_state, target_local_state)
         except Exception:
             pass
 
-        # 3. Copy any extra auth files
-        extra_files = ["Cookies-journal", "Login Data", "Web Data"]
-        for file_name in extra_files:
-            s_file = os.path.join(source_path, "Default", file_name)
-            d_file = os.path.join(target_default_dir, file_name)
-            if os.path.exists(s_file):
+    # 2. Check for Cookies in source profile (supports both Default/Cookies and Default/Network/Cookies)
+    source_cookie_file = find_existing_cookie_file_path(source_path)
+
+    if len(source_cookie_file) > 0 and os.path.exists(source_cookie_file):
+        # Copy to BOTH target locations so any Chrome/Chromium version on any OS finds them
+        try:
+            shutil.copy2(source_cookie_file, os.path.join(target_default_dir, "Cookies"))
+        except Exception:
+            pass
+        try:
+            shutil.copy2(source_cookie_file, os.path.join(target_network_dir, "Cookies"))
+        except Exception:
+            pass
+
+        # 3. Copy any extra auth files from source
+        extra_auth_files = [
+            "Cookies-journal",
+            "Cookies-wal",
+            "Cookies-shm",
+            "Login Data",
+            "Login Data-journal",
+            "Web Data",
+            "Web Data-journal"
+        ]
+        source_default_dir = os.path.join(source_path, "Default")
+        for file_name in extra_auth_files:
+            s_default = os.path.join(source_default_dir, file_name)
+            s_network = os.path.join(source_default_dir, "Network", file_name)
+            if os.path.exists(s_default):
                 try:
-                    shutil.copy2(s_file, d_file)
+                    shutil.copy2(s_default, os.path.join(target_default_dir, file_name))
                 except Exception:
                     pass
-
-        # Check Network/Cookies
-        source_network_cookies = os.path.join(source_path, "Default", "Network", "Cookies")
-        if os.path.exists(source_network_cookies):
-            target_network_dir = os.path.join(target_default_dir, "Network")
-            os.makedirs(target_network_dir, exist_ok=True)
-            try:
-                shutil.copy2(source_network_cookies, os.path.join(target_network_dir, "Cookies"))
-            except Exception:
-                pass
+            if os.path.exists(s_network):
+                try:
+                    shutil.copy2(s_network, os.path.join(target_network_dir, file_name))
+                except Exception:
+                    pass
     else:
         # If source profile does not have cookies yet, seed directly from system Chrome
         seed_profile_from_system_chrome(target_path)

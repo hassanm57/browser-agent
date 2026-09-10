@@ -5,6 +5,8 @@ import os
 import re
 import sys
 import shutil
+import sqlite3
+import subprocess
 import urllib.parse
 import xml.etree.ElementTree as ElementTree
 from bs4 import BeautifulSoup
@@ -993,19 +995,65 @@ async def check_is_x_logged_in(browser_instance: Browser) -> bool:
         return False
 
 
+def check_sqlite_has_x_auth_token(cookies_sqlite_path: str) -> bool:
+    # Directly checks the SQLite database for the auth_token cookie
+    if not os.path.exists(cookies_sqlite_path):
+        return False
+    try:
+        connection = sqlite3.connect(f"file:{cookies_sqlite_path}?mode=ro", uri=True)
+        cursor = connection.cursor()
+        cursor.execute("SELECT name FROM cookies WHERE (host_key = '.x.com' OR host_key = '.twitter.com') AND name = 'auth_token'")
+        found_row = cursor.fetchone()
+        connection.close()
+        return found_row is not None
+    except Exception:
+        return False
+
+
+def open_system_browser_to_url(target_url: str = "https://x.com/login") -> None:
+    # Opens the user's browser using a deterministic OS command on macOS, Linux, or Windows
+    try:
+        if sys.platform == "darwin":
+            # On macOS, attempt to open Google Chrome specifically first, fallback to default browser
+            try:
+                subprocess.Popen(["open", "-a", "Google Chrome", target_url])
+            except Exception:
+                subprocess.Popen(["open", target_url])
+        elif sys.platform == "win32":
+            # On Windows, try start command
+            try:
+                os.startfile(target_url)
+            except Exception:
+                subprocess.Popen(["cmd", "/c", "start", "", target_url], shell=True)
+        elif sys.platform.startswith("linux"):
+            # On Linux, try google-chrome or chromium, fallback to xdg-open
+            try:
+                subprocess.Popen(["google-chrome", target_url])
+            except Exception:
+                try:
+                    subprocess.Popen(["chromium", target_url])
+                except Exception:
+                    subprocess.Popen(["xdg-open", target_url])
+    except Exception as launch_error:
+        print(f"Notice: unable to open system browser via OS command: {str(launch_error)}")
+
+
 async def ensure_x_logged_in_or_prompt_user(
     browser_instance: Browser,
     log_callback_function,
     cancellation_event = None,
     maximum_wait_seconds: int = 300
 ) -> bool:
-    # Verifies if X.com is logged in. If not, opens the login page, prompts the user to log in
-    # manually in the open Chrome window, and waits seamlessly until login is detected.
+    # Verifies if X.com is logged in.
+    # 1. First, checks if the session is already active via browser DOM evaluation or fast cookie check.
+    # 2. If not logged in, opens the login page in the user's system browser via a deterministic OS command.
+    # 3. Polls seamlessly in the background until login is detected, then seeds the session to agent_profile.
     await log_callback_function("INFO", "Checking if X.com is logged in...")
 
+    # Fast initial check: navigate to x.com/home
     try:
         await browser_instance.navigate_to("https://x.com/home")
-        await asyncio.sleep(4)
+        await asyncio.sleep(3)
     except Exception as navigation_error:
         await log_callback_function("WARN", f"Initial X.com navigation note: {str(navigation_error)}")
 
@@ -1014,19 +1062,24 @@ async def ensure_x_logged_in_or_prompt_user(
         await log_callback_function("SUCCESS", "X.com login verified. Session is active.")
         return True
 
-    # If not signed in, prompt user and open login page in the headful Chrome window
+    # Check if system Chrome has the login cookies and can be seeded immediately
+    system_chrome_user_data = find_system_chrome_user_data_path()
+    system_cookies_path = os.path.join(system_chrome_user_data, "Default", "Cookies") if system_chrome_user_data else ""
+    agent_profile_path = get_persistent_profile_path("agent_profile")
+
+    if system_cookies_path and check_sqlite_has_x_auth_token(system_cookies_path):
+        seed_profile_from_system_chrome(agent_profile_path)
+        await log_callback_function("SUCCESS", "X.com login detected from system Chrome and transferred seamlessly.")
+        return True
+
+    # If genuinely not signed in, open login page in the system browser via deterministic OS command
     await log_callback_function(
         "WARN",
-        "X.com is not signed in. Opening X.com login window. Please log into your X.com account manually. The pipeline will automatically continue once login is detected."
+        "X.com is not signed in. Opening your browser to https://x.com/login via system command. Please log into your X.com account. The pipeline will automatically detect your login and continue seamlessly."
     )
+    open_system_browser_to_url("https://x.com/login")
 
-    try:
-        await browser_instance.navigate_to("https://x.com/login")
-        await asyncio.sleep(3)
-    except Exception:
-        pass
-
-    # Polling loop: check every 3 seconds for successful user login
+    # Polling loop: check every 3 seconds for user login
     elapsed_seconds = 0
     poll_interval_seconds = 3
 
@@ -1038,10 +1091,17 @@ async def ensure_x_logged_in_or_prompt_user(
         await asyncio.sleep(poll_interval_seconds)
         elapsed_seconds = elapsed_seconds + poll_interval_seconds
 
+        # Check A: Did login cookies appear in system Chrome?
+        if system_cookies_path and check_sqlite_has_x_auth_token(system_cookies_path):
+            seed_profile_from_system_chrome(agent_profile_path)
+            await log_callback_function("SUCCESS", "X.com login successfully detected from system browser! Continuing pipeline...")
+            await asyncio.sleep(2)
+            return True
+
+        # Check B: Did login happen in the open browser instance?
         is_now_authenticated = await check_is_x_logged_in(browser_instance)
         if is_now_authenticated:
-            await log_callback_function("SUCCESS", "X.com login successfully detected and verified! Continuing pipeline...")
-            # Brief pause so Chrome flushes session tokens to disk
+            await log_callback_function("SUCCESS", "X.com login successfully detected! Continuing pipeline...")
             await asyncio.sleep(2)
             return True
 
@@ -1050,7 +1110,7 @@ async def ensure_x_logged_in_or_prompt_user(
             remaining_seconds = maximum_wait_seconds - elapsed_seconds
             await log_callback_function(
                 "INFO",
-                f"Waiting for manual X.com login in the open Chrome window... ({remaining_seconds}s before timeout)"
+                f"Waiting for manual X.com login in your browser... ({remaining_seconds}s before timeout)"
             )
 
     await log_callback_function("ERROR", f"Timed out after {maximum_wait_seconds} seconds waiting for X.com login.")

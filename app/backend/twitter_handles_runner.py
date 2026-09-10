@@ -24,7 +24,8 @@ from app.backend.database import (
     update_handle_last_tweet_count,
     create_twitter_scrape_run,
     update_twitter_scrape_run_progress,
-    complete_twitter_scrape_run
+    complete_twitter_scrape_run,
+    get_all_settings
 )
 
 
@@ -682,7 +683,8 @@ async def parallel_scraper_worker(
     shared_progress_dictionary: Dict[str, Any],
     log_callback: Callable[[str, str], Any],
     progress_callback: Callable[[Dict[str, Any]], Any],
-    tweet_saved_callback: Callable[[Dict[str, Any]], Any]
+    tweet_saved_callback: Callable[[Dict[str, Any]], Any],
+    is_headless_mode: bool = True
 ):
     # Each parallel worker manages its own browser instance with an isolated worker profile
     shared_progress_dictionary["active_workers"][str(worker_index)] = "Launching Chrome..."
@@ -699,7 +701,7 @@ async def parallel_scraper_worker(
 
         # Launch resilient browser session for this worker
         browser_instance = await trends.create_resilient_browser_instance(
-            is_headless_mode=False,
+            is_headless_mode=is_headless_mode,
             should_use_real_system_profile=False,
             profile_directory_name=worker_profile_name,
             log_callback_function=log_callback
@@ -819,7 +821,13 @@ async def run_parallel_twitter_handles_pipeline(
 
     total_handles_count = len(handles_to_scrape_list)
     await actual_status("running")
-    await actual_log("STEP", f"Starting parallel Twitter scraping for {total_handles_count} handles using {concurrency_level} parallel browser instances...")
+
+    # Read headless setting from database (defaults to true for silent background execution)
+    application_settings_dictionary = get_all_settings()
+    is_headless_mode_enabled = application_settings_dictionary.get("headless_mode", "true") == "true"
+    mode_text = "Headless Background" if is_headless_mode_enabled else "Headful Visible"
+
+    await actual_log("STEP", f"Starting parallel Twitter scraping for {total_handles_count} handles using {concurrency_level} parallel {mode_text} browser instances...")
 
     # Record scrape run in database
     scrape_run_id = create_twitter_scrape_run(total_handles_count, concurrency_level)
@@ -846,7 +854,7 @@ async def run_parallel_twitter_handles_pipeline(
     await actual_log("STEP", "Checking X.com authentication status before starting handle scraping...")
 
     auth_check_browser = await trends.create_resilient_browser_instance(
-        is_headless_mode=False,
+        is_headless_mode=is_headless_mode_enabled,
         should_use_real_system_profile=False,
         profile_directory_name="agent_profile",
         log_callback_function=actual_log
@@ -905,7 +913,8 @@ async def run_parallel_twitter_handles_pipeline(
                 shared_progress_dictionary=shared_progress,
                 log_callback=actual_log,
                 progress_callback=actual_progress,
-                tweet_saved_callback=actual_tweet_saved
+                tweet_saved_callback=actual_tweet_saved,
+                is_headless_mode=is_headless_mode_enabled
             )
         )
         worker_tasks_list.append(task)

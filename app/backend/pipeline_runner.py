@@ -341,7 +341,7 @@ async def run_single_country_pipeline(
     await log_and_record("STEP", f"[2/4] Launching Chrome browser to scrape configured X defense accounts & explore trends...")
     await progress_callback_function("x_accounts", 2, 5, f"Scraping correspondent accounts and X trends for {target_country_name}...", target_country_name)
 
-    is_headless = settings_dictionary.get("headless_mode", "false") == "true"
+    is_headless = settings_dictionary.get("headless_mode", "true") == "true"
     use_real_chrome = settings_dictionary.get("use_real_chrome", "true") == "true"
     max_tweets_target = int(settings_dictionary.get("maximum_tweets_per_trend", "20"))
     max_scroll_rounds = int(settings_dictionary.get("maximum_scroll_rounds", "12"))
@@ -356,14 +356,12 @@ async def run_single_country_pipeline(
     }
     curated_x_sources_tweets: Dict[str, List[str]] = {}
 
-    # For X.com automation on macOS, always use headful Chrome (headless=False) so React hydrates and anti-bot checks pass.
-    # Headless mode on X causes blank pages or collapsed SVG icons.
-    browser_mode_string = "Headful Visible Window (Enforced for X.com reliability)"
+    browser_mode_string = "Headless Background" if is_headless else "Headful Visible Window"
     await log_and_record("BROWSER", f"Launching Chrome ({browser_mode_string}, RealProfile: {use_real_chrome})...")
 
     browser_instance = await trends.create_resilient_browser_instance(
-        is_headless_mode=False,
-        should_use_real_system_profile=use_real_chrome,
+        is_headless_mode=is_headless,
+        should_use_real_system_profile=False,
         profile_directory_name="agent_profile",
         log_callback_function=log_and_record
     )

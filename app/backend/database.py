@@ -47,7 +47,7 @@ def initialize_database():
         ("llm_model_name", "qwen3-14b"),
         ("llm_maximum_tokens", "8192"),
         ("llm_timeout_seconds", "180"),
-        ("headless_mode", "false"),
+        ("headless_mode", "true"),
         ("use_real_chrome", "true"),
         ("maximum_tweets_per_trend", "20"),
         ("maximum_scroll_rounds", "12"),

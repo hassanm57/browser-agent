@@ -277,41 +277,80 @@ browser-agent/
 
 ## 🚀 Quick Start (Automated Setup)
 
-After cloning the repository, you can set up the complete environment (virtual environment, Python dependencies, frontend packages, database, and `.env`) using a single script:
+Set up and launch the complete application (Python virtual environment, backend/frontend dependencies, database, and Chrome profiles) on any machine using a single command:
 
-### Universal (macOS & Linux)
+### Quick Reference
+
+| Operating System | One-Time Setup | Launch Application |
+| :--- | :--- | :--- |
+| **macOS** | `./setup.sh` *(or `./scripts/setup_mac.sh`)* | `./run.sh` *(or `./scripts/run_mac.sh`)* |
+| **Linux (Ubuntu, Debian, Fedora, Arch)** | `./setup.sh` *(or `./scripts/setup_ubuntu.sh`)* | `./run.sh` *(or `./scripts/run_ubuntu.sh`)* |
+| **Windows (Command Prompt / Explorer)** | `setup.bat` *(or double-click `setup.bat`)* | `run.bat` *(or double-click `run.bat`)* |
+| **Windows (PowerShell)** | `.\scripts\setup_windows.ps1` | `.\scripts\run_windows.ps1` |
+
+---
+
+### Step-by-Step Instructions
+
+#### 🍎 macOS & 🐧 Linux
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/hassanm57/browser-agent.git
 cd browser-agent
 
-# 1. Run automated setup (auto-detects macOS vs Linux, creates .venv, installs dependencies, initializes database)
+# 2. Run automated setup (auto-detects macOS vs Linux, creates .venv, installs dependencies, initializes database)
 ./setup.sh
 
-# 2. Launch both backend & frontend together
+# 3. Launch both backend & frontend together
 ./run.sh
 ```
 
-*(Or use platform-specific scripts: `./scripts/setup_mac.sh` / `./scripts/run_mac.sh` on macOS, or `./scripts/setup_ubuntu.sh` / `./scripts/run_ubuntu.sh` on Linux)*
-
-### On Windows
+#### 🪟 Windows (Command Prompt / Double-Click)
 
 ```cmd
+:: 1. Clone the repository
 git clone https://github.com/hassanm57/browser-agent.git
 cd browser-agent
 
-:: 1. Run automated setup
+:: 2. Run automated setup
 setup.bat
 
-:: 2. Launch both backend & frontend together
+:: 3. Launch both backend & frontend together
 run.bat
 ```
+*(You can also simply double-click `setup.bat` and `run.bat` directly from Windows File Explorer).*
 
-*Or with Windows PowerShell:*
+*Or if using Windows PowerShell:*
 ```powershell
 .\scripts\setup_windows.ps1
 .\scripts\run_windows.ps1
 ```
+
+---
+
+### 🌐 Access the Application
+
+Once launched, open your web browser:
+- **Web Dashboard**: [`http://localhost:5173`](http://localhost:5173) (or `http://<your-ip>:5173` from any device on your local network)
+- **FastAPI Backend**: [`http://localhost:8000`](http://localhost:8000)
+- **Interactive API Documentation**: [`http://localhost:8000/docs`](http://localhost:8000/docs)
+
+To stop all running services:
+- On **macOS / Linux**: Press `Ctrl+C` in your terminal window.
+- On **Windows**: Close the two terminal windows.
+
+---
+
+### 🔑 First-Time Setup on New PCs (X.com Login)
+
+When deploying to a fresh PC or system where X.com is not yet logged in:
+1. When you trigger a pipeline (either the Keywords pipeline or Twitter Scraper), the agent checks if X.com is logged in.
+2. If signed out, it automatically opens `https://x.com/login` in the Chrome window and prompts you in the live log console.
+3. Log into your X.com account manually in that Chrome window.
+4. The agent automatically detects your successful login within seconds, confirms it, and resumes scraping seamlessly.
+5. **Session Saved Permanently**: Your login session is saved in `~/.browser-agent/agent_profile` on that machine, so you will **never** need to log in again on future runs.
+6. **No Browser Lock Collisions**: The agent uses an independent browser profile, meaning you can keep Chrome open viewing the frontend dashboard simultaneously without encountering file-locking crashes.
 
 ---
 
@@ -389,25 +428,33 @@ python trends.py "India"
 
 ## 🖥️ Running the Full-Stack Web Application
 
-To use the UI dashboard with real-time telemetry streaming:
+The easiest way to launch the full-stack dashboard is using the automated launch script:
 
-### 1. Start the FastAPI Backend
+- **macOS / Linux**: `./run.sh`
+- **Windows**: `run.bat` *(or `.\scripts\run_windows.ps1`)*
 
+### Manual Multi-Terminal Startup (Optional)
+
+If you prefer to run the backend and frontend in separate terminals manually:
+
+#### Terminal 1 — FastAPI Backend:
 ```bash
-source .venv/bin/activate
-uvicorn app.backend.main:app --host 127.0.0.1 --port 8000 --reload
+# Activate virtual environment
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Launch uvicorn server
+python -m uvicorn app.backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-*Backend runs on `http://127.0.0.1:8000` (API Docs at `http://127.0.0.1:8000/docs`).*
+*Backend runs on `http://localhost:8000` (API Docs at `http://localhost:8000/docs`).*
 
-### 2. Start the Vite Frontend
-
+#### Terminal 2 — Vite Frontend:
 ```bash
 cd app/frontend
-npm run dev -- --host 127.0.0.1
+npm run dev
 ```
-*Frontend runs on `http://127.0.0.1:5173`.*
+*Frontend runs on `http://localhost:5173`.*
 
-Open **`http://127.0.0.1:5173`** in your browser.
+Open **`http://localhost:5173`** in your browser.
 
 ---
 

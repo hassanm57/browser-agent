@@ -1184,6 +1184,72 @@ def sanitize_country_name_for_prompt(country_name_string):
     return clean_name
 
 
+def handle_alternate_spelling_keywords(terms_list):
+    # Handles common alternate transliterations and spellings (e.g., Makkah / Mecca,
+    # Türkiye / Turkey, DPRK / North Korea, Kyiv / Kiev, Houthis / Ansar Allah).
+    # Ensures 1 or 2 high-value alternate spellings are included without increasing
+    # the total count of keywords beyond 15.
+    spelling_equivalents_tuples = [
+        ("makkah", "Mecca"),
+        ("mecca", "Makkah"),
+        ("türkiye", "Turkey"),
+        ("turkey", "Türkiye"),
+        ("dprk", "North Korea"),
+        ("north korea", "DPRK"),
+        ("kyiv", "Kiev"),
+        ("kiev", "Kyiv"),
+        ("uae", "United Arab Emirates"),
+        ("united arab emirates", "UAE"),
+        ("houthis", "Ansar Allah"),
+        ("ansar allah", "Houthis"),
+        ("hezbollah", "Hizbullah"),
+        ("hizbullah", "Hezbollah")
+    ]
+
+    working_terms_list = []
+    for term_entry in terms_list:
+        working_terms_list.append(term_entry)
+
+    alternates_added_count = 0
+    max_alternates_to_include = 2
+
+    # Check which equivalents are relevant to the terms in this topic
+    for original_term in list(working_terms_list):
+        if alternates_added_count >= max_alternates_to_include:
+            break
+
+        lower_original = original_term.lower()
+
+        for source_word, replacement_text in spelling_equivalents_tuples:
+            pattern = r'\b' + re.escape(source_word) + r'\b'
+            if re.search(pattern, lower_original, re.IGNORECASE):
+                # Form the alternate keyword by replacing the source word
+                new_term = re.sub(pattern, replacement_text, original_term, flags=re.IGNORECASE)
+                new_term = ' '.join(new_term.split())
+
+                # Check if this alternate term or its variant already exists
+                already_exists = False
+                for existing_term in working_terms_list:
+                    if existing_term.lower() == new_term.lower():
+                        already_exists = True
+                        break
+
+                if not already_exists:
+                    if len(working_terms_list) < 15:
+                        working_terms_list.append(new_term)
+                    else:
+                        # Replace the last keyword so the total count strictly does NOT exceed 15
+                        replace_index = len(working_terms_list) - 1 - alternates_added_count
+                        if replace_index >= 0:
+                            working_terms_list[replace_index] = new_term
+
+                    alternates_added_count += 1
+                    if alternates_added_count >= max_alternates_to_include:
+                        break
+
+    return working_terms_list[:15]
+
+
 def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_name="Worldwide"):
     # Validates and sanitizes topics returned by the language model to prevent
     # any injected scripts, malicious markdown, or malformed fields from reaching downstream consumers.
@@ -1267,8 +1333,8 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
                 if not is_duplicate_term:
                     clean_terms_list.append(term_str)
 
-        # Cap strictly at 15 terms
-        final_terms = clean_terms_list[:15]
+        # Handle alternate transliterations/spellings (e.g. Makkah / Mecca) without exceeding 15 terms
+        final_terms = handle_alternate_spelling_keywords(clean_terms_list[:15])
 
         # 4. Validate boolean_query
         raw_query = topic_item.get("boolean_query", "")
@@ -1404,6 +1470,7 @@ KEYWORD & SEARCH PHRASE SPECIFICITY REQUIREMENTS:
      ("Strait of Hormuz" OR "Red Sea") ("maritime security" OR "naval escort")
    - "terms": Array of EXACTLY 15 specific, informative search keywords and phrases (2 to 5 words each) directly grounded in the news events.
      * DO NOT BE AFRAID TO GIVE FULL, SPECIFIC PHRASES: Provide complete, concrete keywords like "Mecca Defence Agreement", "NATO Eastern Flank", "Ukraine vs Russia war tensions", "Brent Crude $100 price surge", "Muwaffaq Salti Air Base strike", "IAEA Fordow uranium enrichment", "Red Sea tanker security escort".
+     * ALTERNATE SPELLINGS & ABBREVIATIONS: When entities have common alternate spellings, transliterations, or official abbreviations (e.g. "Makkah" vs "Mecca", "Türkiye" vs "Turkey", "DPRK" vs "North Korea", "Kyiv" vs "Kiev", "UAE" vs "United Arab Emirates", "Houthis" vs "Ansar Allah"), DEDICATE 1 OR 2 KEYWORDS TO THESE ALTERNATE SPELLINGS. For example, if you include "Makkah Defence Alliance", also include "Mecca Defence Alliance", or if you have "Pakistan-Türkiye defense pact", include "Pakistan-Turkey defense pact". Do NOT increase the total count of keywords beyond 15—use 1 or 2 of the 15 slots for these variants.
      * STRICTLY FORBIDDEN GENERIC KEYWORDS: Never output vague, overly broad 1-2 word labels like "Economic Warfare", "Oil Price", "Cyber Strategy", "Foreign Policy", "Defense Spending", "Energy Market", "National Security", "Regional Stability". These generic phrases alone never provide meaningful context.
      * LOOSEN STRICTNESS FOR CONTEXT: While you must avoid generic one-liners, do not make keywords overly restrictive into full sentences. Give rich, human-readable 2-5 word search terms that directly name the pact, crisis, country pair, commander, or military asset.
      * NO REPETITIVE DUPLICATES: Avoid generating repetitive variations of the same 3 words (e.g., do not output "NATO Eastern Flank defense", "NATO Eastern Flank security", "NATO Eastern Flank posture"). Keep each of the 15 terms distinct and multifaceted.

@@ -345,7 +345,9 @@ async def run_single_country_pipeline(
     use_real_chrome = settings_dictionary.get("use_real_chrome", "true") == "true"
     max_tweets_target = int(settings_dictionary.get("maximum_tweets_per_trend", "20"))
     max_scroll_rounds = int(settings_dictionary.get("maximum_scroll_rounds", "12"))
-    trends_to_mine_count = int(settings_dictionary.get("number_of_trends_to_mine", "5"))
+    raw_mine_count = int(settings_dictionary.get("number_of_trends_to_mine", "6"))
+    # Ensure at least 5 boolean queries and under 10 are searched on X (e.g. 5 to 8)
+    trends_to_mine_count = max(5, min(raw_mine_count, 8))
 
     x_native_intel_dictionary = {
         "country": target_country_name,

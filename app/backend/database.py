@@ -51,7 +51,7 @@ def initialize_database():
         ("use_real_chrome", "true"),
         ("maximum_tweets_per_trend", "20"),
         ("maximum_scroll_rounds", "12"),
-        ("number_of_trends_to_mine", "5")
+        ("number_of_trends_to_mine", "6")
     ]
 
     for setting_tuple in default_settings_list:

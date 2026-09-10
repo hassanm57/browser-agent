@@ -112,7 +112,8 @@ def check_if_timestamp_is_within_past_24_hours(timestamp_text: str) -> bool:
 
 
 def extract_detailed_tweets_from_page_chunks(page_state_text: str, target_handle: str) -> List[Dict[str, Any]]:
-    article_chunks = re.split(r'\[\d+\]<article\s+role=article\s*/>', page_state_text)
+    # We support multiple serialized article tag formats (with or without role=article attribute)
+    article_chunks = re.split(r'\[\d+\]<article(?:\s+[^>]*)?>', page_state_text)
     extracted_tweets_list = []
 
     for chunk_index in range(1, len(article_chunks)):
@@ -394,22 +395,6 @@ async def extract_tweets_directly_from_dom(
                 const results = [];
                 
                 for (const art of articles) {
-                    const textElement = art.querySelector('[data-testid="tweetText"]');
-                    if (!textElement) continue;
-                    const tweetText = (textElement.innerText || '').trim();
-                    if (!tweetText || tweetText.length < 5) continue;
-                    
-                    const timeElement = art.querySelector('time');
-                    const timestampText = timeElement ? (timeElement.innerText || '').trim() : '';
-                    const datetimeIso = timeElement ? (timeElement.getAttribute('datetime') || '') : '';
-                    
-                    let tweetUrl = '';
-                    const link = art.querySelector('a[href*="/status/"]');
-                    if (link) {
-                        const href = link.getAttribute('href') || '';
-                        tweetUrl = href.startsWith('http') ? href : ('https://x.com' + href);
-                    }
-                    
                     let authorDisplayName = '';
                     let authorHandle = '';
                     const userHeader = art.querySelector('[data-testid="User-Name"]');
@@ -422,6 +407,61 @@ async def extract_tweets_directly_from_dom(
                                 break;
                             }
                         }
+                    }
+
+                    let tweetText = '';
+                    const textElement = art.querySelector('[data-testid="tweetText"]');
+                    if (textElement) {
+                        tweetText = (textElement.innerText || '').trim();
+                    } else {
+                        // Fallback for modern feeds or desktop feeds without data-testid="tweetText"
+                        const allLines = (art.innerText || '').split('\\n').map(s => s.trim()).filter(Boolean);
+                        if (!authorDisplayName && allLines.length > 0) {
+                            authorDisplayName = allLines[0];
+                        }
+                        let passedHandle = false;
+                        let bodyLines = [];
+                        for (const line of allLines) {
+                            if (line.startsWith('@')) {
+                                passedHandle = true;
+                                if (!authorHandle) {
+                                    authorHandle = line.replace('@', '');
+                                }
+                                continue;
+                            }
+                            if (passedHandle) {
+                                if (line === '·' || line === '•' || line === '-' || line === '|') continue;
+                                if (/^\\d+[smh]$/.test(line) || /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+\\d+/i.test(line)) continue;
+                                if (line === 'Show more' || line.startsWith('http') || /^\\d+[\\d,\\.]*[KMBkmb]?$/.test(line)) continue;
+                                bodyLines.push(line);
+                            }
+                        }
+                        tweetText = bodyLines.join(' ').trim();
+                    }
+                    if (!tweetText || tweetText.length < 5) continue;
+                    
+                    let timestampText = '';
+                    let datetimeIso = '';
+                    const timeElement = art.querySelector('time');
+                    if (timeElement) {
+                        timestampText = (timeElement.innerText || '').trim();
+                        datetimeIso = (timeElement.getAttribute('datetime') || '');
+                    } else {
+                        // Fallback: extract relative time from article text lines (e.g. '11h', '25m', 'Sep 8')
+                        const allLines = (art.innerText || '').split('\\n').map(s => s.trim()).filter(Boolean);
+                        for (const line of allLines.slice(0, 10)) {
+                            if (/^\\d+[smh]$/.test(line) || /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+\\d+/i.test(line)) {
+                                timestampText = line;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    let tweetUrl = '';
+                    const link = art.querySelector('a[href*="/status/"]');
+                    if (link) {
+                        const href = link.getAttribute('href') || '';
+                        tweetUrl = href.startsWith('http') ? href : ('https://x.com' + href);
                     }
                     
                     const group = art.querySelector('div[role="group"]');

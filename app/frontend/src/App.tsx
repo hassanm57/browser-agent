@@ -43,8 +43,13 @@ import { HistoryPage } from "./pages/HistoryPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { TwitterHandlesPage } from "./pages/TwitterHandlesPage";
 
-const BACKEND_API_BASE_URL = "http://localhost:8000";
-const BACKEND_WEBSOCKET_URL = "ws://localhost:8000/ws/pipeline";
+// Dynamically resolve backend host and protocol so frontend works across any PC, IP address, or domain
+const backendHost = (typeof window !== "undefined" && window.location.hostname) ? window.location.hostname : "localhost";
+const backendProtocol = (typeof window !== "undefined" && window.location.protocol === "https:") ? "https" : "http";
+const websocketProtocol = (typeof window !== "undefined" && window.location.protocol === "https:") ? "wss" : "ws";
+
+const BACKEND_API_BASE_URL = `${backendProtocol}://${backendHost}:8000`;
+const BACKEND_WEBSOCKET_URL = `${websocketProtocol}://${backendHost}:8000/ws/pipeline`;
 
 export default function App() {
   // Navigation & Shell State

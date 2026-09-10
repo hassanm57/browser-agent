@@ -861,21 +861,31 @@ async def create_resilient_browser_instance(
     try:
         existing_profile_items = os.listdir(dedicated_profile_path)
         if len(existing_profile_items) == 0:
-            system_chrome_user_data_path = ""
+            candidate_paths = []
             if sys.platform == "darwin":
-                system_chrome_user_data_path = os.path.join(
-                    user_home_directory, "Library", "Application Support", "Google", "Chrome", "Default"
-                )
+                candidate_paths.append(os.path.join(user_home_directory, "Library", "Application Support", "Google", "Chrome", "Default"))
+                candidate_paths.append(os.path.join(user_home_directory, "Library", "Application Support", "Chromium", "Default"))
+                candidate_paths.append(os.path.join(user_home_directory, "Library", "Application Support", "BraveSoftware", "Brave-Browser", "Default"))
             elif sys.platform == "win32":
                 local_app_data_path = os.environ.get("LOCALAPPDATA", "")
                 if local_app_data_path:
-                    system_chrome_user_data_path = os.path.join(
-                        local_app_data_path, "Google", "Chrome", "User Data", "Default"
-                    )
+                    candidate_paths.append(os.path.join(local_app_data_path, "Google", "Chrome", "User Data", "Default"))
+                    candidate_paths.append(os.path.join(local_app_data_path, "Chromium", "User Data", "Default"))
+                    candidate_paths.append(os.path.join(local_app_data_path, "BraveSoftware", "Brave-Browser", "User Data", "Default"))
+                user_profile_env = os.environ.get("USERPROFILE", "")
+                if user_profile_env:
+                    candidate_paths.append(os.path.join(user_profile_env, "AppData", "Local", "Google", "Chrome", "User Data", "Default"))
             elif sys.platform.startswith("linux"):
-                system_chrome_user_data_path = os.path.join(
-                    user_home_directory, ".config", "google-chrome", "Default"
-                )
+                candidate_paths.append(os.path.join(user_home_directory, ".config", "google-chrome", "Default"))
+                candidate_paths.append(os.path.join(user_home_directory, ".config", "chromium", "Default"))
+                candidate_paths.append(os.path.join(user_home_directory, ".config", "google-chrome-stable", "Default"))
+                candidate_paths.append(os.path.join(user_home_directory, ".config", "BraveSoftware", "Brave-Browser", "Default"))
+
+            system_chrome_user_data_path = ""
+            for path_candidate in candidate_paths:
+                if os.path.exists(path_candidate):
+                    system_chrome_user_data_path = path_candidate
+                    break
 
             if system_chrome_user_data_path and os.path.exists(system_chrome_user_data_path):
                 from browser_use.browser.profile import _ignore_chrome_profile_transient_files

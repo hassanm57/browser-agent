@@ -279,18 +279,20 @@ browser-agent/
 
 After cloning the repository, you can set up the complete environment (virtual environment, Python dependencies, frontend packages, database, and `.env`) using a single script:
 
-### On Ubuntu / Debian / Linux
+### Universal (macOS & Linux)
 
 ```bash
 git clone https://github.com/hassanm57/browser-agent.git
 cd browser-agent
 
-# 1. Run automated setup (creates .venv, installs pip & npm dependencies, initializes database)
-./scripts/setup_ubuntu.sh
+# 1. Run automated setup (auto-detects macOS vs Linux, creates .venv, installs dependencies, initializes database)
+./setup.sh
 
 # 2. Launch both backend & frontend together
-./scripts/run_ubuntu.sh
+./run.sh
 ```
+
+*(Or use platform-specific scripts: `./scripts/setup_mac.sh` / `./scripts/run_mac.sh` on macOS, or `./scripts/setup_ubuntu.sh` / `./scripts/run_ubuntu.sh` on Linux)*
 
 ### On Windows
 
@@ -299,10 +301,10 @@ git clone https://github.com/hassanm57/browser-agent.git
 cd browser-agent
 
 :: 1. Run automated setup
-scripts\setup_windows.bat
+setup.bat
 
 :: 2. Launch both backend & frontend together
-scripts\run_windows.bat
+run.bat
 ```
 
 *Or with Windows PowerShell:*

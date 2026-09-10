@@ -84,6 +84,27 @@ Quick REST reference to monitor pipeline status, trigger/cancel runs, retrieve c
     ```bash
     curl -X POST http://localhost:8000/api/twitter/scrape/cancel
     ```
+- **`GET /api/twitter/schedule/status`**
+  - **Description**: Check recurring scraper schedule status, remaining countdown seconds until next run, interval, and completed cycle count:
+    ```bash
+    curl http://localhost:8000/api/twitter/schedule/status
+    ```
+- **`POST /api/twitter/schedule/start`**
+  - **Description**: Start an automated recurring scrape schedule. Chrome browser instances launch, scrape fresh posts, and cleanly terminate upon finishing. During the waiting interval, 0 browser processes run while an asyncio timer counts down until the next cycle:
+    ```bash
+    # Start recurring schedule with default 15-minute interval
+    curl -X POST http://localhost:8000/api/twitter/schedule/start
+
+    # Or specify custom interval in minutes and concurrency
+    curl -X POST http://localhost:8000/api/twitter/schedule/start \
+      -H "Content-Type: application/json" \
+      -d '{"interval_minutes": 30, "concurrency_level": 6}'
+    ```
+- **`POST /api/twitter/schedule/stop`**
+  - **Description**: Halt the recurring schedule immediately and cancel any active scrape or idle countdown:
+    ```bash
+    curl -X POST http://localhost:8000/api/twitter/schedule/stop
+    ```
 - **`GET /api/twitter/tweets`**
   - **Query parameters**: `handle`, `category`, `within_24h_only` (boolean, default: `true`), `sort_by` (`views` | `time` | `likes` | `reposts` | `replies`, default: `views`), `search`
   - **Description**: Retrieve harvested tweets with engagement metrics (likes, reposts, replies, views, bookmarks) and filtering (defaults to posts from the past 24 hours sorted by most views):
@@ -507,6 +528,9 @@ The engine executes a **fail-safe hybrid workflow**:
 | `GET` | `/api/twitter/scrape/status` | Current parallel scraping status, worker activity, and metrics |
 | `POST` | `/api/twitter/scrape/start` | Launch multi-browser parallel scrape (default 6 browsers) |
 | `POST` | `/api/twitter/scrape/cancel` | Abort active Twitter scraper job and close browsers |
+| `GET` | `/api/twitter/schedule/status`| Live recurring scheduler state, countdown seconds, and cycles |
+| `POST` | `/api/twitter/schedule/start` | Start recurring scrape schedule with custom interval in minutes |
+| `POST` | `/api/twitter/schedule/stop` | Stop recurring schedule and cancel active or waiting tasks |
 
 ### WebSocket Protocol (`ws://localhost:8000/ws/pipeline`)
 

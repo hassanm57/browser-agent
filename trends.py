@@ -978,8 +978,8 @@ def seed_profile_from_system_chrome(target_profile_path: str) -> bool:
     if os.path.exists(system_local_state_file_path):
         try:
             shutil.copy2(system_local_state_file_path, target_local_state_file_path)
-        except Exception:
-            pass
+        except Exception as local_state_copy_error:
+            print(f"Notice: unable to copy Local State: {str(local_state_copy_error)}")
 
     # 2. Find cookies in system Chrome:
     # Windows Chrome stores cookies in Default/Network/Cookies.
@@ -994,10 +994,17 @@ def seed_profile_from_system_chrome(target_profile_path: str) -> bool:
         target_network_cookies_file_path = os.path.join(target_network_directory, "Cookies")
         try:
             shutil.copy2(source_cookie_file_path, target_default_cookies_file_path)
-        except Exception:
-            pass
+        except (PermissionError, OSError) as file_lock_error:
+            # On Windows, Chrome holds an exclusive lock (WinError 32) when running
+            print(f"Warning: System Chrome cookie database is currently locked by a running Chrome process: {str(file_lock_error)}")
+            print("To transfer your login session, please close all Google Chrome windows completely.")
+        except Exception as generic_copy_error:
+            print(f"Notice: unable to copy to Default/Cookies: {str(generic_copy_error)}")
+
         try:
             shutil.copy2(source_cookie_file_path, target_network_cookies_file_path)
+        except (PermissionError, OSError):
+            pass
         except Exception:
             pass
 
@@ -1028,10 +1035,15 @@ def seed_profile_from_system_chrome(target_profile_path: str) -> bool:
                 pass
 
     # Verify that at least one of the cookie locations was successfully created in target
+    # and actually contains the active X.com auth_token
     target_default_cookies_path_check = os.path.join(target_default_directory, "Cookies")
     target_network_cookies_path_check = os.path.join(target_network_directory, "Cookies")
-    has_seeded_cookies = os.path.exists(target_default_cookies_path_check) or os.path.exists(target_network_cookies_path_check)
-    return has_seeded_cookies
+    has_target_cookies = os.path.exists(target_default_cookies_path_check) or os.path.exists(target_network_cookies_path_check)
+    if not has_target_cookies:
+        return False
+
+    has_auth_token = check_sqlite_has_x_auth_token(target_profile_path)
+    return has_auth_token
 
 
 async def create_resilient_browser_instance(
@@ -1045,9 +1057,15 @@ async def create_resilient_browser_instance(
     # while allowing independent Chrome windows to run simultaneously.
     dedicated_profile_path = get_persistent_profile_path(profile_directory_name)
 
-    # Check if target profile already has Cookies in either location. If not, seed from system Chrome
+    # Check if target profile already has valid authenticated Cookies.
+    # If the profile only has empty or unauthenticated guest cookies (missing auth_token),
+    # re-attempt seeding from system Chrome before starting the browser.
     existing_cookie_path = find_existing_cookie_file_path(dedicated_profile_path)
-    if len(existing_cookie_path) == 0:
+    has_valid_auth_token = False
+    if len(existing_cookie_path) > 0:
+        has_valid_auth_token = check_sqlite_has_x_auth_token(existing_cookie_path)
+
+    if not has_valid_auth_token:
         did_seed = seed_profile_from_system_chrome(dedicated_profile_path)
         if did_seed and log_callback_function is not None:
             try:
@@ -1100,6 +1118,18 @@ async def check_is_x_logged_in(browser_instance: Browser) -> bool:
                 return false;
             }
         """)
+        # browser-use returns JavaScript booleans serialized as string representations (e.g. 'False' or 'True').
+        # In Python, bool('False') evaluates to True! We explicitly parse string return values here.
+        if isinstance(evaluation_result, str):
+            evaluation_result_cleaned = evaluation_result.strip().lower()
+            if evaluation_result_cleaned == "true" or evaluation_result_cleaned == "1":
+                return True
+            else:
+                return False
+
+        if isinstance(evaluation_result, bool):
+            return evaluation_result
+
         return bool(evaluation_result)
     except Exception:
         return False
@@ -1211,14 +1241,25 @@ async def ensure_x_logged_in_or_prompt_user(
     agent_profile_path = get_persistent_profile_path("agent_profile")
 
     if len(system_cookies_path) > 0 and check_sqlite_has_x_auth_token(system_cookies_path):
-        seed_profile_from_system_chrome(agent_profile_path)
-        await log_callback_function("SUCCESS", "X.com login detected from system Chrome and transferred seamlessly.")
-        return True
+        did_seed_succeed = seed_profile_from_system_chrome(agent_profile_path)
+        if did_seed_succeed:
+            try:
+                await browser_instance.navigate_to("https://x.com/home")
+                await asyncio.sleep(3)
+                if await check_is_x_logged_in(browser_instance):
+                    await log_callback_function("SUCCESS", "X.com login detected from system Chrome and transferred seamlessly.")
+                    return True
+            except Exception:
+                pass
 
-    # If genuinely not signed in, open login page in the system browser via deterministic OS command
+    # If genuinely not signed in or locked on Windows, open login page via deterministic OS command
+    windows_lock_guidance = ""
+    if sys.platform == "win32":
+        windows_lock_guidance = " (On Windows: If Google Chrome is already running, please close all Google Chrome windows briefly so your session cookies can transfer)."
+
     await log_callback_function(
         "WARN",
-        "X.com is not signed in. Opening your browser to https://x.com/login via system command. Please log into your X.com account. The pipeline will automatically detect your login and continue seamlessly."
+        f"X.com is not signed in{windows_lock_guidance}. Opening your browser to https://x.com/login via system command. Please log into your X.com account. The pipeline will automatically detect your login and continue seamlessly."
     )
     open_system_browser_to_url("https://x.com/login")
 
@@ -1237,10 +1278,11 @@ async def ensure_x_logged_in_or_prompt_user(
         # Check A: Did login cookies appear in system Chrome?
         current_system_cookies_path = find_existing_cookie_file_path(system_chrome_user_data) if system_chrome_user_data else ""
         if len(current_system_cookies_path) > 0 and check_sqlite_has_x_auth_token(current_system_cookies_path):
-            seed_profile_from_system_chrome(agent_profile_path)
-            await log_callback_function("SUCCESS", "X.com login successfully detected from system browser! Continuing pipeline...")
-            await asyncio.sleep(2)
-            return True
+            did_seed_poll = seed_profile_from_system_chrome(agent_profile_path)
+            if did_seed_poll:
+                await log_callback_function("SUCCESS", "X.com login successfully detected from system browser! Continuing pipeline...")
+                await asyncio.sleep(2)
+                return True
 
         # Check B: Did login happen in the open browser instance?
         is_now_authenticated = await check_is_x_logged_in(browser_instance)
@@ -1254,7 +1296,7 @@ async def ensure_x_logged_in_or_prompt_user(
             remaining_seconds = maximum_wait_seconds - elapsed_seconds
             await log_callback_function(
                 "INFO",
-                f"Waiting for manual X.com login in your browser... ({remaining_seconds}s before timeout)"
+                f"Waiting for manual X.com login in your browser... ({remaining_seconds}s before timeout){windows_lock_guidance}"
             )
 
     await log_callback_function("ERROR", f"Timed out after {maximum_wait_seconds} seconds waiting for X.com login.")
@@ -1283,8 +1325,11 @@ def sync_agent_profile_to_worker_profile(source_profile_name: str, target_profil
 
     # 2. Check for Cookies in source profile (supports both Default/Cookies and Default/Network/Cookies)
     source_cookie_file = find_existing_cookie_file_path(source_path)
+    source_has_auth_token = False
+    if len(source_cookie_file) > 0:
+        source_has_auth_token = check_sqlite_has_x_auth_token(source_cookie_file)
 
-    if len(source_cookie_file) > 0 and os.path.exists(source_cookie_file):
+    if source_has_auth_token and os.path.exists(source_cookie_file):
         # Copy to BOTH target locations so any Chrome/Chromium version on any OS finds them
         try:
             shutil.copy2(source_cookie_file, os.path.join(target_default_dir, "Cookies"))
@@ -1320,7 +1365,7 @@ def sync_agent_profile_to_worker_profile(source_profile_name: str, target_profil
                 except Exception:
                     pass
     else:
-        # If source profile does not have cookies yet, seed directly from system Chrome
+        # If source profile does not have an active auth_token yet, seed directly from system Chrome
         seed_profile_from_system_chrome(target_path)
 
 

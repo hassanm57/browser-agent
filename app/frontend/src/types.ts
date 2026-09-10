@@ -53,6 +53,18 @@ export interface TwitterScrapeProgressItem {
   started_at: string | null;
   finished_at: string | null;
   elapsed_seconds?: number;
+  scheduler?: TwitterScheduleStatus;
+}
+
+export interface TwitterScheduleStatus {
+  is_active: boolean;
+  interval_minutes: number;
+  concurrency_level: number;
+  seconds_remaining: number;
+  next_run_timestamp: string | null;
+  last_run_timestamp: string | null;
+  total_cycles_completed: number;
+  is_scraping_now: boolean;
 }
 
 export interface CountryItem {

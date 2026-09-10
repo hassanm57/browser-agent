@@ -18,9 +18,11 @@ import {
   Check,
   Clock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Timer,
+  ChevronDown
 } from "lucide-react";
-import type { TwitterHandleItem, TwitterScrapedTweetItem, TwitterScrapeProgressItem } from "../types";
+import type { TwitterHandleItem, TwitterScrapedTweetItem, TwitterScrapeProgressItem, TwitterScheduleStatus } from "../types";
 
 interface TwitterHandlesPageProps {
   backendApiBaseUrl: string;
@@ -70,6 +72,22 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
 
   // Live elapsed time tracking in seconds
   const [liveElapsedSeconds, setLiveElapsedSeconds] = useState<number>(0);
+
+  // Recurring scheduler state
+  const [scheduleStatus, setScheduleStatus] = useState<TwitterScheduleStatus>({
+    is_active: false,
+    interval_minutes: 15,
+    concurrency_level: 6,
+    seconds_remaining: 0,
+    next_run_timestamp: null,
+    last_run_timestamp: null,
+    total_cycles_completed: 0,
+    is_scraping_now: false
+  });
+  const [isTimerPopoverOpen, setIsTimerPopoverOpen] = useState<boolean>(false);
+  const [selectedIntervalMinutes, setSelectedIntervalMinutes] = useState<number>(15);
+  const [customIntervalInput, setCustomIntervalInput] = useState<string>("");
+  const [isStartingSchedule, setIsStartingSchedule] = useState<boolean>(false);
 
   // Handle management form state
   const [newHandleInput, setNewHandleInput] = useState<string>("");
@@ -146,9 +164,25 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       if (response.ok) {
         const data = await response.json();
         setScrapeProgress(data);
+        if (data.scheduler) {
+          setScheduleStatus(data.scheduler);
+        }
       }
     } catch (statusError) {
       console.error("Error checking scrape status:", statusError);
+    }
+  };
+
+  // Fetch recurring scheduler status
+  const fetchScheduleStatus = async () => {
+    try {
+      const response = await fetch(backendUrl + "/api/twitter/schedule/status");
+      if (response.ok) {
+        const data = await response.json();
+        setScheduleStatus(data);
+      }
+    } catch (scheduleError) {
+      console.error("Error checking schedule status:", scheduleError);
     }
   };
 
@@ -157,6 +191,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
     fetchHandlesList();
     fetchTweetsList();
     fetchScrapeStatus();
+    fetchScheduleStatus();
   }, []);
 
   // Refresh tweets when filters change
@@ -205,11 +240,19 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               ) {
                 setIsStartingScrape(false);
                 fetchScrapeStatus();
+                fetchScheduleStatus();
                 fetchTweetsList();
                 fetchHandlesList();
               }
             } else if (parsedData.type === "twitter_scrape_tweet") {
               fetchTweetsList();
+            } else if (parsedData.type === "twitter_schedule_status" && parsedData.data) {
+              setScheduleStatus(parsedData.data);
+            } else if (parsedData.type === "twitter_schedule_tick" && parsedData.data) {
+              setScheduleStatus((previousSchedule) => ({
+                ...previousSchedule,
+                ...parsedData.data
+              }));
             }
           } catch (jsonParseError) {
             // Ignore parse errors on non-json stream frames
@@ -346,6 +389,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       if (keyboardEvent.key === "Escape") {
         setSelectedTweetForModal(null);
         setIsConfirmingRerunModalOpen(false);
+        setIsTimerPopoverOpen(false);
       }
     };
     window.addEventListener("keydown", handleEscapeKeyDown);
@@ -353,6 +397,79 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
       window.removeEventListener("keydown", handleEscapeKeyDown);
     };
   }, []);
+
+  // Close timer popover when user clicks outside
+  useEffect(() => {
+    if (!isTimerPopoverOpen) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      const targetElement = event.target as HTMLElement;
+      if (!targetElement.closest(".timer-popover-container")) {
+        setIsTimerPopoverOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isTimerPopoverOpen]);
+
+  // Periodic heartbeat poll for schedule status while schedule is active
+  useEffect(() => {
+    let schedulePollingIntervalId: any = null;
+    if (scheduleStatus.is_active) {
+      schedulePollingIntervalId = setInterval(() => {
+        fetchScheduleStatus();
+      }, 5000);
+    }
+    return () => {
+      if (schedulePollingIntervalId) {
+        clearInterval(schedulePollingIntervalId);
+      }
+    };
+  }, [scheduleStatus.is_active, backendUrl]);
+
+  // Start recurring schedule
+  const handleStartSchedule = async (intervalMinutesToUse: number) => {
+    setIsStartingSchedule(true);
+    setIsTimerPopoverOpen(false);
+
+    try {
+      const response = await fetch(backendUrl + "/api/twitter/schedule/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          interval_minutes: intervalMinutesToUse,
+          concurrency_level: concurrencyLevel
+        })
+      });
+
+      if (response.ok) {
+        const scheduleResult = await response.json();
+        setScheduleStatus(scheduleResult);
+        await fetchScrapeStatus();
+      }
+    } catch (schedStartError) {
+      console.error("Error starting schedule:", schedStartError);
+    } finally {
+      setIsStartingSchedule(false);
+    }
+  };
+
+  // Stop recurring schedule
+  const handleStopSchedule = async () => {
+    try {
+      const response = await fetch(backendUrl + "/api/twitter/schedule/stop", {
+        method: "POST"
+      });
+      if (response.ok) {
+        const stoppedResult = await response.json();
+        setScheduleStatus(stoppedResult);
+        await fetchScrapeStatus();
+      }
+    } catch (stopError) {
+      console.error("Error stopping schedule:", stopError);
+    }
+  };
 
   // Copy tweet text to clipboard
   const handleCopyTweetText = async () => {
@@ -755,9 +872,9 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             <span>Browsers:</span>
             <select
               value={concurrencyLevel}
-              disabled={scrapeProgress.is_running}
+              disabled={scrapeProgress.is_running || scheduleStatus.is_active}
               onChange={(e) => setConcurrencyLevel(Number(e.target.value))}
-              className="bg-card border border-border/50 rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:border-zinc-500"
+              className="bg-card border border-border/50 rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:border-zinc-500 disabled:opacity-50"
             >
               <option value={2}>2 browsers</option>
               <option value={3}>3 browsers</option>
@@ -768,8 +885,16 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
             </select>
           </div>
 
-          {/* Start / Cancel / Launching Scrape Buttons */}
-          {scrapeProgress.is_running ? (
+          {/* Start / Cancel / Scheduled Scrape Buttons */}
+          {scheduleStatus.is_active ? (
+            <button
+              onClick={handleStopSchedule}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 transition-colors cursor-pointer"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+              Stop Schedule
+            </button>
+          ) : scrapeProgress.is_running ? (
             <button
               onClick={handleCancelScraping}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 transition-colors cursor-pointer"
@@ -777,7 +902,7 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               <Square className="w-3.5 h-3.5 fill-current" />
               Cancel
             </button>
-          ) : isStartingScrape ? (
+          ) : isStartingScrape || isStartingSchedule ? (
             <button
               disabled
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-muted text-muted-foreground border border-border opacity-90 cursor-not-allowed"
@@ -786,18 +911,108 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
               Launching...
             </button>
           ) : (
-            <button
-              onClick={handleStartScrapingClick}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors cursor-pointer shadow-xs"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              {tweetsList.length > 0 ? "Re-run Scraper" : "Run Scraper"}
-            </button>
+            <div className="relative inline-flex timer-popover-container rounded-md shadow-xs">
+              {/* Left action button: Run Scraper (Run Once) */}
+              <button
+                onClick={handleStartScrapingClick}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-l-md text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors cursor-pointer border-r border-background/20"
+                title="Run single scrape immediately"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                {tweetsList.length > 0 ? "Re-run Scraper" : "Run Scraper"}
+              </button>
+
+              {/* Right trigger button: Open Timer Popover */}
+              <button
+                onClick={() => setIsTimerPopoverOpen(!isTimerPopoverOpen)}
+                className="flex items-center px-2 py-1.5 rounded-r-md text-xs font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors cursor-pointer"
+                title="Set recurring scraping timer"
+              >
+                <Timer className="w-3.5 h-3.5" />
+                <ChevronDown className="w-3 h-3 ml-0.5 opacity-70" />
+              </button>
+
+              {/* Timer Popover Menu */}
+              {isTimerPopoverOpen && (
+                <div className="absolute right-0 top-full mt-2 w-72 p-3 bg-card border border-border rounded-lg shadow-xl z-50 text-xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                    <div className="flex items-center gap-1.5 font-medium text-foreground">
+                      <Timer className="w-3.5 h-3.5 text-blue-500" />
+                      <span>Recurring Schedule</span>
+                    </div>
+                    <button
+                      onClick={() => setIsTimerPopoverOpen(false)}
+                      className="text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Repeats scraping automatically to fetch fresh tweets. Browsers shut down between runs to save RAM. New tweets stack automatically.
+                  </p>
+
+                  {/* Interval Presets */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">Interval presets:</label>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[15, 30, 45, 60].map((presetMinutes) => (
+                        <button
+                          key={presetMinutes}
+                          type="button"
+                          onClick={() => {
+                            setSelectedIntervalMinutes(presetMinutes);
+                            setCustomIntervalInput("");
+                          }}
+                          className={`px-2 py-1 rounded text-xs text-center border transition-colors cursor-pointer ${
+                            selectedIntervalMinutes === presetMinutes && customIntervalInput === ""
+                              ? "bg-primary text-primary-foreground border-primary font-medium"
+                              : "bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {presetMinutes}m
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Interval Input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">Custom interval (minutes):</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={1440}
+                      placeholder="e.g. 20"
+                      value={customIntervalInput}
+                      onChange={(inputEvent) => {
+                        const valueString = inputEvent.target.value;
+                        setCustomIntervalInput(valueString);
+                        const numericValue = parseInt(valueString, 10);
+                        if (!isNaN(numericValue) && numericValue > 0) {
+                          setSelectedIntervalMinutes(numericValue);
+                        }
+                      }}
+                      className="w-full bg-muted/40 border border-border rounded px-2.5 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  {/* Start Schedule Button */}
+                  <button
+                    onClick={() => handleStartSchedule(selectedIntervalMinutes)}
+                    className="w-full py-1.5 px-3 rounded-md bg-primary text-primary-foreground font-medium text-xs hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Start Schedule (Every {selectedIntervalMinutes}m)</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           <button
             onClick={handleClearTweets}
-            disabled={scrapeProgress.is_running || isStartingScrape || tweetsList.length === 0}
+            disabled={scrapeProgress.is_running || scheduleStatus.is_active || isStartingScrape || tweetsList.length === 0}
             className="text-xs text-muted-foreground hover:text-rose-500 transition-colors px-2 py-1 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
             title="Clear all scraped tweets"
           >
@@ -805,6 +1020,44 @@ export function TwitterHandlesPage(props: TwitterHandlesPageProps) {
           </button>
         </div>
       </div>
+
+      {/* Recurring Schedule Active Banner with live countdown and Stop button */}
+      {scheduleStatus.is_active && (
+        <div className="p-3.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+              <span className="font-semibold text-emerald-500 dark:text-emerald-400">
+                Recurring Schedule Active ({scheduleStatus.interval_minutes}m interval)
+              </span>
+              <span className="text-muted-foreground text-xs">
+                {scheduleStatus.is_scraping_now || scrapeProgress.is_running ? (
+                  <span className="text-blue-400 font-medium">Scraping fresh tweets in progress...</span>
+                ) : (
+                  <span className="font-mono">
+                    Next scrape in: <span className="font-bold text-foreground text-xs bg-background/60 border border-border/40 px-1.5 py-0.5 rounded">{formatStopwatchDisplay(scheduleStatus.seconds_remaining)}</span>
+                  </span>
+                )}
+              </span>
+              {scheduleStatus.total_cycles_completed > 0 && (
+                <span className="text-muted-foreground text-[11px] bg-background/50 border border-border/40 px-2 py-0.5 rounded">
+                  Cycle {scheduleStatus.total_cycles_completed} completed
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={handleStopSchedule}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 transition-colors cursor-pointer"
+          >
+            <Square className="w-3.5 h-3.5 fill-current" />
+            Stop Schedule
+          </button>
+        </div>
+      )}
 
       {/* Live Scraping Progress Banner with real-time Elapsed Time */}
       {scrapeProgress.is_running && (

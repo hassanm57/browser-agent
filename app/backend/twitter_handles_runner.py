@@ -683,19 +683,30 @@ async def parallel_scraper_worker(
     progress_callback: Callable[[Dict[str, Any]], Any],
     tweet_saved_callback: Callable[[Dict[str, Any]], Any]
 ):
-    # Each parallel worker manages its own headless browser instance
+    # Each parallel worker manages its own browser instance with an isolated worker profile
     shared_progress_dictionary["active_workers"][str(worker_index)] = "Launching Chrome..."
     await progress_callback(shared_progress_dictionary)
-    await log_callback("INFO", f"[Worker {worker_index}] Initializing headless Chrome session...")
+    await log_callback("INFO", f"[Worker {worker_index}] Initializing Chrome session...")
 
     browser_instance = None
     try:
-        # Browser.from_system_chrome(headless=True) copies profile to isolated temp directory
-        browser_instance = Browser.from_system_chrome(headless=True)
+        # Prepare dedicated worker profile so parallel workers never lock against each other
+        worker_profile_name = f"worker_profile_{worker_index}"
+
+        # Sync authenticated session from agent_profile into worker profile so worker inherits active login
+        trends.sync_agent_profile_to_worker_profile("agent_profile", worker_profile_name)
+
+        # Launch resilient browser session for this worker
+        browser_instance = await trends.create_resilient_browser_instance(
+            is_headless_mode=False,
+            should_use_real_system_profile=False,
+            profile_directory_name=worker_profile_name,
+            log_callback_function=log_callback
+        )
         await browser_instance.start()
         shared_progress_dictionary["active_workers"][str(worker_index)] = "Browser ready"
         await progress_callback(shared_progress_dictionary)
-        await log_callback("SUCCESS", f"[Worker {worker_index}] Headless Chrome ready.")
+        await log_callback("SUCCESS", f"[Worker {worker_index}] Chrome ready.")
 
         while not handle_queue.empty():
             if cancellation_event.is_set():
@@ -808,7 +819,39 @@ async def run_parallel_twitter_handles_pipeline(
     for worker_idx in range(1, concurrency_level + 1):
         shared_progress["active_workers"][str(worker_idx)] = "Starting..."
 
-    await actual_progress(shared_progress)
+    # Check independently whether X.com is logged in before dispatching parallel scraping workers
+    await actual_log("STEP", "Checking X.com authentication status before starting handle scraping...")
+
+    auth_check_browser = await trends.create_resilient_browser_instance(
+        is_headless_mode=False,
+        should_use_real_system_profile=True,
+        profile_directory_name="agent_profile",
+        log_callback_function=actual_log
+    )
+
+    is_x_authenticated = False
+    try:
+        await auth_check_browser.start()
+        is_x_authenticated = await trends.ensure_x_logged_in_or_prompt_user(
+            browser_instance=auth_check_browser,
+            log_callback_function=actual_log,
+            cancellation_event=cancellation_event
+        )
+    finally:
+        try:
+            await auth_check_browser.close()
+        except Exception:
+            pass
+
+    if cancellation_event.is_set():
+        shared_progress["status"] = "cancelled"
+        complete_twitter_scrape_run(scrape_run_id, status_name="cancelled", error_message="Cancelled by user")
+        await actual_status("cancelled")
+        await actual_log("WARN", "Parallel scraping cancelled by user during X.com login.")
+        return shared_progress
+
+    if not is_x_authenticated:
+        await actual_log("WARN", "Proceeding with scraping, but X.com is not logged in. Feeds may be restricted.")
 
     # Launch N parallel worker tasks
     worker_tasks_list = []

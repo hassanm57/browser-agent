@@ -361,13 +361,27 @@ async def run_single_country_pipeline(
     browser_mode_string = "Headful Visible Window (Enforced for X.com reliability)"
     await log_and_record("BROWSER", f"Launching Chrome ({browser_mode_string}, RealProfile: {use_real_chrome})...")
 
-    if use_real_chrome:
-        browser_instance = Browser.from_system_chrome(headless=False)
-    else:
-        browser_instance = Browser(headless=False)
+    browser_instance = await trends.create_resilient_browser_instance(
+        is_headless_mode=False,
+        should_use_real_system_profile=use_real_chrome,
+        profile_directory_name="agent_profile",
+        log_callback_function=log_and_record
+    )
 
     try:
         await browser_instance.start()
+
+        # Check independently whether X.com is logged in; if not, prompt user in open window and wait
+        is_x_authenticated = await trends.ensure_x_logged_in_or_prompt_user(
+            browser_instance=browser_instance,
+            log_callback_function=log_and_record,
+            cancellation_event=cancellation_event
+        )
+
+        if not is_x_authenticated and cancellation_event.is_set():
+            await log_and_record("WARN", "Pipeline execution cancelled by user during X.com authentication.")
+            update_pipeline_run_status(run_identifier, "cancelled", "Cancelled by user during login")
+            return None
 
         # Step 3A: Scrape latest 10-15 tweets from configured X correspondent & OSINT accounts
         configured_x_sources_list = []

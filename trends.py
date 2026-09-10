@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sys
+import shutil
 import urllib.parse
 import xml.etree.ElementTree as ElementTree
 from bs4 import BeautifulSoup
@@ -826,6 +827,217 @@ def extract_tweets_from_article_chunks(page_state_text, max_days_window=10):
     return parsed_tweets
 
 
+async def create_resilient_browser_instance(
+    is_headless_mode: bool = False,
+    should_use_real_system_profile: bool = True,
+    profile_directory_name: str = "agent_profile",
+    log_callback_function = None
+) -> Browser:
+    # Prepare a dedicated persistent folder for the agent in the user's home directory.
+    # This prevents file-locking crashes when Google Chrome is already running (e.g., viewing the frontend).
+    user_home_directory = os.path.expanduser("~")
+    browser_agent_base_directory = os.path.join(user_home_directory, ".browser-agent")
+    dedicated_profile_path = os.path.join(browser_agent_base_directory, profile_directory_name)
+    os.makedirs(dedicated_profile_path, exist_ok=True)
+
+    # If the user requested to use their real Chrome profile, attempt Browser.from_system_chrome() first
+    if should_use_real_system_profile:
+        try:
+            browser_instance = Browser.from_system_chrome(headless=is_headless_mode)
+            return browser_instance
+        except Exception as chrome_lock_exception:
+            # When system Chrome is already running, browser-use cannot copy the profile because files are locked.
+            # We catch this error and seamlessly open an independent Chrome window using our dedicated agent profile.
+            warning_text = f"System Chrome profile is in use or locked ({str(chrome_lock_exception)}). Opening an independent Chrome window for the agent..."
+            if log_callback_function is not None:
+                try:
+                    await log_callback_function("WARN", warning_text)
+                except Exception:
+                    pass
+            print(warning_text)
+
+    # If the dedicated profile folder is currently empty, attempt a safe initial copy of readable files
+    # from system Chrome Default directory so existing logins might carry over without lock errors
+    try:
+        existing_profile_items = os.listdir(dedicated_profile_path)
+        if len(existing_profile_items) == 0:
+            system_chrome_user_data_path = ""
+            if sys.platform == "darwin":
+                system_chrome_user_data_path = os.path.join(
+                    user_home_directory, "Library", "Application Support", "Google", "Chrome", "Default"
+                )
+            elif sys.platform == "win32":
+                local_app_data_path = os.environ.get("LOCALAPPDATA", "")
+                if local_app_data_path:
+                    system_chrome_user_data_path = os.path.join(
+                        local_app_data_path, "Google", "Chrome", "User Data", "Default"
+                    )
+            elif sys.platform.startswith("linux"):
+                system_chrome_user_data_path = os.path.join(
+                    user_home_directory, ".config", "google-chrome", "Default"
+                )
+
+            if system_chrome_user_data_path and os.path.exists(system_chrome_user_data_path):
+                from browser_use.browser.profile import _ignore_chrome_profile_transient_files
+
+                def safe_copy_file_worker(source_file, destination_file, *, follow_symlinks=True):
+                    try:
+                        shutil.copy2(source_file, destination_file, follow_symlinks=follow_symlinks)
+                    except (PermissionError, OSError):
+                        # Skip files that are exclusively locked by running Chrome processes
+                        pass
+
+                shutil.copytree(
+                    system_chrome_user_data_path,
+                    dedicated_profile_path,
+                    copy_function=safe_copy_file_worker,
+                    ignore=_ignore_chrome_profile_transient_files,
+                    dirs_exist_ok=True
+                )
+    except Exception:
+        # If copying fails, proceed cleanly with an empty dedicated directory
+        pass
+
+    # Launch Chrome pointing to our dedicated persistent profile directory
+    browser_instance = Browser(
+        headless=is_headless_mode,
+        user_data_dir=dedicated_profile_path
+    )
+    return browser_instance
+
+
+async def check_is_x_logged_in(browser_instance: Browser) -> bool:
+    # Examines the live DOM to see if the user is authenticated on X.com
+    try:
+        current_page = await browser_instance.get_current_page()
+        if not current_page:
+            return False
+
+        evaluation_result = await current_page.evaluate("""
+            () => {
+                const current_url = window.location.href;
+                const post_button = document.querySelector('[data-testid="SideNav_NewTweet_Button"]');
+                const home_tab = document.querySelector('[data-testid="AppTabBar_Home_Link"]');
+                const account_switcher = document.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]');
+                const tweet_box = document.querySelector('[data-testid="tweetTextarea_0"]');
+                const primary_column = document.querySelector('[data-testid="primaryColumn"]');
+                
+                const is_login_flow = current_url.includes('/login') || current_url.includes('/i/flow');
+                const has_logged_in_nav = !!post_button || !!home_tab || !!account_switcher || !!tweet_box;
+                
+                if (!is_login_flow && has_logged_in_nav) {
+                    return true;
+                }
+                
+                if (!is_login_flow && !!primary_column && (current_url.includes('/home') || current_url.includes('/explore'))) {
+                    return true;
+                }
+                
+                return false;
+            }
+        """)
+        return bool(evaluation_result)
+    except Exception:
+        return False
+
+
+async def ensure_x_logged_in_or_prompt_user(
+    browser_instance: Browser,
+    log_callback_function,
+    cancellation_event = None,
+    maximum_wait_seconds: int = 300
+) -> bool:
+    # Verifies if X.com is logged in. If not, opens the login page, prompts the user to log in
+    # manually in the open Chrome window, and waits seamlessly until login is detected.
+    await log_callback_function("INFO", "Checking if X.com is logged in...")
+
+    try:
+        await browser_instance.navigate_to("https://x.com/home")
+        await asyncio.sleep(4)
+    except Exception as navigation_error:
+        await log_callback_function("WARN", f"Initial X.com navigation note: {str(navigation_error)}")
+
+    is_already_authenticated = await check_is_x_logged_in(browser_instance)
+    if is_already_authenticated:
+        await log_callback_function("SUCCESS", "X.com login verified. Session is active.")
+        return True
+
+    # If not signed in, prompt user and open login page in the headful Chrome window
+    await log_callback_function(
+        "WARN",
+        "X.com is not signed in. Opening X.com login window. Please log into your X.com account manually. The pipeline will automatically continue once login is detected."
+    )
+
+    try:
+        await browser_instance.navigate_to("https://x.com/login")
+        await asyncio.sleep(3)
+    except Exception:
+        pass
+
+    # Polling loop: check every 3 seconds for successful user login
+    elapsed_seconds = 0
+    poll_interval_seconds = 3
+
+    while elapsed_seconds < maximum_wait_seconds:
+        if cancellation_event is not None and cancellation_event.is_set():
+            await log_callback_function("WARN", "Pipeline cancelled by user while waiting for X.com login.")
+            return False
+
+        await asyncio.sleep(poll_interval_seconds)
+        elapsed_seconds = elapsed_seconds + poll_interval_seconds
+
+        is_now_authenticated = await check_is_x_logged_in(browser_instance)
+        if is_now_authenticated:
+            await log_callback_function("SUCCESS", "X.com login successfully detected and verified! Continuing pipeline...")
+            # Brief pause so Chrome flushes session tokens to disk
+            await asyncio.sleep(2)
+            return True
+
+        # Periodic reminder in log every 15 seconds
+        if elapsed_seconds % 15 == 0:
+            remaining_seconds = maximum_wait_seconds - elapsed_seconds
+            await log_callback_function(
+                "INFO",
+                f"Waiting for manual X.com login in the open Chrome window... ({remaining_seconds}s before timeout)"
+            )
+
+    await log_callback_function("ERROR", f"Timed out after {maximum_wait_seconds} seconds waiting for X.com login.")
+    return False
+
+
+def sync_agent_profile_to_worker_profile(source_profile_name: str, target_profile_name: str) -> None:
+    # Copies the authenticated agent profile to an isolated worker profile directory
+    # so multiple parallel workers can run concurrently without Chrome file-locking conflicts.
+    user_home_directory = os.path.expanduser("~")
+    base_directory = os.path.join(user_home_directory, ".browser-agent")
+    source_path = os.path.join(base_directory, source_profile_name)
+    target_path = os.path.join(base_directory, target_profile_name)
+
+    if not os.path.exists(source_path):
+        return
+
+    os.makedirs(target_path, exist_ok=True)
+
+    from browser_use.browser.profile import _ignore_chrome_profile_transient_files
+
+    def safe_copy_file_worker(source_file, destination_file, *, follow_symlinks=True):
+        try:
+            shutil.copy2(source_file, destination_file, follow_symlinks=follow_symlinks)
+        except (PermissionError, OSError):
+            pass
+
+    try:
+        shutil.copytree(
+            source_path,
+            target_path,
+            copy_function=safe_copy_file_worker,
+            ignore=_ignore_chrome_profile_transient_files,
+            dirs_exist_ok=True
+        )
+    except Exception as copy_error:
+        print(f"Notice during worker profile sync: {str(copy_error)}")
+
+
 async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_enabled, trends24_topics_list=None, topics_with_boolean_queries_list=None):
     # This function uses an active headful browser session so you can see Chrome on screen
     # 1. Opens https://x.com/explore/tabs/trending and extracts active live trends
@@ -843,18 +1055,26 @@ async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_count
         "sample_tweets_by_trend": {}
     }
 
-    if is_real_chrome_enabled:
-        browser_instance = Browser.from_system_chrome(
-            headless=False,
-        )
-    else:
-        browser_instance = Browser(
-            headless=False,
-        )
+    browser_instance = await create_resilient_browser_instance(
+        is_headless_mode=False,
+        should_use_real_system_profile=is_real_chrome_enabled,
+        profile_directory_name="agent_profile"
+    )
 
     try:
-        print("Launching visible Chrome window and navigating to https://x.com/explore/tabs/trending...")
+        print("Launching visible Chrome window...")
         await browser_instance.start()
+
+        # Verify X.com login status before exploring trends
+        async def cli_log_printer(level_tag, message_text):
+            print(f"[{level_tag}] {message_text}")
+
+        await ensure_x_logged_in_or_prompt_user(
+            browser_instance=browser_instance,
+            log_callback_function=cli_log_printer
+        )
+
+        print("Navigating to https://x.com/explore/tabs/trending...")
         await browser_instance.navigate_to("https://x.com/explore/tabs/trending")
         await asyncio.sleep(5)
 

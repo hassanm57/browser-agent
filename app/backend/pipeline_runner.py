@@ -31,6 +31,110 @@ RAW_SOURCES_FILE_PATH = os.path.join(PROJECT_ROOT_DIRECTORY, "raw_sources.json")
 KEYWORDS_FILE_PATH = os.path.join(PROJECT_ROOT_DIRECTORY, "keywords.json")
 
 
+async def extract_tweets_from_browser_dom_fallback(browser_instance: Browser, max_days_window: int = 35) -> List[str]:
+    # Procedural fallback that extracts tweets directly from the live DOM via CDP evaluate.
+    # Solves cases where get_state_as_text() serializer collapses tags or omits article boundaries.
+    try:
+        current_page = await browser_instance.get_current_page()
+        if not current_page:
+            return []
+
+        raw_json_string = await current_page.evaluate("""
+            () => {
+                const article_elements = Array.from(document.querySelectorAll('article[data-testid="tweet"], article[role="article"]'));
+                const results_list = [];
+
+                for (const article_element of article_elements) {
+                    const tweet_text_element = article_element.querySelector('[data-testid="tweetText"]');
+                    const tweet_text = tweet_text_element ? tweet_text_element.innerText.trim() : "";
+
+                    if (!tweet_text || tweet_text.length < 15) {
+                        continue;
+                    }
+
+                    let author_display_name = "";
+                    let author_handle = "";
+                    const user_header_element = article_element.querySelector('[data-testid="User-Name"]');
+                    if (user_header_element) {
+                        const header_lines = (user_header_element.innerText || "").split('\\n').map(s => s.trim()).filter(Boolean);
+                        if (header_lines.length > 0) {
+                            author_display_name = header_lines[0];
+                        }
+                        for (const line of header_lines) {
+                            if (line.startsWith('@')) {
+                                author_handle = line;
+                                break;
+                            }
+                        }
+                    }
+
+                    const time_element = article_element.querySelector('time');
+                    const timestamp_text = time_element ? (time_element.innerText || "").trim() : "";
+                    const datetime_iso = time_element ? (time_element.getAttribute('datetime') || "") : "";
+
+                    results_list.push({
+                        "author": author_display_name,
+                        "handle": author_handle,
+                        "text": tweet_text,
+                        "timestamp": timestamp_text,
+                        "datetime_iso": datetime_iso
+                    });
+                }
+                return JSON.stringify(results_list);
+            }
+        """)
+
+        if not raw_json_string:
+            return []
+
+        parsed_dom_items = json.loads(raw_json_string)
+        formatted_tweets_list: List[str] = []
+        current_utc_time = datetime.datetime.now(datetime.timezone.utc)
+
+        for tweet_dict in parsed_dom_items:
+            author_str = tweet_dict.get("author", "").strip()
+            handle_str = tweet_dict.get("handle", "").strip()
+            text_str = tweet_dict.get("text", "").strip()
+            timestamp_str = tweet_dict.get("timestamp", "").strip()
+            datetime_iso_str = tweet_dict.get("datetime_iso", "").strip()
+
+            if handle_str.lower() in ["@real_hm_", "@twitter", "@x"]:
+                continue
+
+            is_valid_date = True
+            if datetime_iso_str:
+                try:
+                    iso_clean = datetime_iso_str.replace("Z", "+00:00")
+                    tweet_dt = datetime.datetime.fromisoformat(iso_clean)
+                    age_seconds = (current_utc_time - tweet_dt).total_seconds()
+                    age_days = age_seconds / (24 * 3600)
+                    if age_days > max_days_window:
+                        is_valid_date = False
+                except Exception:
+                    is_valid_date = True
+
+            if not is_valid_date:
+                continue
+
+            header_parts = []
+            if author_str:
+                header_parts.append(author_str)
+            if handle_str:
+                header_parts.append(handle_str)
+            if timestamp_str:
+                header_parts.append(timestamp_str)
+
+            header_label = " | ".join(header_parts)
+            formatted_line = f"[{header_label}] {text_str}" if header_label else text_str
+
+            if formatted_line not in formatted_tweets_list:
+                formatted_tweets_list.append(formatted_line)
+
+        return formatted_tweets_list
+    except Exception:
+        return []
+
+
 async def run_single_country_pipeline(
     target_country_name: str,
     country_index: int,
@@ -250,13 +354,15 @@ async def run_single_country_pipeline(
     }
     curated_x_sources_tweets: Dict[str, List[str]] = {}
 
-    browser_mode_string = "Headless" if is_headless else "Headful Visible Window"
+    # For X.com automation on macOS, always use headful Chrome (headless=False) so React hydrates and anti-bot checks pass.
+    # Headless mode on X causes blank pages or collapsed SVG icons.
+    browser_mode_string = "Headful Visible Window (Enforced for X.com reliability)"
     await log_and_record("BROWSER", f"Launching Chrome ({browser_mode_string}, RealProfile: {use_real_chrome})...")
 
     if use_real_chrome:
-        browser_instance = Browser.from_system_chrome(headless=is_headless)
+        browser_instance = Browser.from_system_chrome(headless=False)
     else:
-        browser_instance = Browser(headless=is_headless)
+        browser_instance = Browser(headless=False)
 
     try:
         await browser_instance.start()
@@ -308,6 +414,13 @@ async def run_single_country_pipeline(
                         for tweet_str in fresh_account_tweets:
                             if tweet_str not in collected_account_tweets:
                                 collected_account_tweets.append(tweet_str)
+
+                        # DOM evaluate fallback if chunk parsing returned 0
+                        if len(collected_account_tweets) == 0:
+                            dom_fallback_tweets = await extract_tweets_from_browser_dom_fallback(browser_instance, max_days_window=35)
+                            for dom_tweet_str in dom_fallback_tweets:
+                                if dom_tweet_str not in collected_account_tweets:
+                                    collected_account_tweets.append(dom_tweet_str)
 
                         if len(collected_account_tweets) >= 15:
                             break
@@ -457,6 +570,12 @@ async def run_single_country_pipeline(
                         if tweet_text not in collected_tweets_for_trend:
                             collected_tweets_for_trend.append(tweet_text)
 
+                    if len(collected_tweets_for_trend) == 0:
+                        dom_fallback_tweets = await extract_tweets_from_browser_dom_fallback(browser_instance, max_days_window=10)
+                        for dom_tweet_str in dom_fallback_tweets:
+                            if dom_tweet_str not in collected_tweets_for_trend:
+                                collected_tweets_for_trend.append(dom_tweet_str)
+
                     if len(collected_tweets_for_trend) >= max_tweets_target:
                         break
 
@@ -548,6 +667,12 @@ async def run_single_country_pipeline(
                         if tweet_text not in collected_tweets_for_query:
                             collected_tweets_for_query.append(tweet_text)
 
+                    if len(collected_tweets_for_query) == 0:
+                        dom_fallback_tweets = await extract_tweets_from_browser_dom_fallback(browser_instance, max_days_window=10)
+                        for dom_tweet_str in dom_fallback_tweets:
+                            if dom_tweet_str not in collected_tweets_for_query:
+                                collected_tweets_for_query.append(dom_tweet_str)
+
                     if len(collected_tweets_for_query) >= max_tweets_target:
                         break
 
@@ -559,6 +684,26 @@ async def run_single_country_pipeline(
                         await asyncio.sleep(2)
                     except Exception:
                         break
+
+                # If Top tab returned 0 tweets, fall back to Latest tab (&f=live) for fresh chronological tweets
+                if len(collected_tweets_for_query) == 0 and not cancellation_event.is_set():
+                    try:
+                        latest_search_url = f"{search_url}&f=live"
+                        await browser_instance.navigate_to(latest_search_url)
+                        await asyncio.sleep(4)
+                        latest_page_text = await browser_instance.get_state_as_text()
+                        latest_tweets = trends.extract_tweets_from_article_chunks(latest_page_text, max_days_window=10)
+                        for tweet_text in latest_tweets:
+                            if tweet_text not in collected_tweets_for_query:
+                                collected_tweets_for_query.append(tweet_text)
+
+                        if len(collected_tweets_for_query) == 0:
+                            dom_fallback_tweets = await extract_tweets_from_browser_dom_fallback(browser_instance, max_days_window=10)
+                            for dom_tweet_str in dom_fallback_tweets:
+                                if dom_tweet_str not in collected_tweets_for_query:
+                                    collected_tweets_for_query.append(dom_tweet_str)
+                    except Exception:
+                        pass
 
                 await log_and_record("SUCCESS", f"Captured {len(collected_tweets_for_query)} fresh tweets for Boolean query: {current_mining_query}")
                 x_native_intel_dictionary["sample_tweets_by_trend"][current_mining_query] = collected_tweets_for_query[:25]

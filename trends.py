@@ -642,20 +642,25 @@ def extract_x_explore_trends(raw_page_state_text):
 
 def validate_tweet_date_margin(cleaned_lines, reference_date=None, max_days_window=10):
     # Enforces a date margin: [Today - max_days_window days, Today].
-    # Rejects tweets from past historical years (2006 to previous year),
-    # relative dates older than max_days_window days, and older months outside the window.
-    # On the Top tab or profile timeline, enforces that a valid fresh timestamp within the window is detected.
+    # Rejects tweets from past historical years (2006 to previous year) when found on date lines.
+    # Accepts relative dates within max_days_window days and current acceptable month-day strings.
     if reference_date is None:
         reference_date = datetime.date.today()
 
     current_year_number = reference_date.year
+    month_names_list = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
 
-    # 1. Immediate rejection for past historical years (2006 through current_year - 1)
-    for past_year_int in range(2006, current_year_number):
-        past_year_str = str(past_year_int)
-        for check_index in range(min(8, len(cleaned_lines))):
-            if past_year_str in cleaned_lines[check_index]:
-                return False, ""
+    # 1. Past historical years rejection: ONLY for dedicated date lines (length <= 25) with a month and past year.
+    # Never reject a fresh tweet just because its body text happens to mention a past year (e.g. "2024 budget").
+    for check_index in range(min(5, len(cleaned_lines))):
+        candidate_line = cleaned_lines[check_index].strip()
+        if len(candidate_line) <= 25:
+            for past_year_int in range(2006, current_year_number):
+                past_year_str = str(past_year_int)
+                if past_year_str in candidate_line:
+                    for month_abbr in month_names_list:
+                        if month_abbr in candidate_line.lower():
+                            return False, ""
 
     # Build the set of acceptable month-day strings for the last max_days_window days
     acceptable_date_strings = []
@@ -673,12 +678,10 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None, max_days_wind
         acceptable_date_strings.append(f"{month_full} {day_num}")
         acceptable_date_strings.append(f"{day_num} {month_full}")
 
-    month_names_list = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
-
     detected_date_label = ""
 
-    # Check header lines where timestamp tokens live
-    for line_index in range(min(8, len(cleaned_lines))):
+    # Check header lines where timestamp tokens live (first 5 lines only)
+    for line_index in range(min(5, len(cleaned_lines))):
         current_line = cleaned_lines[line_index].strip()
         lower_line = current_line.lower()
 
@@ -697,9 +700,9 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None, max_days_wind
             else:
                 return False, ""
 
-        # Explicit acceptable month-day strings
+        # Explicit acceptable month-day strings on dedicated short lines
         for acceptable_date in acceptable_date_strings:
-            if acceptable_date in lower_line:
+            if acceptable_date in lower_line and len(current_line) <= 25:
                 detected_date_label = current_line
                 return True, detected_date_label
 
@@ -717,15 +720,16 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None, max_days_wind
                     else:
                         return False, ""
                 for acceptable_date in acceptable_date_strings:
-                    if acceptable_date in cleaned_part:
+                    if acceptable_date in cleaned_part and len(part.strip()) <= 25:
                         return True, part.strip()
 
-        # Check if an older month outside the window is mentioned (both "May 14" and "14 May")
-        for month_name in month_names_list:
-            if re.search(r'\b' + month_name + r'[a-z]*\s+\d{1,2}\b', lower_line) or re.search(r'\b\d{1,2}\s+' + month_name + r'[a-z]*\b', lower_line):
-                return False, ""
+        # Check if an older month outside the window is mentioned on a dedicated date line
+        if len(current_line) <= 25:
+            for month_name in month_names_list:
+                if re.search(r'\b' + month_name + r'[a-z]*\s+\d{1,2}\b', lower_line) or re.search(r'\b\d{1,2}\s+' + month_name + r'[a-z]*\b', lower_line):
+                    return False, ""
 
-    # On Top tab, enforce that a fresh date within 10 days was detected
+    # On Top tab, enforce that a fresh date within max_days_window was detected
     if len(detected_date_label) > 0:
         return True, detected_date_label
 
@@ -733,10 +737,10 @@ def validate_tweet_date_margin(cleaned_lines, reference_date=None, max_days_wind
 
 
 def extract_tweets_from_article_chunks(page_state_text, max_days_window=10):
-    # In browser-use state text, each tweet is rendered inside an [ID]<article role=article /> container.
+    # In browser-use state text, each tweet is rendered inside an [ID]<article ... /> container.
     # Splitting by article containers guarantees we only extract content belonging to individual tweets,
     # completely separating each tweet from other tweets and completely isolating from the right sidebar.
-    article_chunks = re.split(r'\[\d+\]<article\s+role=article\s*/>', page_state_text)
+    article_chunks = re.split(r'\[\d+\]<article\b[^>]*>', page_state_text)
     parsed_tweets = []
 
     sidebar_and_action_stop_signals = [
@@ -1215,15 +1219,52 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
         raw_terms = topic_item.get("terms", [])
         if not isinstance(raw_terms, list):
             raw_terms = []
+
+        banned_generic_phrases_list = [
+            "economic warfare", "oil price", "oil prices", "cyber strategy", "cyber security",
+            "national security", "foreign policy", "energy crisis", "defense spending",
+            "military action", "regional tension", "regional stability", "strategic stability",
+            "energy market", "oil market", "security strategy"
+        ]
+
         clean_terms_list = []
         for term_item in raw_terms:
             term_str = str(term_item).strip()
             term_str = re.sub(r'<[^>]*>', '', term_str).strip()
             lower_term = term_str.lower()
+
             if "ignore previous" in lower_term or "system override" in lower_term:
                 continue
-            if len(term_str) >= 2 and len(term_str) <= 100:
-                if term_str not in clean_terms_list:
+
+            # Filter out banned generic phrases that provide zero context
+            if lower_term in banned_generic_phrases_list:
+                continue
+
+            # Ensure term is informative: reject single generic lowercase words (keep uppercase acronyms like NATO, AUKUS, IAEA)
+            term_words_list = term_str.split()
+            if len(term_words_list) == 1:
+                # Allow only capitalized acronyms/proper names of length >= 3 e.g. NATO, AUKUS, IAEA
+                if not (term_str.isupper() and len(term_str) >= 3):
+                    continue
+
+            if len(term_str) >= 3 and len(term_str) <= 100:
+                # Check for near-duplicates in terms within this topic
+                is_duplicate_term = False
+                candidate_words_set = set(lower_term.split())
+                for existing_term_str in clean_terms_list:
+                    if lower_term == existing_term_str.lower():
+                        is_duplicate_term = True
+                        break
+                    existing_words_set = set(existing_term_str.lower().split())
+                    # If both terms have 3+ words and share 80%+ words, consider it an excessive duplicate
+                    if len(candidate_words_set) >= 3 and len(existing_words_set) >= 3:
+                        intersection_count = len(candidate_words_set.intersection(existing_words_set))
+                        smaller_set_count = min(len(candidate_words_set), len(existing_words_set))
+                        if smaller_set_count > 0 and (intersection_count / smaller_set_count) >= 0.8:
+                            is_duplicate_term = True
+                            break
+
+                if not is_duplicate_term:
                     clean_terms_list.append(term_str)
 
         # Cap strictly at 15 terms
@@ -1354,14 +1395,18 @@ TOPIC SELECTION DIRECTIVES - STRICTLY PRIORITIZE:
    - IAEA safeguards inspections, nuclear facility monitoring, and non-proliferation alerts.
    - Confidence-building measures (CBMs), military crisis hotlines, and strategic nuclear risk reduction.
 
-KEYWORD & BOOLEAN QUERY REQUIREMENTS:
+KEYWORD & SEARCH PHRASE SPECIFICITY REQUIREMENTS:
 1. Generate between 10 to 12 distinct, high-priority strategic topics based on the ingested news.
 2. For EACH topic, provide:
    - "boolean_query": Formulate an exact, high-precision Boolean search query formatted for X.com (Twitter) search using quotation marks and OR logic, e.g.:
      ("NATO" OR "Article 5") ("Eastern Flank" OR "deterrence")
      ("AUKUS" OR "Hypersonic") ("defense pact" OR "Indo-Pacific")
      ("Strait of Hormuz" OR "Red Sea") ("maritime security" OR "naval escort")
-   - "terms": Array of EXACTLY 15 CRISP, HIGH-IMPACT search keywords and phrases (official treaty/pact names, commanders, weapons systems, hashtags, regional terminology). NO generic fluff, keep each keyword crisp, punchy, and highly targeted.
+   - "terms": Array of EXACTLY 15 specific, informative search keywords and phrases (2 to 5 words each) directly grounded in the news events.
+     * DO NOT BE AFRAID TO GIVE FULL, SPECIFIC PHRASES: Provide complete, concrete keywords like "Mecca Defence Agreement", "NATO Eastern Flank", "Ukraine vs Russia war tensions", "Brent Crude $100 price surge", "Muwaffaq Salti Air Base strike", "IAEA Fordow uranium enrichment", "Red Sea tanker security escort".
+     * STRICTLY FORBIDDEN GENERIC KEYWORDS: Never output vague, overly broad 1-2 word labels like "Economic Warfare", "Oil Price", "Cyber Strategy", "Foreign Policy", "Defense Spending", "Energy Market", "National Security", "Regional Stability". These generic phrases alone never provide meaningful context.
+     * LOOSEN STRICTNESS FOR CONTEXT: While you must avoid generic one-liners, do not make keywords overly restrictive into full sentences. Give rich, human-readable 2-5 word search terms that directly name the pact, crisis, country pair, commander, or military asset.
+     * NO REPETITIVE DUPLICATES: Avoid generating repetitive variations of the same 3 words (e.g., do not output "NATO Eastern Flank defense", "NATO Eastern Flank security", "NATO Eastern Flank posture"). Keep each of the 15 terms distinct and multifaceted.
 
 OUTPUT FORMAT:
 Respond ONLY with a valid, clean JSON array of objects. Do NOT include markdown backticks (```json), thinking reasoning, or preamble text.
@@ -1369,7 +1414,7 @@ Each object must have these exact keys:
 - "label": Short, descriptive title of the news topic or defense development
 - "category": Exactly one of "defense", "diplomacy", "politics", "economic"
 - "boolean_query": High-precision Boolean search query formatted for X.com search
-- "terms": Array of exactly 15 crisp keyword and search phrase strings
+- "terms": Array of exactly 15 specific, informative keyword and search phrase strings
 
 Representative example structure:
 [

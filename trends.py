@@ -827,88 +827,130 @@ def extract_tweets_from_article_chunks(page_state_text, max_days_window=10):
     return parsed_tweets
 
 
+def get_persistent_profile_path(profile_directory_name: str) -> str:
+    # We prefix profile folders with 'browser-use-user-data-dir-' so that the
+    # browser-use library treats this directory as a direct persistent profile
+    # and does not attempt to create a slow, lockable throwaway temp directory.
+    user_home_directory = os.path.expanduser("~")
+    browser_agent_base_directory = os.path.join(user_home_directory, ".browser-agent")
+    os.makedirs(browser_agent_base_directory, exist_ok=True)
+
+    if profile_directory_name.startswith("browser-use-user-data-dir-"):
+        folder_name = profile_directory_name
+    else:
+        folder_name = f"browser-use-user-data-dir-{profile_directory_name}"
+
+    full_profile_path = os.path.join(browser_agent_base_directory, folder_name)
+    os.makedirs(full_profile_path, exist_ok=True)
+    return full_profile_path
+
+
+def find_system_chrome_user_data_path() -> str:
+    # Auto-detects the system's primary Chrome, Chromium, or Brave user data directory
+    user_home_directory = os.path.expanduser("~")
+    candidate_paths_list = []
+
+    if sys.platform == "darwin":
+        candidate_paths_list.append(os.path.join(user_home_directory, "Library", "Application Support", "Google", "Chrome"))
+        candidate_paths_list.append(os.path.join(user_home_directory, "Library", "Application Support", "Chromium"))
+        candidate_paths_list.append(os.path.join(user_home_directory, "Library", "Application Support", "BraveSoftware", "Brave-Browser"))
+    elif sys.platform == "win32":
+        local_app_data_path = os.environ.get("LOCALAPPDATA", "")
+        if local_app_data_path:
+            candidate_paths_list.append(os.path.join(local_app_data_path, "Google", "Chrome", "User Data"))
+            candidate_paths_list.append(os.path.join(local_app_data_path, "Chromium", "User Data"))
+            candidate_paths_list.append(os.path.join(local_app_data_path, "BraveSoftware", "Brave-Browser", "User Data"))
+        user_profile_env = os.environ.get("USERPROFILE", "")
+        if user_profile_env:
+            candidate_paths_list.append(os.path.join(user_profile_env, "AppData", "Local", "Google", "Chrome", "User Data"))
+    elif sys.platform.startswith("linux"):
+        candidate_paths_list.append(os.path.join(user_home_directory, ".config", "google-chrome"))
+        candidate_paths_list.append(os.path.join(user_home_directory, ".config", "chromium"))
+        candidate_paths_list.append(os.path.join(user_home_directory, ".config", "google-chrome-stable"))
+        candidate_paths_list.append(os.path.join(user_home_directory, ".config", "BraveSoftware", "Brave-Browser"))
+
+    for candidate_path in candidate_paths_list:
+        if os.path.exists(candidate_path):
+            return candidate_path
+
+    return ""
+
+
+def seed_profile_from_system_chrome(target_profile_path: str) -> bool:
+    # Safely seeds the target profile with essential cookie and session decryption files
+    # from the user's system Chrome without copying gigabytes of caches or causing lock errors.
+    system_chrome_path = find_system_chrome_user_data_path()
+    if not system_chrome_path or not os.path.exists(system_chrome_path):
+        return False
+
+    target_default_dir = os.path.join(target_profile_path, "Default")
+    os.makedirs(target_default_dir, exist_ok=True)
+
+    # 1. Copy Local State (contains the OS encryption key needed to decrypt Chrome cookies)
+    system_local_state = os.path.join(system_chrome_path, "Local State")
+    target_local_state = os.path.join(target_profile_path, "Local State")
+    if os.path.exists(system_local_state):
+        try:
+            shutil.copy2(system_local_state, target_local_state)
+        except Exception:
+            pass
+
+    # 2. Copy Default/Cookies (SQLite DB with all active website logins)
+    system_default_dir = os.path.join(system_chrome_path, "Default")
+    system_cookies = os.path.join(system_default_dir, "Cookies")
+    target_cookies = os.path.join(target_default_dir, "Cookies")
+    if os.path.exists(system_cookies):
+        try:
+            shutil.copy2(system_cookies, target_cookies)
+        except Exception:
+            pass
+
+    # 3. Copy other auth-related files if present
+    extra_auth_files = ["Cookies-journal", "Login Data", "Web Data"]
+    for file_name in extra_auth_files:
+        src_file = os.path.join(system_default_dir, file_name)
+        dst_file = os.path.join(target_default_dir, file_name)
+        if os.path.exists(src_file):
+            try:
+                shutil.copy2(src_file, dst_file)
+            except Exception:
+                pass
+
+    # Check Network/Cookies in case system Chrome uses the newer Network subfolder
+    system_network_cookies = os.path.join(system_default_dir, "Network", "Cookies")
+    if os.path.exists(system_network_cookies):
+        target_network_dir = os.path.join(target_default_dir, "Network")
+        os.makedirs(target_network_dir, exist_ok=True)
+        try:
+            shutil.copy2(system_network_cookies, os.path.join(target_network_dir, "Cookies"))
+        except Exception:
+            pass
+
+    return os.path.exists(target_cookies)
+
+
 async def create_resilient_browser_instance(
     is_headless_mode: bool = False,
     should_use_real_system_profile: bool = True,
     profile_directory_name: str = "agent_profile",
     log_callback_function = None
 ) -> Browser:
-    # Prepare a dedicated persistent folder for the agent in the user's home directory.
-    # This prevents file-locking crashes when Google Chrome is already running (e.g., viewing the frontend).
-    user_home_directory = os.path.expanduser("~")
-    browser_agent_base_directory = os.path.join(user_home_directory, ".browser-agent")
-    dedicated_profile_path = os.path.join(browser_agent_base_directory, profile_directory_name)
-    os.makedirs(dedicated_profile_path, exist_ok=True)
+    # Prepare a dedicated persistent profile directory with browser-use-user-data-dir- prefix.
+    # This prevents file-locking crashes when Google Chrome is already running (e.g., viewing the frontend),
+    # while allowing independent Chrome windows to run simultaneously.
+    dedicated_profile_path = get_persistent_profile_path(profile_directory_name)
 
-    # If the user requested to use their real Chrome profile, attempt Browser.from_system_chrome() first
-    if should_use_real_system_profile:
-        try:
-            browser_instance = Browser.from_system_chrome(headless=is_headless_mode)
-            return browser_instance
-        except Exception as chrome_lock_exception:
-            # When system Chrome is already running, browser-use cannot copy the profile because files are locked.
-            # We catch this error and seamlessly open an independent Chrome window using our dedicated agent profile.
-            warning_text = f"System Chrome profile is in use or locked ({str(chrome_lock_exception)}). Opening an independent Chrome window for the agent..."
-            if log_callback_function is not None:
-                try:
-                    await log_callback_function("WARN", warning_text)
-                except Exception:
-                    pass
-            print(warning_text)
+    # Check if target profile already has Cookies. If not, seed from system Chrome
+    target_cookies_path = os.path.join(dedicated_profile_path, "Default", "Cookies")
+    if not os.path.exists(target_cookies_path):
+        did_seed = seed_profile_from_system_chrome(dedicated_profile_path)
+        if did_seed and log_callback_function is not None:
+            try:
+                await log_callback_function("INFO", f"Seeded login credentials and cookies into {profile_directory_name} from system Chrome.")
+            except Exception:
+                pass
 
-    # If the dedicated profile folder is currently empty, attempt a safe initial copy of readable files
-    # from system Chrome Default directory so existing logins might carry over without lock errors
-    try:
-        existing_profile_items = os.listdir(dedicated_profile_path)
-        if len(existing_profile_items) == 0:
-            candidate_paths = []
-            if sys.platform == "darwin":
-                candidate_paths.append(os.path.join(user_home_directory, "Library", "Application Support", "Google", "Chrome", "Default"))
-                candidate_paths.append(os.path.join(user_home_directory, "Library", "Application Support", "Chromium", "Default"))
-                candidate_paths.append(os.path.join(user_home_directory, "Library", "Application Support", "BraveSoftware", "Brave-Browser", "Default"))
-            elif sys.platform == "win32":
-                local_app_data_path = os.environ.get("LOCALAPPDATA", "")
-                if local_app_data_path:
-                    candidate_paths.append(os.path.join(local_app_data_path, "Google", "Chrome", "User Data", "Default"))
-                    candidate_paths.append(os.path.join(local_app_data_path, "Chromium", "User Data", "Default"))
-                    candidate_paths.append(os.path.join(local_app_data_path, "BraveSoftware", "Brave-Browser", "User Data", "Default"))
-                user_profile_env = os.environ.get("USERPROFILE", "")
-                if user_profile_env:
-                    candidate_paths.append(os.path.join(user_profile_env, "AppData", "Local", "Google", "Chrome", "User Data", "Default"))
-            elif sys.platform.startswith("linux"):
-                candidate_paths.append(os.path.join(user_home_directory, ".config", "google-chrome", "Default"))
-                candidate_paths.append(os.path.join(user_home_directory, ".config", "chromium", "Default"))
-                candidate_paths.append(os.path.join(user_home_directory, ".config", "google-chrome-stable", "Default"))
-                candidate_paths.append(os.path.join(user_home_directory, ".config", "BraveSoftware", "Brave-Browser", "Default"))
-
-            system_chrome_user_data_path = ""
-            for path_candidate in candidate_paths:
-                if os.path.exists(path_candidate):
-                    system_chrome_user_data_path = path_candidate
-                    break
-
-            if system_chrome_user_data_path and os.path.exists(system_chrome_user_data_path):
-                from browser_use.browser.profile import _ignore_chrome_profile_transient_files
-
-                def safe_copy_file_worker(source_file, destination_file, *, follow_symlinks=True):
-                    try:
-                        shutil.copy2(source_file, destination_file, follow_symlinks=follow_symlinks)
-                    except (PermissionError, OSError):
-                        # Skip files that are exclusively locked by running Chrome processes
-                        pass
-
-                shutil.copytree(
-                    system_chrome_user_data_path,
-                    dedicated_profile_path,
-                    copy_function=safe_copy_file_worker,
-                    ignore=_ignore_chrome_profile_transient_files,
-                    dirs_exist_ok=True
-                )
-    except Exception:
-        # If copying fails, proceed cleanly with an empty dedicated directory
-        pass
-
-    # Launch Chrome pointing to our dedicated persistent profile directory
+    # Launch Chrome directly pointing to our dedicated persistent profile directory
     browser_instance = Browser(
         headless=is_headless_mode,
         user_data_dir=dedicated_profile_path
@@ -1018,34 +1060,53 @@ async def ensure_x_logged_in_or_prompt_user(
 def sync_agent_profile_to_worker_profile(source_profile_name: str, target_profile_name: str) -> None:
     # Copies the authenticated agent profile to an isolated worker profile directory
     # so multiple parallel workers can run concurrently without Chrome file-locking conflicts.
-    user_home_directory = os.path.expanduser("~")
-    base_directory = os.path.join(user_home_directory, ".browser-agent")
-    source_path = os.path.join(base_directory, source_profile_name)
-    target_path = os.path.join(base_directory, target_profile_name)
+    source_path = get_persistent_profile_path(source_profile_name)
+    target_path = get_persistent_profile_path(target_profile_name)
 
-    if not os.path.exists(source_path):
-        return
+    source_cookies = os.path.join(source_path, "Default", "Cookies")
+    target_default_dir = os.path.join(target_path, "Default")
+    os.makedirs(target_default_dir, exist_ok=True)
 
-    os.makedirs(target_path, exist_ok=True)
+    if os.path.exists(source_cookies):
+        # 1. Copy Local State (OS decryption key)
+        source_local_state = os.path.join(source_path, "Local State")
+        target_local_state = os.path.join(target_path, "Local State")
+        if os.path.exists(source_local_state):
+            try:
+                shutil.copy2(source_local_state, target_local_state)
+            except Exception:
+                pass
 
-    from browser_use.browser.profile import _ignore_chrome_profile_transient_files
-
-    def safe_copy_file_worker(source_file, destination_file, *, follow_symlinks=True):
+        # 2. Copy Default/Cookies (SQLite DB with all active logins)
+        target_cookies = os.path.join(target_default_dir, "Cookies")
         try:
-            shutil.copy2(source_file, destination_file, follow_symlinks=follow_symlinks)
-        except (PermissionError, OSError):
+            shutil.copy2(source_cookies, target_cookies)
+        except Exception:
             pass
 
-    try:
-        shutil.copytree(
-            source_path,
-            target_path,
-            copy_function=safe_copy_file_worker,
-            ignore=_ignore_chrome_profile_transient_files,
-            dirs_exist_ok=True
-        )
-    except Exception as copy_error:
-        print(f"Notice during worker profile sync: {str(copy_error)}")
+        # 3. Copy any extra auth files
+        extra_files = ["Cookies-journal", "Login Data", "Web Data"]
+        for file_name in extra_files:
+            s_file = os.path.join(source_path, "Default", file_name)
+            d_file = os.path.join(target_default_dir, file_name)
+            if os.path.exists(s_file):
+                try:
+                    shutil.copy2(s_file, d_file)
+                except Exception:
+                    pass
+
+        # Check Network/Cookies
+        source_network_cookies = os.path.join(source_path, "Default", "Network", "Cookies")
+        if os.path.exists(source_network_cookies):
+            target_network_dir = os.path.join(target_default_dir, "Network")
+            os.makedirs(target_network_dir, exist_ok=True)
+            try:
+                shutil.copy2(source_network_cookies, os.path.join(target_network_dir, "Cookies"))
+            except Exception:
+                pass
+    else:
+        # If source profile does not have cookies yet, seed directly from system Chrome
+        seed_profile_from_system_chrome(target_path)
 
 
 async def run_x_com_deep_trend_and_tweet_miner(target_country_name, target_country_slug, is_headless_enabled, trends24_topics_list=None, topics_with_boolean_queries_list=None):

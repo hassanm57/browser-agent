@@ -847,7 +847,7 @@ async def run_parallel_twitter_handles_pipeline(
 
     auth_check_browser = await trends.create_resilient_browser_instance(
         is_headless_mode=False,
-        should_use_real_system_profile=True,
+        should_use_real_system_profile=False,
         profile_directory_name="agent_profile",
         log_callback_function=actual_log
     )

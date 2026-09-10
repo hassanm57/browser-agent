@@ -38,7 +38,7 @@ trap cleanup_processes SIGINT SIGTERM
 
 # Start FastAPI backend in the background
 echo "[1/2] Starting FastAPI Backend on http://localhost:8000..."
-"$PROJECT_ROOT_DIRECTORY/.venv/bin/uvicorn" app.backend.main:app --host 0.0.0.0 --port 8000 --reload &
+"$PROJECT_ROOT_DIRECTORY/.venv/bin/python" -m uvicorn app.backend.main:app --host 0.0.0.0 --port 8000 --reload &
 BACKEND_PROCESS_ID=$!
 
 # Give backend a moment to bind to the port
@@ -46,7 +46,7 @@ sleep 1
 
 # Start Vite frontend dev server in the background
 echo "[2/2] Starting Vite Frontend on http://localhost:5173..."
-npm run dev --prefix "$PROJECT_ROOT_DIRECTORY/app/frontend" &
+(cd "$PROJECT_ROOT_DIRECTORY/app/frontend" && npm run dev) &
 FRONTEND_PROCESS_ID=$!
 
 echo ""

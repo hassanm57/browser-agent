@@ -17,13 +17,14 @@ Write-Host "Working directory: $ProjectRoot" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "[1/2] Launching FastAPI Backend on http://localhost:8000..." -ForegroundColor Yellow
-Start-Process -FilePath "cmd.exe" -ArgumentList "/k", "cd /d `"$ProjectRoot`" && `"$UvicornPath`" app.backend.main:app --host 0.0.0.0 --port 8000 --reload"
+$PythonPath = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
+Start-Process -FilePath "cmd.exe" -WorkingDirectory $ProjectRoot -ArgumentList "/k", "`"$PythonPath`" -m uvicorn app.backend.main:app --host 0.0.0.0 --port 8000 --reload"
 
 Start-Sleep -Seconds 2
 
 Write-Host "[2/2] Launching Vite Frontend on http://localhost:5173..." -ForegroundColor Yellow
 $FrontendDir = Join-Path $ProjectRoot "app\frontend"
-Start-Process -FilePath "cmd.exe" -ArgumentList "/k", "cd /d `"$FrontendDir`" && npm run dev"
+Start-Process -FilePath "cmd.exe" -WorkingDirectory $FrontendDir -ArgumentList "/k", "npm run dev"
 
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Green

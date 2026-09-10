@@ -110,11 +110,11 @@ if not exist ".venv" (
     echo Existing .venv directory found.
 )
 
-echo Upgrading pip inside virtual environment...
-call ".venv\Scripts\python.exe" -m pip install --upgrade pip
+echo Upgrading pip, setuptools, and wheel inside virtual environment...
+call ".venv\Scripts\python.exe" -m pip install --upgrade pip setuptools wheel
 
 echo Installing Python dependencies from requirements.txt...
-call ".venv\Scripts\pip.exe" install -r requirements.txt
+call ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: Failed to install Python dependencies.
     pause

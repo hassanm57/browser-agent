@@ -20,19 +20,31 @@ echo ""
 echo "[Step 1/6] Checking Python installation..."
 if ! command -v python3 &> /dev/null; then
     echo "ERROR: python3 could not be found."
-    echo "Please install Python 3 by running:"
-    echo "    sudo apt update && sudo apt install -y python3 python3-pip python3-venv"
+    if command -v apt &> /dev/null; then
+        echo "Install Python 3 by running: sudo apt update && sudo apt install -y python3 python3-pip python3-venv"
+    elif command -v dnf &> /dev/null; then
+        echo "Install Python 3 by running: sudo dnf install -y python3 python3-pip"
+    elif command -v pacman &> /dev/null; then
+        echo "Install Python 3 by running: sudo pacman -S python python-pip python-virtualenv"
+    else
+        echo "Please install Python 3.10+ using your system package manager."
+    fi
     exit 1
 fi
 
 PYTHON_VERSION_STRING=$(python3 --version)
 echo "Found $PYTHON_VERSION_STRING"
 
-# Check if python3-venv package is installed (needed on Ubuntu for virtual environments)
+# Check if python3-venv package is installed (needed on Ubuntu/Debian for virtual environments)
 if ! python3 -m venv --help &> /dev/null; then
     echo "ERROR: python3-venv is missing."
-    echo "Please install the virtual environment package by running:"
-    echo "    sudo apt update && sudo apt install -y python3-venv"
+    if command -v apt &> /dev/null; then
+        echo "Please install virtual environment support: sudo apt update && sudo apt install -y python3-venv"
+    elif command -v dnf &> /dev/null; then
+        echo "Please install virtual environment support: sudo dnf install -y python3-virtualenv"
+    elif command -v pacman &> /dev/null; then
+        echo "Please install virtual environment support: sudo pacman -S python-virtualenv"
+    fi
     exit 1
 fi
 
@@ -107,11 +119,11 @@ else
     echo "Existing .venv directory found."
 fi
 
-echo "Upgrading pip..."
-.venv/bin/python -m pip install --upgrade pip
+echo "Upgrading pip, setuptools, and wheel..."
+.venv/bin/python -m pip install --upgrade pip setuptools wheel
 
 echo "Installing Python dependencies from requirements.txt..."
-.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements.txt
 
 echo "Initializing SQLite database..."
 .venv/bin/python -c "from app.backend.database import initialize_database; initialize_database(); print('Database initialized successfully.')"
@@ -123,9 +135,12 @@ cd "$PROJECT_ROOT_DIRECTORY/app/frontend"
 npm install
 cd "$PROJECT_ROOT_DIRECTORY"
 
-# Make run script executable
+# Make run scripts executable
 if [ -f "$SCRIPTS_DIRECTORY/run_ubuntu.sh" ]; then
     chmod +x "$SCRIPTS_DIRECTORY/run_ubuntu.sh"
+fi
+if [ -f "$PROJECT_ROOT_DIRECTORY/run.sh" ]; then
+    chmod +x "$PROJECT_ROOT_DIRECTORY/run.sh"
 fi
 
 echo ""

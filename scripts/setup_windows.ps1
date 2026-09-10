@@ -101,11 +101,11 @@ if (-not (Test-Path ".venv")) {
 $VenvPython = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
 $VenvPip = Join-Path $ProjectRoot ".venv\Scripts\pip.exe"
 
-Write-Host "Upgrading pip..." -ForegroundColor Green
-& $VenvPython -m pip install --upgrade pip
+Write-Host "Upgrading pip, setuptools, and wheel..." -ForegroundColor Green
+& $VenvPython -m pip install --upgrade pip setuptools wheel
 
 Write-Host "Installing requirements from requirements.txt..." -ForegroundColor Green
-& $VenvPip install -r requirements.txt
+& $VenvPython -m pip install -r requirements.txt
 
 Write-Host "Initializing SQLite database..." -ForegroundColor Green
 & $VenvPython -c "from app.backend.database import initialize_database; initialize_database(); print('Database initialized successfully.')"

@@ -57,6 +57,21 @@ function getExactNewsSourceWebsiteUrl(sourceNameString: string): string {
   if (lowercasedSource.includes("defence.in")) {
     return "https://defence.in";
   }
+  if (lowercasedSource.includes("defenceupdate")) {
+    return "https://defenceupdate.in";
+  }
+  if (lowercasedSource.includes("livefist")) {
+    return "https://www.livefistdefence.com";
+  }
+  if (lowercasedSource.includes("nationaldefence") || lowercasedSource.includes("national defence")) {
+    return "https://nationaldefence.in";
+  }
+  if (lowercasedSource.includes("alphadefense") || lowercasedSource.includes("alpha defense")) {
+    return "https://alphadefense.in";
+  }
+  if (lowercasedSource.includes("iadnews")) {
+    return "https://iadnews.in";
+  }
   if (lowercasedSource.includes("indian express") || lowercasedSource.includes("newindianexpress")) {
     return "https://www.newindianexpress.com/india";
   }

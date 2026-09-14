@@ -238,10 +238,45 @@
     "enabled": true
   },
   {
+    "name": "Defence Update India RSS",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://defenceupdate.in/feed/",
+    "enabled": true
+  },
+  {
+    "name": "IDRW RSS Feed",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://idrw.org/feed/",
+    "enabled": true
+  },
+  {
     "name": "Livefist Defence",
     "category": "defense_military",
     "type": "rss",
     "url": "https://www.livefistdefence.com/feed/",
+    "enabled": true
+  },
+  {
+    "name": "National Defence India RSS",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://nationaldefence.in/feed",
+    "enabled": true
+  },
+  {
+    "name": "Alpha Defense RSS",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://alphadefense.in/feed/",
+    "enabled": true
+  },
+  {
+    "name": "IADNews Indian Aerospace & Defence RSS",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://iadnews.in/feed/",
     "enabled": true
   },
   {

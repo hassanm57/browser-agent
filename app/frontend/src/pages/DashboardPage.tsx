@@ -128,6 +128,21 @@ function getExactNewsSourceWebsiteUrl(sourceNameString: string, sourcesList?: So
   if (lowercasedSource.includes("defence.in")) {
     return "https://defence.in";
   }
+  if (lowercasedSource.includes("defenceupdate")) {
+    return "https://defenceupdate.in";
+  }
+  if (lowercasedSource.includes("livefist")) {
+    return "https://www.livefistdefence.com";
+  }
+  if (lowercasedSource.includes("nationaldefence") || lowercasedSource.includes("national defence")) {
+    return "https://nationaldefence.in";
+  }
+  if (lowercasedSource.includes("alphadefense") || lowercasedSource.includes("alpha defense")) {
+    return "https://alphadefense.in";
+  }
+  if (lowercasedSource.includes("iadnews")) {
+    return "https://iadnews.in";
+  }
   if (lowercasedSource.includes("indian express") || lowercasedSource.includes("newindianexpress")) {
     return "https://www.newindianexpress.com/india";
   }
@@ -290,7 +305,12 @@ export function DashboardPage(props: DashboardPageProps) {
         lowerCandidate.includes("idrw") ||
         lowerCandidate.includes("defencexp") ||
         lowerCandidate.includes("defence.in") ||
-        lowerCandidate.includes("indian express")
+        lowerCandidate.includes("indian express") ||
+        lowerCandidate.includes("defenceupdate") ||
+        lowerCandidate.includes("livefist") ||
+        lowerCandidate.includes("nationaldefence") ||
+        lowerCandidate.includes("alphadefense") ||
+        lowerCandidate.includes("iadnews")
       ) {
         const indianHeadlines = newsIntelMap[candidateKey] || [];
         for (let index = 0; index < indianHeadlines.length && curatedHotTopicsList.length < 3; index++) {

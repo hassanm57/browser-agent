@@ -245,7 +245,8 @@ async def run_single_country_pipeline(
                                 "disarmament.un.org", "idrw.org", "livefistdefence.com", "quwa.org",
                                 "defense.gov", "airandspaceforces.com", "navalnews.com", "usni.org",
                                 "warontherocks.com", "thediplomat.com", "iaea.org", "scmp.com",
-                                "defencexp.com", "defence.in"
+                                "defencexp.com", "defence.in", "defenceupdate.in", "nationaldefence.in",
+                                "alphadefense.in", "iadnews.in", "indiandefencereview.com"
                             ]
 
                             is_from_specialized_domain = False
@@ -642,7 +643,10 @@ async def run_single_country_pipeline(
                 target_country_name,
                 news_sources_intel_dictionary,
                 x_native_intel_dictionary.get("trends_observed", []),
-                curated_x_sources_tweets
+                curated_x_sources_tweets,
+                endpoint_url,
+                model_name,
+                settings_dictionary.get("vllm_api_key", "EMPTY")
             )
             await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} topics (15 crisp keywords each + Boolean queries).")
             for topic_preview_index in range(min(3, len(synthesized_topics_list))):

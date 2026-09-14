@@ -627,7 +627,7 @@ async def run_single_country_pipeline(
         # PHASE 3: Synthesize news-derived topics & Boolean X queries with Strategic AI Model
         # Passing curated_x_sources_tweets and X explore topics so ground truth and correspondent scoops are fully accounted for!
         await log_and_record("STEP", "[3/4] Synthesizing news + correspondent topics & Boolean X queries with Strategic AI Model...")
-        await progress_callback_function("llm_synthesis", 3, 5, f"Synthesizing 15 crisp keywords per topic for {target_country_name}...", target_country_name)
+        await progress_callback_function("llm_synthesis", 3, 5, f"Synthesizing context-rich keyword phrases for {target_country_name}...", target_country_name)
 
         endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.11.214:8000/v1")
         model_name = settings_dictionary.get("llm_model_name", "qwen3-14b")
@@ -650,7 +650,7 @@ async def run_single_country_pipeline(
                 settings_dictionary.get("vllm_api_key", "EMPTY"),
                 timeout_seconds
             )
-            await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} topics (15 crisp keywords each + Boolean queries).")
+            await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} hot trending story rows with context-rich keywords and Boolean queries.")
             for topic_preview_index in range(min(3, len(synthesized_topics_list))):
                 preview_item = synthesized_topics_list[topic_preview_index]
                 await log_and_record("INFO", f"  Topic {topic_preview_index + 1}: {preview_item.get('label')} -> Boolean: {preview_item.get('boolean_query')}")

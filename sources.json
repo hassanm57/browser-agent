@@ -355,6 +355,20 @@
     "type": "rss",
     "url": "https://www.geo.tv/rss/1/5",
     "enabled": true
+  },
+  {
+    "name": "Defence Capital RSS",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://defencecapital.in/feed/",
+    "enabled": true
+  },
+  {
+    "name": "The Diplomat India RSS",
+    "category": "geopolitics_strategy",
+    "type": "rss",
+    "url": "https://thediplomat.com/tag/india/feed/",
+    "enabled": true
   }
 ]
 

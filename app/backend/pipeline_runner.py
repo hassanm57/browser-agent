@@ -182,6 +182,7 @@ async def run_single_country_pipeline(
     
     configured_sources_list = trends.load_sources_configuration_file()
     news_sources_intel_dictionary: Dict[str, List[str]] = {}
+    headline_sources_metadata_map: Dict[str, Dict[str, str]] = {}
 
     for source_entry in configured_sources_list:
         if cancellation_event.is_set():
@@ -214,10 +215,19 @@ async def run_single_country_pipeline(
                     xml_root = trends.ElementTree.fromstring(response.content)
                     for item_element in xml_root.findall(".//item"):
                         title_element = item_element.find("title")
+                        link_element = item_element.find("link")
                         if title_element is not None and title_element.text:
                             clean_title = trends.clean_dom_tags_and_markdown(title_element.text)
                             if len(clean_title) > 15 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
                                 headlines_for_source.append(clean_title)
+                                article_link = source_url
+                                if link_element is not None and link_element.text and len(link_element.text.strip()) > 0:
+                                    article_link = link_element.text.strip()
+                                headline_sources_metadata_map[clean_title] = {
+                                    "source_name": source_name,
+                                    "headline": clean_title,
+                                    "url": article_link
+                                }
             else:
                 response = trends.requests.get(source_url, timeout=12, headers=desktop_browser_headers)
                 if response.status_code == 200:
@@ -247,7 +257,8 @@ async def run_single_country_pipeline(
                                 "defense.gov", "airandspaceforces.com", "navalnews.com", "usni.org",
                                 "warontherocks.com", "thediplomat.com", "iaea.org", "scmp.com",
                                 "defencexp.com", "defence.in", "defenceupdate.in", "nationaldefence.in",
-                                "alphadefense.in", "iadnews.in", "indiandefencereview.com"
+                                "alphadefense.in", "iadnews.in", "indiandefencereview.com",
+                                "defencecapital.in"
                             ]
 
                             is_from_specialized_domain = False
@@ -281,6 +292,15 @@ async def run_single_country_pipeline(
 
                             if is_relevant and len(headlines_for_source) < 20:
                                 headlines_for_source.append(clean_title)
+                                link_href = header_tag.get("href")
+                                if not link_href and header_tag.parent and header_tag.parent.name == "a":
+                                    link_href = header_tag.parent.get("href")
+                                article_link = urllib.parse.urljoin(source_url, link_href) if link_href else source_url
+                                headline_sources_metadata_map[clean_title] = {
+                                    "source_name": source_name,
+                                    "headline": clean_title,
+                                    "url": article_link
+                                }
 
             # Fallback 1: If zero headlines extracted and source is Reuters, attempt verified Reuters RSS wire
             if len(headlines_for_source) == 0 and "reuters.com" in source_url:
@@ -292,6 +312,7 @@ async def run_single_country_pipeline(
                         reuters_xml_root = trends.ElementTree.fromstring(reuters_response.content)
                         for r_item in reuters_xml_root.findall(".//item"):
                             r_title = r_item.find("title")
+                            r_link = r_item.find("link")
                             if r_title is not None and r_title.text:
                                 clean_r_title = trends.clean_dom_tags_and_markdown(r_title.text)
                                 if clean_r_title.endswith("- Reuters"):
@@ -299,6 +320,12 @@ async def run_single_country_pipeline(
                                 if len(clean_r_title) > 15 and not trends.is_bot_challenge_text(clean_r_title):
                                     if clean_r_title not in headlines_for_source and len(headlines_for_source) < 20:
                                         headlines_for_source.append(clean_r_title)
+                                        r_url = r_link.text.strip() if (r_link is not None and r_link.text) else source_url
+                                        headline_sources_metadata_map[clean_r_title] = {
+                                            "source_name": "Reuters World News",
+                                            "headline": clean_r_title,
+                                            "url": r_url
+                                        }
                         if len(headlines_for_source) > 0:
                             await log_and_record("SUCCESS", f"Reuters RSS wire harvested {len(headlines_for_source)} clean headlines!")
                 except Exception as reuters_err:
@@ -313,11 +340,18 @@ async def run_single_country_pipeline(
                         dawn_xml_root = trends.ElementTree.fromstring(dawn_rss_response.content)
                         for dawn_item in dawn_xml_root.findall(".//item"):
                             dawn_title = dawn_item.find("title")
+                            dawn_link = dawn_item.find("link")
                             if dawn_title is not None and dawn_title.text:
                                 dawn_clean_title = trends.clean_dom_tags_and_markdown(dawn_title.text)
                                 if len(dawn_clean_title) > 15 and not trends.is_bot_challenge_text(dawn_clean_title):
                                     if dawn_clean_title not in headlines_for_source:
                                         headlines_for_source.append(dawn_clean_title)
+                                        d_url = dawn_link.text.strip() if (dawn_link is not None and dawn_link.text) else source_url
+                                        headline_sources_metadata_map[dawn_clean_title] = {
+                                            "source_name": "Dawn News",
+                                            "headline": dawn_clean_title,
+                                            "url": d_url
+                                        }
                         if len(headlines_for_source) > 0:
                             await log_and_record("SUCCESS", f"Dawn RSS fallback harvested {len(headlines_for_source)} clean headlines!")
                 except Exception as dawn_rss_error:
@@ -651,6 +685,8 @@ async def run_single_country_pipeline(
                 timeout_seconds
             )
             await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} hot trending story rows with context-rich keywords and Boolean queries.")
+            # Correlate synthesized topics with their exact news source headlines and direct URLs
+            trends.correlate_topics_with_sources(synthesized_topics_list, headline_sources_metadata_map, curated_x_sources_tweets)
             for topic_preview_index in range(min(3, len(synthesized_topics_list))):
                 preview_item = synthesized_topics_list[topic_preview_index]
                 await log_and_record("INFO", f"  Topic {topic_preview_index + 1}: {preview_item.get('label')} -> Boolean: {preview_item.get('boolean_query')}")
@@ -805,6 +841,7 @@ async def run_single_country_pipeline(
         "relevant_trends24_topics": relevant_trends24_topics_list,
         "x_trends24_topics": relevant_trends24_topics_list,
         "news_sources_intel": news_sources_intel_dictionary,
+        "headline_sources_metadata": headline_sources_metadata_map,
         "curated_x_sources_intel": curated_x_sources_tweets,
         "x_native_explore": x_native_intel_dictionary
     }

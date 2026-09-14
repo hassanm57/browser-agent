@@ -89,6 +89,9 @@ export interface KeywordTopicItem {
   terms: string[];
   boolean_query?: string;
   sample_tweets?: string[];
+  source_headline?: string;
+  source_name?: string;
+  source_url?: string;
 }
 
 export interface KeywordsData {

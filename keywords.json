@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-14T15:22:31.241591",
+  "generated_at": "2026-09-14T15:57:54.245463",
   "country": "Worldwide",
   "sources_consulted": [
     "x.com_native_explore_and_tweets",
@@ -53,190 +53,328 @@
     "The Diplomat Asia-Pacific Defense",
     "The Hindu International",
     "Al Jazeera English RSS",
-    "Geo News World"
+    "Geo News World",
+    "Defence Capital RSS",
+    "The Diplomat India RSS"
   ],
-  "total_topics": 10,
+  "total_topics": 13,
   "topics": [
     {
-      "label": "Strait of Hormuz Tanker Attacks & Wounded Pilot Rescue in Iran",
+      "label": "Houthis Launch Major Drone and Missile Attack on Saudi Aramco Jazan Refinery",
       "category": "defense",
-      "boolean_query": "(\"Strait of Hormuz\" OR \"tanker fire\") (\"UKMTO\" OR \"projectile\")",
+      "boolean_query": "Houthis AND Saudi Aramco AND Jazan refinery",
       "terms": [
-        "Strait of Hormuz tanker projectile strike UKMTO",
-        "Downed Air Force WSO pilot rescue Bravo",
-        "Iran-US drone conflict 2026",
-        "Hormuz shipping traffic reduction 2026",
-        "U.S. Central Command vessel redirection"
+        "Houthis drone attack on Saudi Jazan refinery 2026",
+        "Saudi energy ministry fire response",
+        "Red Sea security escalation",
+        "Iran-aligned Houthi military operations",
+        "Yemen-Saudi conflict escalation",
+        "Ansar Allah drone attack on Saudi Jazan refinery 2026"
       ],
+      "source_headline": "Houthis claim large-scale missile, drone attack on King Khalid Air Base in Saudi Arabia",
+      "source_name": "The Express Tribune",
+      "source_url": "https://tribune.com.pk/story/2629197/diplomacy-stumbles-with-postponement-of-meeting-on-strait-of-hormuz-proposal",
       "sample_tweets": [
-        "[The Hormuz Report | @HormuzReport | Sep 11] Sep 11 BREAKING: IRAN HAS REPORTEDLY AGAIN STRUCK TWO VESSELS ON THE OMANI SIDE OF THE STRAIT OF HORMUZ — reportedly under HEAVY U.S. ESCORT — with FOUR PROJECTILES hitting the vessels, per UKMTO and initial reports. ONE VESSEL IS REPORTEDLY BURNING AFTER CATCHING FIRE — while the",
-        "[Arab News | @arabnews | Sep 13] Sep 13 UKMTO says a vessel has been struck by an unknown projectile while transiting the Strait of Hormuz 3K",
-        "[Arab News | @arabnews | Sep 13] Sep 13 UKMTO says a vessel has been struck by an unknown projectile while transiting the 3K",
-        "[The New Region | @thenewregion | Sep 13] Sep 13 A vessel was struck by an “unknown projectile ” while transiting the Strait of Hormuz , sparking a fire onboard, the UK Maritime Trade Operations ( UKMTO ) said Sunday Local authorities were assisting in evacuating the crew, while their status, the extent of damage, and",
-        "[Iran International English | @IranIntl_En | Sep 9] Sep 9 #BREAKING The UK Maritime Trade Operations said it had received a report involving a merchant vessel in the Strait of Hormuz on Tuesday. UKMTO said reports indicated that the vessel had been subject to interaction as part of ongoing military activity in the region. 9.6K",
-        "[Iran Flash News | @FlashWireNews | Sep 11] Sep 11 ⚡BREAKING: Iran has just struck 2 vessels at the same time with 4 missiles in the US-backed southern Omani corridor of the Strait of Hormuz , while transiting under US escort, with one vessel on fire and the status of the second unknown, per UKMTO #Iran #Yemen #IRGC",
-        "[Iran Flash News | @FlashWireNews | Sep 11] Sep 11 ⚡BREAKING: Iran has just struck 2 vessels at the same time with 4 missiles in the US-backed southern Omani corridor of the Strait of Hormuz , while transiting under US escort, with one vessel on fire and the status of the second unknown, per UKMTO #Iran #Yemen #IRGC 0:35 4.1K",
-        "[Anadolu English | @anadoluagency | Sep 13] Sep 13 🚨 Fire breaks out aboard a vessel after it is struck by an unknown projectile while transiting the Strait of Hormuz UKMTO Local authorities assist in evacuating crew members, while the extent of damage and any environmental impact remain unknown v.aa.com.tr/4055680 3.3K",
-        "[Iran Flash News | @FlashWireNews | Sep 11] Sep 11 ⚡BREAKING: Iran has just struck 2 vessels at the same time with 4 missiles in the US-backed southern Omani corridor of the Strait of Hormuz , while transiting under US escort, with one vessel on fire and the status of the second unknown, per UKMTO #Iran #Yemen #IRGC 0:02 / 0:37 4.1K",
-        "[OSINTdefender | @sentdefender | 13h] According to a release from U.S. Central Command, since the resumption of the blockade of vessels traveling to and from Iran, 101 vessels have been redirected. This comes as the planned meeting between Iranian and Gulf nation officials over the Strait of Hormuz has now been"
+        "[Mossad Commentary | @MOSSADil | Sep 8] Sep 8 WATCH: HOUTHI STRIKE ON ARAMCO FACILITIES — JIZAN, SAUDI ARABIA. So much for the new defense pact. Just one month ago, Saudi Arabia, Turkey and Pakistan signed the Makkah Joint Defence Agreement, declaring that an armed attack on one would be considered an attack on all three.",
+        "[Eli Afriat 🇮🇱 | @EliAfriatISR | Sep 8] Sep 8 The launched a broad attack on Saudi Arabia overnight, targeting Abha Airport, the Aramco fuel terminal in Abha, King Khalid Air Base in Khamis Mushait, the Jizan refinery , and the fuel terminal in Najran. Seventy-three people are reported injured, and the Jizan refinery",
+        "[Eli Afriat 🇮🇱 | @EliAfriatISR | Sep 8] Sep 8 , and the fuel terminal in Najran. Seventy-three people are reported injured, and the Jizan refinery",
+        "[Sputnik | @SputnikInt | Sep 8] Sep 8 strike Saudi Saudi Aramco facilities, including the refinery in Jizan and the bulk plant in Abha, have been struck alongside King Khalid Airbase and Abha International Airport, local media reported. The Saudi Arabia in",
+        "[Lovish 🇮🇳 | @lovish_pandey06 | Sep 8] Sep 8 A fresh drone strike by Yemen's Houthi rebels hit Saudi Aramco Jazan oil refinery , leading to a temporary partial shutdown of the plant. Saudi Aramco is being hit very badly but their MECCA pact partners are crying 😭 😂 #Aramco #Saudiarabia",
+        "[Lovish 🇮🇳 | @lovish_pandey06 | Sep 8] Sep 8 A fresh drone strike by Yemen's Houthi rebels hit Saudi Aramco Jazan oil refinery , leading to a temporary partial shutdown of the plant. Saudi Aramco is being hit very badly but their MECCA pact partners are crying 😭 😂 #Aramco #Saudiarabia 0:15 0:11 Quote Shehbaz Sharif",
+        "[Geopolitics Now 360 | @geopoliticsnow_ | Sep 8] Sep 8 BREAKING: HOUTHI STRIKES ON SAUDI ENERGY FACILITIES REPORTEDLY AMONG LARGEST EVER Middle East outlets are describing the latest Houthi missile and drone strikes on southern Saudi Arabia as among the largest attacks of their kind in recent years. The targeted multiple",
+        "[Lovish 🇮🇳 | @lovish_pandey06 | Sep 8] Sep 8 A fresh drone strike by Yemen's Houthi rebels hit Saudi Aramco Jazan oil refinery , leading to a temporary partial shutdown of the plant. Saudi Aramco is being hit very badly but their MECCA pact partners are crying 😭 😂 #Aramco #Saudiarabia 0:14 0:11 Quote Shehbaz Sharif",
+        "[Geopolitics Now 360 | @geopoliticsnow_ | Sep 8] Sep 8 BREAKING: HOUTHI STRIKES ON SAUDI ENERGY FACILITIES REPORTEDLY AMONG LARGEST EVER Middle East outlets are describing the latest Houthi missile and drone strikes on southern Arabia as among the largest attacks of their kind in recent years. The targeted multiple",
+        "[Idrees Ali | @idreesali114 | 12h] LONDON, Sept 13 (Reuters) - Saudi Arabia will run out of oil stocks for exports ‌if it doesn't restart its major pipeline to the Red Sea within days, leading to a loss of up to 4% of global supply, Saudi oil buyers and traders said. 2.4K 697K",
+        "[Idrees Ali | @idreesali114 | Sep 12] Sep 12 ADEN/DUBAI, Sept 12 (Reuters) - Saudi Arabia has shut down its East-West pipeline, after the vital oil conduit came under aerial attack in the widening Middle East war, threatening to send energy prices even higher. 6.8K",
+        "[Idrees Ali | @idreesali114 | Sep 11] Sep 11 Unclear how effective any counter-Houthi operations by the Saudis or others would be, given how rapidly the Houthis are moving. Quote Idrees Ali",
+        "[Phil Stewart | @phildstewart | Aug 10] Aug 10 (Reuters) - Yemen's Iran-aligned Houthis launched a drone attack on Saudi Aramco's Jazan refinery, they said on Sunday. The Saudi energy ministry said a fire had broken out at the refinery but was later extinguished with no injuries and authorities were dealing with the",
+        "[Phil Stewart | @phildstewart | Aug 10] Aug 10 (Reuters) - Yemen's Iran-aligned Houthis have resumed attacks on the Red Sea port city of Mocha, a Yemeni military spokesperson said. Footage shown by Houthi-affiliated Al Masirah TV showed the launch of several ballistic missiles and drones, which Houthi military spokesperson"
       ]
     },
     {
-      "label": "NATO Allies Uncover & Foil Russian Subsea Cable Sabotage Plot",
+      "label": "NATO Foils Russian Subsea Cable Sabotage Plot in Baltic Sea",
       "category": "defense",
-      "boolean_query": "(\"NATO\" OR \"subsea sabotage\") (\"Russia\" OR \"cable plot\")",
+      "boolean_query": "NATO AND subsea cable sabotage AND Baltic Sea",
       "terms": [
-        "NATO Russian subsea cable sabotage plot 2026",
-        "Undersea communication disruption Baltic Sea",
-        "Allied cyber-electronic countermeasures",
-        "Russian hybrid warfare infrastructure",
-        "Transatlantic data security review"
+        "NATO subsea cable sabotage prevention 2026",
+        "Russian cyber-physical attack attempt",
+        "Baltic Sea infrastructure security",
+        "Underwater communication network protection",
+        "Allied intelligence collaboration"
       ],
+      "source_headline": "NATO allies foil Russian subsea cable sabotage plot",
+      "source_name": "Defense News RSS",
+      "source_url": "https://www.defensenews.com/global/europe/2026/09/10/nato-allies-foil-russian-subsea-cable-sabotage-plot/",
       "sample_tweets": [
+        "[Reuters | @Reuters | Sep 10] Sep 10 EXCLUSIVE: NATO allies foil Russian subsea cable sabotage plot reut.rs/3Ti3Kl8 EXCLUSIVE: NATO allies foil Russian subsea cable sabotage plot 95K",
+        "[FRANCE 24 English | @France24_en | Sep 13] Sep 13 It is one of the most spectacular acts of sabotage committed since World War II: gas pipelines belonging to Nord Stream exploded on the seabed of the Baltic Sea . The event higlighted Germany's energy dependence on Russia.",
+        "[New York Post | @nypost | Sep 10] Sep 10 US, NATO allies foil Russian subsea cable sabotage plot trib.al/uZ0Xr60 37K",
+        "[dom | icp | @dominic_w | Sep 11] Sep 11 Something all blockchains should consider: some states are actively preparing to disrupt global internet connectivity by attacking undersea cables. Evaluate your security and resilience in such circumstances. For example, today, many chains might fork. |scroll element (horizontal 0%)",
         "[dom | icp | @dominic_w | Sep 11] Sep 11 Something all blockchains should consider: some states are actively preparing to disrupt global internet connectivity by attacking undersea cables. Evaluate your security and resilience in such circumstances. For example, today, many chains might fork. Ukraine war briefing: Nato ‘foils Russian undersea cable sabotage drill’ 37K",
-        "[Kęstutis Budrys | @BudrysKestutis | Sep 9] Sep 9 Russia escalates when it sees hesitation. It tests limits when it senses weakness. When #NATO increased its presence in the #BalticSea , disruptions of undersea cables stopped. When we reinforced military posture at the eastern flank, provocations stopped. Presence. Deterrence.",
+        "[CTV News | @CTVNews | Sep 12] Sep 12 NATO allies foil Russian subsea cable sabotage plot: Reuters exclusive NATO allies foil Russian subsea cable sabotage plot: Reuters exclusive ctvnews.ca 16K",
         "[Mario Nawfal | @MarioNawfal | Sep 10] Sep 10 🇷🇺🇺🇸🇬🇧 NATO stopped Russian subs from practicing how to cut the world’s internet, without leaving a trace... British, Norwegian, and U.S. forces tracked Moscow’s GUGI deep-sea units near Svalbard this spring, as they tested a new tool used to disable undersea cables. The",
-        "[OSINTdefender | @sentdefender | Sep 10] Sep 10 Russia ’s Main Directorate of Deep-Sea Research (GUGI) using deep sea submersibles to simulate",
-        "[MAKS 26 🇺🇦👀 | @Maks_NAFO_FELLA | Sep 10] Sep 10 👀🇳🇴 Reuters: NATO allies disrupted a covert Russian undersea operation near Norway’s Svalbard archipelago earlier this year. Russia ’s secretive GUGI deep-sea warfare directorate was using submarines and submersibles to rehearse the deployment of technology designed to disable",
-        "[NEXTA | @nexta_tv | Sep 11] Sep 11 NATO foiled a Russian operation targeting undersea cables near Svalbard According to Reuters, Russian submarines were practicing how to destroy undersea cables using a new secret weapon that leaves almost no trace. The UK, Norway and the US were monitoring the submarines. NATO",
-        "[Ministry of Defence 🇬🇧 | @DefenceHQ | Sep 10] Sep 10 Russia is constantly probing and testing us. NATO has always been a defensive alliance – but we are ready to defend every inch of NATO territory if Russia attacks. 1.4K 1K 295K",
-        "[Ministry of Defence 🇬🇧 | @DefenceHQ | Sep 10] Sep 10 Russia is constantly probing and testing us. NATO has always been a defensive alliance – but we are ready to defend every inch of NATO territory if Russia attacks. 0:01 / 1:52 1.4K 1K 295K",
-        "[Jessica Berlin | @berlin_bridge | Sep 13] Sep 13 Russia attacks the Polish-Ukrainian border. The Kremlin is taunting Nato 1.5K 39K",
-        "[Tymofiy Mylovanov | @Mylovanov | Sep 12] Sep 12 NATO 's Ex-Military Chief Rob Bauer: By late 2021, 25 NATO countries sent daily intelligence on Russia massing forces around Ukraine. NATO watched the buildup grow exactly as expected, week after week. The US said Russia would invade. The question was who believed it. 1/",
-        "[Tymofiy Mylovanov | @Mylovanov | Sep 12] Sep 12 NATO 's Ex-Military Chief Rob Bauer: By late 2021, 25 NATO countries sent daily intelligence on Russia massing forces around Ukraine. NATO watched the buildup grow exactly as expected, week after week. The US said Russia would invade. The question was who believed it. 1/ 2:08 1K 144K",
-        "[NEXTA | @nexta_tv | Sep 13] Sep 13 Footage of the strike on a checkpoint on the Ukrainian-Polish border Ukrainian Foreign Minister Andrii Sybiha called what happened “Putin’s terror” and said that the Russian threat is now literally knocking on the doors of the EU and NATO . Sybiha called on partners to increase"
+        "[Rule of Five History | @RuleOf5History | Sep 10] Sep 10 NATO allies caught Russian deep-sea units rehearsing near critical undersea cables off Svalbard. Western officials told Reuters the secret technology was designed to disable cables while making attribution difficult Britain, Norway and the U.S. intervened No cable was damaged",
+        "[The Kyiv Independent | @KyivIndependent | Sep 10] Sep 10 ⚡️ NATO allies disrupt Russian exercise involving secret weapon targeting subsea cables, Reuters reports. The operation was carried out by Russia's Main Directorate for Deep Sea Research (GUGI), which used deep-sea submersibles to simulate deploying the technology, according to",
+        "[Ahmad Shah Mohibi | @WarGuy_ | Sep 13] Sep 13 🇩🇪 It is one of the most spectacular acts of sabotage committed since World War II: gas pipelines belonging to Nord Stream exploded on the seabed of the Baltic Sea",
+        "[WION | @WIONews | Sep 10] Sep 10 #RaceToPower | Russia's underwater 'shadow war': report reveals Russian Navy simulated undersea cable sabotage Russian submarines tracked during secretive Arctic exercise: NATO",
+        "[Irish Independent | @Independent_ie | Sep 10] Sep 10 NATO allies foil Russian subsea cable sabotage",
+        "[Irish Independent | @Independent_ie | Sep 10] Sep 10 NATO allies foil Russian subsea cable sabotage independent.ie 12K",
+        "[SergioLR🪖 | @CasetaBosque | Sep 10] Sep 10 Show original 🚨URGENT: According to an exclusive new Reuters investigation, several NATO countries disrupted a covert Russian submarine operation 🇷🇺 near Svalbard 🇳🇴 this spring. British 🇬🇧, Norwegian 🇳🇴, and U.S. 🇺🇸 forces tracked and confronted several Russian vessels 🇷🇺 linked to the GUGI",
+        "[Гакрукс | @Gakruks1 | Sep 10] Sep 10 NATO EXCLUSIVE: NATO allies foil Russian subsea cable sabotage plot",
+        "[Alex 🇺🇸 | @A_L_E_X_V_E_G_A | Sep 10] Sep 10 US, NATO allies foil Russian subsea cable sabotage plot Deep in Arctic waters near the remote Svalbard archipelago this spring, NATO allies caught Russian subs training to unleash a secret weapon designed to disable critical undersea cables without leaving any fingerprints. The",
+        "[Global Brief | @globalbrief_now | Sep 10] Sep 10 NATO nations thwarted a covert Russian operation off the coast of Norway This spring, the UK, Norway, and the US intercepted submarines belonging to the Russian Defense Ministry’s Main Directorate of Deep-Sea Research (GUGI) near the Svalbard archipelago. According to"
       ]
     },
     {
-      "label": "Pentagon Eyeing Tech Testbed Expansion Along US-Mexico Border",
+      "label": "U.S. Expands Tech Testbed Along U.S.-Mexico Border for AI and Drone Warfare",
       "category": "defense",
-      "boolean_query": "(\"US-Mexico border\" OR \"tech testbed\") (\"Pentagon\" OR \"DoD\")",
+      "boolean_query": "U.S. tech testbed AND Mexico border AND AI warfare",
       "terms": [
-        "Pentagon US-Mexico border tech testbed 2026",
-        "DoD border surveillance sensor towers",
-        "Joint Task Force North AI trials",
-        "Autonomous drone patrol corridors",
-        "Commercial tech integration border"
+        "Pentagon border tech testbed 2026",
+        "AI-driven border security systems",
+        "Drone warfare simulation infrastructure",
+        "Mexican-U.S. defense collaboration",
+        "Border surveillance modernization"
       ],
+      "source_headline": "Pentagon eyeing tech testbed expansion along US-Mexico border",
+      "source_name": "Breaking Defense RSS",
+      "source_url": "https://breakingdefense.com/2026/09/pentagon-eyeing-tech-testbed-expansion-along-us-mexico-border/",
       "sample_tweets": [
-        "[Breaking Defense | @BreakingDefense | Sep 11] Sep 11 Pentagon eyeing tech testbed expansion along US-Mexico border Pentagon eyeing tech testbed expansion along US-Mexico border - Breaking Defense “We want to do as much as we can; I would love to continue to bring on new projects, new programs to the border and try it out, but we want to do it in a responsible way that's safe,” Mark Ditlevson,... 2.5K",
-        "[@arnaudmercier | Sep 12] Sep 12 Pentagon eyeing tech testbed expansion along US-Mexico border news.google.com/rss/articles/C Breaking Defense"
+        "[ToraX | @torax_fi | 1m] 🚨 BREAKING: 🇺🇸 TRUMP REJECTS CALLS TO SLOW DOWN AI DEVELOPMENT HE SAYS THE . IS AHEAD OF CHINA AND CAN’T AFFORD TO LOSE THAT LEAD AI LEADERS ARE WARNING ABOUT RISKS 0:34",
+        "[Ahmad Shah Mohibi | @WarGuy_ | 39m] 🇺🇸 US President Donald Trump says the US is leading the global AI race ‘by a lot,’ while declining to reveal how he personally uses the technology.",
+        "[CGTN Frontline | @Frontlinestory | 2m] Commentary: Washington' AI Distillation Hysteria: America' Flimsy Excuse to Cripple China' Rise Washington' latest coordinated assault by security agencies accusing Chinese artificial intelligence firms of \"industrial-scale malicious distillation\" is neither grounded in",
+        "[Breaking Defense | @BreakingDefense | Sep 11] Sep 11 Pentagon eyeing testbed expansion along US-Mexico border Pentagon eyeing tech testbed expansion along US-Mexico border - Breaking Defense “We want to do as much as we can; I would love to continue to bring on new projects, new programs to the border and try it out, but we want to do it in a responsible way that's safe,” Mark Ditlevson,... 2.5K",
+        "[Sowetan | @Sowetan1981 | 17m] AI doomsday concerns as exaggerated amid rising competition with China.",
+        "[Guillermo Flor | @guilleflorvs | 6m] BREAKING: Trump just told the AI industry to stop asking for the brakes. While Dario Amodei, Sam Altman, and others have publicly pushed for slower AI development and more regulation, Trump is moving in the exact opposite direction. His position: America accelerates. Full stop.",
+        "[CBS Mornings | @CBSMornings | Sep 7] Sep 7 Drone activity at .- Mexico border drops 75% after 3.7K",
+        "[Anadolu English | @anadoluagency | Sep 8] Sep 8 US military’ use of laser weapon system cuts suspicious drone activity along Mexico border by roughly 75% according to report",
+        "[CBS Mornings | @CBSMornings | Sep 7] Sep 7 Drone activity at .- Mexico border drops 75% after",
+        "[Alexander Doria | @Dorialexander | 14m] Well documented effort but cannot fix internal contradictions: frontier (or even economically workable ai ) is not an \"asset\" but a continuous practice, so any access will be submitted to constant renegociation. It' not just US AI",
+        "[RKM | @rkmtimes | 22h] NEW 🇺🇸🇨🇦🇲🇽🇨🇺🔥US Border Security forces are deploying AI-Driven monitoring Systems (detective border ) and strengthening Customs enforcement to screen incoming shipments, asylum seekers and require stricter proofs of origin from manufacturers in these hubs.",
+        "[RKM | @rkmtimes | 22h] NEW 🇺🇸🇨🇦🇲🇽🇨🇺🔥US Border Security forces are deploying AI-Driven monitoring Systems (detective border ) and strengthening Customs enforcement to screen incoming shipments, asylum seekers and require stricter proofs of origin from manufacturers in these hubs. 1.9K",
+        "[المنصة الاقتصادية | @Economyzone | 2m] US lawmakers face growing pressure to regulate advanced AI , but concerns remain that moving too aggressively could weaken America’ technological race with China. #الذكاء_الاصطناعي #التكنولوجيا #ArtificialIntelligence #AIRegulation #Technology #EconomyZone",
+        "[News18 | @CNNnews18 | 13m] #NewsroomUnfiltered AI technology accelerates, experts warn of the need for government oversight to ensure safe development. While progress is essential, regulatory frameworks are crucial to prevent unchecked advancements and maintain societal safety. Vivekananda Ojha,",
+        "[Eric Daugherty | @EricLDaugh | Sep 8] Sep 8 🚨 WOW! There has been a -75% DROP in drone activity along the US-Mexico border Rio Grande Valley after the US military deployed a \"high-energy LASER WEAPON SYSTEM\" — CBS Many of these same drones are linked to the CARTELS Badss 🔥🔥 The first use of this weapon to down",
+        "[Kyle Chan | @kyleichan | Sep 13] Sep 13 Very important article from the head of China's Ministry of State Security, laying out China's view of top AI risks. First is social & political risk from AI content. Second, is cyber, citing Mythos: \"Second, the landscape of cyber offense and defense is undergoing a"
       ]
     },
     {
-      "label": "Armenia Signs $155M Deal for Indian Artillery & Pinaka Rocket Systems",
+      "label": "India Hosts BRICS Summit Amid Nuclear Tensions and Geopolitical Realignment",
+      "category": "diplomacy",
+      "boolean_query": "India BRICS summit AND nuclear risks",
+      "terms": [
+        "New Delhi BRICS 2026 nuclear concerns",
+        "India-Russia-BRICS strategic alignment",
+        "Nuclear proliferation discussions",
+        "Global security architecture shifts",
+        "BRICS energy security initiatives"
+      ],
+      "source_headline": "Nuclear Security Takes Priority Amid India’s Renewed Push for Nuclear Power",
+      "source_name": "The Diplomat India RSS",
+      "source_url": "https://thediplomat.com/2024/08/nuclear-security-takes-priority-amid-indias-renewed-push-for-nuclear-power/",
+      "sample_tweets": [
+        "[TaiwanPlus News | @taiwanplusnews | 1h] At the BRICS meeting in New Delhi, Indian Prime Minister Narendra Modi warned against weaponizing technology and essential minerals, saying this could harm the bloc's shared progress. 0:40",
+        "[Economic Times | @EconomicTimes | 22h] #Weaponisation of critical minerals, tech can hurt progress’: #Modi warns amid #China ’s curbs at #BRICS | 🌍🤝🕊️💼 #BRICSSummit LIVE Updates ➠ ecoti.in/1cL2LY 🗞️ 6.9K",
+        "[RT_India | @RT_India_news | 15m] 📹 ‘Delhi Has The Power To Find Convergence’:",
+        "[ANI | @ANI | 30m] #WATCH | Delhi: BJP MP Sudhanshu Trivedi says, \"The recently concluded BRICS summit offered a splendid example of how India , under the leadership of Prime Minister Narendra Modi, is emerging as a positive and impactful force on the global stage amid a changing world order.",
+        "[Dr. Rakesh Bansal | @iamrakeshbansal | 7h] PM Modi Warns Against Weaponising Tech & Minerals at BRICS PM Modi told BRICS leaders that using technology and critical minerals as weapons can slow shared growth. He asked the group to work together and share solutions with the Global South. Remarks seemed aimed at China after",
+        "[WION | @WIONews | 19m] BRICS 2026: India 's big message from the BRICS Summit Russia, China, US: All doors open for India India building BRICS without US breakup",
+        "[Economic Times | @EconomicTimes | 7h] BRICS Summit : Modi warns against weaponisation of tech, critical minerals; Xi announces open-source AI 4.1K",
+        "[WION | @WIONews | 5h] #WIONAtBRICS India PM Modi’s sharp caution at the New Delhi BRICS Summit against the weaponisation of technology and critical minerals strikes at the core of 21st-century economic anxiety",
+        "[Times Now Navbharat | @TNNavbharat | Sep 13] Sep 13 Translated from Hindi Show original",
+        "[Times Now Navbharat | @TNNavbharat | Sep 13] Sep 13 Translated from Hindi Show original BRICS Summit 2026: BRICS Leaders Concerned Over Deliberate Attacks on Nuclear Facilities, Emphasize Need to Maintain Security #BRICSOnNavBharat #BRICS2026 #BRICSSummit #BRICS #NuclearSafety BRICS Summit 2026: परमाणु सुविधाओं पर जानबूझकर हमलों से ब्रिक्स नेता चिंतित, सुरक्षा बनाए रखने पर...",
+        "[Sputnik India | @Sputnik_India | 19h] Sputnik India BRICS Summit in New Delhi 🔸Restraint on the US-Iran war and more👇 1.7K",
+        "[RT_India | @RT_India_news | Sep 12] Sep 12 Delhi Declaration: BRICS Sends Powerful Message to the World From UN reform to sanctions, terrorism and AI - here are some of the key takeaways: 🇮🇳 India ’s UNSC Bid Backed Russia & China reaffirm support for India and Brazil to play bigger role in the UN Security Council. ⚖️",
+        "[Sputnik India | @Sputnik_India | 19h] Sputnik India BRICS Summit in New Delhi 🔸Restraint on the US-Iran war and more👇 1:37 1.7K",
+        "[⏳Towhee 🌏☮️ | @amborin | Sep 12] Sep 12 BRICS : Russia and India agree on BRICS PAY, to bypass the US Dollar: \"The system will allow payments between companies (B2B) and citizens (C2B) directly in national currencies (rubles, rupees, yuan, etc.), bypassing the US dollar as an intermediary.\" \"The agreement signed",
+        "[WION | @WIONews | 17h] #WIONAtBRICS BRICS Summit concludes; concern remains: China's monopoly on critical minerals a major concern",
+        "[WION | @WIONews | Sep 7] Sep 7 #WIONAtBRICS | Delhi Schools, Government Offices To Shut On September 11 For BRICS Summit The BRICS Summit 2026 comes at a time when extreme weather and climate-related disruptions are creating new challenges for member nations. From devastating floods and heatwaves to growing"
+      ]
+    },
+    {
+      "label": "Tanker Attack in Strait of Hormuz Sparks U.S.-Iran Escalation",
       "category": "economic",
-      "boolean_query": "(\"Armenia\" OR \"Pinaka\") (\"artillery deal\" OR \"arms contract\")",
+      "boolean_query": "Strait of Hormuz AND tanker attack AND Iran",
       "terms": [
-        "Armenia India $155M artillery procurement",
-        "Pinaka multi-barrel rocket launcher export",
-        "Indian defense exports Caucasus region",
-        "Armenia-Azerbaijan military balance",
-        "Indian military modernization 2026"
-      ]
-    },
-    {
-      "label": "Pakistan Air Force Deploys HQ-17AE & KORKUT Layered Airbase Counter-UAS",
-      "category": "defense",
-      "boolean_query": "(\"HQ-17AE\" OR \"KORKUT\") (\"Pakistan Air Force\" OR \"SHORAD\")",
-      "terms": [
-        "Pakistan HQ-17AE KORKUT airbase defense",
-        "PAF counter-drone layered systems 2026",
-        "Turkish-Israeli SHORAD integration",
-        "Pakistan Air Force UAS threat matrix",
-        "Operation Sindoor air defense upgrades"
+        "Hormuz tanker projectile incident 2026",
+        "U.S. naval response in Persian Gulf",
+        "Iranian maritime strategy",
+        "Global oil supply chain disruption",
+        "Strait of Hormuz security protocols"
       ],
+      "source_headline": "U.S., Iran Trade Strikes in Strait of Hormuz as Both Battle on Social Media",
+      "source_name": "USNI News (U.S. Naval Institute)",
+      "source_url": "https://news.usni.org/2026/09/04/u-s-iran-trade-strikes-in-strait-of-hormuz-as-both-battle-on-social-media",
       "sample_tweets": [
-        "[China Military Bugle | @ChinaMilBugle | Sep 7] Sep 7 Powered by China's Defense Industry:",
-        "[Farooq Bhai | @FarooqB90714421 | Sep 7] Sep 7 The PAF has released the first images of its newly inducted Triple Layered SHORAD , operationally deployed at various sites. Systems include: Aselsan Korkut CASIC HQ17AE The LD76 is still left out tho. |scroll element| (horizontal 0%) 64K",
-        "[𝕽𝖚𝖇𝖞🇵🇰 | @_11R_y | Sep 8] Sep 8 🇵🇰🇹🇷 Another important developmet in #Pakistan #Turkey defense cooperation The KORKUT air defense system developed by the Turkish defense organization ASELSAN has been highlighted by the Pakistan Air Force . The system is equipped with a 35 mm automatic cannon, advanced tracking.",
-        "[Powindah 💀 | @intel_view | Sep 7] Sep 7 Look what showed up in Pakistan Air Force latest clip 👀🔥 🔹 ASOJ Electronic Warfare Aircraft 🔹 CIWS 🔹 Bayraktar Akıncı UCAV 🔹 Bayraktar TB2 UAV quite the lineup of Turkish defence tech! 🇹🇷🤝🇵🇰 0:21 Quote Powindah 💀",
-        "[Pakistan Strategic Forum | @ForumStrategic | Sep 7] Sep 7 Pakistan Air Force shows its newly inducted Layered Integrated Air Defence System [IADS] officially declared on 7th Sep 2026 🦅🛡 🇵🇰 - Chinese HQ-17 [LOWMADS]. Korkut [35 mm self-propelled anti-aircraft gun SPAAG]. - Turkish Sahin [40mm physical destruction and",
-        "[Powindah 💀 | @intel_view | Sep 7] Sep 7 🚨 🇵🇰 PAF Expands Its Multi-Layered Air Defence Pakistan Air Force has inducted: HQ-17 🇨🇳: a Chinese short-range surface-to-air missile system, derived from the Russian Tor-M1 family. Korkut 🇹🇷: a Turkish tracked self-propelled anti-aircraft gun/CIWS system developed by x.com/intel_view/sta… 1.1K",
-        "[Startup Pakistan | @PakStartup | Sep 7] Sep 7 Pakistan has publicly showcased Türkiye’s ASELSAN KORKUT 35mm air-defence system, highlighting a growing focus on countering dr0nes, cruise miss!les and other low-altitude thre@ts. Featured in a Pakistan Air Force Defence Day film, KORKUT reportedly combines radar,",
-        "[Clash Report | @clashreport | Sep 7] Sep 7 Pakistan Air Force KORKUT 35mm anti-aircraft gun system in its Defence Day video, the first confirmation of induction. The PAF showed a layered air defense stack. KORKUT",
-        "[INTELLIGENCE FRONT⚡️ | @IntelFrontUnit | Sep 7] Sep 7 HQ 17AE short range air defence system of the Pakistan Air Force provides a mobile point defence capability against low altitude aerial threats, including aircraft, helicopters, cruise missiles and UAVs. The system strengthens Pakistan’s layered air defence network with rapid",
-        "[jacques frédéric | @jacquesfrd89032 | Sep 7] Sep 7 Pakistan Air Force unveils Chinese HQ-17AE surface-to-air missile system acquisition in new video worlddefencenews.blogspot.com/2026/09/pakist |scroll element (horizontal 0%)"
+        "[The Wall Street Journal | @WSJ | Sep 12] Sep 12 Breaking: Saudi Arabia shut down a crucial pipeline that allowed oil exports to circumvent the Strait of Hormuz 1.5K 515K",
+        "[Al Jazeera English | @AJEnglish | 6h] Oil prices rose more than 3 percent on Monday, with Brent crude futures reaching $107.82 a barrel. Shipping traffic through the Strait of Hormuz also dropped to single digits over the weekend. 🔴 LIVE updates: aje.news/jm4ix2",
+        "[Al Jazeera English | @AJEnglish | 6h] Oil prices rose more than 3 percent on Monday, with Brent crude futures reaching $107.82 a barrel. Shipping traffic through the Strait of Hormuz also dropped to single digits over the weekend. 🔴 LIVE updates: aje.news/jm4ix2 61K",
+        "[Al Jazeera English | @AJEnglish | Sep 12] Sep 12 Saudi Arabia has shut its East-West oil pipeline after a drone attack . Riyadh says the attack originated in Iraq. The pipeline allowed Riyadh to bypass the Strait of Hormuz 1.7K 217K",
+        "[Gunther Eagleman™ | @GuntherEagleman | Sep 9] Sep 9 🚨 BREAKING: The United States just destroyed five Iranian oil tankers after Iran took shots at American forces. Video shows the ships on fire and then sinking into the ocean. The Pentagon called it punishment for an attempted attack on a U.S. warship, one of the biggest",
+        "[Li Zexin 李泽欣 | @XH_Lee23 | 7h] Chinese crew members in the Strait of Hormuz heard warnings on radio from US military before it attacked another nearby oil tanker , the ship was soon later on fire. \"This is US military aircraft. I’m preparing to fire at your stern. You have 3 minutes to clear the crew from the",
+        "[THE INTEL PATRIOT 🇺🇸 | @DeIntelpatriot | Sep 9] Sep 9 🚨 BREAKING: Iranian oil tankers turned back in the Strait of Hormuz . Reports say eight Iranian tankers were stopped by the U.S. Navy and forced to reverse course. No Iran ’s oil gets out. Do you support Trump on this? B. No",
+        "[THE INTEL PATRIOT 🇺🇸 | @DeIntelpatriot | Sep 9] Sep 9 🚨 BREAKING: Iranian oil tankers turned back in the Strait of Hormuz . Reports say eight Iranian tankers were stopped by the U.S. Navy and forced to reverse course. No Iran ’s oil gets out. Do you support Trump on this? B. No 3K 64K",
+        "[BMX | @BMX_Press | 16h] 🚨 BREAKING: Maritime alert: US warship reported under fire inside the Strait of Hormuz transit lane. ⚓️🔥 🇺🇸 21K",
+        "[Clash Report | @clashreport | Sep 11] Sep 11 Sign of the times: Qatar — the world's biggest LNG exporter before the war — is now in talks to buy U.S. LNG under long-term contracts. That's a stunning reversal. The Iran war knocked out two of Qatar's 14 LNG trains at Ras Laffan (3–5 year repair timeline, ~$20 billion/year",
+        "[BMX | @BMX_Press | 16h] 🚨 BREAKING: Maritime alert: US warship reported under fire inside the Strait of Hormuz transit lane. ⚓️🔥 🇺🇸 0:18 GBC 21K",
+        "[Aaron Rupar | @atrupar | Sep 10] Sep 10 Trump: \"I think we should call the Hormuz Strait the Trump Strait . I should get something out of it. The Trump Strait .\" 144K",
+        "[Iran In Hyderabad | @IraninHyderabad | Sep 10] Sep 10 🔴 IRGC Navy targets and destroys a U.S. Saildrone Explorer unmanned surface vessel (hull no. 5838) operating at the entrance to the Strait of #Hormuz 1.3K 39K",
+        "[Donald J Trump Posts TruthSocial | @TruthTrumpPost | 15h] Commentary account Saudi Arabia's East West pipeline, which carries about 4 million barrels a day to the Red Sea port of Yanbu, was shut down Friday. The number that should worry people isn't the 4%, it's the 5 to 7 days. A damaged pipeline is a supply problem with a known fix; a stockpile that",
+        "[OSINTdefender | @sentdefender | 13h] According to a release from U.S. Central Command, since the resumption of the blockade of vessels traveling to and from Iran, 101 vessels have been redirected. This comes as the planned meeting between Iranian and Gulf nation officials over the Strait of Hormuz has now been",
+        "[OSINTdefender | @sentdefender | 20h] The tanker struck by an unknown projectile while transiting the Strait of Hormuz yesterday evening is on fire, and local authorities were in the process of evacuating its crew, according to an update from the United Kingdom Maritime Trade Operations (UKMTO) Center issued earlier"
       ]
     },
     {
-      "label": "Space Force Texas DARC Radar Network for Deep Space Surveillance",
+      "label": "Ukraine Conflict Enters New Phase with NATO Supply of Patriot Interceptors",
       "category": "defense",
-      "boolean_query": "(\"Space Force\" OR \"DARC radar\") (\"Texas\" OR \"deep space\")",
+      "boolean_query": "Ukraine AND Patriot interceptors AND NATO",
       "terms": [
-        "Space Force Texas DARC space radar 2030",
-        "Trinational space surveillance alliance",
-        "Deep space object tracking system",
-        "Space Domain Awareness 2026",
-        "US-Canada-Mexico space security"
+        "NATO Patriot system delivery 2026",
+        "Ukrainian air defense modernization",
+        "Russian missile targeting patterns",
+        "Eastern European defense coordination",
+        "Winter 2026 combat readiness"
       ],
+      "source_headline": "Ukraine contracting around 1,000 Patriot missiles from allies, defense chief says",
+      "source_name": "Defense News RSS",
+      "source_url": "https://www.defensenews.com/flashpoints/ukraine/2026/09/08/ukraine-contracting-around-1000-patriot-missiles-from-allies-defense-chief-says/",
       "sample_tweets": [
-        "[SpaceNews | @SpaceNews_Inc | Sep 9] Sep 9 Space Force as third site of deep-space radar network spacenews.com/space-force-se 4.9K",
-        "[Inside Defense | @insidedefense | Sep 10] Sep 10 Space Force for third DARC location ow.ly/xEmW106EwOy",
-        "[Space Systems Command | @USSF_SSC | Sep 10] Sep 10 The #SpaceForce has approved project planning and selected Lake Kickapoo, , as the preferred location for the third and final site of the Deep Space Advanced Radar Capability global network, pending final planning approvals. More: ssc.spaceforce.mil/Newsroom/Artic 11K",
-        "[Charles: The Patriot | @patriot1of4 | Sep 11] Sep 11 Perfect! Space Force Taps Texas Site for New Deep Space Radar",
-        "[Breaking Defense | @BreakingDefense | Sep 11] Sep 11 Space Force as US home for trinational DARC space radar network Space Force picks Texas as US home for trinational DARC space radar network - Breaking Defense 2K",
-        "[SkyGlass by AVIAR Labs | @SkyGlass12 | Sep 11] Sep 11 SPACE FORCE CHOOSES TEXAS The U.S. Space Force has selected as the home for the U.S. segment of the trinational DARC space radar network, marking a milestone in global space surveillance. Space Force picks Texas as US home for trinational DARC space radar network - Breaking Defense",
-        "[Scott Firsing, PhD | @scottfirsing | Sep 10] Sep 10 Another major win for and America’s growing space and national security ecosystem. The",
-        "[Army Recognition | @ArmyRecognition | Sep 10] Sep 10 U.S. Space Force Selects Texas DARC Radar to Track Enemy Satellites in Geostationary Orbit 1.7K",
-        "[Cal Biesecker | @calvinb21 | 18h] The Space Force last week said it approved the project planning for its third Deep Space Advanced Radar Capability (DARC) site, which will be located in Space Force Finalizes Texas Site For Deep Space Radar - Defense Daily",
-        "[JTCrawford | @JtCrawford | Sep 11] Sep 11 Space Force sites trinational DARC radar in —allied space domain awareness built on sovereign soil, shared capability. Strategic partnerships that respect borders and balance burdens. This is how republics defend themselves. #SpaceDefense #Deterrence",
-        "[KeepSpace4Peace | @KeepSpace4Peace | Sep 12] Sep 12 DARC indeed “DARC will be a game-changer when it comes to Space Domain Awareness,” said Pablo Pezzimenti, vice president, integrated national systems,",
-        "[Air & Space Forces Magazine | @ASForcesMag | Sep 11] Sep 11 Space Force Site for New Deep Space Radar, Targets Operations in 2030 Space Force Taps Texas Site for New Deep Space Radar",
-        "[Defense Daily | @DefenseDaily | Sep 13] Sep 13 Space Force Site For Deep Space Radar - Defense Daily",
-        "[Defense Daily | @DefenseDaily | Sep 13] Sep 13 Space Force Site For Deep Space Radar - Defense Daily Space Force Finalizes Texas Site For Deep Space Radar - Defense Daily 1K",
-        "[Mitch (Casspari) | @mitchcasspari | Sep 11] Sep 11 Space Force verortet DARC-Radar in : Start 2027, Vollbetrieb bis 2032: ift.tt/oqHJSLa #space #satelliten #weltall #astronomie #universe #planeten #spaceship #starcitizen #elonmusk #galaxie #spacex Space Force verortet DARC-Radar in Texas: Start 2027, Vollbetrieb bis 2032 it-boltwise.de"
-      ]
-    },
-    {
-      "label": "Indian Coast Guard Conducts Two-Day Maritime Exercise in Andaman & Nicobar",
-      "category": "defense",
-      "boolean_query": "(\"Indian Coast Guard\" OR \"Andaman drill\") (\"anti-submarine\" OR \"ASW\")",
-      "terms": [
-        "Indian Coast Guard Andaman exercise 2026",
-        "Anti-submarine warfare training",
-        "Maritime domain awareness South China Sea",
-        "Quad naval coordination drills",
-        "Indo-Pacific maritime security"
-      ]
-    },
-    {
-      "label": "US-India Yudh Abhyas 2026 Precision Fires & MLIDS Counter-Drone Drills",
-      "category": "defense",
-      "boolean_query": "(\"Yudh Abhyas\" OR \"MLIDS\") (\"India\" OR \"Bikaner\")",
-      "terms": [
-        "Yudh Abhyas 2026 MLIDS counter-UAS",
-        "Bikaner joint precision fires exercise",
-        "India-US military tech exchange",
-        "HIMARS Pinaka K9 integration",
-        "Multi-domain task force drills"
-      ]
-    },
-    {
-      "label": "Russia Sends Medieval Warrior Bones to Ukraine Front for Morale",
-      "category": "politics",
-      "boolean_query": "(\"Russia\" OR \"Ukraine war\") (\"medieval bones\" OR \"morale boost\")",
-      "terms": [
-        "Russian medieval warrior relics Ukraine 2026",
-        "Propaganda warfare psychological operations",
-        "Historical symbolism in conflict",
-        "Ukrainian frontline morale tactics",
-        "Russian cultural warfare 2026"
-      ],
-      "sample_tweets": [
+        "[Defense of Ukraine | @DefenceU | 25m] 🇺🇦🤝🇺🇸 Thank you, United States, for support that helps save Ukrainian lives.",
+        "[Open Source Intelligence | @osint42 | 8m] 🔴 Former CIA Director David Petraeus stated that Ukraine must scale up its military industry to maximize its innovations. He noted that intelligence officials estimate Russia could produce as many as 10 million artillery shells annually.",
+        "[Defense of Ukraine | @DefenceU | Sep 9] Sep 9 Ukraine Defense Contact Group meeting. New contributions: air defense, drones, shells. 🇩🇪 Germany: interceptor missiles for Patriot 🇬🇧 United Kingdom: £100M for American weapons via PURL, 95,000 more drones by",
+        "[Anadolu English | @anadoluagency | Sep 9] Sep 9 🇬🇧I🇺🇦 UK announces £100M air defense package for Ukraine ahead of winter Patriot missile , large-caliber artillery rounds, and drones to help Ukraine v.aa.com.tr/4051555 1.8K",
+        "[The Economist | @TheEconomist | Sep 11] Sep 11 Ukraine ’s stock of Patriot PAC-3 , the only truly effective counter for ballistic missiles that it has available, is all but exhausted. Its air defences are under mounting pressure",
+        "[Anadolu English | @anadoluagency | Sep 9] Sep 9 🇬🇧I🇺🇦 UK announces £100M air defense package for Ukraine ahead of winter 1.8K",
+        "[The Economist | @TheEconomist | Sep 11] Sep 11 Ukraine ’s stock of Patriot PAC-3 , the only truly effective counter for ballistic missiles that it has available, is all but exhausted. Its air defences are under mounting pressure 54K",
+        "[The Kyiv Independent | @KyivIndependent | Sep 11] Sep 11 ⚡️ EU gives final green light to 6 billion euros in defense aid for Ukraine Patriot missiles purchase. Ukraine to use funds from the EU's 90-billion-euro ($104-billion) support loan to purchase U.S.-made PAC-3 Patriot , one",
+        "[LMA.25 | @LMA258 | Sep 9] Sep 9 Translated from German Show original This was stated by German Defense Minister Boris Pistorius at today's meeting of the NATO Contact Group for the Defense of Ukraine (Ramstein format):⬇️",
+        "[LMA.25 | @LMA258 | Sep 9] Sep 9 Translated from German Show original This was stated by German Defense Minister Boris Pistorius at today's meeting of the NATO Contact Group for the Defense of Ukraine (Ramstein format):⬇️ 1:23 3.7K",
+        "[OSINTtechnical | @Osinttechnical | Sep 8] Sep 8 Today, three major packages of PATRIOT missiles for Ukraine were announced: - The EU will fund €3.2 billion for interceptor purchases. - The UK will provide £100 million for PURL to purchase . - Germany will directly deliver PAC-2 missiles from Bundeswehr stocks. 5.8K 158K",
+        "[AMK Mapping 🇳🇿 | @AMK_Mapping_ | Sep 9] Sep 9 Ukraine is so much more competent in using patriot systems. They receive extremely limited stockpiles and know how to conserve them, still managing to shoot down a portion of Russia's most advanced tactical ballistic missiles. Meanwhile America just goes fucking crazy launching",
+        "[LMA.25 | @LMA258 | Sep 9] Sep 9 Translated from German Show original This was stated by German Defense Minister Boris Pistorius at today's meeting of the NATO Contact Group for the Defense of Ukraine (Ramstein format):⬇️ 0:02 / 1:25 3.7K",
+        "[AMK Mapping 🇳🇿 | @AMK_Mapping_ | Sep 9] Sep 9 Close to 100 Patriot PAC-2/3 interceptors have been launched by the U.S. in Jordan so far. Iran has launched around 30 ballistic missiles. This is the biggest Iranian attack in months, and the U.S. is completely draining their remaining interceptor stockpiles. x.com/AMK_Mapping_/s… 0:02 / 0:43 1.9K 150K",
+        "[Emiraa Air - Sea Defence | @DenizEmiraa | Sep 10] Sep 10 NEW 🔗🪖 EU states have approved the release of 3.2 billion euros in funding that Ukraine will use for the supply of interceptor missiles for Patriot air defense systems.",
+        "[Ursula von der Leyen | @vonderleyen | Sep 11] Sep 11 Today, we have approved €6.1 billion to help Ukraine procure air defence systems, missiles, drones and electronic warfare systems. With this approval, Ukraine can purchase the Patriot equipment it needs to protect its skies from Russia's attacks. Together with our Member",
+        "[Jonathan Beale | @bealejonathan | Sep 8] Sep 8 This should be good news for Ukraine …but I wonder what guarantees have been given by 🇺🇸 to supply Patriot interceptors before winter…and how many? Quote UK Joint Delegation to NATO",
+        "[Jonathan Beale | @bealejonathan | Sep 8] Sep 8 #Ukraine Contact Grouo meeting virtually (Hegseth tends to skip them). Doesn’t sound v optimistic about peace talks tho - saying Ukraine / Europe must be prepared for a “protracted conflict” !",
         "[Jonathan Beale | @bealejonathan | Aug 18] Aug 18 This isn't the first time Russia's accused the UK of supplying drones to Ukraine which have been used to target Russian territory. Two years ago Russia's Foreign Ministry said this : tass.com/politics/18382 1.5K"
       ]
     },
     {
-      "label": "Bangladesh Seeks to Reset Relations with India Amid BRICS Nuclear Concerns",
-      "category": "diplomacy",
-      "boolean_query": "(\"Bangladesh\" OR \"BRICS\") (\"nuclear risk\" OR \"India relations\")",
+      "label": "U.S. Navy Unveils Next-Generation Fighter Decision Amid China's Submarine Expansion",
+      "category": "defense",
+      "boolean_query": "U.S. Navy fighter AND China submarines",
       "terms": [
-        "Bangladesh-India bilateral engagement 2026",
-        "BRICS nuclear security concerns",
-        "South Asian regional stability",
-        "India-Bangladesh border security",
-        "Nuclear non-proliferation dialogue"
+        "U.S. carrier-based fighter 2026",
+        "China's Silent Anvil torpedo",
+        "Undersea warfare modernization",
+        "Pacific Fleet readiness",
+        "Naval aviation technology shift"
+      ],
+      "source_headline": "US Navy’s next-generation fighter decision to be unveiled soon, sources say",
+      "source_name": "Defense News RSS",
+      "source_url": "https://www.defensenews.com/news/your-military/2026/09/09/us-navys-next-generation-fighter-decision-to-be-unveiled-soon-sources-say/"
+    },
+    {
+      "label": "Israel Establishes AI and Robotics Military Branch for Drone Warfare",
+      "category": "defense",
+      "boolean_query": "Israel AI military branch AND drones",
+      "terms": [
+        "Israeli AI warfare division 2026",
+        "Autonomous drone combat systems",
+        "Cyber-physical military integration",
+        "Gaza conflict technology shift",
+        "Defense innovation strategy"
+      ],
+      "source_headline": "Israeli military creates new branch focused on AI, drones and robotics",
+      "source_name": "Breaking Defense RSS",
+      "source_url": "https://breakingdefense.com/2026/09/israeli-military-creates-new-branch-focused-on-ai-drones-and-robotics/",
+      "sample_tweets": [
+        "[Idrees Ali | @idreesali114 | Sep 10] Sep 10 Sept 10 (Reuters) - An Israeli airstrike killed a man, his wife, and their two daughters, aged 8 and 12, in a house in the northern Gaza Strip on Thursday, health officials said, after the Israeli military escalated bombardments over the past two days. 2.2K",
+        "[Phil Stewart | @phildstewart | Aug 10] Aug 10 (Reuters) - Israeli Prime Minister Benjamin Netanyahu restated his rejection of Donald Trump's latest Gaza plan in televised remarks to his right-wing government on Sunday, even as Israel's military has effectively halted attacks in the territory under pressure from the U.S.",
+        "[Phil Stewart | @phildstewart | Aug 10] Aug 10 (Reuters) - Yemen's Iran-aligned Houthis have resumed attacks on the Red Sea port city of Mocha, a Yemeni military spokesperson said. Footage shown by Houthi-affiliated Al Masirah TV showed the launch of several ballistic missiles and drones, which Houthi military spokesperson",
+        "[Phil Stewart | @phildstewart | Aug 10] Aug 10 (Reuters) - Israeli Prime Minister Benjamin Netanyahu restated his rejection of Donald Trump's latest Gaza plan in televised remarks to his right-wing government on Sunday, even as Israel's military has effectively halted attacks in the territory under pressure from the U.S. 9.7K"
+      ]
+    },
+    {
+      "label": "Russia Deploys Medieval Warrior Bones to Boost Ukrainian Front Morale",
+      "category": "politics",
+      "boolean_query": "Russia AND Ukrainian morale AND bones",
+      "terms": [
+        "Russian historical propaganda 2026",
+        "Ukrainian front psychological warfare",
+        "Symbolic military morale tactics",
+        "Eastern Front psychological operations",
+        "Historical relic mobilization"
+      ],
+      "source_headline": "Russia sends bones of medieval warrior prince to Ukraine front to boost morale",
+      "source_name": "Defense News RSS",
+      "source_url": "https://www.defensenews.com/global/2026/09/10/russia-sends-bones-of-medieval-warrior-prince-to-ukraine-front-to-boost-morale/"
+    },
+    {
+      "label": "AI Industry Leaders Call for Slowing Development Amid Escalating Security Risks",
+      "category": "economic",
+      "boolean_query": "AI slowdown AND Anthropic AND security",
+      "terms": [
+        "AI development pause 2026",
+        "Anthropic CEO Dario Amodei statement",
+        "Military AI escalation concerns",
+        "Tech ethics governance",
+        "Global AI arms race"
+      ],
+      "source_headline": "AI-linked stocks slump after top lab CEOs call for slowing technology's development",
+      "source_name": "Reuters World News",
+      "source_url": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxQSTRDc1JSdWVDTmE5WmI2MEFCWGgxWUdvcGRNNlNjNXNiMmlaRGhLYmpOUGhFbGNQQzI0cks4Wjk3a0JFaE4wdUVDdFJUangyS1ZOWFRZOUU3VmdjblNOb29feDFwRkRQNDR6WGw5Z0xxMUhTeEhqNGxYanNuSHBDcjRhRVRSYjhQTHBTTXBjZnF3MnA5NnR1TkNLWFZLNXJrd19VRUNaMTg1ZzlKbTB1RnV0VVM2cG84aTdEWGZ3bHRVY2M?oc=5",
+      "sample_tweets": [
+        "[OSINTdefender | @sentdefender | 16h] The AI debate has taken a turn in recent days as some of the industry’s biggest names are publicly arguing that the pace of development may be outrunning the safeguards needed to control increasingly capable systems. Anthropic CEO Dario Amodei is calling for AI companies to slow"
+      ]
+    },
+    {
+      "label": "Kerael Robotics Unveils 2,500kg Heavy-Lift Drone with Indigenous 'Black Bird' Motors",
+      "category": "defense",
+      "boolean_query": "Kerael Robotics AND Black Bird AND drone",
+      "terms": [
+        "Indian heavy-lift drone 2026",
+        "Black Bird motor technology",
+        "Defence logistics capabilities",
+        "Indigenous drone production",
+        "Military transport innovation"
+      ],
+      "source_headline": "Kerael Robotics Unveils 2,500kg Heavy-Lift Drone With Indigenous ‘Black Bird’ Motors for Defence and Logistics",
+      "source_name": "IDRW RSS Feed",
+      "source_url": "https://idrw.org/kerael-robotics-unveils-2500kg-heavy-lift-drone-with-indigenous-black-bird-motors-for-defence-and-logistics/"
+    },
+    {
+      "label": "India's P75I Submarine Project Faces Production Delays Amid TKMS Collaboration",
+      "category": "defense",
+      "boolean_query": "P75I AND TKMS AND production delays",
+      "terms": [
+        "Indian submarine timeline 2026",
+        "TKMS collaboration challenges",
+        "Nuclear sub construction delays",
+        "Naval procurement bottlenecks",
+        "Indo-German defense tech"
+      ],
+      "source_headline": "India’s P75I and TKMS: Strategic Opportunity or Timeline Risk?",
+      "source_name": "DefenceXP India",
+      "source_url": "https://www.defencexp.com/india-p75i-and-tkms/"
+    },
+    {
+      "label": "Indian Coast Guard Conducts Two-Day Maritime Exercise in Andaman & Nicobar Islands",
+      "category": "defense",
+      "boolean_query": "Indian Coast Guard AND Andaman exercise",
+      "terms": [
+        "Andaman maritime drill 2026",
+        "Indian Ocean security operations",
+        "Coastal defense readiness",
+        "Regional naval coordination",
+        "Island chain security"
+      ],
+      "source_headline": "0 Comment on Indian Coast Guard conducts two-day maritime exercise in Andaman & Nicobar Islands",
+      "source_name": "IDRW India Category",
+      "source_url": "https://idrw.org/indian-coast-guard-conducts-two-day-maritime-exercise-in-andaman-nicobar-islands/#respond",
+      "sample_tweets": [
+        "[Idrees Ali | @idreesali114 | Sep 10] Sep 10 ADEN/DUBAI, Sept 10 (Reuters) - Yemen's Iran-aligned Houthi militants have reached the Red Sea islands of Hanish after capturing the coastal city of Mocha, two Yemeni government sources said, in a dramatic strategic shift that could threaten the Bab el-Mandeb Strait. 155K"
       ]
     }
   ]

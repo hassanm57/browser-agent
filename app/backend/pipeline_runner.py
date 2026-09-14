@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import sys
 import json
 import datetime
@@ -630,7 +631,7 @@ async def run_single_country_pipeline(
 
         endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.11.214:8000/v1")
         model_name = settings_dictionary.get("llm_model_name", "qwen3-14b")
-        timeout_seconds = int(settings_dictionary.get("llm_timeout_seconds", "180"))
+        timeout_seconds = int(settings_dictionary.get("llm_timeout_seconds", "300"))
 
         await log_and_record("LLM", f"Synthesizing topics via {endpoint_url} (Model: {model_name}, Timeout: {timeout_seconds}s)...")
 
@@ -646,7 +647,8 @@ async def run_single_country_pipeline(
                 curated_x_sources_tweets,
                 endpoint_url,
                 model_name,
-                settings_dictionary.get("vllm_api_key", "EMPTY")
+                settings_dictionary.get("vllm_api_key", "EMPTY"),
+                timeout_seconds
             )
             await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} topics (15 crisp keywords each + Boolean queries).")
             for topic_preview_index in range(min(3, len(synthesized_topics_list))):

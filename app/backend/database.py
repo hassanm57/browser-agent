@@ -46,7 +46,7 @@ def initialize_database():
         ("vllm_api_key", "EMPTY"),
         ("llm_model_name", "qwen3-14b"),
         ("llm_maximum_tokens", "8192"),
-        ("llm_timeout_seconds", "180"),
+        ("llm_timeout_seconds", "300"),
         ("headless_mode", "true"),
         ("use_real_chrome", "true"),
         ("maximum_tweets_per_trend", "20"),

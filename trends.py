@@ -175,7 +175,12 @@ def is_bot_challenge_text(text_string):
         "security service to protect",
         "svg content collapsed",
         "more content below viewport",
-        "scroll to reveal"
+        "scroll to reveal",
+        "ssl handshake failed",
+        "error code 525",
+        "additional troubleshooting information",
+        "if you're a visitor",
+        "if you're the owner"
     ]
     for indicator_phrase in bot_challenge_indicator_phrases:
         if indicator_phrase in lowercased_text_string:
@@ -236,6 +241,16 @@ def fetch_headlines_from_configured_sources(sources_list):
                     heading_item = headings_collection[heading_index]
                     heading_text = heading_item.get_text(strip=True)
 
+                    # Clean IDRW comments prefix if present (e.g., '12 Commentson...')
+                    heading_text = re.sub(r'^\d+\s*Comments?on\s*', '', heading_text, flags=re.IGNORECASE).strip()
+
+                    # Clean Janes trailing call-to-action tags (e.g., '...Read Article')
+                    heading_text = re.sub(r'\s*Read (Article|Case Study|Analysis|Briefing|Feature)$', '', heading_text, flags=re.IGNORECASE).strip()
+
+                    # Skip relative timestamps and forum date markers (e.g., 'Yesterday at 11:41 PM' on defence.in)
+                    if re.match(r'^(yesterday|today|tomorrow)\s+at\s+', heading_text, flags=re.IGNORECASE):
+                        continue
+
                     if len(heading_text) > 25 and len(heading_text) < 160:
                         # Skip Cloudflare or bot verification challenge text
                         if is_bot_challenge_text(heading_text):
@@ -250,7 +265,8 @@ def fetch_headlines_from_configured_sources(sources_list):
                                 "armscontrol.org", "sipri.org", "carnegieendowment.org", "stimson.org",
                                 "disarmament.un.org", "idrw.org", "livefistdefence.com", "quwa.org",
                                 "defense.gov", "airandspaceforces.com", "navalnews.com", "usni.org",
-                                "warontherocks.com", "thediplomat.com", "iaea.org"
+                                "warontherocks.com", "thediplomat.com", "iaea.org", "scmp.com",
+                                "defencexp.com", "defence.in"
                             ]
 
                             is_from_specialized_domain = False
@@ -265,7 +281,10 @@ def fetch_headlines_from_configured_sources(sources_list):
                                 "pact", "russia", "border", "missile", "defense", "defence", "nato",
                                 "taiwan", "ukraine", "hormuz", "sanctions", "nuclear", "warhead",
                                 "proliferation", "deterrence", "doctrine", "disarmament", "iaea",
-                                "bmd", "hypersonic", "drone", "uav", "cbm", "air force"
+                                "bmd", "hypersonic", "drone", "uav", "cbm", "air force",
+                                "india", "indian", "mod", "drdo", "hal", "tejas", "iaf", "ladakh",
+                                "lac", "loc", "kashmir", "brahmos", "agni", "ins ", "coast guard",
+                                "indo-pacific"
                             ]
 
                             has_strategic_keyword = False
@@ -1913,13 +1932,189 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
     return validated_topics_list
 
 
+def is_indian_defence_source_name_or_url(source_name_string, source_url_string=""):
+    # Checks if a source belongs to Indian defence publications or Indian national news
+    combined_string = (str(source_name_string) + " " + str(source_url_string)).lower()
+    indian_indicators_list = [
+        "idrw", "defencexp", "defence.in", "indian express",
+        "newindianexpress", "livefist"
+    ]
+    for indicator in indian_indicators_list:
+        if indicator in combined_string:
+            return True
+    return False
+
+
+def is_indian_defence_topic(topic_item):
+    # Checks if a topic belongs to Indian defence based on its label, query, and keywords
+    indian_defence_keywords_list = [
+        "india", "indian", "tejas", "drdo", "hal", "iaf", "mod", "new delhi",
+        "ladakh", "lac", "brahmos", "agni", "ins ", "defencexp", "idrw",
+        "indian navy", "indian army", "indian air force", "p75i", "amca",
+        "lch", "pinaka", "zorawar", "indo-pacific", "pakistan-india",
+        "sino-indian", "rajnath", "delhi", "south asia"
+    ]
+    label_text = topic_item.get("label", "").lower()
+    boolean_query_text = topic_item.get("boolean_query", "").lower()
+    terms_list = topic_item.get("terms", [])
+
+    for keyword in indian_defence_keywords_list:
+        if keyword in label_text or keyword in boolean_query_text:
+            return True
+
+    for term in terms_list:
+        term_lower = str(term).lower()
+        for keyword in indian_defence_keywords_list:
+            if keyword in term_lower:
+                return True
+
+    return False
+
+
+def prioritize_indian_defence_topics_first(topics_list):
+    # Procedurally separate Indian defence topics and other topics,
+    # then place Indian defence topics at the top of the list so they appear first in the UI
+    indian_defence_topics = []
+    other_topics = []
+
+    for topic_index in range(len(topics_list)):
+        current_topic = topics_list[topic_index]
+        if is_indian_defence_topic(current_topic):
+            indian_defence_topics.append(current_topic)
+        else:
+            other_topics.append(current_topic)
+
+    reordered_topics = []
+    for topic in indian_defence_topics:
+        reordered_topics.append(topic)
+    for topic in other_topics:
+        reordered_topics.append(topic)
+
+    return reordered_topics[:15]
+
+
+def extract_key_phrases_from_headline(headline_text):
+    # Extract distinct keywords and noun phrases from a headline to form 15 terms
+    cleaned_text = re.sub(r'[^a-zA-Z0-9\s\-]', ' ', headline_text)
+    words_list = cleaned_text.split()
+
+    stop_words_list = [
+        "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or", "is",
+        "are", "was", "were", "with", "by", "as", "from", "after", "over", "into",
+        "about", "amid", "says", "report", "news", "update", "confirms", "reveals",
+        "shows", "more", "first", "second", "third", "ahead", "behind"
+    ]
+
+    significant_words = []
+    for word in words_list:
+        word_lower = word.lower()
+        if len(word) >= 3 and word_lower not in stop_words_list:
+            significant_words.append(word)
+
+    terms_list = []
+    if len(headline_text) <= 60:
+        terms_list.append(headline_text)
+
+    for i in range(len(significant_words) - 1):
+        pair = significant_words[i] + " " + significant_words[i + 1]
+        if pair not in terms_list:
+            terms_list.append(pair)
+
+    for i in range(len(significant_words) - 2):
+        triplet = significant_words[i] + " " + significant_words[i + 1] + " " + significant_words[i + 2]
+        if triplet not in terms_list:
+            terms_list.append(triplet)
+
+    for word in significant_words:
+        if word not in terms_list:
+            terms_list.append(word)
+
+    contextual_fillers = [
+        "Military Readiness", "Defense Modernization", "Strategic Capability",
+        "Frontline Posture", "Combat Drills", "Joint Exercises", "Defense Budget",
+        "Armed Forces", "Air Defense", "Border Security", "Procurement Program",
+        "Indo-Pacific Security", "Missile Defense", "Naval Operations", "Regional Deterrence"
+    ]
+    for filler in contextual_fillers:
+        if len(terms_list) >= 15:
+            break
+        if filler not in terms_list:
+            terms_list.append(filler)
+
+    return terms_list[:15]
+
+
+def create_boolean_query_from_terms(terms_list, label_text):
+    # Formulates a high-precision Boolean query using quotes and OR logic
+    if len(terms_list) >= 2:
+        return f'("{terms_list[0]}" OR "{terms_list[1]}") ("defense" OR "military")'
+    elif len(terms_list) == 1:
+        return f'"{terms_list[0]}" ("defense" OR "security")'
+    else:
+        return f'"{label_text[:50]}"'
+
+
+def generate_fallback_topics_from_headlines(news_sources_intel_dictionary, country_name_string="Worldwide", target_topics_count=15):
+    # Generates structured topics procedurally directly from headlines when LLM is unavailable
+    collected_topics_list = []
+    registered_labels_list = []
+
+    # Priority 1: Indian defence sources
+    indian_source_keys = []
+    other_source_keys = []
+
+    for source_name in news_sources_intel_dictionary:
+        if is_indian_defence_source_name_or_url(source_name):
+            indian_source_keys.append(source_name)
+        else:
+            other_source_keys.append(source_name)
+
+    # Process Indian defence headlines first
+    for source_name in indian_source_keys:
+        headlines = news_sources_intel_dictionary.get(source_name, [])
+        for headline in headlines:
+            if len(collected_topics_list) >= target_topics_count:
+                break
+            if headline in registered_labels_list:
+                continue
+            registered_labels_list.append(headline)
+            terms = extract_key_phrases_from_headline(headline)
+            boolean_query = create_boolean_query_from_terms(terms, headline)
+            collected_topics_list.append({
+                "label": headline,
+                "category": "defense",
+                "boolean_query": boolean_query,
+                "terms": terms
+            })
+
+    # Process other sources to reach target_topics_count (15)
+    for source_name in other_source_keys:
+        headlines = news_sources_intel_dictionary.get(source_name, [])
+        for headline in headlines:
+            if len(collected_topics_list) >= target_topics_count:
+                break
+            if headline in registered_labels_list:
+                continue
+            registered_labels_list.append(headline)
+            terms = extract_key_phrases_from_headline(headline)
+            boolean_query = create_boolean_query_from_terms(terms, headline)
+            collected_topics_list.append({
+                "label": headline,
+                "category": "defense",
+                "boolean_query": boolean_query,
+                "terms": terms
+            })
+
+    return collected_topics_list[:target_topics_count]
+
+
 def synthesize_topics_from_news_and_trends(
     target_country_name,
     news_sources_intel_dictionary,
     observed_trends_list=None,
     x_accounts_tweets_dictionary=None
 ):
-    # This function synthesizes 10 to 12 strategic topics directly from authoritative news headlines,
+    # This function synthesizes exactly 15 strategic topics directly from authoritative news headlines,
     # enriched by verified defense correspondent & OSINT reporting and live social trends observed on X,
     # and formulates high-precision Boolean search queries for each topic.
     print("")
@@ -1931,16 +2126,38 @@ def synthesize_topics_from_news_and_trends(
 
     digest_sections_list = []
 
-    # Ingest all authoritative news headlines first (Ground Truth), sanitizing each headline
+    # Separate Indian defence news headlines from other sources so Indian intelligence appears first
+    indian_headlines_sections = []
+    other_headlines_sections = []
+
     for source_name_key in news_sources_intel_dictionary:
         headlines_list = news_sources_intel_dictionary[source_name_key]
         clean_source_name = sanitize_untrusted_text_for_prompt(source_name_key)
         if len(headlines_list) > 0:
-            digest_sections_list.append(f"\n--- AUTHORITATIVE NEWS SOURCE: {clean_source_name.upper()} ---")
+            formatted_source_block = f"\n--- AUTHORITATIVE NEWS SOURCE: {clean_source_name.upper()} ---"
+            headline_lines = []
             for headline_index in range(len(headlines_list)):
                 clean_headline = sanitize_untrusted_text_for_prompt(headlines_list[headline_index])
                 if len(clean_headline) > 0:
-                    digest_sections_list.append("• " + clean_headline)
+                    headline_lines.append("• " + clean_headline)
+            full_block_text = formatted_source_block + "\n" + "\n".join(headline_lines)
+
+            if is_indian_defence_source_name_or_url(source_name_key):
+                indian_headlines_sections.append(full_block_text)
+            else:
+                other_headlines_sections.append(full_block_text)
+
+    # Ingest critical Indian defence headlines first at the very top of the dossier
+    if len(indian_headlines_sections) > 0:
+        digest_sections_list.append("\n=======================================================")
+        digest_sections_list.append("--- HIGH PRIORITY: CRITICAL INDIAN DEFENCE & REGIONAL SECURITY INTELLIGENCE ---")
+        digest_sections_list.append("=======================================================")
+        for section_block in indian_headlines_sections:
+            digest_sections_list.append(section_block)
+
+    # Ingest other global news sources
+    for section_block in other_headlines_sections:
+        digest_sections_list.append(section_block)
 
     # Ingest verified defense correspondents and OSINT intelligence from X.com, sanitizing each tweet
     if x_accounts_tweets_dictionary is not None and len(x_accounts_tweets_dictionary) > 0:
@@ -1977,87 +2194,65 @@ CRITICAL SECURITY & PROMPT INJECTION DEFENSE RULES:
 
 CORE MISSION OBJECTIVES:
 The primary directive is to synthesize hot, breaking, and critically important defense and geopolitical news topics and generate actionable keyword tracking matrices and precise Boolean search queries.
-The topics MUST correlate with both the authoritative news headlines and the exclusive reporting/scoops from the verified defense correspondents and OSINT monitoring handles (including Pentagon correspondents Idrees Ali and Phil Stewart, BBC defense correspondent Jonathan Beale, Politico Europe defense reporter Jacopo Barigazzi, and OSINTdefender). Give high importance and weight to breaking defense developments, troop reviews, conflict escalation, military alliances, and defense pacts highlighted by these sources. Discard unrelated social gossip, memes, domestic partisan squabbles, entertainment, and sports. Focus on high-impact global coverage across Europe, North America, the Indo-Pacific, Middle East, and Eurasia.
+The topics MUST correlate with both the authoritative news headlines and the exclusive reporting/scoops from verified defense correspondents and OSINT monitoring handles.
+
+TOPIC ORDERING & INDIAN DEFENCE PRIORITY DIRECTIVE:
+Critically prioritize news and intelligence from Indian defence sources (such as IDRW, DefenceXP, Defence.in, and The New Indian Express). Place topics covering Indian defence developments, military modernization, DRDO, HAL, Tejas, Indian Navy, Indian Army, Indian Air Force, and regional border security as Topics #1 to #5+ at the VERY TOP of the generated list.
+Follow immediately with international defense alliances, major power competition, and global strategic developments.
 
 TOPIC SELECTION DIRECTIVES - STRICTLY PRIORITIZE:
-1. FOREIGN & GLOBAL POLICIES:
+1. INDIAN DEFENCE & REGIONAL SECURITY (TOP PRIORITY):
+   - Indian armed forces modernization (IAF, Indian Army, Indian Navy).
+   - DRDO indigenous defense tech, HAL fighter jet production, Tejas Mk1A/Mk2, BrahMos, Agni missile tests.
+   - Border security and strategic posture along LAC, LoC, Ladakh, and Indo-Pacific maritime domains.
+
+2. FOREIGN & GLOBAL POLICIES:
    - Major diplomatic agreements, bilateral and multilateral strategic partnerships, foreign ministry negotiations.
    - International summits (UN, G7, BRICS, SCO, ASEAN), high-level state delegations, and diplomatic accords.
-   - International sanctions regimes, export controls on critical tech, and diplomatic sovereignty disputes.
 
-2. DEFENSE & MILITARY STRATEGY:
+3. DEFENSE & MILITARY STRATEGY:
    - Armed forces modernization programs, military doctrine shifts, and force deployments.
-   - Naval task forces, carrier strike groups, air defense interceptor deployments, and frontline military posture.
-   - Joint multinational military exercises, combat drills, and defense readiness maneuvers.
-   - Defense budget allocations, defense industrial base capacity, and major arms trade deals.
+   - Frontline military posture, joint multinational military exercises, and combat drills.
 
-3. GLOBAL AGREEMENTS & DEFENSE PACTS TO STRENGTHEN DEFENSE:
-   - Mutual defense treaties, bilateral security pacts, and collective security alliances (e.g., NATO expansions/initiatives, AUKUS Pillar 1 & 2 developments, Quad defense pacts, CSTO accords, Gulf security pacts).
-   - Bilateral military cooperation pacts, intelligence-sharing frameworks, and mutual logistics support agreements.
-   - International defense technology sharing, co-development agreements, and defense procurement accords.
+4. GLOBAL AGREEMENTS & DEFENSE PACTS TO STRENGTHEN DEFENSE:
+   - Mutual defense treaties, bilateral security pacts (NATO, AUKUS, Quad, CSTO).
+   - Bilateral military cooperation pacts, intelligence-sharing frameworks, and defense procurement accords.
 
-4. STRATEGIC DETERRENCE & EMERGING WARFARE TECH:
-   - Nuclear non-proliferation, nuclear modernization, and strategic deterrence posture.
-   - Hypersonic missile systems, integrated air and missile defense (IAMD), and anti-satellite (ASAT) capabilities.
-   - Military artificial intelligence (AI), autonomous drone swarms (UAV/USV), electronic warfare (EW), and cyber defense.
+5. STRATEGIC DETERRENCE & EMERGING WARFARE TECH:
+   - Nuclear non-proliferation, hypersonic missile systems, integrated air and missile defense (IAMD).
+   - Military artificial intelligence (AI), autonomous drone swarms (UAV/USV), electronic warfare (EW).
 
-5. REGIONAL CONFLICT FLASHPOINTS & MARITIME CHOKEPOINTS:
+6. REGIONAL CONFLICT FLASHPOINTS & MARITIME CHOKEPOINTS:
    - Freedom of navigation operations, strait security (Hormuz, Bab-el-Mandeb, Malacca, Taiwan Strait, Black Sea).
-   - Border security operations, cross-border escalation dynamics, and counter-terrorism military campaigns.
-
-6. NUCLEAR DOCTRINE, ARMS CONTROL & STRATEGIC STABILITY:
-   - Nuclear doctrine shifts, credible minimum deterrence, no-first-use debates, and nuclear triad modernizations.
-   - Arms control treaty compliance, CTBT, NPT review processes, and FMCT negotiations.
-   - Missile test notifications, MTCR compliance, ballistic missile defense (BMD) tracking, and export control regimes.
-   - IAEA safeguards inspections, nuclear facility monitoring, and non-proliferation alerts.
-   - Confidence-building measures (CBMs), military crisis hotlines, and strategic nuclear risk reduction.
 
 KEYWORD & SEARCH PHRASE SPECIFICITY REQUIREMENTS:
-1. Generate between 10 to 12 distinct, high-priority strategic topics based on the ingested news.
+1. Generate EXACTLY 15 distinct, high-priority strategic topics based on the ingested news.
 2. For EACH topic, provide:
-   - "boolean_query": Formulate an exact, high-precision Boolean search query formatted for X.com (Twitter) search using quotation marks and OR logic, e.g.:
-     ("NATO" OR "Article 5") ("Eastern Flank" OR "deterrence")
-     ("AUKUS" OR "Hypersonic") ("defense pact" OR "Indo-Pacific")
-     ("Strait of Hormuz" OR "Red Sea") ("maritime security" OR "naval escort")
+   - "boolean_query": Formulate an exact, high-precision Boolean search query formatted for X.com (Twitter) search using quotation marks and OR logic.
    - "terms": Array of EXACTLY 15 specific, informative search keywords and phrases (2 to 5 words each) directly grounded in the news events.
-     * DO NOT BE AFRAID TO GIVE FULL, SPECIFIC PHRASES: Provide complete, concrete keywords like "Mecca Defence Agreement", "NATO Eastern Flank", "Ukraine vs Russia war tensions", "Brent Crude $100 price surge", "Muwaffaq Salti Air Base strike", "IAEA Fordow uranium enrichment", "Red Sea tanker security escort".
-     * ALTERNATE SPELLINGS & ABBREVIATIONS: When entities have common alternate spellings, transliterations, or official abbreviations (e.g. "Makkah" vs "Mecca", "Türkiye" vs "Turkey", "DPRK" vs "North Korea", "Kyiv" vs "Kiev", "UAE" vs "United Arab Emirates", "Houthis" vs "Ansar Allah"), DEDICATE 1 OR 2 KEYWORDS TO THESE ALTERNATE SPELLINGS. For example, if you include "Makkah Defence Alliance", also include "Mecca Defence Alliance", or if you have "Pakistan-Türkiye defense pact", include "Pakistan-Turkey defense pact". Do NOT increase the total count of keywords beyond 15—use 1 or 2 of the 15 slots for these variants.
-     * STRICTLY FORBIDDEN GENERIC KEYWORDS: Never output vague, overly broad 1-2 word labels like "Economic Warfare", "Oil Price", "Cyber Strategy", "Foreign Policy", "Defense Spending", "Energy Market", "National Security", "Regional Stability". These generic phrases alone never provide meaningful context.
-     * LOOSEN STRICTNESS FOR CONTEXT: While you must avoid generic one-liners, do not make keywords overly restrictive into full sentences. Give rich, human-readable 2-5 word search terms that directly name the pact, crisis, country pair, commander, or military asset.
-     * NO REPETITIVE DUPLICATES: Avoid generating repetitive variations of the same 3 words (e.g., do not output "NATO Eastern Flank defense", "NATO Eastern Flank security", "NATO Eastern Flank posture"). Keep each of the 15 terms distinct and multifaceted.
+     * Provide complete, concrete keywords (e.g. "Tejas Mk1A Fighter Jet", "DRDO GaN Semiconductor", "Indian Navy MAHASAGAR", "NATO Eastern Flank").
+     * When entities have common alternate spellings/acronyms, dedicate 1-2 slots to them.
+     * Strictly forbidden: vague, generic 1-2 word labels like "Defense Spending", "Oil Price", "National Security".
+     * Avoid repetitive variations of the same words.
 
 OUTPUT FORMAT:
-Respond ONLY with a valid, clean JSON array of objects. Do NOT include markdown backticks (```json), thinking reasoning, or preamble text.
+Respond ONLY with a valid, clean JSON array of exactly 15 objects. Do NOT include markdown backticks (```json), thinking reasoning, or preamble text.
 Each object must have these exact keys:
 - "label": Short, descriptive title of the news topic or defense development
 - "category": Exactly one of "defense", "diplomacy", "politics", "economic"
 - "boolean_query": High-precision Boolean search query formatted for X.com search
 - "terms": Array of exactly 15 specific, informative keyword and search phrase strings
-
-Representative example structure:
-[
-  {
-    "label": "NATO Collective Defense and Eastern Flank Modernization",
-    "category": "defense",
-    "boolean_query": "(\\"NATO\\" OR \\"Article 5\\") (\\"Eastern Flank\\" OR \\"deterrence\\")",
-    "terms": [
-      "NATO Collective Defense", "Article 5 NATO", "NATO Eastern Flank", "NATO Defense Spending 2%",
-      "Rapid Reaction Force", "NATO Joint Drills", "Steadfast Defender", "NATO Summit 2026",
-      "Mark Rutte NATO", "European Deterrence Initiative", "NATO Air Shielding", "Patriot Missile Deployment",
-      "Baltic Defense Line", "Suwalki Gap Security", "#NATOSummit"
-    ]
-  }
-]
 """
 
     # User message encapsulating the sanitized untrusted dossier in protective XML tags
-    user_prompt_content = f"""Please analyze the following multi-source news and intelligence dossier for {safe_country_name} and synthesize 10 to 12 strategic topics with 15 crisp keywords and high-precision Boolean queries.
+    user_prompt_content = f"""Please analyze the following multi-source news and intelligence dossier for {safe_country_name} and synthesize EXACTLY 15 strategic topics with 15 crisp keywords and high-precision Boolean queries.
+Make sure topics derived from the Indian defence sources are placed at the VERY TOP of the list first.
 
 <untrusted_intelligence_dossier>
 {full_intel_digest_string}
 </untrusted_intelligence_dossier>
 
-Remember: Respond ONLY with a valid, clean JSON array of objects adhering strictly to the system directives."""
+Remember: Respond ONLY with a valid, clean JSON array of 15 objects adhering strictly to the system directives."""
 
     language_model_client = ChatOpenAI(
         model=llm_model_name_string,
@@ -2073,7 +2268,12 @@ Remember: Respond ONLY with a valid, clean JSON array of objects adhering strict
         model_response_object = await language_model_client.ainvoke([system_message_object, user_message_object])
         return model_response_object.completion
 
-    raw_model_completion_text = asyncio.run(call_llm())
+    raw_model_completion_text = ""
+    try:
+        raw_model_completion_text = asyncio.run(call_llm())
+    except Exception as llm_execution_error:
+        print(f"    Notice: LLM topic synthesis call error: {llm_execution_error}")
+        raw_model_completion_text = ""
 
     # Clean markdown formatting backticks if present
     cleaned_json_text = raw_model_completion_text.strip()
@@ -2086,21 +2286,36 @@ Remember: Respond ONLY with a valid, clean JSON array of objects adhering strict
     cleaned_json_text = cleaned_json_text.strip()
 
     parsed_topics_raw_list = []
-    try:
-        parsed_topics_raw_list = json.loads(cleaned_json_text)
-    except Exception:
-        first_bracket_index = cleaned_json_text.find("[")
-        last_bracket_index = cleaned_json_text.rfind("]")
-        if first_bracket_index != -1 and last_bracket_index != -1:
-            bracket_substring = cleaned_json_text[first_bracket_index:last_bracket_index + 1]
-            try:
-                parsed_topics_raw_list = json.loads(bracket_substring)
-            except Exception:
-                pass
+    if len(cleaned_json_text) > 0:
+        try:
+            parsed_topics_raw_list = json.loads(cleaned_json_text)
+        except Exception:
+            first_bracket_index = cleaned_json_text.find("[")
+            last_bracket_index = cleaned_json_text.rfind("]")
+            if first_bracket_index != -1 and last_bracket_index != -1:
+                bracket_substring = cleaned_json_text[first_bracket_index:last_bracket_index + 1]
+                try:
+                    parsed_topics_raw_list = json.loads(bracket_substring)
+                except Exception:
+                    pass
 
     # Rigorously validate schema and sanitize all returned topics
     final_validated_topics = validate_and_sanitize_synthesized_topics(parsed_topics_raw_list, safe_country_name)
-    return final_validated_topics
+
+    # If the LLM returned fewer than 15 topics (or was unavailable), top up using fallback headline synthesis
+    if len(final_validated_topics) < 15:
+        needed_topics_count = 15 - len(final_validated_topics)
+        fallback_synthesized_topics = generate_fallback_topics_from_headlines(
+            news_sources_intel_dictionary,
+            country_name_string=safe_country_name,
+            target_topics_count=needed_topics_count
+        )
+        for fallback_topic in fallback_synthesized_topics:
+            final_validated_topics.append(fallback_topic)
+
+    # Prioritize Indian defence topics at the very top so they appear first in the UI
+    final_ordered_topics = prioritize_indian_defence_topics_first(final_validated_topics)
+    return final_ordered_topics[:15]
 
 
 def synthesize_keywords_with_llm(target_country_name, consolidated_intel_dictionary):

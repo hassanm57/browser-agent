@@ -70,10 +70,17 @@
     "enabled": true
   },
   {
-    "name": "Janes Defence News",
+    "name": "Janes All Defence News",
     "category": "defense_military",
     "type": "web",
-    "url": "https://www.janes.com/defence-intelligence-insights/defence-news",
+    "url": "https://www.janes.com/defence-intelligence-insights/all-defence-news",
+    "enabled": true
+  },
+  {
+    "name": "SCMP China Military",
+    "category": "defense_military",
+    "type": "web",
+    "url": "https://www.scmp.com/news/china/military",
     "enabled": true
   },
   {
@@ -198,8 +205,36 @@
   {
     "name": "IDRW Indian Defence Research Wing",
     "category": "defense_military",
-    "type": "rss",
-    "url": "https://idrw.org/feed/",
+    "type": "web",
+    "url": "https://idrw.org/",
+    "enabled": true
+  },
+  {
+    "name": "IDRW India Category",
+    "category": "defense_military",
+    "type": "web",
+    "url": "https://idrw.org/category/india/",
+    "enabled": true
+  },
+  {
+    "name": "The New Indian Express",
+    "category": "defense_military",
+    "type": "web",
+    "url": "https://www.newindianexpress.com/india",
+    "enabled": true
+  },
+  {
+    "name": "DefenceXP India",
+    "category": "defense_military",
+    "type": "web",
+    "url": "https://www.defencexp.com/",
+    "enabled": true
+  },
+  {
+    "name": "Defence.in Forum & News",
+    "category": "defense_military",
+    "type": "web",
+    "url": "https://defence.in/",
     "enabled": true
   },
   {

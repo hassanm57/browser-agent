@@ -40,7 +40,25 @@ function getExactNewsSourceWebsiteUrl(sourceNameString: string): string {
     return "https://www.defenseone.com";
   }
   if (lowercasedSource.includes("janes")) {
-    return "https://www.janes.com/defence-intelligence-insights/defence-news";
+    return "https://www.janes.com/defence-intelligence-insights/all-defence-news";
+  }
+  if (lowercasedSource.includes("scmp")) {
+    return "https://www.scmp.com/news/china/military";
+  }
+  if (lowercasedSource.includes("idrw")) {
+    if (lowercasedSource.includes("category") || lowercasedSource.includes("india")) {
+      return "https://idrw.org/category/india";
+    }
+    return "https://idrw.org";
+  }
+  if (lowercasedSource.includes("defencexp") || lowercasedSource.includes("defence xp")) {
+    return "https://www.defencexp.com";
+  }
+  if (lowercasedSource.includes("defence.in")) {
+    return "https://defence.in";
+  }
+  if (lowercasedSource.includes("indian express") || lowercasedSource.includes("newindianexpress")) {
+    return "https://www.newindianexpress.com/india";
   }
   if (lowercasedSource.includes("foreign affairs")) {
     if (lowercasedSource.includes("nuclear")) {

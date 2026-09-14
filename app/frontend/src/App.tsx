@@ -119,7 +119,7 @@ export default function App() {
   const [totalScrapedTweetsCount, setTotalScrapedTweetsCount] = useState<number>(0);
 
   const [currentSettings, setCurrentSettings] = useState<ApplicationSettings>({
-    vllm_base_url: "http://10.13.12.121:8000/v1",
+    vllm_base_url: "http://10.13.11.214:8000/v1",
     vllm_api_key: "EMPTY",
     llm_model_name: "qwen3-14b",
     llm_maximum_tokens: "8192",

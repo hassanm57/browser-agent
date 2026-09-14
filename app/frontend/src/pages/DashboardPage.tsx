@@ -111,7 +111,25 @@ function getExactNewsSourceWebsiteUrl(sourceNameString: string, sourcesList?: So
     return "https://www.defenseone.com";
   }
   if (lowercasedSource.includes("janes")) {
-    return "https://www.janes.com/defence-intelligence-insights/defence-news";
+    return "https://www.janes.com/defence-intelligence-insights/all-defence-news";
+  }
+  if (lowercasedSource.includes("scmp")) {
+    return "https://www.scmp.com/news/china/military";
+  }
+  if (lowercasedSource.includes("idrw")) {
+    if (lowercasedSource.includes("category") || lowercasedSource.includes("india")) {
+      return "https://idrw.org/category/india";
+    }
+    return "https://idrw.org";
+  }
+  if (lowercasedSource.includes("defencexp") || lowercasedSource.includes("defence xp")) {
+    return "https://www.defencexp.com";
+  }
+  if (lowercasedSource.includes("defence.in")) {
+    return "https://defence.in";
+  }
+  if (lowercasedSource.includes("indian express") || lowercasedSource.includes("newindianexpress")) {
+    return "https://www.newindianexpress.com/india";
   }
   if (lowercasedSource.includes("foreign affairs")) {
     if (lowercasedSource.includes("nuclear")) {
@@ -264,7 +282,25 @@ export function DashboardPage(props: DashboardPageProps) {
     });
   }
 
-  // 1. Identify Defense News RSS and take top 2 headlines
+  // 1. Identify Indian Defence Sources (IDRW, DefenceXP, Defence.in, The New Indian Express) and take top headlines first
+  for (const candidateKey in newsIntelMap) {
+    if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
+      const lowerCandidate = candidateKey.toLowerCase();
+      if (
+        lowerCandidate.includes("idrw") ||
+        lowerCandidate.includes("defencexp") ||
+        lowerCandidate.includes("defence.in") ||
+        lowerCandidate.includes("indian express")
+      ) {
+        const indianHeadlines = newsIntelMap[candidateKey] || [];
+        for (let index = 0; index < indianHeadlines.length && curatedHotTopicsList.length < 3; index++) {
+          attemptAddHotTopic(candidateKey, indianHeadlines[index], "Indian Defence");
+        }
+      }
+    }
+  }
+
+  // 2. Identify Defense News RSS and take top 2 headlines
   let defenseNewsSourceKey = "";
   for (const candidateKey in newsIntelMap) {
     if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {

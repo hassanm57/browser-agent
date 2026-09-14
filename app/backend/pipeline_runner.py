@@ -224,6 +224,17 @@ async def run_single_country_pipeline(
                     for header_tag in html_soup.find_all(["h1", "h2", "h3", "h4", "a"]):
                         raw_text = header_tag.get_text()
                         clean_title = trends.clean_dom_tags_and_markdown(raw_text)
+
+                        # Clean IDRW comments prefix if present
+                        clean_title = re.sub(r'^\d+\s*Comments?on\s*', '', clean_title, flags=re.IGNORECASE).strip()
+
+                        # Clean Janes trailing call-to-action tags
+                        clean_title = re.sub(r'\s*Read (Article|Case Study|Analysis|Briefing|Feature)$', '', clean_title, flags=re.IGNORECASE).strip()
+
+                        # Skip relative timestamps and forum date markers
+                        if re.match(r'^(yesterday|today|tomorrow)\s+at\s+', clean_title, flags=re.IGNORECASE):
+                            continue
+
                         if len(clean_title) > 25 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
                             # If it comes from a specialized defense, strategic affairs, or think tank domain, all articles are relevant
                             lower_title = clean_title.lower()
@@ -233,7 +244,8 @@ async def run_single_country_pipeline(
                                 "armscontrol.org", "sipri.org", "carnegieendowment.org", "stimson.org",
                                 "disarmament.un.org", "idrw.org", "livefistdefence.com", "quwa.org",
                                 "defense.gov", "airandspaceforces.com", "navalnews.com", "usni.org",
-                                "warontherocks.com", "thediplomat.com", "iaea.org"
+                                "warontherocks.com", "thediplomat.com", "iaea.org", "scmp.com",
+                                "defencexp.com", "defence.in"
                             ]
 
                             is_from_specialized_domain = False
@@ -248,7 +260,10 @@ async def run_single_country_pipeline(
                                 "pact", "russia", "border", "missile", "defense", "defence", "nato",
                                 "taiwan", "ukraine", "hormuz", "sanctions", "nuclear", "warhead",
                                 "proliferation", "deterrence", "doctrine", "disarmament", "iaea",
-                                "bmd", "hypersonic", "drone", "uav", "cbm", "air force"
+                                "bmd", "hypersonic", "drone", "uav", "cbm", "air force",
+                                "india", "indian", "mod", "drdo", "hal", "tejas", "iaf", "ladakh",
+                                "lac", "loc", "kashmir", "brahmos", "agni", "ins ", "coast guard",
+                                "indo-pacific"
                             ]
 
                             has_strategic_keyword = False
@@ -612,7 +627,7 @@ async def run_single_country_pipeline(
         await log_and_record("STEP", "[3/4] Synthesizing news + correspondent topics & Boolean X queries with Strategic AI Model...")
         await progress_callback_function("llm_synthesis", 3, 5, f"Synthesizing 15 crisp keywords per topic for {target_country_name}...", target_country_name)
 
-        endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.12.121:8000/v1")
+        endpoint_url = settings_dictionary.get("vllm_base_url", "http://10.13.11.214:8000/v1")
         model_name = settings_dictionary.get("llm_model_name", "qwen3-14b")
         timeout_seconds = int(settings_dictionary.get("llm_timeout_seconds", "180"))
 

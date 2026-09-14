@@ -42,7 +42,7 @@ def initialize_database():
 
     # Default settings to seed if the table is empty
     default_settings_list = [
-        ("vllm_base_url", "http://10.13.12.121:8000/v1"),
+        ("vllm_base_url", "http://10.13.11.214:8000/v1"),
         ("vllm_api_key", "EMPTY"),
         ("llm_model_name", "qwen3-14b"),
         ("llm_maximum_tokens", "8192"),

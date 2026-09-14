@@ -139,7 +139,7 @@ export function SettingsPage(props: SettingsPageProps) {
                 className="w-full px-3 py-2 rounded bg-background border border-border text-xs text-foreground font-mono outline-none focus:border-primary transition-colors"
               />
               <span className="text-[10px] text-muted-foreground mt-1 block">
-                Default: http://10.13.12.121:8000/v1
+                Default: http://10.13.11.214:8000/v1
               </span>
             </div>
 

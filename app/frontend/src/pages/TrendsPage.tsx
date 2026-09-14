@@ -72,6 +72,9 @@ function getExactNewsSourceWebsiteUrl(sourceNameString: string): string {
   if (lowercasedSource.includes("iadnews")) {
     return "https://iadnews.in";
   }
+  if (lowercasedSource.includes("indian defence review") || lowercasedSource.includes("indiandefencereview")) {
+    return "https://indiandefencereview.com";
+  }
   if (lowercasedSource.includes("indian express") || lowercasedSource.includes("newindianexpress")) {
     return "https://www.newindianexpress.com/india";
   }

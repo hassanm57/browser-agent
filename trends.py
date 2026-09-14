@@ -1938,7 +1938,8 @@ def is_indian_defence_source_name_or_url(source_name_string, source_url_string="
     indian_indicators_list = [
         "idrw", "defencexp", "defence.in", "indian express",
         "newindianexpress", "livefist", "defenceupdate",
-        "nationaldefence", "alphadefense", "iadnews"
+        "nationaldefence", "alphadefense", "iadnews",
+        "indiandefencereview", "indian defence review"
     ]
     for indicator in indian_indicators_list:
         if indicator in combined_string:

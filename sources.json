@@ -280,6 +280,13 @@
     "enabled": true
   },
   {
+    "name": "Indian Defence Review RSS",
+    "category": "defense_military",
+    "type": "rss",
+    "url": "https://indiandefencereview.com/feed",
+    "enabled": true
+  },
+  {
     "name": "Quwa Defence News",
     "category": "defense_military",
     "type": "rss",

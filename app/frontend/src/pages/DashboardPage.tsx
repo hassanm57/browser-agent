@@ -143,6 +143,9 @@ function getExactNewsSourceWebsiteUrl(sourceNameString: string, sourcesList?: So
   if (lowercasedSource.includes("iadnews")) {
     return "https://iadnews.in";
   }
+  if (lowercasedSource.includes("indian defence review") || lowercasedSource.includes("indiandefencereview")) {
+    return "https://indiandefencereview.com";
+  }
   if (lowercasedSource.includes("indian express") || lowercasedSource.includes("newindianexpress")) {
     return "https://www.newindianexpress.com/india";
   }
@@ -310,7 +313,9 @@ export function DashboardPage(props: DashboardPageProps) {
         lowerCandidate.includes("livefist") ||
         lowerCandidate.includes("nationaldefence") ||
         lowerCandidate.includes("alphadefense") ||
-        lowerCandidate.includes("iadnews")
+        lowerCandidate.includes("iadnews") ||
+        lowerCandidate.includes("indiandefencereview") ||
+        lowerCandidate.includes("indian defence review")
       ) {
         const indianHeadlines = newsIntelMap[candidateKey] || [];
         for (let index = 0; index < indianHeadlines.length && curatedHotTopicsList.length < 3; index++) {

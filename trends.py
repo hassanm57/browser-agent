@@ -1076,7 +1076,6 @@ async def create_resilient_browser_instance(
     # Detect real Google Chrome executable on the system so we use Chrome rather than Playwright Chromium.
     # On Windows, using chrome.exe allows Chrome to decrypt user cookies via Windows DPAPI and App-Bound encryption.
     system_chrome_executable_path = find_system_chrome_executable_path()
-    system_chrome_user_data_path = find_system_chrome_user_data_path()
 
     # Prevent browser-use from copying the Chrome profile to a random temporary directory.
     # On Windows, Chrome v20 App-Bound encryption renders cookies non-transferable; copying the
@@ -1087,49 +1086,15 @@ async def create_resilient_browser_instance(
     except Exception:
         pass
 
-    # Option A: When real system profile is requested and exists on disk, point directly to it
-    if should_use_real_system_profile and len(system_chrome_user_data_path) > 0 and os.path.exists(system_chrome_user_data_path):
-        if log_callback_function is not None:
-            try:
-                await log_callback_function("INFO", f"Using real system Chrome user data directory directly: {system_chrome_user_data_path}")
-            except Exception:
-                pass
-
-        browser_configuration_parameters = {
-            "headless": is_headless_mode,
-            "user_data_dir": system_chrome_user_data_path,
-            "profile_directory": "Default"
-        }
-        if len(system_chrome_executable_path) > 0 and os.path.exists(system_chrome_executable_path):
-            browser_configuration_parameters["executable_path"] = system_chrome_executable_path
-
-        if sys.platform == "darwin":
-            browser_configuration_parameters["device_scale_factor"] = 1.0
-
-        browser_instance = Browser(**browser_configuration_parameters)
-        return browser_instance
-
-    # Option B Fallback: Use dedicated agent profile directory
-    # Prepare a dedicated persistent profile directory with browser-use-user-data-dir- prefix.
-    # This prevents file-locking crashes when Google Chrome is already running (e.g., viewing the frontend),
-    # while allowing independent Chrome windows to run simultaneously.
+    # Always use the dedicated persistent profile directory with browser-use-user-data-dir- prefix.
+    # This avoids SingletonLock conflicts when your regular Google Chrome is already running.
     dedicated_profile_path = get_persistent_profile_path(profile_directory_name)
 
-    # Check if target profile already has valid authenticated Cookies.
-    # If the profile only has empty or unauthenticated guest cookies (missing auth_token),
-    # re-attempt seeding from system Chrome before starting the browser.
-    existing_cookie_path = find_existing_cookie_file_path(dedicated_profile_path)
-    has_valid_auth_token = False
-    if len(existing_cookie_path) > 0:
-        has_valid_auth_token = check_sqlite_has_x_auth_token(existing_cookie_path)
-
-    if not has_valid_auth_token:
-        did_seed = seed_profile_from_system_chrome(dedicated_profile_path)
-        if did_seed and log_callback_function is not None:
-            try:
-                await log_callback_function("INFO", f"Seeded login credentials and cookies into {profile_directory_name} from system Chrome.")
-            except Exception:
-                pass
+    if log_callback_function is not None:
+        try:
+            await log_callback_function("INFO", f"Using dedicated Chrome profile directory: {dedicated_profile_path}")
+        except Exception:
+            pass
 
     browser_configuration_parameters = {
         "headless": is_headless_mode,
@@ -1143,6 +1108,7 @@ async def create_resilient_browser_instance(
 
     browser_instance = Browser(**browser_configuration_parameters)
     return browser_instance
+
 
 
 async def check_is_x_logged_in(browser_instance: Browser) -> bool:
@@ -1274,16 +1240,15 @@ async def ensure_x_logged_in_or_prompt_user(
     cancellation_event = None,
     maximum_wait_seconds: int = 300
 ) -> bool:
-    # Verifies if X.com is logged in.
-    # 1. First, checks if the session is already active via browser DOM evaluation or fast cookie check.
-    # 2. If not logged in, opens the login page in the user's system browser via a deterministic OS command.
-    # 3. Polls seamlessly in the background until login is detected, then seeds the session to agent_profile.
+    # Verifies if X.com is logged in inside this browser instance.
+    # If not logged in, navigates the visible browser window directly to https://x.com/login
+    # and waits for the user to log in. Once logged in, the session is saved permanently
+    # in the dedicated profile (agent_profile) for all future runs.
     await log_callback_function("INFO", "Checking if X.com is logged in...")
 
-    # Fast initial check: navigate to x.com/home
     try:
         await browser_instance.navigate_to("https://x.com/home")
-        await asyncio.sleep(3)
+        await asyncio.sleep(4)
     except Exception as navigation_error:
         await log_callback_function("WARN", f"Initial X.com navigation note: {str(navigation_error)}")
 
@@ -1292,35 +1257,16 @@ async def ensure_x_logged_in_or_prompt_user(
         await log_callback_function("SUCCESS", "X.com login verified. Session is active.")
         return True
 
-    # Check if system Chrome has the login cookies and can be seeded immediately
-    system_chrome_user_data = find_system_chrome_user_data_path()
-    system_cookies_path = find_existing_cookie_file_path(system_chrome_user_data) if system_chrome_user_data else ""
-    agent_profile_path = get_persistent_profile_path("agent_profile")
-
-    if len(system_cookies_path) > 0 and check_sqlite_has_x_auth_token(system_cookies_path):
-        did_seed_succeed = seed_profile_from_system_chrome(agent_profile_path)
-        if did_seed_succeed:
-            try:
-                await browser_instance.navigate_to("https://x.com/home")
-                await asyncio.sleep(3)
-                if await check_is_x_logged_in(browser_instance):
-                    await log_callback_function("SUCCESS", "X.com login detected from system Chrome and transferred seamlessly.")
-                    return True
-            except Exception:
-                pass
-
-    # If genuinely not signed in or locked on Windows, open login page via deterministic OS command
-    windows_lock_guidance = ""
-    if sys.platform == "win32":
-        windows_lock_guidance = " (On Windows: If Google Chrome is already running, please close all Google Chrome windows briefly so your session cookies can transfer)."
-
+    # Navigate the AGENT'S window directly to login instead of opening an external browser
     await log_callback_function(
         "WARN",
-        f"X.com is not signed in{windows_lock_guidance}. Opening your browser to https://x.com/login via system command. Please log into your X.com account. The pipeline will automatically detect your login and continue seamlessly."
+        "X.com is not signed in this agent window. Navigating to https://x.com/login in the open window. Please log into your X.com account here once (session will be saved permanently)."
     )
-    open_system_browser_to_url("https://x.com/login")
+    try:
+        await browser_instance.navigate_to("https://x.com/login")
+    except Exception as navigation_login_error:
+        await log_callback_function("WARN", f"Navigation to login page note: {str(navigation_login_error)}")
 
-    # Polling loop: check every 3 seconds for user login
     elapsed_seconds = 0
     poll_interval_seconds = 3
 
@@ -1332,28 +1278,18 @@ async def ensure_x_logged_in_or_prompt_user(
         await asyncio.sleep(poll_interval_seconds)
         elapsed_seconds = elapsed_seconds + poll_interval_seconds
 
-        # Check A: Did login cookies appear in system Chrome?
-        current_system_cookies_path = find_existing_cookie_file_path(system_chrome_user_data) if system_chrome_user_data else ""
-        if len(current_system_cookies_path) > 0 and check_sqlite_has_x_auth_token(current_system_cookies_path):
-            did_seed_poll = seed_profile_from_system_chrome(agent_profile_path)
-            if did_seed_poll:
-                await log_callback_function("SUCCESS", "X.com login successfully detected from system browser! Continuing pipeline...")
-                await asyncio.sleep(2)
-                return True
-
-        # Check B: Did login happen in the open browser instance?
+        # Check if the user completed login inside the open agent browser window
         is_now_authenticated = await check_is_x_logged_in(browser_instance)
         if is_now_authenticated:
             await log_callback_function("SUCCESS", "X.com login successfully detected! Continuing pipeline...")
             await asyncio.sleep(2)
             return True
 
-        # Periodic reminder in log every 15 seconds
         if elapsed_seconds % 15 == 0:
             remaining_seconds = maximum_wait_seconds - elapsed_seconds
             await log_callback_function(
                 "INFO",
-                f"Waiting for manual X.com login in your browser... ({remaining_seconds}s before timeout){windows_lock_guidance}"
+                f"Waiting for manual X.com login in the visible browser window... ({remaining_seconds}s before timeout)"
             )
 
     await log_callback_function("ERROR", f"Timed out after {maximum_wait_seconds} seconds waiting for X.com login.")

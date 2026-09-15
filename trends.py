@@ -1903,8 +1903,24 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
                 if not is_duplicate_term:
                     clean_terms_list.append(term_str)
 
-        # Keep 5 to 10 context-rich phrases
-        final_terms = handle_alternate_spelling_keywords(clean_terms_list[:10])
+        # Keep up to 12 context-rich phrases
+        final_terms = handle_alternate_spelling_keywords(clean_terms_list[:12])
+
+        # If fewer than 8 terms were generated, enrich using key phrases from clean_label to guarantee at least 8 keywords
+        if len(final_terms) < 8:
+            label_phrases = extract_key_phrases_from_headline(clean_label)
+            for phrase in label_phrases:
+                phrase_clean = phrase.strip()
+                phrase_lower = phrase_clean.lower()
+                is_duplicate = False
+                for existing_term in final_terms:
+                    if existing_term.lower() == phrase_lower:
+                        is_duplicate = True
+                        break
+                if not is_duplicate and len(phrase_clean) >= 3:
+                    final_terms.append(phrase_clean)
+                if len(final_terms) >= 8:
+                    break
 
         # 4. Validate and tighten boolean_query
         raw_query = topic_item.get("boolean_query", "")
@@ -2304,9 +2320,67 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
 
         # Assign both the array of all sources and top source fields for backwards compatibility
         topic_item["sources"] = final_matched_sources_list
-        topic_item["source_headline"] = final_matched_sources_list[0]["title"]
+        primary_source_headline = str(final_matched_sources_list[0]["title"]).strip()
+        topic_item["source_headline"] = primary_source_headline
         topic_item["source_name"] = final_matched_sources_list[0]["source_name"]
         topic_item["source_url"] = final_matched_sources_list[0]["url"]
+
+        # Enforce that the primary news source headline title and its key sub-phrases are in terms,
+        # and guarantee that at least 8 context-rich keywords exist for every topic
+        cleaned_source_headline = clean_headline_for_topic_label(primary_source_headline)
+        existing_terms = topic_item.get("terms", [])
+        updated_terms = []
+
+        for term in existing_terms:
+            if term not in updated_terms:
+                updated_terms.append(term)
+
+        # Check if the primary source headline is already represented in terms
+        has_headline_in_terms = False
+        cleaned_headline_lower = cleaned_source_headline.lower()
+        for term in updated_terms:
+            term_lower = term.lower()
+            if term_lower == cleaned_headline_lower or cleaned_headline_lower in term_lower or term_lower in cleaned_headline_lower:
+                has_headline_in_terms = True
+                break
+
+        if not has_headline_in_terms and len(cleaned_source_headline) > 5:
+            # Insert the primary source headline title at the beginning of the terms list
+            updated_terms.insert(0, cleaned_source_headline)
+
+        # Ensure at least 8 keywords by extracting phrases from the primary source headline
+        if len(updated_terms) < 8:
+            headline_phrases = extract_key_phrases_from_headline(primary_source_headline)
+            for phrase in headline_phrases:
+                phrase_clean = phrase.strip()
+                phrase_lower = phrase_clean.lower()
+                is_duplicate = False
+                for term in updated_terms:
+                    if term.lower() == phrase_lower:
+                        is_duplicate = True
+                        break
+                if not is_duplicate and len(phrase_clean) >= 3:
+                    updated_terms.append(phrase_clean)
+                if len(updated_terms) >= 8:
+                    break
+
+        # If still under 8 keywords, extract phrases from the topic label
+        if len(updated_terms) < 8:
+            label_phrases = extract_key_phrases_from_headline(topic_item.get("label", ""))
+            for phrase in label_phrases:
+                phrase_clean = phrase.strip()
+                phrase_lower = phrase_clean.lower()
+                is_duplicate = False
+                for term in updated_terms:
+                    if term.lower() == phrase_lower:
+                        is_duplicate = True
+                        break
+                if not is_duplicate and len(phrase_clean) >= 3:
+                    updated_terms.append(phrase_clean)
+                if len(updated_terms) >= 8:
+                    break
+
+        topic_item["terms"] = updated_terms[:12]
 
 
 def generate_fallback_topics_from_headlines(news_sources_intel_dictionary, country_name_string="Worldwide", target_topics_count=13):
@@ -2493,7 +2567,8 @@ STRICT REQUIREMENTS FOR EACH GENERATED ROW:
 2. "category": Exactly one of "defense", "diplomacy", "politics", "economic".
 3. "boolean_query": MUST BE SHORT AND CONCISE (maximum 2 to 4 search terms total, under 100 characters).
    Use exact quotes and standard Boolean syntax.
-4. "terms": Array of 5 to 10 CRISP, CONTEXT-RICH, DETAILED KEYWORDS AND PHRASES (between 2 and 7-10 words each).
+4. "terms": Array of EXACTLY 8 to 12 (at least 8) CRISP, CONTEXT-RICH, DETAILED KEYWORDS AND PHRASES (between 2 and 7-10 words each). Every single topic MUST have at least 8 keywords.
+   - MANDATORY SOURCE HEADLINE TITLE INTEGRATION: The exact news headline title of the primary news source article from which the story originated MUST be included as one of the keywords in the "terms" array. Furthermore, extract key distinctive sub-phrases from that news headline title as additional keywords.
    - The keywords themselves must carry the core contextual intelligence: specific weapon designations, military branches, country names, dates/year 2026, program names, and locations extracted directly from the text.
    - STRICTLY FORBIDDEN: Vague, generic, contextless 1-2 word labels like "NATO Missile Defence", "Nuclear Testing", "Defense Contracts", "Oil Price", "National Security", "Regional Stability", "Military Modernization", "Air Defense", "Armed Forces".
 
@@ -2508,11 +2583,14 @@ SYNTACTIC STRUCTURE EXAMPLE (PURELY SYNTHETIC PLACEHOLDERS):
     "category": "defense",
     "boolean_query": "(\"Model-7X\" OR \"air defense\") (\"Nation-Alpha\" OR \"radar network\")",
     "terms": [
+      "Nation-Alpha Deploys Model-7X Air Defense Radar Along Border Sector",
       "Model-7X tactical radar deployment",
       "Border sector early warning network",
       "Nation-Alpha ground air defense trials 2026",
       "Long-range phased array radar installation",
-      "Joint territorial airspace surveillance"
+      "Joint territorial airspace surveillance system",
+      "Surface-to-air missile radar integration",
+      "Frontline radar coverage expansion"
     ]
   }
 ]
@@ -2527,7 +2605,7 @@ IMPORTANT: The "boolean_query" field MUST be a valid JSON string wrapped in doub
 - Topics 1 to 10: The top 10 most trending, hottest breaking defense, military, and geopolitical stories worldwide (balanced across Sections 1, 2, 3, and 4).
 - Topics 11 to 13: Exactly 3 dedicated topics derived EXCLUSIVELY from the configured Indian sources in Section 4, where India is directly involved.
 
-Ensure each row has a self-generated phrased headline, a concise Boolean query (2 to 4 terms), and 5 to 10 context-rich, phrasey keywords (up to 7-10 words each) grounded directly in the text below.
+Ensure each row has a self-generated phrased headline, a concise Boolean query (2 to 4 terms), and AT LEAST 8 context-rich, phrasey keywords (between 2 and 7-10 words each) grounded directly in the text below, with the primary news headline title and its key sub-phrases included in the keywords.
 
 <untrusted_intelligence_dossier>
 {full_intel_digest_string}

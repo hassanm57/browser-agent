@@ -284,7 +284,8 @@ browser-agent/
 ├── requirements.txt                 # Core Python dependencies (browser-use, requests, bs4, etc.)
 └── README.md                        # Documentation
 ```
-
+log in on X (windows): Start-Process "chrome.exe" -ArgumentList '--user-data-dir="C:\Users\dell\.browser-agent\browser-use-user-data-dir-  
+  agent_profile"', '--new-window', 'https://x.com/login'
 ---
 
 ## 📦 Prerequisites

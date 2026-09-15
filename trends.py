@@ -1073,6 +1073,43 @@ async def create_resilient_browser_instance(
     profile_directory_name: str = "agent_profile",
     log_callback_function = None
 ) -> Browser:
+    # Detect real Google Chrome executable on the system so we use Chrome rather than Playwright Chromium.
+    # On Windows, using chrome.exe allows Chrome to decrypt user cookies via Windows DPAPI and App-Bound encryption.
+    system_chrome_executable_path = find_system_chrome_executable_path()
+    system_chrome_user_data_path = find_system_chrome_user_data_path()
+
+    # Prevent browser-use from copying the Chrome profile to a random temporary directory.
+    # On Windows, Chrome v20 App-Bound encryption renders cookies non-transferable; copying the
+    # SQLite file to another folder breaks decryption and causes X.com to appear logged out.
+    try:
+        from browser_use.browser.profile import BrowserProfile
+        BrowserProfile._copy_profile = lambda self: None
+    except Exception:
+        pass
+
+    # Option A: When real system profile is requested and exists on disk, point directly to it
+    if should_use_real_system_profile and len(system_chrome_user_data_path) > 0 and os.path.exists(system_chrome_user_data_path):
+        if log_callback_function is not None:
+            try:
+                await log_callback_function("INFO", f"Using real system Chrome user data directory directly: {system_chrome_user_data_path}")
+            except Exception:
+                pass
+
+        browser_configuration_parameters = {
+            "headless": is_headless_mode,
+            "user_data_dir": system_chrome_user_data_path,
+            "profile_directory": "Default"
+        }
+        if len(system_chrome_executable_path) > 0 and os.path.exists(system_chrome_executable_path):
+            browser_configuration_parameters["executable_path"] = system_chrome_executable_path
+
+        if sys.platform == "darwin":
+            browser_configuration_parameters["device_scale_factor"] = 1.0
+
+        browser_instance = Browser(**browser_configuration_parameters)
+        return browser_instance
+
+    # Option B Fallback: Use dedicated agent profile directory
     # Prepare a dedicated persistent profile directory with browser-use-user-data-dir- prefix.
     # This prevents file-locking crashes when Google Chrome is already running (e.g., viewing the frontend),
     # while allowing independent Chrome windows to run simultaneously.
@@ -1094,16 +1131,15 @@ async def create_resilient_browser_instance(
             except Exception:
                 pass
 
-    # Detect real Google Chrome executable on the system so we use Chrome rather than Playwright Chromium.
-    # On Windows, using chrome.exe allows Chrome to decrypt user cookies via Windows DPAPI.
-    system_chrome_executable_path = find_system_chrome_executable_path()
-
     browser_configuration_parameters = {
         "headless": is_headless_mode,
         "user_data_dir": dedicated_profile_path
     }
     if len(system_chrome_executable_path) > 0 and os.path.exists(system_chrome_executable_path):
         browser_configuration_parameters["executable_path"] = system_chrome_executable_path
+
+    if sys.platform == "darwin":
+        browser_configuration_parameters["device_scale_factor"] = 1.0
 
     browser_instance = Browser(**browser_configuration_parameters)
     return browser_instance

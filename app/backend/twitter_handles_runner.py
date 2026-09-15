@@ -862,9 +862,10 @@ async def run_parallel_twitter_handles_pipeline(
     total_handles_count = len(handles_to_scrape_list)
     await actual_status("running")
 
-    # Read headless setting from database (defaults to true for silent background execution)
+    # Read settings from database
     application_settings_dictionary = get_all_settings()
     is_headless_mode_enabled = application_settings_dictionary.get("headless_mode", "true") == "true"
+    use_real_chrome_enabled = application_settings_dictionary.get("use_real_chrome", "true") == "true"
     mode_text = "Headless Background" if is_headless_mode_enabled else "Headful Visible"
 
     await actual_log("STEP", f"Starting parallel Twitter scraping for {total_handles_count} handles using {concurrency_level} parallel {mode_text} browser instances...")
@@ -895,7 +896,7 @@ async def run_parallel_twitter_handles_pipeline(
 
     auth_check_browser = await trends.create_resilient_browser_instance(
         is_headless_mode=is_headless_mode_enabled,
-        should_use_real_system_profile=False,
+        should_use_real_system_profile=use_real_chrome_enabled,
         profile_directory_name="agent_profile",
         log_callback_function=actual_log
     )

@@ -412,7 +412,7 @@ async def run_single_country_pipeline(
 
     browser_instance = await trends.create_resilient_browser_instance(
         is_headless_mode=is_headless,
-        should_use_real_system_profile=False,
+        should_use_real_system_profile=use_real_chrome,
         profile_directory_name="agent_profile",
         log_callback_function=log_and_record
     )

@@ -1103,6 +1103,17 @@ async def create_resilient_browser_instance(
     if len(system_chrome_executable_path) > 0 and os.path.exists(system_chrome_executable_path):
         browser_configuration_parameters["executable_path"] = system_chrome_executable_path
 
+    # Force Chrome to activate, focus, and open maximized in foreground when headful
+    if not is_headless_mode:
+        browser_configuration_parameters["ignore_default_args"] = [
+            "--disable-window-activation",
+            "--disable-focus-on-load"
+        ]
+        browser_configuration_parameters["args"] = [
+            "--start-maximized",
+            "--new-window"
+        ]
+
     if sys.platform == "darwin":
         browser_configuration_parameters["device_scale_factor"] = 1.0
 

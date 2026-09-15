@@ -369,6 +369,20 @@
     "type": "rss",
     "url": "https://thediplomat.com/tag/india/feed/",
     "enabled": true
+  },
+  {
+    "name": "The Week India Defence",
+    "category": "defense_military",
+    "type": "web",
+    "url": "https://www.theweek.in/news/defence",
+    "enabled": true
+  },
+  {
+    "name": "Times of India Defence",
+    "category": "defense_military",
+    "type": "web",
+    "url": "https://timesofindia.indiatimes.com/defence/news",
+    "enabled": true
   }
 ]
 

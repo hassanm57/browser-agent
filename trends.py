@@ -1268,7 +1268,22 @@ async def ensure_x_logged_in_or_prompt_user(
         await log_callback_function("SUCCESS", "X.com login verified. Session is active.")
         return True
 
-    # Navigate the AGENT'S window directly to login instead of opening an external browser
+    # Check if the browser is running in headless (hidden) mode
+    is_browser_headless = False
+    if hasattr(browser_instance, "browser_profile") and browser_instance.browser_profile is not None:
+        is_browser_headless = bool(getattr(browser_instance.browser_profile, "headless", False))
+
+    if is_browser_headless:
+        await log_callback_function(
+            "ERROR",
+            "X.com is NOT signed in, and Chrome is currently running in Headless (hidden) mode! "
+            "Because the browser is hidden, you cannot see it to enter your credentials. "
+            "Please turn OFF 'Headless Mode' in Settings (or set HEADLESS=false in .env) and run the pipeline once so a visible Chrome window appears for you to log into X.com. "
+            "Once logged in, your session is saved permanently in agent_profile."
+        )
+        return False
+
+    # Navigate the AGENT'S visible window directly to login
     await log_callback_function(
         "WARN",
         "X.com is not signed in this agent window. Navigating to https://x.com/login in the open window. Please log into your X.com account here once (session will be saved permanently)."

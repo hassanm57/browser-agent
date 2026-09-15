@@ -83,6 +83,12 @@ export interface SourceItem {
   enabled: boolean;
 }
 
+export interface TopicSourceReference {
+  title: string;
+  source_name: string;
+  url: string;
+}
+
 export interface KeywordTopicItem {
   label: string;
   category: string;
@@ -92,6 +98,7 @@ export interface KeywordTopicItem {
   source_headline?: string;
   source_name?: string;
   source_url?: string;
+  sources?: TopicSourceReference[];
 }
 
 export interface KeywordsData {

@@ -2101,73 +2101,214 @@ def create_boolean_query_from_terms(terms_list, label_text):
 
 def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, curated_x_sources_tweets=None):
     """
-    Finds and attaches the exact source headline title, source publication name,
-    and direct article URL to each topic in topics_list.
+    Finds and attaches ALL matching source headlines, source publication names,
+    and direct article URLs to each topic in topics_list.
     """
+    # Define common stop words to exclude when calculating word overlap
+    stop_words_list = [
+        "the", "and", "for", "with", "from", "that", "this", "have", "has",
+        "had", "been", "will", "are", "was", "were", "about", "into", "over",
+        "after", "amid", "its", "their", "under", "between", "during", "says",
+        "said", "calls", "call", "urges", "faces", "first", "second", "third",
+        "year", "more", "also", "amidst", "near", "shows", "tells", "against",
+        "across", "ahead", "close", "open", "opens", "takes", "make", "makes",
+        "made", "seen", "back", "just", "time", "times", "like", "than", "some",
+        "could", "would", "should", "very", "down", "part", "still"
+    ]
+
     for topic_item in topics_list:
-        topic_label = str(topic_item.get("label", "")).lower()
-        topic_terms = [str(term_item).lower() for term_item in topic_item.get("terms", [])]
+        topic_label_string = str(topic_item.get("label", "")).lower()
+        topic_terms_list = topic_item.get("terms", [])
 
-        best_match_title = ""
-        best_match_source = ""
-        best_match_url = ""
-        best_match_score = 0
+        # Clean label characters to remove punctuation
+        clean_label_characters = []
+        for character in topic_label_string:
+            if character.isalnum() or character == " ":
+                clean_label_characters.append(character)
+            else:
+                clean_label_characters.append(" ")
+        clean_label_string = "".join(clean_label_characters)
+        raw_label_words = clean_label_string.split()
 
-        # 1. Compare against all known headline metadata
-        for headline_text, meta in headline_sources_metadata_map.items():
-            headline_lower = headline_text.lower()
-            current_score = 0
+        # Extract significant words from label
+        label_keywords_list = []
+        for word in raw_label_words:
+            if len(word) >= 3 and word not in stop_words_list:
+                label_keywords_list.append(word)
 
-            # Check term overlap
-            for term in topic_terms:
-                term_tokens = term.split()
-                for token in term_tokens:
-                    if len(token) > 3 and token in headline_lower:
-                        current_score += 2
+        # Build 2-word phrases from adjacent words in label for phrase matching
+        label_bigrams_list = []
+        for word_index in range(len(label_keywords_list) - 1):
+            first_word = label_keywords_list[word_index]
+            second_word = label_keywords_list[word_index + 1]
+            label_bigrams_list.append(first_word + " " + second_word)
 
-            # Check label tokens overlap
-            label_tokens = topic_label.split()
-            for token in label_tokens:
-                if len(token) > 3 and token in headline_lower:
-                    current_score += 3
+        # Extract significant words from terms
+        term_keywords_list = []
+        for term_item in topic_terms_list:
+            clean_term_characters = []
+            for character in str(term_item).lower():
+                if character.isalnum() or character == " ":
+                    clean_term_characters.append(character)
+                else:
+                    clean_term_characters.append(" ")
+            clean_term_string = "".join(clean_term_characters)
+            for term_word in clean_term_string.split():
+                if len(term_word) >= 4 and term_word not in stop_words_list and term_word not in label_keywords_list:
+                    if term_word not in term_keywords_list:
+                        term_keywords_list.append(term_word)
 
-            if current_score > best_match_score:
-                best_match_score = current_score
-                best_match_title = meta.get("headline", headline_text)
-                best_match_source = meta.get("source_name", "")
-                best_match_url = meta.get("url", "")
+        scored_candidates_list = []
+        seen_article_urls_set = set()
 
-        # 2. Check X tweets if score is low or if topic is from X scoops
-        if best_match_score < 4 and curated_x_sources_tweets:
-            for acc_name, tweets in curated_x_sources_tweets.items():
-                for tw in tweets:
-                    tw_lower = tw.lower()
-                    tweet_score = 0
-                    for term in topic_terms:
-                        for token in term.split():
-                            if len(token) > 3 and token in tw_lower:
-                                tweet_score += 2
-                    for token in topic_label.split():
-                        if len(token) > 3 and token in tw_lower:
-                            tweet_score += 3
+        # Step 1: Compare topic against all ingested news headlines
+        for headline_text, metadata_dictionary in headline_sources_metadata_map.items():
+            headline_lower_string = headline_text.lower()
 
-                    if tweet_score > best_match_score:
-                        best_match_score = tweet_score
-                        first_line = tw.split("\n")[0].strip()
-                        best_match_title = first_line[:120]
-                        best_match_source = f"X.com ({acc_name})"
-                        clean_handle = acc_name.replace("@", "").strip()
-                        best_match_url = f"https://x.com/{clean_handle}"
+            # Clean headline tokens
+            clean_headline_characters = []
+            for character in headline_lower_string:
+                if character.isalnum() or character == " ":
+                    clean_headline_characters.append(character)
+                else:
+                    clean_headline_characters.append(" ")
+            clean_headline_string = "".join(clean_headline_characters)
+            headline_words_list = clean_headline_string.split()
 
-        # If still no match, assign sensible fallback
-        if not best_match_title:
-            best_match_title = topic_item.get("label", "Defense Intelligence Event")
-            best_match_source = "Global Defense Intelligence Wire"
-            best_match_url = "https://www.defensenews.com/"
+            # Match label keywords against headline words using stem prefix check
+            matched_label_tokens_count = 0
+            for label_word in label_keywords_list:
+                matched_this_word = False
+                for headline_word in headline_words_list:
+                    if label_word == headline_word:
+                        matched_this_word = True
+                        break
+                    elif len(label_word) >= 4 and len(headline_word) >= 4:
+                        prefix_length = min(min(len(label_word), len(headline_word)), 4)
+                        if label_word[:prefix_length] == headline_word[:prefix_length]:
+                            if label_word.startswith(headline_word) or headline_word.startswith(label_word):
+                                matched_this_word = True
+                                break
+                if matched_this_word:
+                    matched_label_tokens_count = matched_label_tokens_count + 1
 
-        topic_item["source_headline"] = best_match_title
-        topic_item["source_name"] = best_match_source
-        topic_item["source_url"] = best_match_url
+            # Determine minimum tokens required based on label length
+            minimum_required_tokens = 2
+            if len(label_keywords_list) < 3:
+                minimum_required_tokens = 1
+
+            has_bigram_match = False
+            for bigram in label_bigrams_list:
+                if bigram in headline_lower_string:
+                    has_bigram_match = True
+                    break
+
+            # Skip headlines that don't match the primary subject of the label
+            if matched_label_tokens_count < minimum_required_tokens and not has_bigram_match:
+                continue
+
+            relevance_score = matched_label_tokens_count * 5
+
+            if has_bigram_match:
+                relevance_score = relevance_score + 15
+
+            # Add term keywords bonus
+            for term_word in term_keywords_list:
+                for headline_word in headline_words_list:
+                    if term_word == headline_word:
+                        relevance_score = relevance_score + 1
+                        break
+
+            # Check direct term string matches
+            for term_item in topic_terms_list:
+                term_string_lower = str(term_item).lower()
+                if len(term_string_lower) > 5 and term_string_lower in headline_lower_string:
+                    relevance_score = relevance_score + 10
+
+            article_url = str(metadata_dictionary.get("url", "")).strip()
+            if len(article_url) > 0 and article_url not in seen_article_urls_set:
+                seen_article_urls_set.add(article_url)
+                candidate_title = metadata_dictionary.get("headline", headline_text)
+                candidate_source_name = metadata_dictionary.get("source_name", "News Wire")
+                scored_candidates_list.append({
+                    "score": relevance_score,
+                    "title": candidate_title,
+                    "source_name": candidate_source_name,
+                    "url": article_url
+                })
+
+        # Step 2: Check X tweets if available
+        if curated_x_sources_tweets is not None:
+            for account_name, tweets_list in curated_x_sources_tweets.items():
+                for tweet_text in tweets_list:
+                    tweet_lower = tweet_text.lower()
+                    tweet_matched_tokens = 0
+                    for label_word in label_keywords_list:
+                        if label_word in tweet_lower:
+                            tweet_matched_tokens = tweet_matched_tokens + 1
+
+                    if tweet_matched_tokens >= 2:
+                        tweet_score = tweet_matched_tokens * 4
+                        clean_handle = account_name.replace("@", "").strip()
+                        tweet_url = f"https://x.com/{clean_handle}"
+                        first_line = tweet_text.split("\n")[0].strip()
+                        candidate_title = first_line[:140]
+                        if tweet_url not in seen_article_urls_set:
+                            seen_article_urls_set.add(tweet_url)
+                            scored_candidates_list.append({
+                                "score": tweet_score,
+                                "title": candidate_title,
+                                "source_name": f"X.com ({account_name})",
+                                "url": tweet_url
+                            })
+
+        # Sort candidates descending by score using procedural bubble sort
+        for outer_index in range(len(scored_candidates_list)):
+            for inner_index in range(outer_index + 1, len(scored_candidates_list)):
+                if scored_candidates_list[inner_index]["score"] > scored_candidates_list[outer_index]["score"]:
+                    temporary_candidate = scored_candidates_list[outer_index]
+                    scored_candidates_list[outer_index] = scored_candidates_list[inner_index]
+                    scored_candidates_list[inner_index] = temporary_candidate
+
+        # Step 3: Filter candidates by dynamic relevance threshold
+        final_matched_sources_list = []
+        if len(scored_candidates_list) > 0:
+            highest_score = scored_candidates_list[0]["score"]
+            score_cutoff = highest_score * 0.40
+            if score_cutoff < 10:
+                score_cutoff = 10
+
+            for candidate_item in scored_candidates_list:
+                if candidate_item["score"] >= score_cutoff:
+                    final_matched_sources_list.append({
+                        "title": candidate_item["title"],
+                        "source_name": candidate_item["source_name"],
+                        "url": candidate_item["url"]
+                    })
+                # Cap at top 15 sources per topic
+                if len(final_matched_sources_list) >= 15:
+                    break
+
+        # Fallback if no candidate passed the cutoff
+        if len(final_matched_sources_list) == 0:
+            if len(scored_candidates_list) > 0:
+                final_matched_sources_list.append({
+                    "title": scored_candidates_list[0]["title"],
+                    "source_name": scored_candidates_list[0]["source_name"],
+                    "url": scored_candidates_list[0]["url"]
+                })
+            else:
+                final_matched_sources_list.append({
+                    "title": topic_item.get("label", "Defense Intelligence Event"),
+                    "source_name": "Global Defense Intelligence Wire",
+                    "url": "https://www.defensenews.com/"
+                })
+
+        # Assign both the array of all sources and top source fields for backwards compatibility
+        topic_item["sources"] = final_matched_sources_list
+        topic_item["source_headline"] = final_matched_sources_list[0]["title"]
+        topic_item["source_name"] = final_matched_sources_list[0]["source_name"]
+        topic_item["source_url"] = final_matched_sources_list[0]["url"]
 
 
 def generate_fallback_topics_from_headlines(news_sources_intel_dictionary, country_name_string="Worldwide", target_topics_count=13):

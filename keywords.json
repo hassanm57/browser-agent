@@ -189,38 +189,6 @@
       "label": "U.S. Deploys On-Orbit Space Control Weapons, AI for Threat Detection",
       "category": "defense",
       "boolean_query": "space control weapons AND AI detection",
-      "terms": [
-        "U.S. Air Force space control weapons",
-        "AI integration for missile tracking",
-        "2026 U.S. space warfare capabilities",
-        "Orbital defense system deployment",
-        "Pentagon AI warfare strategy"
-      ],
-      "sources": [
-        {
-          "title": "US Air Force secretary reveals deployment of on-orbit space control weapons",
-          "source_name": "Defense News RSS",
-          "url": "https://www.defensenews.com/news/your-military/2026/09/14/us-air-force-secretary-reveals-deployment-of-on-orbit-space-control-weapons/"
-        },
-        {
-          "title": "Space Force has ‘space control weapons’ on orbit, Air Force secretary reveals",
-          "source_name": "Breaking Defense RSS",
-          "url": "https://breakingdefense.com/2026/09/space-force-has-space-control-weapons-on-orbit-air-force-secretary-says/"
-        },
-        {
-          "title": "Meink Reveals Space Force Has ‘On-Orbit Space Control Weapons’",
-          "source_name": "Air & Space Forces Magazine",
-          "url": "https://www.airandspaceforces.com/meink-space-force-on-orbit-space-control-weapons/"
-        },
-        {
-          "title": "US military has ‘on-orbit’ space weapons, Air Force Secretary reveals",
-          "source_name": "Defense One Intelligence & Tech",
-          "url": "https://www.defenseone.com/defense-systems/2026/09/us-military-has-orbit-space-weapons-air-force-secretary-reveals/415964/"
-        }
-      ],
-      "source_headline": "US Air Force secretary reveals deployment of on-orbit space control weapons",
-      "source_name": "Defense News RSS",
-      "source_url": "https://www.defensenews.com/news/your-military/2026/09/14/us-air-force-secretary-reveals-deployment-of-on-orbit-space-control-weapons/",
       "sample_tweets": [
         "[Department of War Innovation Unit | @DIU_x | 17h] Our Space Threat Intelligence Synthesis Engine solicitation is now live. The",
         "[Stellarix | @Stellarixorine | Sep 9] Sep 9 🤖 The sky is becoming a battlefield of data. Modern AI-powered drone tracking systems can combine acoustic detection , optical tracking, thermal imaging and rangefinding to monitor multiple objects in real time. Instead of relying on one sensor, these systems bring different",
@@ -243,6 +211,37 @@
         "[HKS香港衛視 | @hk_stv | 33m] 首次承认 ！美国已拥有在轨“太空控制武器”，可摧毁敌方卫星 #US #AntiSatellite #SpaceOffensiveCapability",
         "[DogeDesigner | @cb_doge | 5h] Grok Bot Summary of Elon Musk’s All-In Summit Interview Today Opening bit - Joke cold open: “We’re all going to die.” Death rate still 100%. - Then straight into “what happened in the last 72 hours.” AI danger and the Hugging Face incident - AI",
         "[Decode Conflict | @DecodeConflict | Sep 13] Sep 13 AI IS LEAVING THE DRONE AND ENTERING THE MISSILE"
+      ],
+      "terms": [
+        "U.S. Air Force space control weapons",
+        "2026 U.S. space warfare capabilities",
+        "Orbital defense system deployment",
+        "Pentagon AI warfare strategy"
+      ],
+      "source_headline": "US Air Force secretary reveals deployment of on-orbit space control weapons",
+      "source_name": "Defense News RSS",
+      "source_url": "https://www.defensenews.com/news/your-military/2026/09/14/us-air-force-secretary-reveals-deployment-of-on-orbit-space-control-weapons/",
+      "sources": [
+        {
+          "title": "US Air Force secretary reveals deployment of on-orbit space control weapons",
+          "source_name": "Defense News RSS",
+          "url": "https://www.defensenews.com/news/your-military/2026/09/14/us-air-force-secretary-reveals-deployment-of-on-orbit-space-control-weapons/"
+        },
+        {
+          "title": "Space Force has ‘space control weapons’ on orbit, Air Force secretary reveals",
+          "source_name": "Breaking Defense RSS",
+          "url": "https://breakingdefense.com/2026/09/space-force-has-space-control-weapons-on-orbit-air-force-secretary-says/"
+        },
+        {
+          "title": "Meink Reveals Space Force Has ‘On-Orbit Space Control Weapons’",
+          "source_name": "Air & Space Forces Magazine",
+          "url": "https://www.airandspaceforces.com/meink-space-force-on-orbit-space-control-weapons/"
+        },
+        {
+          "title": "US military has ‘on-orbit’ space weapons, Air Force Secretary reveals",
+          "source_name": "Defense One Intelligence & Tech",
+          "url": "https://www.defenseone.com/defense-systems/2026/09/us-military-has-orbit-space-weapons-air-force-secretary-reveals/415964/"
+        }
       ]
     },
     {

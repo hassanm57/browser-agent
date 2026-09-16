@@ -238,9 +238,8 @@ async def run_single_country_pipeline(
                         geo_breaking_elements = html_soup.find_all(class_=re.compile(r'breaking|top-story', re.IGNORECASE))
                         for breaking_container in geo_breaking_elements:
                             for breaking_candidate in breaking_container.find_all(["a", "h1", "h2"]):
-                                raw_breaking = breaking_candidate.get_text(strip=True)
-                                clean_breaking = re.sub(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}$', '', raw_breaking).strip()
-                                clean_breaking = re.sub(r'^(Live|LIVE)\s*[:\-]?\s*', '', clean_breaking).strip()
+                                raw_breaking = breaking_candidate.get_text(separator=" ", strip=True)
+                                clean_breaking = trends.clean_headline_for_search_term(raw_breaking)
                                 if len(clean_breaking) > 25 and len(clean_breaking) < 160 and not trends.is_bot_challenge_text(clean_breaking):
                                     if clean_breaking not in headlines_for_source and len(headlines_for_source) < 20:
                                         headlines_for_source.append(clean_breaking)
@@ -255,26 +254,14 @@ async def run_single_country_pipeline(
                                         }
 
                     for header_tag in html_soup.find_all(["h1", "h2", "h3", "h4", "a"]):
-                        raw_text = header_tag.get_text()
-                        clean_title = trends.clean_dom_tags_and_markdown(raw_text)
-
-                        # Clean IDRW comments prefix if present
-                        clean_title = re.sub(r'^\d+\s*Comments?on\s*', '', clean_title, flags=re.IGNORECASE).strip()
-
-                        # Clean Janes trailing call-to-action tags
-                        clean_title = re.sub(r'\s*Read (Article|Case Study|Analysis|Briefing|Feature)$', '', clean_title, flags=re.IGNORECASE).strip()
-
-                        # Clean trailing publish dates e.g. 'Sep 16, 2026'
-                        clean_title = re.sub(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}$', '', clean_title).strip()
-
-                        # Clean leading 'Live' or 'LIVE:' markers
-                        clean_title = re.sub(r'^(Live|LIVE)\s*[:\-]?\s*', '', clean_title).strip()
+                        raw_text = header_tag.get_text(separator=" ", strip=True)
+                        clean_title = trends.clean_headline_for_search_term(raw_text)
 
                         # Skip relative timestamps and forum date markers
                         if re.match(r'^(yesterday|today|tomorrow)\s+at\s+', clean_title, flags=re.IGNORECASE):
                             continue
 
-                        if len(clean_title) > 25 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
+                        if len(clean_title) > 25 and len(clean_title) < 160 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
                             # If it comes from a specialized defense, strategic affairs, or think tank domain, all articles are relevant
                             lower_title = clean_title.lower()
                             specialized_defense_domains = [
@@ -862,6 +849,28 @@ async def run_single_country_pipeline(
     # PHASE 5: Consolidate raw data and save raw_sources.json and keywords.json
     await log_and_record("STEP", "[5/5] Consolidating and saving intelligence artifacts...")
     current_iso_time = datetime.datetime.now().isoformat()
+    # Build detailed story clusters enriched with direct URLs for deep analysis
+    enriched_story_clusters_list = []
+    if trends.SKLEARN_AVAILABLE and len(news_sources_intel_dictionary) > 0:
+        raw_story_clusters = trends.group_headlines_into_story_clusters(news_sources_intel_dictionary, similarity_threshold=0.25)
+        for cluster_entry in raw_story_clusters:
+            cluster_articles_list = []
+            for single_headline in cluster_entry.get("headlines", []):
+                meta_item = headline_sources_metadata_map.get(single_headline, {})
+                cluster_articles_list.append({
+                    "headline": single_headline,
+                    "source_name": meta_item.get("source_name", "Unknown"),
+                    "url": meta_item.get("url", "")
+                })
+            enriched_story_clusters_list.append({
+                "cluster_id": cluster_entry.get("cluster_id"),
+                "representative_headline": cluster_entry.get("representative_headline"),
+                "headline_count": cluster_entry.get("headline_count"),
+                "multi_source": cluster_entry.get("multi_source"),
+                "source_names": cluster_entry.get("source_names", []),
+                "articles": cluster_articles_list
+            })
+
     consolidated_raw_sources = {
         "country": target_country_name,
         "slug": country_slug_name,
@@ -872,7 +881,8 @@ async def run_single_country_pipeline(
         "news_sources_intel": news_sources_intel_dictionary,
         "headline_sources_metadata": headline_sources_metadata_map,
         "curated_x_sources_intel": curated_x_sources_tweets,
-        "x_native_explore": x_native_intel_dictionary
+        "x_native_explore": x_native_intel_dictionary,
+        "story_clusters": enriched_story_clusters_list
     }
 
     with open(RAW_SOURCES_FILE_PATH, "w", encoding="utf-8") as file_pointer:

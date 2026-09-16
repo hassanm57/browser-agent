@@ -146,10 +146,11 @@ def fetch_trends24_topics(target_country_slug):
                 current_list_item = list_items_collection[item_index]
                 anchor_element = current_list_item.find("a")
                 if anchor_element is not None:
-                    cleaned_topic_text = anchor_element.get_text(strip=True)
+                    cleaned_topic_text = anchor_element.get_text(separator=" ", strip=True)
                 else:
-                    cleaned_topic_text = current_list_item.get_text(strip=True)
-                    
+                    cleaned_topic_text = current_list_item.get_text(separator=" ", strip=True)
+                cleaned_topic_text = " ".join(cleaned_topic_text.split())
+
                 if len(cleaned_topic_text) > 0 and cleaned_topic_text not in extracted_trending_topics_list:
                     extracted_trending_topics_list.append(cleaned_topic_text)
                     if len(extracted_trending_topics_list) >= 40:
@@ -196,6 +197,135 @@ def is_bot_challenge_text(text_string):
         if indicator_phrase in lowercased_text_string:
             return True
     return False
+
+
+DANGLING_TRAILING_WORDS_SET = {
+    "of", "in", "to", "for", "and", "or", "as", "with", "by", "on", "at",
+    "between", "from", "that", "which", "amid", "over", "into", "about",
+    "a", "an", "the", "is", "are", "was", "were", "warns", "says",
+    "amidst", "against", "under", "through", "after", "before", "during",
+    "without", "within"
+}
+
+GENERIC_BUZZWORD_PATTERNS_LIST = [
+    r'\bmilitary\s+capabilities\b',
+    r'\barms\s+dynamics\b',
+    r'\bconflict\s+escalation\b',
+    r'\bsecurity\s+cooperation\b',
+    r'\bdefense\s+cooperation\b',
+    r'\bdefense\s+industry\b',
+    r'\bstrategic\s+stability\b',
+    r'\bregional\s+stability\b',
+    r'\bregional\s+deterrence\b',
+    r'\bgeopolitical\s+dynamics\b',
+    r'\bgeopolitical\s+landscape\b',
+    r'\bdefense\s+posture\b',
+    r'\bmilitary\s+posture\b',
+    r'\bstrategic\s+posture\b',
+    r'\bbilateral\s+ties\b',
+    r'\bbilateral\s+relations\b',
+    r'\bstrategic\s+partnership\b',
+    r'\bdefense\s+partnership\b',
+    r'\bdefense\s+capabilities\b',
+    r'\bmissile\s+capabilities\b',
+    r'\bnaval\s+dynamics\b',
+    r'\bregional\s+tensions?\b',
+    r'\bsecurity\s+landscape\b',
+    r'\bthreat\s+perception\b',
+    r'\barms\s+race\b',
+    r'\bdefense\s+ecosystem\b',
+    r'\bproject\s+risks?\b',
+    r'\bprocurement\s+delays?\b',
+    r'\bstrategic\s+implications\b',
+    r'\bforeign\s+policy\b',
+    r'\bnational\s+security\b',
+    r'\beconomic\s+warfare\b',
+    r'\bcombat\s+readiness\b'
+]
+
+
+def strip_dangling_trailing_words(text_string):
+    # Iteratively removes trailing prepositions, conjunctions, or incomplete verbs that leave a phrase dangling
+    words_list = text_string.strip().split()
+    while len(words_list) > 0:
+        last_word_cleaned = re.sub(r'[^a-zA-Z]', '', words_list[-1]).lower()
+        if last_word_cleaned in DANGLING_TRAILING_WORDS_SET:
+            words_list.pop()
+        else:
+            break
+    rejoined_string = " ".join(words_list)
+    return rejoined_string.rstrip(":, -–—")
+
+
+def is_generic_fluff_term(term_string):
+    # Determines if a keyword term is an abstract generic buzzword rather than a concrete news search query
+    lower_term = term_string.lower().strip()
+    for pattern in GENERIC_BUZZWORD_PATTERNS_LIST:
+        if re.search(pattern, lower_term) is not None:
+            return True
+    return False
+
+
+def clean_headline_for_search_term(raw_headline_text):
+    # Prepares a complete headline or phrase as a high-precision, search-ready keyword without mid-sentence truncation
+    cleaned_term = str(raw_headline_text).strip()
+    if len(cleaned_term) == 0:
+        return ""
+
+    # 1. Strip raw HTML tags and entities
+    cleaned_term = re.sub(r'<[^>]+>', ' ', cleaned_term)
+    cleaned_term = re.sub(r'&[a-zA-Z]+;', ' ', cleaned_term)
+
+    # 2. Fix glued media indicators like '?Video' into '?'
+    cleaned_term = re.sub(r'\?(Video|Photos?|Audio|Updated|Reports?|Watch)\b', '?', cleaned_term, flags=re.IGNORECASE)
+
+    # 3. Strip trailing media badges and update markers
+    cleaned_term = re.sub(r'\s*[-–—|/]?\s*\b(Video|Photos?|Audio|Live\s+Updates?|Updated|Reports?|Watch|Analysis|Factbox)\b\s*$', '', cleaned_term, flags=re.IGNORECASE)
+
+    # 4. Remove leading bracketed source tags like [IDRW] or (Reuters)
+    cleaned_term = re.sub(r'^[\[\(][A-Za-z0-9\s\.\-_]+[\]\)]\s*[:\-]?\s*', '', cleaned_term)
+
+    # 5. Remove leading uppercase source acronyms with colon or spaced dash (e.g. SCMP - , AFP: )
+    cleaned_term = re.sub(r'^[A-Z]{2,8}\s*:\s*', '', cleaned_term)
+    cleaned_term = re.sub(r'^[A-Z]{2,8}\s+[-–—]\s+', '', cleaned_term)
+
+    # 6. Remove IDRW comments prefix (e.g. '0 Comment on...', '12 Comments on...')
+    cleaned_term = re.sub(r'^\d+\s*Comments?\s*(on)?\s*', '', cleaned_term, flags=re.IGNORECASE)
+    cleaned_term = re.sub(r'^on\s+(?=[A-Z0-9])', '', cleaned_term)
+
+    # 7. Remove leading "Live" or "LIVE:" markers
+    cleaned_term = re.sub(r'^(Live|LIVE)\s*[:\-]?\s*', '', cleaned_term)
+
+    # 8. Remove Janes call-to-action tags
+    cleaned_term = re.sub(r'\s*Read (Article|Case Study|Analysis|Briefing|Feature)$', '', cleaned_term, flags=re.IGNORECASE)
+
+    # 9. Remove trailing publish dates
+    cleaned_term = re.sub(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}$', '', cleaned_term)
+
+    # 10. Normalize internal whitespace
+    cleaned_term = " ".join(cleaned_term.split())
+
+    # 11. Manage character length up to 120 chars without cutting mid-word or mid-clause
+    if len(cleaned_term) > 120:
+        boundary_cut_position = -1
+        for separator in [';', ' - ', ': ', ', ']:
+            position = cleaned_term[:120].rfind(separator)
+            if position > 50:
+                boundary_cut_position = position
+                break
+        if boundary_cut_position > 50:
+            cleaned_term = cleaned_term[:boundary_cut_position]
+        else:
+            space_position = cleaned_term[:120].rfind(' ')
+            if space_position > 50:
+                cleaned_term = cleaned_term[:space_position]
+            else:
+                cleaned_term = cleaned_term[:120]
+
+    # 12. Strip any dangling trailing prepositions or conjunctions
+    cleaned_term = strip_dangling_trailing_words(cleaned_term)
+
+    return cleaned_term.strip()
 
 
 def fetch_headlines_from_configured_sources(sources_list):
@@ -250,9 +380,8 @@ def fetch_headlines_from_configured_sources(sources_list):
                     geo_breaking_elements = html_soup_parser.find_all(class_=re.compile(r'breaking|top-story', re.IGNORECASE))
                     for breaking_container in geo_breaking_elements:
                         for breaking_candidate in breaking_container.find_all(["a", "h1", "h2"]):
-                            raw_breaking_headline = breaking_candidate.get_text(strip=True)
-                            clean_breaking_headline = re.sub(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}$', '', raw_breaking_headline).strip()
-                            clean_breaking_headline = re.sub(r'^(Live|LIVE)\s*[:\-]?\s*', '', clean_breaking_headline).strip()
+                            raw_breaking_headline = breaking_candidate.get_text(separator=" ", strip=True)
+                            clean_breaking_headline = clean_headline_for_search_term(raw_breaking_headline)
                             if len(clean_breaking_headline) > 25 and len(clean_breaking_headline) < 160 and not is_bot_challenge_text(clean_breaking_headline):
                                 if clean_breaking_headline not in extracted_headlines_list and len(extracted_headlines_list) < 20:
                                     extracted_headlines_list.append(clean_breaking_headline)
@@ -261,19 +390,8 @@ def fetch_headlines_from_configured_sources(sources_list):
                 headings_collection = html_soup_parser.find_all(["h1", "h2", "h3", "a"])
                 for heading_index in range(len(headings_collection)):
                     heading_item = headings_collection[heading_index]
-                    heading_text = heading_item.get_text(strip=True)
-
-                    # Clean IDRW comments prefix if present (e.g., '12 Commentson...')
-                    heading_text = re.sub(r'^\d+\s*Comments?on\s*', '', heading_text, flags=re.IGNORECASE).strip()
-
-                    # Clean Janes trailing call-to-action tags (e.g., '...Read Article')
-                    heading_text = re.sub(r'\s*Read (Article|Case Study|Analysis|Briefing|Feature)$', '', heading_text, flags=re.IGNORECASE).strip()
-
-                    # Clean trailing publish dates e.g. 'Sep 16, 2026'
-                    heading_text = re.sub(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}$', '', heading_text).strip()
-
-                    # Clean leading 'Live' or 'LIVE:' markers
-                    heading_text = re.sub(r'^(Live|LIVE)\s*[:\-]?\s*', '', heading_text).strip()
+                    raw_heading_text = heading_item.get_text(separator=" ", strip=True)
+                    heading_text = clean_headline_for_search_term(raw_heading_text)
 
                     # Skip relative timestamps and forum date markers (e.g., 'Yesterday at 11:41 PM' on defence.in)
                     if re.match(r'^(yesterday|today|tomorrow)\s+at\s+', heading_text, flags=re.IGNORECASE):
@@ -1898,27 +2016,28 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
 
         clean_terms_list = []
         for term_item in raw_terms:
-            term_str = str(term_item).strip()
-            term_str = re.sub(r'<[^>]*>', '', term_str).strip()
+            # Clean HTML noise, source tags, comments prefixes, and trailing media badges
+            term_str = clean_headline_for_search_term(str(term_item))
+            term_str = strip_dangling_trailing_words(term_str)
             lower_term = term_str.lower()
 
             if "ignore previous" in lower_term or "system override" in lower_term:
                 continue
 
-            # Filter out banned generic phrases that provide zero context
-            if lower_term in banned_generic_phrases_list:
+            # Filter out banned generic phrases and abstract academic fluff
+            if lower_term in banned_generic_phrases_list or is_generic_fluff_term(term_str):
                 continue
 
-            # Ensure term is informative: reject single generic lowercase words
+            # Reject single generic lowercase or mixed-case words (only allow uppercase acronyms or hashtags)
             term_words_list = term_str.split()
             if len(term_words_list) == 1:
-                # Allow only capitalized acronyms/proper names or hashtags e.g. NATO, AUKUS, PAF, #YA26
-                if not (term_str.startswith("#") or (term_str.isupper() and len(term_str) >= 2)):
+                if not (term_str.startswith("#") or (term_str.isupper() and len(term_str) >= 2 and len(term_str) <= 8)):
                     continue
 
-            # Cap word length at 10 words per user constraint ("Not longer than 7-10 words")
-            if len(term_words_list) > 10:
-                term_str = " ".join(term_words_list[:10])
+            # If term exceeds 14 words, trim at word boundary and strip any dangling prepositions
+            if len(term_words_list) > 14:
+                term_str = " ".join(term_words_list[:14])
+                term_str = strip_dangling_trailing_words(term_str)
 
             if len(term_str) >= 2 and len(term_str) <= 120:
                 # Check for duplicates in terms within this topic
@@ -1938,7 +2057,13 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
         if len(final_terms) < 8:
             label_phrases = extract_key_phrases_from_headline(clean_label)
             for phrase in label_phrases:
-                phrase_clean = phrase.strip()
+                phrase_clean = clean_headline_for_search_term(phrase)
+                phrase_clean = strip_dangling_trailing_words(phrase_clean)
+                if is_generic_fluff_term(phrase_clean):
+                    continue
+                phrase_words = phrase_clean.split()
+                if len(phrase_words) == 1 and not (phrase_clean.startswith("#") or (phrase_clean.isupper() and len(phrase_clean) >= 2)):
+                    continue
                 phrase_lower = phrase_clean.lower()
                 is_duplicate = False
                 for existing_term in final_terms:
@@ -2047,10 +2172,24 @@ def clean_headline_for_topic_label(raw_headline_text):
     # Strip attribution prefixes and leading fluff from headlines to keep labels concise and crisp
     cleaned_label = raw_headline_text.strip()
 
-    # Remove leading source tags like 'SCMP - ' or '[IDRW]'
-    cleaned_label = re.sub(r'^[\[\(]?[A-Za-z0-9\s]+[\]\)]?\s*[:\-]\s*', '', cleaned_label)
+    # 1. Remove leading bracketed source tags like [IDRW] or (Reuters)
+    cleaned_label = re.sub(r'^[\[\(][A-Za-z0-9\s\.\-_]+[\]\)]\s*[:\-]?\s*', '', cleaned_label)
 
-    # Remove leading conversational fluff phrases
+    # 2. Remove leading uppercase source acronyms with colon or spaced dash (e.g. SCMP - , AFP: )
+    cleaned_label = re.sub(r'^[A-Z]{2,8}\s*:\s*', '', cleaned_label)
+    cleaned_label = re.sub(r'^[A-Z]{2,8}\s+[-–—]\s+', '', cleaned_label)
+
+    # 3. Remove IDRW comments prefix (e.g. '0 Comment on...', '12 Comments on...')
+    cleaned_label = re.sub(r'^\d+\s*Comments?\s*(on)?\s*', '', cleaned_label, flags=re.IGNORECASE)
+    cleaned_label = re.sub(r'^on\s+(?=[A-Z0-9])', '', cleaned_label)
+
+    # 4. Remove glued media indicators like '?Video'
+    cleaned_label = re.sub(r'\?(Video|Photos?|Audio|Updated|Reports?|Watch)\b', '?', cleaned_label, flags=re.IGNORECASE)
+
+    # 5. Remove trailing media badges and update markers
+    cleaned_label = re.sub(r'\s*[-–—|/]?\s*\b(Video|Photos?|Audio|Live\s+Updates?|Updated|Reports?|Watch|Analysis|Factbox)\b\s*$', '', cleaned_label, flags=re.IGNORECASE)
+
+    # 6. Remove leading conversational fluff phrases
     conversational_prefixes = [
         r'^(while\s+(talk|speculation|reports?)\s+(of|about|on)\s+the\s+)',
         r'^(while\s+(talk|speculation|reports?)\s+(of|about|on)\s+)',
@@ -2065,27 +2204,29 @@ def clean_headline_for_topic_label(raw_headline_text):
         cleaned_label = re.sub(prefix_pattern, '', cleaned_label, flags=re.IGNORECASE)
 
     cleaned_label = cleaned_label.strip()
-    if len(cleaned_label) > 80:
-        truncated_slice = cleaned_label[:80]
+    if len(cleaned_label) > 100:
+        truncated_slice = cleaned_label[:100]
         last_space_position = truncated_slice.rfind(' ')
-        if last_space_position > 40:
+        if last_space_position > 50:
             cleaned_label = truncated_slice[:last_space_position]
         else:
             cleaned_label = truncated_slice
 
-    return cleaned_label
+    cleaned_label = strip_dangling_trailing_words(cleaned_label)
+    return cleaned_label.strip()
 
 
 def extract_key_phrases_from_headline(headline_text):
-    # Extract distinct keywords and noun phrases from a headline to form 15 terms
-    cleaned_text = re.sub(r'[^a-zA-Z0-9\s\-]', ' ', headline_text)
+    # Extract distinct keywords and noun phrases from a headline to form context-rich search terms
+    cleaned_headline = clean_headline_for_search_term(headline_text)
+    cleaned_text = re.sub(r'[^a-zA-Z0-9\s\-]', ' ', cleaned_headline)
     words_list = cleaned_text.split()
 
     stop_words_list = [
         "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or", "is",
         "are", "was", "were", "with", "by", "as", "from", "after", "over", "into",
-        "about", "amid", "says", "report", "news", "update", "confirms", "reveals",
-        "shows", "more", "first", "second", "third", "ahead", "behind",
+        "about", "amid", "says", "report", "reports", "news", "update", "updated",
+        "confirms", "reveals", "shows", "more", "first", "second", "third", "ahead", "behind",
         "may", "might", "can", "could", "will", "would", "shall", "should",
         "be", "been", "being", "have", "has", "had", "do", "does", "did",
         "not", "no", "nor", "neither", "either", "but", "while", "when", "where",
@@ -2095,40 +2236,46 @@ def extract_key_phrases_from_headline(headline_text):
         "hers", "it", "its", "all", "any", "both", "each", "few", "most", "other",
         "some", "such", "only", "own", "same", "so", "than", "too", "very", "just",
         "now", "new", "said", "say", "talk", "talks", "real", "get", "gets",
-        "got", "make", "makes", "made", "like", "see", "seen", "also", "back", "even"
+        "got", "make", "makes", "made", "like", "see", "seen", "also", "back", "even",
+        "video", "photos", "photo", "audio", "between", "amidst", "against", "warns",
+        "claim", "claims", "according", "details", "exclusive"
     ]
 
     significant_words = []
     for word in words_list:
         word_lower = word.lower()
-        # Keep words that have length of at least 3 characters and are not generic stop words
-        if len(word) >= 3 and word_lower not in stop_words_list:
+        # Keep words that have length of at least 3 characters or are 2-letter uppercase acronyms/codes (e.g. DF, SU, MI)
+        is_length_eligible = (len(word) >= 3) or (len(word) == 2 and word.isupper())
+        if is_length_eligible and word_lower not in stop_words_list:
             significant_words.append(word)
 
     terms_list = []
-    cleaned_label = clean_headline_for_topic_label(headline_text)
-    if len(cleaned_label) <= 60 and len(cleaned_label) > 10:
-        terms_list.append(cleaned_label)
+    if len(cleaned_headline) <= 110 and len(cleaned_headline) > 10:
+        terms_list.append(cleaned_headline)
 
     # Generate multi-word phrases from adjacent significant words
     for word_index in range(len(significant_words) - 1):
         first_word = significant_words[word_index]
         second_word = significant_words[word_index + 1]
         pair_phrase = first_word + " " + second_word
-        if pair_phrase not in terms_list:
-            terms_list.append(pair_phrase)
+        clean_pair = strip_dangling_trailing_words(pair_phrase)
+        if clean_pair not in terms_list and not is_generic_fluff_term(clean_pair) and len(clean_pair.split()) >= 2:
+            terms_list.append(clean_pair)
 
     for word_index in range(len(significant_words) - 2):
         first_word = significant_words[word_index]
         second_word = significant_words[word_index + 1]
         third_word = significant_words[word_index + 2]
         triplet_phrase = first_word + " " + second_word + " " + third_word
-        if triplet_phrase not in terms_list:
-            terms_list.append(triplet_phrase)
+        clean_triplet = strip_dangling_trailing_words(triplet_phrase)
+        if clean_triplet not in terms_list and not is_generic_fluff_term(clean_triplet) and len(clean_triplet.split()) >= 2:
+            terms_list.append(clean_triplet)
 
+    # Only include single words if they are proper uppercase acronyms or hashtags (e.g. NATO, AUKUS, INS, DRDO)
     for word in significant_words:
-        if word not in terms_list and len(word) >= 3:
-            terms_list.append(word)
+        if word.startswith("#") or (word.isupper() and len(word) >= 2 and len(word) <= 8):
+            if word not in terms_list:
+                terms_list.append(word)
 
     return terms_list[:8]
 
@@ -2158,9 +2305,13 @@ def clean_headline_text_for_similarity(raw_headline_text):
     cleaned_text = str(raw_headline_text).strip()
 
     # Remove common source attribution prefixes like "[Reuters]", "SCMP -", "(AFP)"
-    cleaned_text = re.sub(r'^\[.*?\]\s*', '', cleaned_text)
-    cleaned_text = re.sub(r'^\(.*?\)\s*', '', cleaned_text)
-    cleaned_text = re.sub(r'^[A-Z][A-Za-z\s]{1,20}\s*[-–—:]\s*', '', cleaned_text)
+    cleaned_text = re.sub(r'^[\[\(][A-Za-z0-9\s\.\-_]+[\]\)]\s*[:\-]?\s*', '', cleaned_text)
+    cleaned_text = re.sub(r'^[A-Z]{2,8}\s*:\s*', '', cleaned_text)
+    cleaned_text = re.sub(r'^[A-Z]{2,8}\s+[-–—]\s+', '', cleaned_text)
+    cleaned_text = re.sub(r'^\d+\s*Comments?\s*(on)?\s*', '', cleaned_text, flags=re.IGNORECASE)
+    cleaned_text = re.sub(r'^on\s+(?=[A-Z0-9])', '', cleaned_text)
+    cleaned_text = re.sub(r'\?(Video|Photos?|Audio|Updated|Reports?|Watch)\b', '?', cleaned_text, flags=re.IGNORECASE)
+    cleaned_text = re.sub(r'\s*[-–—|/]?\s*\b(Video|Photos?|Audio|Live\s+Updates?|Updated|Reports?|Watch|Analysis|Factbox)\b\s*$', '', cleaned_text, flags=re.IGNORECASE)
 
     # Remove URLs that might be embedded in headline text
     cleaned_text = re.sub(r'https?://\S+', '', cleaned_text)
@@ -2796,13 +2947,20 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
 
         # Enforce that the primary news source headline title and its key sub-phrases are in terms,
         # and guarantee that at least 8 context-rich keywords exist for every topic
-        cleaned_source_headline = clean_headline_for_topic_label(primary_source_headline)
+        cleaned_source_headline = clean_headline_for_search_term(primary_source_headline)
         existing_terms = topic_item.get("terms", [])
         updated_terms = []
 
         for term in existing_terms:
-            if term not in updated_terms:
-                updated_terms.append(term)
+            clean_term_str = clean_headline_for_search_term(term)
+            clean_term_str = strip_dangling_trailing_words(clean_term_str)
+            if is_generic_fluff_term(clean_term_str):
+                continue
+            term_words = clean_term_str.split()
+            if len(term_words) == 1 and not (clean_term_str.startswith("#") or (clean_term_str.isupper() and len(clean_term_str) >= 2 and len(clean_term_str) <= 8)):
+                continue
+            if len(clean_term_str) >= 2 and clean_term_str not in updated_terms:
+                updated_terms.append(clean_term_str)
 
         # Check if the primary source headline is already represented in terms
         has_headline_in_terms = False
@@ -2813,7 +2971,7 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                 has_headline_in_terms = True
                 break
 
-        if not has_headline_in_terms and len(cleaned_source_headline) > 5:
+        if not has_headline_in_terms and len(cleaned_source_headline) > 5 and not is_generic_fluff_term(cleaned_source_headline):
             # Insert the primary source headline title at the beginning of the terms list
             updated_terms.insert(0, cleaned_source_headline)
 
@@ -2821,7 +2979,13 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         if len(updated_terms) < 8:
             headline_phrases = extract_key_phrases_from_headline(primary_source_headline)
             for phrase in headline_phrases:
-                phrase_clean = phrase.strip()
+                phrase_clean = clean_headline_for_search_term(phrase)
+                phrase_clean = strip_dangling_trailing_words(phrase_clean)
+                if is_generic_fluff_term(phrase_clean):
+                    continue
+                phrase_words = phrase_clean.split()
+                if len(phrase_words) == 1 and not (phrase_clean.startswith("#") or (phrase_clean.isupper() and len(phrase_clean) >= 2 and len(phrase_clean) <= 8)):
+                    continue
                 phrase_lower = phrase_clean.lower()
                 is_duplicate = False
                 for term in updated_terms:
@@ -2837,7 +3001,13 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         if len(updated_terms) < 8:
             label_phrases = extract_key_phrases_from_headline(topic_item.get("label", ""))
             for phrase in label_phrases:
-                phrase_clean = phrase.strip()
+                phrase_clean = clean_headline_for_search_term(phrase)
+                phrase_clean = strip_dangling_trailing_words(phrase_clean)
+                if is_generic_fluff_term(phrase_clean):
+                    continue
+                phrase_words = phrase_clean.split()
+                if len(phrase_words) == 1 and not (phrase_clean.startswith("#") or (phrase_clean.isupper() and len(phrase_clean) >= 2 and len(phrase_clean) <= 8)):
+                    continue
                 phrase_lower = phrase_clean.lower()
                 is_duplicate = False
                 for term in updated_terms:
@@ -3058,10 +3228,15 @@ STRICT REQUIREMENTS FOR EACH GENERATED ROW:
 2. "category": Exactly one of "defense", "diplomacy", "politics", "economic".
 3. "boolean_query": MUST BE SHORT AND CONCISE (maximum 2 to 4 search terms total, under 100 characters).
    Use exact quotes and standard Boolean syntax.
-4. "terms": Array of EXACTLY 8 to 12 (at least 8) CRISP, CONTEXT-RICH, DETAILED KEYWORDS AND PHRASES (between 2 and 7-10 words each). Every single topic MUST have at least 8 keywords.
-   - MANDATORY SOURCE HEADLINE TITLE INTEGRATION: The exact news headline title of the primary news source article from which the story originated MUST be included as one of the keywords in the "terms" array. Furthermore, extract key distinctive sub-phrases from that news headline title as additional keywords.
-   - The keywords themselves must carry the core contextual intelligence: specific weapon designations, military branches, country names, dates/year 2026, program names, and locations extracted directly from the text.
-   - STRICTLY FORBIDDEN: Vague, generic, contextless 1-2 word labels like "NATO Missile Defence", "Nuclear Testing", "Defense Contracts", "Oil Price", "National Security", "Regional Stability", "Military Modernization", "Air Defense", "Armed Forces".
+4. "terms": Array of EXACTLY 8 to 12 (at least 8) HIGH-PRECISION, ACTIONABLE SEARCH QUERIES AND KEYWORD PHRASES (between 2 and 10 words each). Every single topic MUST have at least 8 keywords.
+   - ACTIONABLE SEARCHABILITY MANDATE: Every keyword phrase MUST be formulated such that when searched on X/Twitter or Google, it directly and reliably retrieves the exact news articles and headlines from which the story originated. The keywords must NOT be generic textbook topics.
+   - MANDATORY SOURCE HEADLINE INTEGRATION: The exact, complete news headline title of the primary news source article from which the story originated MUST be included as the first keyword in the "terms" array (do NOT chop it, do NOT truncate it mid-sentence).
+   - DISTINCTIVE SUB-PHRASES & NAMED ENTITIES: Extract distinct multi-word clauses from that source headline and story text (e.g. specific weapon designations like 'Chinese DF missile', vessel names like 'INS Trishul', incident locations like 'near Makkah', named leaders like 'Vance', 'Shehbaz', 'Saudi crown prince', and specific milestones like '$38bn bill').
+   - ZERO-TOLERANCE BAN ON ABSTRACT ACADEMIC FLUFF:
+     * NEVER output abstract textbook categories or analytical essays. For example, STRICTLY FORBIDDEN: 'Houthi military capabilities', 'China-Saudi-Yemen arms dynamics', 'Yemen conflict escalation', 'Regional security cooperation', 'Indian defense industry', 'Strategic defense posture', 'Bilateral defense ties', 'Geopolitical dynamics', 'Project risks', 'Procurement delays', 'Defense contracts', 'National security', 'Regional stability'.
+     * NEVER output incomplete phrases ending in dangling prepositions or conjunctions (e.g. NEVER write 'Saudi-Led Coalition Warns of', 'Cooperation Between', 'Racks up bill as'). Every phrase must be a complete, grammatically sound thought.
+     * NEVER output single generic words (e.g. do NOT output 'Reports', 'Video', 'Drills', 'Missile', 'Tensions').
+     * NEVER mangle hyphenated words or chop prefixes (e.g. write 'Saudi-led coalition', NOT 'led coalition').
 
 CRITICAL ANTI-LEAKAGE / ZERO-HARDCODING RULE:
 - NEVER repeat or copy any fictional placeholder names from the synthetic syntax format example below (e.g., do NOT output 'Model-7X' or 'Nation-Alpha').
@@ -3096,7 +3271,7 @@ IMPORTANT: The "boolean_query" field MUST be a valid JSON string wrapped in doub
 - Topics 1 to 10: The top 10 most trending, hottest breaking defense, military, and geopolitical stories worldwide (balanced across Sections 1, 2, 3, and 4).
 - Topics 11 to 13: Exactly 3 dedicated topics derived EXCLUSIVELY from the configured Indian sources in Section 4, where India is directly involved.
 
-Ensure each row has a self-generated phrased headline, a concise Boolean query (2 to 4 terms), and AT LEAST 8 context-rich, phrasey keywords (between 2 and 7-10 words each) grounded directly in the text below, with the primary news headline title and its key sub-phrases included in the keywords.
+Ensure each row has a self-generated phrased headline, a concise Boolean query (2 to 4 terms), and AT LEAST 8 actionable search queries and keyword phrases (between 2 and 10 words each) grounded directly in the text below, with the complete primary news headline title and its key sub-phrases included in the keywords. Do NOT generate generic academic fluff like 'military capabilities' or 'arms dynamics'.
 
 <untrusted_intelligence_dossier>
 {full_intel_digest_string}

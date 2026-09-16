@@ -993,6 +993,14 @@ def resolve_source_website_url(source_name_string: str) -> str:
     # 2. Known domain mappings fallback
     lowercased_source_name = source_name_string.lower()
 
+    if "geo tv world" in lowercased_source_name or "geo news world" in lowercased_source_name or "geo world" in lowercased_source_name:
+        return "https://www.geo.tv/category/world"
+    if "geo tv" in lowercased_source_name or "geo news" in lowercased_source_name or "geo.tv" in lowercased_source_name:
+        return "https://www.geo.tv"
+    if "nationaldefence" in lowercased_source_name or "national defence" in lowercased_source_name:
+        return "https://nationaldefence.in"
+    if "indiandefensenews" in lowercased_source_name or "indian defence news" in lowercased_source_name:
+        return "https://www.indiandefensenews.in"
     if "defense news" in lowercased_source_name:
         return "https://www.defensenews.com"
     if "the news" in lowercased_source_name or "thenews" in lowercased_source_name:
@@ -1055,63 +1063,118 @@ def extract_curated_top_trends(raw_intelligence_dictionary: Dict[str, Any], requ
             "category": resolved_category
         })
 
-    # Step 1: Find Defense News source key
-    defense_news_source_key = ""
-    for candidate_source_key in news_sources_intel_map.keys():
-        if "defense news" in candidate_source_key.lower():
-            defense_news_source_key = candidate_source_key
-            break
+    # User Requirements for Top Trends:
+    # - Rank 1: Top headline from geo.tv (the LIVE/breaking banner headline)
+    # - Rank 2: Headline from https://nationaldefence.in/
+    # - Rank 3: Headline from https://www.geo.tv/category/world
+    # - Ranks 4 to requested_limit: Additional trending stories from other sources
 
-    if len(defense_news_source_key) > 0:
-        defense_headlines = news_sources_intel_map.get(defense_news_source_key, [])
-        for headline_item in defense_headlines:
-            if len(curated_trends_list) >= 2:
-                break
-            attempt_add_headline(defense_news_source_key, headline_item, "Defense & Military")
+    def find_matching_source_key(preferred_substrings: List[str], excluded_substrings: List[str] = []) -> str:
+        for candidate_key in news_sources_intel_map.keys():
+            lower_key = candidate_key.lower()
+            has_excluded = False
+            for excluded_item in excluded_substrings:
+                if excluded_item in lower_key:
+                    has_excluded = True
+                    break
+            if has_excluded:
+                continue
+            for preferred_item in preferred_substrings:
+                if preferred_item in lower_key:
+                    return candidate_key
+        return ""
 
-    # Step 2: Find The News International source key
-    the_news_source_key = ""
-    for candidate_source_key in news_sources_intel_map.keys():
-        lowered_candidate_key = candidate_source_key.lower()
-        if "the news" in lowered_candidate_key or "thenews" in lowered_candidate_key:
-            the_news_source_key = candidate_source_key
-            break
+    # 1. Podium Rank 1: Geo TV Front Page (the LIVE / breaking headline)
+    geo_front_page_key = find_matching_source_key(
+        ["geo tv front page", "geo tv", "geo news"],
+        ["world", "rss"]
+    )
+    if len(geo_front_page_key) > 0:
+        geo_headlines = news_sources_intel_map.get(geo_front_page_key, [])
+        if len(geo_headlines) > 0:
+            attempt_add_headline(geo_front_page_key, geo_headlines[0], "Breaking News")
 
-    if len(the_news_source_key) > 0:
-        the_news_headlines = news_sources_intel_map.get(the_news_source_key, [])
-        for headline_item in the_news_headlines:
-            initial_count = len(curated_trends_list)
-            attempt_add_headline(the_news_source_key, headline_item, "International / Regional")
-            if len(curated_trends_list) > initial_count:
-                break
+    # 2. Podium Rank 2: National Defence India (https://nationaldefence.in/)
+    national_defence_key = find_matching_source_key(["nationaldefence", "national defence"])
+    if len(national_defence_key) > 0:
+        nd_headlines = news_sources_intel_map.get(national_defence_key, [])
+        if len(nd_headlines) > 0:
+            attempt_add_headline(national_defence_key, nd_headlines[0], "Indian Defence")
 
-    # Step 3: Gather remaining sources and add 1 from each source until reaching requested_limit
-    remaining_source_keys_list = []
-    for candidate_source_key in news_sources_intel_map.keys():
-        if candidate_source_key != defense_news_source_key and candidate_source_key != the_news_source_key:
-            remaining_source_keys_list.append(candidate_source_key)
+    # 3. Podium Rank 3: Geo TV World (https://www.geo.tv/category/world)
+    geo_world_key = find_matching_source_key(["geo tv world", "geo news world", "geo world"])
+    if len(geo_world_key) > 0:
+        world_headlines = news_sources_intel_map.get(geo_world_key, [])
+        if len(world_headlines) > 0:
+            attempt_add_headline(geo_world_key, world_headlines[0], "World News")
 
-    # Pass 1: Add 1 headline from each remaining source
-    for remaining_source_key in remaining_source_keys_list:
+    # Fallback if any podium position was missed
+    if len(curated_trends_list) < 1:
+        any_geo_key = find_matching_source_key(["geo"])
+        if len(any_geo_key) > 0:
+            any_geo_headlines = news_sources_intel_map.get(any_geo_key, [])
+            if len(any_geo_headlines) > 0:
+                attempt_add_headline(any_geo_key, any_geo_headlines[0], "Breaking News")
+
+    if len(curated_trends_list) < 3:
+        for candidate_source_key in news_sources_intel_map.keys():
+            lower_candidate = candidate_source_key.lower()
+            if (
+                "idrw" in lower_candidate
+                or "indiandefensenews" in lower_candidate
+                or "defencexp" in lower_candidate
+                or "livefist" in lower_candidate
+                or "defense news" in lower_candidate
+            ):
+                fallback_headlines = news_sources_intel_map.get(candidate_source_key, [])
+                for headline_item in fallback_headlines:
+                    if len(curated_trends_list) >= 3:
+                        break
+                    attempt_add_headline(candidate_source_key, headline_item, "Top Story")
+
+    # 4. Fill Ranks 4 to requested_limit from other prominent sources in priority order
+    priority_sources_list = [
+        "defense news",
+        "idrw",
+        "indiandefensenews",
+        "dawn",
+        "tribune",
+        "the news",
+        "reuters",
+        "defencexp",
+        "livefist",
+        "alphadefense",
+        "iadnews",
+        "indiandefencereview",
+        "defencecapital",
+        "janes",
+        "csis",
+        "bbc"
+    ]
+
+    for target_substring in priority_sources_list:
         if len(curated_trends_list) >= requested_limit:
             break
-        source_headlines = news_sources_intel_map.get(remaining_source_key, [])
-        for headline_item in source_headlines:
-            initial_count = len(curated_trends_list)
-            attempt_add_headline(remaining_source_key, headline_item, "Global Intel")
-            if len(curated_trends_list) > initial_count:
-                break
-
-    # Pass 2: If still under requested_limit, add more headlines from any source
-    if len(curated_trends_list) < requested_limit:
         for candidate_source_key in news_sources_intel_map.keys():
+            if target_substring in candidate_source_key.lower():
+                source_headlines = news_sources_intel_map.get(candidate_source_key, [])
+                for headline_item in source_headlines:
+                    initial_count = len(curated_trends_list)
+                    attempt_add_headline(candidate_source_key, headline_item, "Trending Intelligence")
+                    if len(curated_trends_list) > initial_count or len(curated_trends_list) >= requested_limit:
+                        break
             if len(curated_trends_list) >= requested_limit:
                 break
-            source_headlines = news_sources_intel_map.get(candidate_source_key, [])
-            for headline_item in source_headlines:
-                if len(curated_trends_list) >= requested_limit:
-                    break
-                attempt_add_headline(candidate_source_key, headline_item, "Global Intel")
+
+    # Final fallback pass: if still under requested_limit, add any remaining headlines
+    for candidate_source_key in news_sources_intel_map.keys():
+        if len(curated_trends_list) >= requested_limit:
+            break
+        source_headlines = news_sources_intel_map.get(candidate_source_key, [])
+        for headline_item in source_headlines:
+            if len(curated_trends_list) >= requested_limit:
+                break
+            attempt_add_headline(candidate_source_key, headline_item, "Global Intel")
 
     return curated_trends_list
 

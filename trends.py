@@ -245,6 +245,18 @@ def fetch_headlines_from_configured_sources(sources_list):
                 http_response_object.encoding = "utf-8"
                 html_soup_parser = BeautifulSoup(http_response_object.text, "html.parser")
 
+                # Priority extraction for Geo TV: capture breaking LIVE banner headlines and top stories first
+                if "geo.tv" in source_url.lower():
+                    geo_breaking_elements = html_soup_parser.find_all(class_=re.compile(r'breaking|top-story', re.IGNORECASE))
+                    for breaking_container in geo_breaking_elements:
+                        for breaking_candidate in breaking_container.find_all(["a", "h1", "h2"]):
+                            raw_breaking_headline = breaking_candidate.get_text(strip=True)
+                            clean_breaking_headline = re.sub(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}$', '', raw_breaking_headline).strip()
+                            clean_breaking_headline = re.sub(r'^(Live|LIVE)\s*[:\-]?\s*', '', clean_breaking_headline).strip()
+                            if len(clean_breaking_headline) > 25 and len(clean_breaking_headline) < 160 and not is_bot_challenge_text(clean_breaking_headline):
+                                if clean_breaking_headline not in extracted_headlines_list and len(extracted_headlines_list) < 20:
+                                    extracted_headlines_list.append(clean_breaking_headline)
+
                 # Look for headings and article links
                 headings_collection = html_soup_parser.find_all(["h1", "h2", "h3", "a"])
                 for heading_index in range(len(headings_collection)):
@@ -256,6 +268,12 @@ def fetch_headlines_from_configured_sources(sources_list):
 
                     # Clean Janes trailing call-to-action tags (e.g., '...Read Article')
                     heading_text = re.sub(r'\s*Read (Article|Case Study|Analysis|Briefing|Feature)$', '', heading_text, flags=re.IGNORECASE).strip()
+
+                    # Clean trailing publish dates e.g. 'Sep 16, 2026'
+                    heading_text = re.sub(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}$', '', heading_text).strip()
+
+                    # Clean leading 'Live' or 'LIVE:' markers
+                    heading_text = re.sub(r'^(Live|LIVE)\s*[:\-]?\s*', '', heading_text).strip()
 
                     # Skip relative timestamps and forum date markers (e.g., 'Yesterday at 11:41 PM' on defence.in)
                     if re.match(r'^(yesterday|today|tomorrow)\s+at\s+', heading_text, flags=re.IGNORECASE):
@@ -278,7 +296,7 @@ def fetch_headlines_from_configured_sources(sources_list):
                                 "warontherocks.com", "thediplomat.com", "iaea.org", "scmp.com",
                                 "defencexp.com", "defence.in", "defenceupdate.in", "nationaldefence.in",
                                 "alphadefense.in", "iadnews.in", "indiandefencereview.com",
-                                "defencecapital.in"
+                                "defencecapital.in", "indiandefensenews.in"
                             ]
 
                             is_from_specialized_domain = False
@@ -1967,7 +1985,9 @@ def is_indian_defence_source_name_or_url(source_name_string, source_url_string="
         "nationaldefence", "alphadefense", "iadnews",
         "indiandefencereview", "indian defence review",
         "defencecapital", "defence capital", "thediplomat.com/tag/india",
-        "diplomat india", "the hindu", "thehindu"
+        "diplomat india", "the hindu", "thehindu",
+        "indiandefensenews", "indian defence news",
+        "timesofindia", "theweek"
     ]
     for indicator in indian_indicators_list:
         if indicator in combined_string:

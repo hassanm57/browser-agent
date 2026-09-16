@@ -232,6 +232,28 @@ async def run_single_country_pipeline(
                 response = trends.requests.get(source_url, timeout=12, headers=desktop_browser_headers)
                 if response.status_code == 200:
                     html_soup = trends.BeautifulSoup(response.text, "html.parser")
+
+                    # Priority extraction for Geo TV: capture breaking LIVE banner headlines and top stories first
+                    if "geo.tv" in source_url.lower():
+                        geo_breaking_elements = html_soup.find_all(class_=re.compile(r'breaking|top-story', re.IGNORECASE))
+                        for breaking_container in geo_breaking_elements:
+                            for breaking_candidate in breaking_container.find_all(["a", "h1", "h2"]):
+                                raw_breaking = breaking_candidate.get_text(strip=True)
+                                clean_breaking = re.sub(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}$', '', raw_breaking).strip()
+                                clean_breaking = re.sub(r'^(Live|LIVE)\s*[:\-]?\s*', '', clean_breaking).strip()
+                                if len(clean_breaking) > 25 and len(clean_breaking) < 160 and not trends.is_bot_challenge_text(clean_breaking):
+                                    if clean_breaking not in headlines_for_source and len(headlines_for_source) < 20:
+                                        headlines_for_source.append(clean_breaking)
+                                        b_link_href = breaking_candidate.get("href")
+                                        if not b_link_href and breaking_candidate.parent and breaking_candidate.parent.name == "a":
+                                            b_link_href = breaking_candidate.parent.get("href")
+                                        b_article_link = urllib.parse.urljoin(source_url, b_link_href) if b_link_href else source_url
+                                        headline_sources_metadata_map[clean_breaking] = {
+                                            "source_name": source_name,
+                                            "headline": clean_breaking,
+                                            "url": b_article_link
+                                        }
+
                     for header_tag in html_soup.find_all(["h1", "h2", "h3", "h4", "a"]):
                         raw_text = header_tag.get_text()
                         clean_title = trends.clean_dom_tags_and_markdown(raw_text)
@@ -241,6 +263,12 @@ async def run_single_country_pipeline(
 
                         # Clean Janes trailing call-to-action tags
                         clean_title = re.sub(r'\s*Read (Article|Case Study|Analysis|Briefing|Feature)$', '', clean_title, flags=re.IGNORECASE).strip()
+
+                        # Clean trailing publish dates e.g. 'Sep 16, 2026'
+                        clean_title = re.sub(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}$', '', clean_title).strip()
+
+                        # Clean leading 'Live' or 'LIVE:' markers
+                        clean_title = re.sub(r'^(Live|LIVE)\s*[:\-]?\s*', '', clean_title).strip()
 
                         # Skip relative timestamps and forum date markers
                         if re.match(r'^(yesterday|today|tomorrow)\s+at\s+', clean_title, flags=re.IGNORECASE):
@@ -258,7 +286,7 @@ async def run_single_country_pipeline(
                                 "warontherocks.com", "thediplomat.com", "iaea.org", "scmp.com",
                                 "defencexp.com", "defence.in", "defenceupdate.in", "nationaldefence.in",
                                 "alphadefense.in", "iadnews.in", "indiandefencereview.com",
-                                "defencecapital.in"
+                                "defencecapital.in", "indiandefensenews.in"
                             ]
 
                             is_from_specialized_domain = False

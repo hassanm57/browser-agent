@@ -86,6 +86,15 @@ function getExactNewsSourceWebsiteUrl(sourceNameString: string, sourcesList?: So
 
   // Fallback pattern matching for all known intelligence news outlets
   const lowercasedSource = sourceNameString.toLowerCase();
+  if (lowercasedSource.includes("geo tv world") || lowercasedSource.includes("geo news world") || lowercasedSource.includes("geo world")) {
+    return "https://www.geo.tv/category/world";
+  }
+  if (lowercasedSource.includes("geo tv") || lowercasedSource.includes("geo news") || lowercasedSource.includes("geo.tv")) {
+    return "https://www.geo.tv";
+  }
+  if (lowercasedSource.includes("indiandefensenews") || lowercasedSource.includes("indian defence news")) {
+    return "https://www.indiandefensenews.in";
+  }
   if (lowercasedSource.includes("defense news")) {
     return "https://www.defensenews.com";
   }
@@ -300,110 +309,158 @@ export function DashboardPage(props: DashboardPageProps) {
     });
   }
 
-  // 1. Identify Indian Defence Sources (IDRW, DefenceXP, Defence.in, The New Indian Express) and take top headlines first
-  for (const candidateKey in newsIntelMap) {
-    if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
-      const lowerCandidate = candidateKey.toLowerCase();
-      if (
-        lowerCandidate.includes("idrw") ||
-        lowerCandidate.includes("defencexp") ||
-        lowerCandidate.includes("defence.in") ||
-        lowerCandidate.includes("indian express") ||
-        lowerCandidate.includes("defenceupdate") ||
-        lowerCandidate.includes("livefist") ||
-        lowerCandidate.includes("nationaldefence") ||
-        lowerCandidate.includes("alphadefense") ||
-        lowerCandidate.includes("iadnews") ||
-        lowerCandidate.includes("indiandefencereview") ||
-        lowerCandidate.includes("indian defence review")
-      ) {
-        const indianHeadlines = newsIntelMap[candidateKey] || [];
-        for (let index = 0; index < indianHeadlines.length && curatedHotTopicsList.length < 3; index++) {
-          attemptAddHotTopic(candidateKey, indianHeadlines[index], "Indian Defence");
+  // ---------------------------------------------------------------------------
+  // Top 10 Trending Hot Topics Curation:
+  // User Requirements:
+  // - Rank 1: Top headline from geo.tv (the LIVE/breaking banner headline)
+  // - Rank 2: Headline from https://nationaldefence.in/
+  // - Rank 3: Headline from https://www.geo.tv/category/world
+  // - Ranks 4 to 10: Additional trending stories from other sources
+  // ---------------------------------------------------------------------------
+
+  // Helper function to find matching source key in newsIntelMap
+  function findMatchingSourceKey(preferredSubstrings: string[], excludedSubstrings: string[] = []): string {
+    for (const candidateKey in newsIntelMap) {
+      if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
+        const lowerKey = candidateKey.toLowerCase();
+        let hasExcluded = false;
+        for (let eIndex = 0; eIndex < excludedSubstrings.length; eIndex++) {
+          if (lowerKey.includes(excludedSubstrings[eIndex])) {
+            hasExcluded = true;
+            break;
+          }
+        }
+        if (hasExcluded) {
+          continue;
+        }
+        for (let pIndex = 0; pIndex < preferredSubstrings.length; pIndex++) {
+          if (lowerKey.includes(preferredSubstrings[pIndex])) {
+            return candidateKey;
+          }
+        }
+      }
+    }
+    return "";
+  }
+
+  // 1. Podium Rank 1: Geo TV Front Page (the LIVE / breaking headline)
+  const geoFrontPageKey = findMatchingSourceKey(
+    ["geo tv front page", "geo tv", "geo news"],
+    ["world", "rss"]
+  );
+  if (geoFrontPageKey.length > 0) {
+    const geoHeadlines = newsIntelMap[geoFrontPageKey] || [];
+    if (geoHeadlines.length > 0) {
+      attemptAddHotTopic(geoFrontPageKey, geoHeadlines[0], "Breaking News");
+    }
+  }
+
+  // 2. Podium Rank 2: National Defence India (https://nationaldefence.in/)
+  const nationalDefenceKey = findMatchingSourceKey(["nationaldefence", "national defence"]);
+  if (nationalDefenceKey.length > 0) {
+    const ndHeadlines = newsIntelMap[nationalDefenceKey] || [];
+    if (ndHeadlines.length > 0) {
+      attemptAddHotTopic(nationalDefenceKey, ndHeadlines[0], "Indian Defence");
+    }
+  }
+
+  // 3. Podium Rank 3: Geo TV World (https://www.geo.tv/category/world)
+  const geoWorldKey = findMatchingSourceKey(["geo tv world", "geo news world", "geo world"]);
+  if (geoWorldKey.length > 0) {
+    const worldHeadlines = newsIntelMap[geoWorldKey] || [];
+    if (worldHeadlines.length > 0) {
+      attemptAddHotTopic(geoWorldKey, worldHeadlines[0], "World News");
+    }
+  }
+
+  // Fallback: If any podium position was missed due to unavailable source, backfill from available sources
+  if (curatedHotTopicsList.length < 1) {
+    const anyGeoKey = findMatchingSourceKey(["geo"]);
+    if (anyGeoKey.length > 0) {
+      const anyGeoHeadlines = newsIntelMap[anyGeoKey] || [];
+      if (anyGeoHeadlines.length > 0) {
+        attemptAddHotTopic(anyGeoKey, anyGeoHeadlines[0], "Breaking News");
+      }
+    }
+  }
+
+  if (curatedHotTopicsList.length < 3) {
+    for (const candidateKey in newsIntelMap) {
+      if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
+        const lowerCandidate = candidateKey.toLowerCase();
+        if (
+          lowerCandidate.includes("idrw") ||
+          lowerCandidate.includes("indiandefensenews") ||
+          lowerCandidate.includes("defencexp") ||
+          lowerCandidate.includes("livefist") ||
+          lowerCandidate.includes("defense news")
+        ) {
+          const fallbackHeadlines = newsIntelMap[candidateKey] || [];
+          for (let index = 0; index < fallbackHeadlines.length && curatedHotTopicsList.length < 3; index++) {
+            attemptAddHotTopic(candidateKey, fallbackHeadlines[index], "Top Story");
+          }
         }
       }
     }
   }
 
-  // 2. Identify Defense News RSS and take top 2 headlines
-  let defenseNewsSourceKey = "";
-  for (const candidateKey in newsIntelMap) {
-    if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
-      if (candidateKey.toLowerCase().includes("defense news")) {
-        defenseNewsSourceKey = candidateKey;
-        break;
-      }
-    }
-  }
+  // 4. Fill Ranks 4 to 10 from other prominent sources in priority order
+  const prioritySourcesList = [
+    "defense news",
+    "idrw",
+    "indiandefensenews",
+    "dawn",
+    "tribune",
+    "the news",
+    "reuters",
+    "defencexp",
+    "livefist",
+    "alphadefense",
+    "iadnews",
+    "indiandefencereview",
+    "defencecapital",
+    "janes",
+    "csis",
+    "bbc"
+  ];
 
-  if (defenseNewsSourceKey.length > 0) {
-    const defenseHeadlines = newsIntelMap[defenseNewsSourceKey] || [];
-    for (let index = 0; index < defenseHeadlines.length && curatedHotTopicsList.length < 2; index++) {
-      attemptAddHotTopic(defenseNewsSourceKey, defenseHeadlines[index], "Defense & Military");
-    }
-  }
-
-  // 2. Identify The News International World and take top 1 headline
-  let theNewsSourceKey = "";
-  for (const candidateKey in newsIntelMap) {
-    if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
-      const lowerCandidate = candidateKey.toLowerCase();
-      if (lowerCandidate.includes("the news") || lowerCandidate.includes("thenews")) {
-        theNewsSourceKey = candidateKey;
-        break;
-      }
-    }
-  }
-
-  if (theNewsSourceKey.length > 0) {
-    const theNewsHeadlines = newsIntelMap[theNewsSourceKey] || [];
-    for (let index = 0; index < theNewsHeadlines.length; index++) {
-      const beforeCount = curatedHotTopicsList.length;
-      attemptAddHotTopic(theNewsSourceKey, theNewsHeadlines[index], "International / Regional");
-      if (curatedHotTopicsList.length > beforeCount) {
-        break;
-      }
-    }
-  }
-
-  // 3. Take 1-2 from other sources to fill up to exactly 10 total
-  const remainingOtherSourceKeysList: string[] = [];
-  for (const candidateKey in newsIntelMap) {
-    if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
-      if (candidateKey !== defenseNewsSourceKey && candidateKey !== theNewsSourceKey) {
-        remainingOtherSourceKeysList.push(candidateKey);
-      }
-    }
-  }
-
-  // Pass 1: Take 1 from each remaining source
-  for (let otherIndex = 0; otherIndex < remainingOtherSourceKeysList.length; otherIndex++) {
+  for (let pIndex = 0; pIndex < prioritySourcesList.length; pIndex++) {
     if (curatedHotTopicsList.length >= 10) {
       break;
     }
-    const currentOtherKey = remainingOtherSourceKeysList[otherIndex];
-    const sourceHeadlines = newsIntelMap[currentOtherKey] || [];
-    for (let headlineIndex = 0; headlineIndex < sourceHeadlines.length; headlineIndex++) {
-      const beforeCount = curatedHotTopicsList.length;
-      attemptAddHotTopic(currentOtherKey, sourceHeadlines[headlineIndex], "Global Intel");
-      if (curatedHotTopicsList.length > beforeCount) {
-        break;
+    const targetSubstring = prioritySourcesList[pIndex];
+    for (const candidateKey in newsIntelMap) {
+      if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
+        if (candidateKey.toLowerCase().includes(targetSubstring)) {
+          const sourceHeadlines = newsIntelMap[candidateKey] || [];
+          for (let hIndex = 0; hIndex < sourceHeadlines.length; hIndex++) {
+            const beforeCount = curatedHotTopicsList.length;
+            attemptAddHotTopic(candidateKey, sourceHeadlines[hIndex], "Trending Intelligence");
+            if (curatedHotTopicsList.length > beforeCount || curatedHotTopicsList.length >= 10) {
+              break;
+            }
+          }
+        }
       }
-    }
-  }
-
-  // Pass 2: If still under 10, take a 2nd from remaining sources
-  for (let otherIndex = 0; otherIndex < remainingOtherSourceKeysList.length; otherIndex++) {
-    if (curatedHotTopicsList.length >= 10) {
-      break;
-    }
-    const currentOtherKey = remainingOtherSourceKeysList[otherIndex];
-    const sourceHeadlines = newsIntelMap[currentOtherKey] || [];
-    for (let headlineIndex = 0; headlineIndex < sourceHeadlines.length; headlineIndex++) {
       if (curatedHotTopicsList.length >= 10) {
         break;
       }
-      attemptAddHotTopic(currentOtherKey, sourceHeadlines[headlineIndex], "Global Intel");
+    }
+  }
+
+  // Final fallback pass: if still under 10, add any remaining headlines
+  for (const candidateKey in newsIntelMap) {
+    if (curatedHotTopicsList.length >= 10) {
+      break;
+    }
+    if (Object.prototype.hasOwnProperty.call(newsIntelMap, candidateKey)) {
+      const sourceHeadlines = newsIntelMap[candidateKey] || [];
+      for (let hIndex = 0; hIndex < sourceHeadlines.length; hIndex++) {
+        if (curatedHotTopicsList.length >= 10) {
+          break;
+        }
+        attemptAddHotTopic(candidateKey, sourceHeadlines[hIndex], "Global Intel");
+      }
     }
   }
 

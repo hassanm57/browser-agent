@@ -131,3 +131,15 @@ When adding features or modifying code in this repository, strictly adhere to th
   6. The LLM dossier shows "WIDELY REPORTED STORY" blocks for multi-source clusters
 - **Post-synthesis**: `correlate_topics_with_sources()` uses embedding similarity as a 0-30 point scoring boost alongside word overlap, and allows embedding-only matches (>0.25 similarity) to bypass the word overlap minimum.
 - **Graceful fallback**: If scikit-learn is not installed, the system falls back to source-by-source dossier building (old behavior).
+
+---
+
+## 7. Top Trends Curation Rules
+
+- **Dashboard / API Podium Ranking**:
+  1. **Rank 1**: Geo TV Front Page (`https://www.geo.tv/`) — the LIVE / breaking banner headline (biggest font on page).
+  2. **Rank 2**: National Defence India (`https://nationaldefence.in/`).
+  3. **Rank 3**: Geo TV World (`https://www.geo.tv/category/world`).
+  4. **Ranks 4 to 10**: Diverse mix from remaining sources (Indian Defence outlets like IDRW, Indian Defence News, DefenceXP; Defense News RSS; Dawn; Tribune; The News; Reuters; etc.).
+- **New Indian Defence Source**: `https://www.indiandefensenews.in/feeds/posts/default?alt=rss` added to `sources.json` and recognized as an Indian defence domain.
+

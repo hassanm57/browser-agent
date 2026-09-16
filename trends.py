@@ -202,7 +202,7 @@ def is_bot_challenge_text(text_string):
 DANGLING_TRAILING_WORDS_SET = {
     "of", "in", "to", "for", "and", "or", "as", "with", "by", "on", "at",
     "between", "from", "that", "which", "amid", "over", "into", "about",
-    "a", "an", "the", "is", "are", "was", "were", "warns", "says",
+    "a", "an", "the", "is", "are", "was", "were", "warns",
     "amidst", "against", "under", "through", "after", "before", "during",
     "without", "within", "its", "their", "his", "her", "contains", "racks", "eyes",
     "holy", "near", "much", "different", "first", "second", "third", "high", "top",
@@ -324,6 +324,58 @@ def is_incomplete_stub_keyword(term_string):
             return True
 
     return False
+
+
+def clean_and_sanitize_keyword_phrase(raw_term_string):
+    # Cleans an LLM-generated keyword phrase by removing HTML entities, unmatched
+    # quotes, stray punctuation, and normalizing whitespace, ensuring the phrase
+    # is natural, readable, and ready for search without weird symbols or cut-offs.
+    if raw_term_string is None:
+        return ""
+
+    cleaned_phrase = str(raw_term_string).strip()
+    if len(cleaned_phrase) == 0:
+        return ""
+
+    # 1. Remove HTML tags and entities
+    cleaned_phrase = re.sub(r'<[^>]+>', ' ', cleaned_phrase)
+    cleaned_phrase = re.sub(r'&[a-zA-Z]+;', ' ', cleaned_phrase)
+
+    # 2. Fix glued media indicators like '?Video' into ' '
+    cleaned_phrase = re.sub(r'\?(Video|Photos?|Audio|Updated|Reports?|Watch)\b', ' ', cleaned_phrase, flags=re.IGNORECASE)
+
+    # 3. Strip trailing media badges and update markers
+    cleaned_phrase = re.sub(r'\s*[-–—|/]?\s*\b(Video|Photos?|Audio|Live\s+Updates?|Updated|Reports?|Watch|Analysis|Factbox)\b\s*$', '', cleaned_phrase, flags=re.IGNORECASE)
+
+    # 4. Remove leading list numbering or bullet points like "1. ", "• ", "- "
+    cleaned_phrase = re.sub(r'^\s*(\d+[\.\)]|[-•*])\s*', '', cleaned_phrase)
+
+    # 5. Normalize unicode smart quotes and dashes to standard ascii equivalents
+    cleaned_phrase = cleaned_phrase.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'")
+    cleaned_phrase = cleaned_phrase.replace("—", " ").replace("–", " ").replace("―", " ")
+
+    # 6. Strip outer quotes
+    cleaned_phrase = cleaned_phrase.strip("\"'")
+
+    # 7. Remove internal unmatched stray quotes surrounded by spaces (e.g. "Vance 'much different" -> "Vance much different")
+    cleaned_phrase = re.sub(r"\s+['\"]\s*", " ", cleaned_phrase)
+    cleaned_phrase = re.sub(r"\s*['\"]\s+", " ", cleaned_phrase)
+    cleaned_phrase = cleaned_phrase.strip("\"'")
+
+    # 8. Remove stray dashes surrounded by spaces, while preserving internal hyphens in words like DF-15A or Saudi-led
+    cleaned_phrase = re.sub(r'\s+-\s+', ' ', cleaned_phrase)
+
+    # 9. Remove weird symbols like @, ~, |, \, /, ^, *, ?, !, :, ;, % (preserve hyphens, hashtags, and dollar signs)
+    cleaned_phrase = re.sub(r'[^a-zA-Z0-9\s\-#$]', '', cleaned_phrase)
+
+    # 10. Normalize internal whitespace
+    cleaned_phrase = re.sub(r'\s+', ' ', cleaned_phrase).strip()
+
+    # 11. Strip any trailing punctuation and dangling prepositions/conjunctions
+    cleaned_phrase = cleaned_phrase.rstrip(":, -–—\"'")
+    cleaned_phrase = strip_dangling_trailing_words(cleaned_phrase)
+
+    return cleaned_phrase.strip()
 
 
 def clean_headline_for_search_term(raw_headline_text):
@@ -2078,8 +2130,8 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
         clean_label_lower = clean_label.lower()
 
         for term_item in raw_terms:
-            # Clean HTML noise, source tags, comments prefixes, and trailing media badges
-            term_str = clean_headline_for_search_term(str(term_item))
+            # Clean HTML noise, unmatched quotes, stray symbols, and trailing media badges
+            term_str = clean_and_sanitize_keyword_phrase(str(term_item))
             term_str = strip_dangling_trailing_words(term_str)
             lower_term = term_str.lower()
 
@@ -2130,7 +2182,7 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
         if len(final_terms) < 8:
             label_phrases = extract_key_phrases_from_headline(clean_label)
             for phrase in label_phrases:
-                phrase_clean = clean_headline_for_search_term(phrase)
+                phrase_clean = clean_and_sanitize_keyword_phrase(phrase)
                 phrase_clean = strip_dangling_trailing_words(phrase_clean)
                 if is_generic_fluff_term(phrase_clean) or is_incomplete_stub_keyword(phrase_clean):
                     continue
@@ -2315,8 +2367,8 @@ def extract_key_phrases_from_headline(headline_text):
         if len(cleaned_quote_item) >= 3 and not is_generic_fluff_term(cleaned_quote_item):
             quoted_phrases_list.append(cleaned_quote_item)
 
-    # 2. Split headline into natural clauses by punctuation and major clause markers
-    raw_clauses_list = re.split(r'[;,\–—\-]|\bas\b|\bamid\b|\bwhile\b|\bafter\b|\bwhen\b|\bbecause\b', base_headline_text, flags=re.IGNORECASE)
+    # 2. Split headline into natural clauses by punctuation and major clause markers (do not split internal hyphens)
+    raw_clauses_list = re.split(r'\s+[-–—]\s+|[;,]|\bas\b|\bamid\b|\bwhile\b|\bafter\b|\bwhen\b|\bbecause\b', base_headline_text, flags=re.IGNORECASE)
     cleaned_clauses_list = []
     for raw_clause_item in raw_clauses_list:
         clause_string = raw_clause_item.strip().strip("'\"")
@@ -2445,40 +2497,6 @@ def extract_key_phrases_from_headline(headline_text):
                     if not is_already_present:
                         generated_phrases_list.append(cand_phrase)
 
-    # Strategy F: N-gram sliding window of significant words (4-5 words each)
-    significant_tokens_list = []
-    stop_words_set = {
-        "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or", "is",
-        "are", "was", "were", "with", "by", "as", "from", "after", "over", "into",
-        "about", "amid", "more", "first", "second", "third", "may", "might", "can",
-        "could", "will", "would", "be", "been", "being", "have", "has", "had",
-        "not", "no", "nor", "but", "while", "when", "where", "why", "how", "what",
-        "which", "who", "whom", "this", "that", "these", "those", "their", "there",
-        "they", "them", "we", "our", "you", "your", "he", "him", "his", "she", "her",
-        "it", "its", "all", "any", "both", "each", "few", "most", "some", "such",
-        "so", "than", "too", "very", "just", "now", "new", "said", "say", "also",
-        "defensive", "offensive", "contains", "racks", "eyes", "strains", "hit",
-        "used", "time", "agree", "agrees", "meet", "warns", "says", "shows", "reveals",
-        "claims", "details", "near", "much", "different", "report", "reports"
-    }
-    raw_cleaned_words_list = re.sub(r'[^a-zA-Z0-9\s\-]', ' ', base_headline_text).split()
-    for word_token in raw_cleaned_words_list:
-        if len(word_token) >= 3 and word_token.lower() not in stop_words_set:
-            significant_tokens_list.append(word_token)
-
-    for window_size in [4, 5]:
-        for window_index in range(len(significant_tokens_list) - window_size + 1):
-            ngram_string = " ".join(significant_tokens_list[window_index:window_index + window_size])
-            ngram_cleaned = strip_dangling_trailing_words(ngram_string)
-            if not is_incomplete_stub_keyword(ngram_cleaned) and not is_generic_fluff_term(ngram_cleaned):
-                is_already_present = False
-                for existing_phrase in generated_phrases_list:
-                    if ngram_cleaned.lower() == existing_phrase.lower():
-                        is_already_present = True
-                        break
-                if not is_already_present:
-                    generated_phrases_list.append(ngram_cleaned)
-
     # Filter all results: enforce 4 to 10 words (or 2-3 words ONLY if containing a recognized weapon code)
     final_filtered_phrases_list = []
     for candidate_phrase_item in generated_phrases_list:
@@ -2523,10 +2541,14 @@ def create_boolean_query_from_terms(terms_list, label_text):
 
 def clean_headline_text_for_similarity(raw_headline_text):
     """
-    Strips out noise characters, source prefixes, and normalizes the headline
-    so that TF-IDF can compare the actual content words, not formatting artifacts.
+    Strips out noise characters, source prefixes, normalizes transliterations
+    and military synonyms so that TF-IDF and cosine similarity can accurately
+    detect paraphrased reports of the exact same event across different sources.
     """
     cleaned_text = str(raw_headline_text).strip()
+
+    # Strip possessives ('s or ’s) BEFORE stripping punctuation so "Mecca's" becomes "Mecca", not "mecca s"
+    cleaned_text = re.sub(r"['’]s\b", "", cleaned_text, flags=re.IGNORECASE)
 
     # Remove common source attribution prefixes like "[Reuters]", "SCMP -", "(AFP)"
     cleaned_text = re.sub(r'^[\[\(][A-Za-z0-9\s\.\-_]+[\]\)]\s*[:\-]?\s*', '', cleaned_text)
@@ -2540,6 +2562,39 @@ def clean_headline_text_for_similarity(raw_headline_text):
     # Remove URLs that might be embedded in headline text
     cleaned_text = re.sub(r'https?://\S+', '', cleaned_text)
 
+    # Lowercase for consistent comparison
+    cleaned_text = cleaned_text.lower()
+
+    # Normalize transliterations and spelling variants
+    transliteration_mappings = [
+        (r'\bmakkah\b', 'mecca'),
+        (r'\btürkiye\b', 'turkey'),
+        (r'\bkyiv\b', 'kiev'),
+        (r'\bdprk\b', 'north korea'),
+        (r'\bansar allah\b', 'houthi'),
+        (r'\bhouthis\b', 'houthi'),
+        (r'\bhezbollah\b', 'hizbullah'),
+        (r'\buae\b', 'emirates'),
+        (r'\bunited arab emirates\b', 'emirates'),
+        (r'\bshehbaz\b', 'shahbaz')
+    ]
+    for pattern_regex, replacement_string in transliteration_mappings:
+        cleaned_text = re.sub(pattern_regex, replacement_string, cleaned_text)
+
+    # Normalize common military event synonyms
+    synonym_mappings = [
+        (r'\b(shoots? down|shot down|downed|downing|downs?)\b', 'intercepted'),
+        (r'\bintercepts\b', 'intercepted'),
+        (r'\buavs?\b', 'drone'),
+        (r'\bdrones\b', 'drone'),
+        (r'\bairspace\b', 'sky'),
+        (r'\bskies\b', 'sky'),
+        (r'\bmissiles\b', 'missile'),
+        (r'\bforces\b', 'military')
+    ]
+    for pattern_regex, replacement_string in synonym_mappings:
+        cleaned_text = re.sub(pattern_regex, replacement_string, cleaned_text)
+
     # Replace all non-alphanumeric characters (except spaces) with spaces
     cleaned_characters_list = []
     for character in cleaned_text:
@@ -2551,9 +2606,6 @@ def clean_headline_text_for_similarity(raw_headline_text):
 
     # Collapse multiple spaces into single space
     cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
-
-    # Lowercase for consistent comparison
-    cleaned_text = cleaned_text.lower()
 
     return cleaned_text
 
@@ -2608,7 +2660,7 @@ def compute_headline_similarity_matrix(headlines_list):
 
 def group_headlines_into_story_clusters(
     news_sources_intel_dictionary,
-    similarity_threshold=0.25,
+    similarity_threshold=0.18,
     minimum_cluster_size=1,
     maximum_cluster_size=15
 ):
@@ -3005,6 +3057,85 @@ def categorize_sources_into_specific_topics(sources_list):
     return categorized_topic_groups_list
 
 
+def deduplicate_synthesized_topics_using_cosine_similarity(topics_list, similarity_threshold=0.20):
+    # Rigorously detects and merges duplicate synthesized topics that cover the same breaking event.
+    # Uses TF-IDF + cosine similarity across the normalized label and terms of each topic.
+    # If two topics exceed the similarity threshold (default 0.20), the lower-ranked duplicate topic
+    # is merged into the higher-ranked one (combining unique terms and sources) and removed.
+    if not SKLEARN_AVAILABLE or len(topics_list) < 2:
+        return topics_list
+
+    print("    Running topic-level cosine similarity deduplication...")
+
+    # Build text representation for each topic: double-weight label + terms
+    topic_text_representations = []
+    for topic_item in topics_list:
+        topic_label = str(topic_item.get("label", ""))
+        topic_terms = " ".join([str(t) for t in topic_item.get("terms", [])])
+        combined_text = f"{topic_label} {topic_label} {topic_terms}"
+        cleaned_rep = clean_headline_text_for_similarity(combined_text)
+        topic_text_representations.append(cleaned_rep)
+
+    vectorizer = TfidfVectorizer(
+        ngram_range=(1, 2),
+        min_df=1,
+        stop_words='english',
+        sublinear_tf=True
+    )
+
+    try:
+        tfidf_matrix = vectorizer.fit_transform(topic_text_representations)
+        sim_matrix = cosine_similarity(tfidf_matrix)
+    except Exception as err:
+        print(f"    Notice: Topic deduplication similarity calculation skipped: {err}")
+        return topics_list
+
+    duplicate_indices_set = set()
+    total_topics = len(topics_list)
+
+    for outer_idx in range(total_topics):
+        if outer_idx in duplicate_indices_set:
+            continue
+        for inner_idx in range(outer_idx + 1, total_topics):
+            if inner_idx in duplicate_indices_set:
+                continue
+
+            similarity_score = float(sim_matrix[outer_idx][inner_idx])
+            if similarity_score >= similarity_threshold:
+                primary_topic = topics_list[outer_idx]
+                duplicate_topic = topics_list[inner_idx]
+                print(f"    Detected duplicate topic (cosine similarity: {similarity_score:.2f}):")
+                print(f"      [Topic {outer_idx + 1}]: {primary_topic.get('label')}")
+                print(f"      [Topic {inner_idx + 1}]: {duplicate_topic.get('label')} -> MERGING into Topic {outer_idx + 1}")
+
+                # Merge terms from duplicate into primary without exceeding 12 terms
+                primary_terms = primary_topic.get("terms", [])
+                primary_terms_lower = [t.lower() for t in primary_terms]
+                for term_item in duplicate_topic.get("terms", []):
+                    clean_cand = clean_and_sanitize_keyword_phrase(str(term_item))
+                    if len(clean_cand) >= 2 and clean_cand.lower() not in primary_terms_lower and len(primary_terms) < 12:
+                        primary_terms.append(clean_cand)
+                        primary_terms_lower.append(clean_cand.lower())
+
+                # Merge sources from duplicate into primary if already attached
+                primary_sources = primary_topic.get("sources", [])
+                existing_urls = [s.get("url") for s in primary_sources if isinstance(s, dict)]
+                for src in duplicate_topic.get("sources", []):
+                    if isinstance(src, dict) and src.get("url") not in existing_urls:
+                        primary_sources.append(src)
+                        existing_urls.append(src.get("url"))
+
+                duplicate_indices_set.add(inner_idx)
+
+    deduplicated_topics_list = []
+    for idx in range(total_topics):
+        if idx not in duplicate_indices_set:
+            deduplicated_topics_list.append(topics_list[idx])
+
+    print(f"    Topic deduplication completed: {len(topics_list)} -> {len(deduplicated_topics_list)} unique topics.")
+    return deduplicated_topics_list
+
+
 def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, curated_x_sources_tweets=None):
     """
     Finds and attaches ALL matching source headlines, source publication names,
@@ -3119,7 +3250,7 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
             # Old approach: skip if word overlap was below threshold.
             # New approach: also check embedding similarity before skipping.
             word_overlap_is_insufficient = (matched_label_tokens_count < minimum_required_tokens and not has_bigram_match)
-            embedding_says_related = (embedding_similarity >= 0.25)
+            embedding_says_related = (embedding_similarity >= 0.18)
 
             if word_overlap_is_insufficient and not embedding_says_related:
                 # Neither word overlap nor embedding similarity indicates a match
@@ -3243,7 +3374,7 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         updated_terms = []
 
         for term in existing_terms:
-            clean_term_str = clean_headline_for_search_term(term)
+            clean_term_str = clean_and_sanitize_keyword_phrase(term)
             clean_term_str = strip_dangling_trailing_words(clean_term_str)
             term_lower_str = clean_term_str.lower()
 
@@ -3281,11 +3412,11 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
             if not is_duplicate and len(clean_term_str) >= 2:
                 updated_terms.append(clean_term_str)
 
-        # Ensure at least 8 keywords by extracting crisp distilled phrases from the primary source headline
-        if len(updated_terms) < 8:
+        # Ensure at least 8 keywords by extracting crisp distilled phrases from the primary source headline only if needed
+        if len(updated_terms) < 6:
             headline_phrases = extract_key_phrases_from_headline(primary_source_headline)
             for phrase in headline_phrases:
-                phrase_clean = clean_headline_for_search_term(phrase)
+                phrase_clean = clean_and_sanitize_keyword_phrase(phrase)
                 phrase_clean = strip_dangling_trailing_words(phrase_clean)
                 if is_generic_fluff_term(phrase_clean) or is_incomplete_stub_keyword(phrase_clean):
                     continue
@@ -3311,11 +3442,11 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                 if len(updated_terms) >= 8:
                     break
 
-        # If still under 8 keywords, extract phrases from the topic label
-        if len(updated_terms) < 8:
+        # If still under 6 keywords, extract phrases from the topic label
+        if len(updated_terms) < 6:
             label_phrases = extract_key_phrases_from_headline(topic_item.get("label", ""))
             for phrase in label_phrases:
-                phrase_clean = clean_headline_for_search_term(phrase)
+                phrase_clean = clean_and_sanitize_keyword_phrase(phrase)
                 phrase_clean = strip_dangling_trailing_words(phrase_clean)
                 if is_generic_fluff_term(phrase_clean) or is_incomplete_stub_keyword(phrase_clean):
                     continue
@@ -3455,7 +3586,7 @@ def synthesize_topics_from_news_and_trends(
     if SKLEARN_AVAILABLE and len(news_sources_intel_dictionary) > 0:
         story_clusters_list = group_headlines_into_story_clusters(
             news_sources_intel_dictionary,
-            similarity_threshold=0.25
+            similarity_threshold=0.18
         )
 
         # Build dossier sections from the clusters
@@ -3533,6 +3664,11 @@ CRITICAL SECURITY & PROMPT INJECTION DEFENSE RULES:
 CORE MISSION & COMPOSITION DIRECTIVE (EXACTLY 13 TOPICS TOTAL):
 You must synthesize EXACTLY 13 topics in total, structured as a single JSON array of 13 objects:
 
+STRICT ANTI-DUPLICATION RULE (CRITICAL):
+- NO DUPLICATE STORIES OR OVERLAPPING TOPICS ACROSS THE 13 ROWS: Every single row among the 13 topics MUST cover a completely different, unique news story.
+- If multiple news sources report on the same event (e.g. a Houthi drone intercepted near Makkah/Mecca reported by both Geo TV and Saudi/Reuters wires), cover it in ONLY ONE TOPIC.
+- NEVER create two separate topics for the same event with different titles or rephrasings (e.g., do NOT output Topic 1 as "Houthi Drone Intercepted Near Makkah..." and Topic 4 as "Saudi Forces Down Houthi Drone Near Mecca's Airspace"). Each topic must be 100% unique!
+
 PART A: TOPICS 1 TO 10 (BALANCED GLOBAL & REGIONAL TRENDING MIX)
 - Synthesize the top 10 most trending, hottest breaking defense, military, and geopolitical intelligence stories from across the entire world (drawing from Sections 1, 2, 3, and 4).
 - Balance major global breaking news (e.g. DoD tech testbed expansion along borders, NATO subsea cable sabotage, deep space radar), live real-time scoops from X.com (e.g. Persian Gulf/Hormuz tanker projectile incidents, pilot search/rescue), and regional developments according to genuine real-time heat and freshness.
@@ -3550,8 +3686,13 @@ STRICT REQUIREMENTS FOR EACH GENERATED ROW:
 2. "category": Exactly one of "defense", "diplomacy", "politics", "economic".
 3. "boolean_query": MUST BE SHORT AND CONCISE (maximum 2 to 4 search terms total, under 100 characters).
    Use exact quotes and standard Boolean syntax.
-4. "terms": Array of EXACTLY 8 to 12 (at least 8) CRISP, HIGH-CONTEXT SEARCH QUERIES (4 to 10 words MAXIMUM each).
+4. "terms": Array of EXACTLY 10 to 12 CRISP, HIGH-CONTEXT SEARCH QUERIES (4 to 10 words MAXIMUM each).
    Every keyword phrase must be a concrete, actionable search query that will reliably pull up this exact news story when searched on X/Twitter or Google.
+
+   - CLEANLINESS & SEARCH QUALITY:
+     * Output clean, natural human-readable search queries without stray quotes, cut-off words, trailing prepositions, or strange punctuation marks.
+     * Never cut off phrases mid-sentence (e.g. FORBIDDEN: "warns of", "holy sites are red", "threats to holy", "led coalition warns").
+     * Do NOT output weird symbols or fragmented text.
 
    - STRICT RULE: DO NOT COPY THE NEWS HEADLINE WORD-FOR-WORD:
      * Never paste the full news headline into the terms list.
@@ -3617,7 +3758,12 @@ IMPORTANT: The "boolean_query" field MUST be a valid JSON string wrapped in doub
 - Topics 1 to 10: The top 10 most trending, hottest breaking defense, military, and geopolitical stories worldwide (balanced across Sections 1, 2, 3, and 4).
 - Topics 11 to 13: Exactly 3 dedicated topics derived EXCLUSIVELY from the configured Indian sources in Section 4, where India is directly involved.
 
-Ensure each row has a self-generated phrased headline (6 to 12 words), a concise Boolean query (2 to 4 terms), and AT LEAST 8 crisp, high-context search queries (4 to 10 words MAXIMUM each). Do NOT copy headlines word-for-word into keywords. Do NOT output incomplete stubs like 'Forces Down', 'Iran Downing', or 'Chinese DF'. Do NOT output generic academic fluff like 'military capabilities' or 'arms dynamics'.
+STRICT REQUIREMENTS:
+1. NO DUPLICATE STORIES: Every row MUST be a completely unique news event. NEVER create two topics for the same event with different phrasings.
+2. Ensure each row has a self-generated phrased headline (6 to 12 words), a concise Boolean query (2 to 4 terms), and 10 to 12 CRISP, HIGH-CONTEXT search queries (4 to 10 words MAXIMUM each).
+3. Do NOT copy headlines word-for-word into keywords.
+4. Do NOT output incomplete stubs or cut-off phrases like 'Forces Down', 'Iran Downing', or 'Chinese DF'.
+5. Do NOT output generic academic fluff like 'military capabilities' or 'arms dynamics'.
 
 <untrusted_intelligence_dossier>
 {full_intel_digest_string}
@@ -3836,6 +3982,11 @@ Remember: Respond ONLY with a valid, clean JSON array of 13 objects adhering str
 
             # Check if any headline from this regional source appears in the topic
             for headline in news_sources_intel_dictionary[source_name_key]:
+                # Check semantic similarity using normalized cosine similarity
+                similarity_score = compute_similarity_score_for_correlation(topic.get("label", ""), headline)
+                if similarity_score >= 0.18:
+                    return True
+
                 headline_words = clean_headline_text_for_similarity(headline).split()
                 matched_word_count = 0
                 for word in headline_words:
@@ -3874,37 +4025,82 @@ Remember: Respond ONLY with a valid, clean JSON array of 13 objects adhering str
                     if len(headline) > 20:
                         geo_headlines_for_injection.append(headline)
 
-        # Deduplicate against existing topic labels to avoid creating duplicates
-        existing_labels_lower = []
-        for topic in final_validated_topics:
-            existing_labels_lower.append(topic.get("label", "").lower())
-
         injected_count = 0
         for headline in geo_headlines_for_injection:
             if injected_count >= topics_needed:
                 break
 
             cleaned_label = clean_headline_for_topic_label(headline)
-            if cleaned_label.lower() in existing_labels_lower:
+
+            # Check if this headline is already covered by ANY existing topic (by exact match or cosine similarity)
+            already_covered = False
+            for existing_topic in final_validated_topics:
+                existing_label = existing_topic.get("label", "")
+                if cleaned_label.lower() == existing_label.lower():
+                    already_covered = True
+                    break
+                sim_score = compute_similarity_score_for_correlation(cleaned_label, existing_label)
+                if sim_score >= 0.18:
+                    already_covered = True
+                    break
+
+            if already_covered:
                 continue
 
-            terms = extract_key_phrases_from_headline(headline)
-            boolean_query = create_boolean_query_from_terms(terms, cleaned_label)
+            raw_injected_terms = extract_key_phrases_from_headline(headline)
+            clean_injected_terms = []
+            for raw_term in raw_injected_terms:
+                sanitized_term = clean_and_sanitize_keyword_phrase(raw_term)
+                if len(sanitized_term) >= 2 and not is_generic_fluff_term(sanitized_term) and not is_incomplete_stub_keyword(sanitized_term):
+                    clean_injected_terms.append(sanitized_term)
+
+            boolean_query = create_boolean_query_from_terms(clean_injected_terms, cleaned_label)
 
             injected_topic = {
                 "label": cleaned_label,
                 "category": "defense",
                 "boolean_query": boolean_query,
-                "terms": terms
+                "terms": clean_injected_terms
             }
 
             # Insert before the Indian-dedicated topics (positions 11-13)
             # so the regional topics appear in the top 10
             insert_position = min(10, len(final_validated_topics))
             final_validated_topics.insert(insert_position, injected_topic)
-            existing_labels_lower.append(cleaned_label.lower())
             injected_count = injected_count + 1
             print(f"      Injected: {cleaned_label[:80]}")
+
+    # Rigorously deduplicate synthesized topics using cosine similarity (merging duplicates)
+    final_validated_topics = deduplicate_synthesized_topics_using_cosine_similarity(
+        final_validated_topics,
+        similarity_threshold=0.20
+    )
+
+    # If deduplication dropped topic count below 13, top up with non-duplicate fallback topics
+    if len(final_validated_topics) < 13:
+        needed_topics_count = 13 - len(final_validated_topics)
+        print(f"    Notice: Need {needed_topics_count} topic(s) after deduplication. Topping up with fallback topics...")
+        fallback_synthesized_topics = generate_fallback_topics_from_headlines(
+            news_sources_intel_dictionary,
+            country_name_string=safe_country_name,
+            target_topics_count=needed_topics_count * 3
+        )
+        for candidate_topic in fallback_synthesized_topics:
+            if len(final_validated_topics) >= 13:
+                break
+            cand_label = candidate_topic.get("label", "")
+            is_duplicate = False
+            for existing_topic in final_validated_topics:
+                existing_label = existing_topic.get("label", "")
+                if cand_label.lower() == existing_label.lower():
+                    is_duplicate = True
+                    break
+                sim_score = compute_similarity_score_for_correlation(cand_label, existing_label)
+                if sim_score >= 0.18:
+                    is_duplicate = True
+                    break
+            if not is_duplicate:
+                final_validated_topics.append(candidate_topic)
 
     # Return validated topics preserving natural trending order sorted from hottest down
     return final_validated_topics[:13]

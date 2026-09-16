@@ -114,3 +114,20 @@ When adding features or modifying code in this repository, strictly adhere to th
   - Fresh automated browser instances lack cookies and trigger bot checks (LinkedIn full-screen login modals, Google CAPTCHA).
   - To bypass this on sites requiring login, run Chrome with remote debugging (`--remote-debugging-port=9222`) and set `CHROME_CDP_URL=http://localhost:9222`, or persist cookies using `CHROME_USER_DATA_DIR=./chrome_profile`.
 - **Async Execution**: `browser-use` relies on `asyncio`; top-level script execution requires `asyncio.run()`.
+
+---
+
+## 6. Headline Similarity Grouping (TF-IDF + Cosine Similarity)
+
+- **Library**: `scikit-learn` (TfidfVectorizer + cosine_similarity)
+- **Location**: `trends.py` — functions: `group_headlines_into_story_clusters()`, `build_clustered_dossier_sections()`, `compute_similarity_score_for_correlation()`
+- **When it runs**: Automatically during Phase 3 (LLM Synthesis) in `synthesize_topics_from_news_and_trends()`. Also enhances `correlate_topics_with_sources()` scoring.
+- **How it works**:
+  1. All headlines from all sources are flattened into a single list
+  2. TF-IDF vectors are computed with unigrams + bigrams, English stop words removed
+  3. Pairwise cosine similarity matrix is computed
+  4. Union-Find clustering merges headlines above similarity threshold (default 0.25)
+  5. Multi-source clusters (same story from 2+ sources) are prioritized in the dossier
+  6. The LLM dossier shows "WIDELY REPORTED STORY" blocks for multi-source clusters
+- **Post-synthesis**: `correlate_topics_with_sources()` uses embedding similarity as a 0-30 point scoring boost alongside word overlap, and allows embedding-only matches (>0.25 similarity) to bypass the word overlap minimum.
+- **Graceful fallback**: If scikit-learn is not installed, the system falls back to source-by-source dossier building (old behavior).

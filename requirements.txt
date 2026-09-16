@@ -12,3 +12,6 @@ pydantic>=2.7.0
 # Web scraping, RSS parsing, and HTTP requests
 requests>=2.31.0
 beautifulsoup4>=4.12.0
+
+# Headline similarity grouping (TF-IDF + cosine similarity)
+scikit-learn>=1.4.0

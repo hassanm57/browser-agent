@@ -668,6 +668,7 @@ async def run_single_country_pipeline(
         timeout_seconds = int(settings_dictionary.get("llm_timeout_seconds", "300"))
 
         await log_and_record("LLM", f"Synthesizing topics via {endpoint_url} (Model: {model_name}, Timeout: {timeout_seconds}s)...")
+        await log_and_record("INFO", "Headlines will be grouped by TF-IDF similarity before LLM synthesis for better topic deduplication...")
 
         synthesized_topics_list = []
         try:

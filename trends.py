@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import json
+import math
 import os
 import re
 import sys
@@ -15,6 +16,15 @@ import requests
 from browser_use import Browser
 from browser_use.browser.events import ScrollEvent
 from browser_use.llm import ChatOpenAI, UserMessage, SystemMessage
+
+# Scikit-learn imports for semantic headline grouping via TF-IDF + cosine similarity
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    print("Warning: scikit-learn not installed. Headline grouping will fall back to source-based ordering.")
 
 # Load environment configuration values from .env file with override enabled
 load_dotenv(override=True)
@@ -2113,6 +2123,429 @@ def create_boolean_query_from_terms(terms_list, label_text):
         return f'"{label_text[:50]}"'
 
 
+# =====================================================================================
+# HEADLINE SIMILARITY GROUPING
+# Groups similar news headlines from different sources using TF-IDF + cosine similarity.
+# This runs BEFORE LLM synthesis so the dossier shows pre-grouped related stories,
+# and AFTER synthesis to improve topic-to-source correlation accuracy.
+# =====================================================================================
+
+def clean_headline_text_for_similarity(raw_headline_text):
+    """
+    Strips out noise characters, source prefixes, and normalizes the headline
+    so that TF-IDF can compare the actual content words, not formatting artifacts.
+    """
+    cleaned_text = str(raw_headline_text).strip()
+
+    # Remove common source attribution prefixes like "[Reuters]", "SCMP -", "(AFP)"
+    cleaned_text = re.sub(r'^\[.*?\]\s*', '', cleaned_text)
+    cleaned_text = re.sub(r'^\(.*?\)\s*', '', cleaned_text)
+    cleaned_text = re.sub(r'^[A-Z][A-Za-z\s]{1,20}\s*[-–—:]\s*', '', cleaned_text)
+
+    # Remove URLs that might be embedded in headline text
+    cleaned_text = re.sub(r'https?://\S+', '', cleaned_text)
+
+    # Replace all non-alphanumeric characters (except spaces) with spaces
+    cleaned_characters_list = []
+    for character in cleaned_text:
+        if character.isalnum() or character == ' ':
+            cleaned_characters_list.append(character)
+        else:
+            cleaned_characters_list.append(' ')
+    cleaned_text = ''.join(cleaned_characters_list)
+
+    # Collapse multiple spaces into single space
+    cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+
+    # Lowercase for consistent comparison
+    cleaned_text = cleaned_text.lower()
+
+    return cleaned_text
+
+
+def compute_headline_similarity_matrix(headlines_list):
+    """
+    Takes a flat list of headline strings and returns a 2D similarity matrix
+    where each cell [i][j] is the cosine similarity between headline i and headline j.
+
+    Uses TF-IDF vectorization with unigrams and bigrams to capture both
+    individual words and two-word phrases (like "fighter jet", "missile test").
+    """
+    if not SKLEARN_AVAILABLE:
+        print("    Warning: scikit-learn not available, cannot compute similarity matrix.")
+        return None
+
+    if len(headlines_list) < 2:
+        return None
+
+    # Clean each headline before vectorizing so we compare actual content words
+    cleaned_headlines_list = []
+    for headline_index in range(len(headlines_list)):
+        original_headline = headlines_list[headline_index]
+        cleaned_version = clean_headline_text_for_similarity(original_headline)
+        cleaned_headlines_list.append(cleaned_version)
+
+    # Build TF-IDF vectors using both single words (unigrams) and two-word phrases (bigrams).
+    # Bigrams help match things like "fighter jet" or "missile defense" even if individual
+    # words like "defense" appear in many headlines.
+    # min_df=1 ensures even rare terms are included (important for niche defense topics).
+    # max_df=0.95 drops words appearing in 95%+ of headlines (like "the", "and").
+    tfidf_vectorizer = TfidfVectorizer(
+        ngram_range=(1, 2),
+        min_df=1,
+        max_df=0.95,
+        stop_words='english',
+        sublinear_tf=True
+    )
+
+    try:
+        tfidf_matrix = tfidf_vectorizer.fit_transform(cleaned_headlines_list)
+    except ValueError:
+        # This can happen if all headlines are identical or empty after cleaning
+        print("    Warning: TF-IDF vectorization failed (possibly all headlines are too similar or empty).")
+        return None
+
+    # Compute pairwise cosine similarity between all headline vectors
+    similarity_matrix = cosine_similarity(tfidf_matrix)
+
+    return similarity_matrix
+
+
+def group_headlines_into_story_clusters(
+    news_sources_intel_dictionary,
+    similarity_threshold=0.25,
+    minimum_cluster_size=1,
+    maximum_cluster_size=15
+):
+    """
+    Groups similar headlines from different sources into "story clusters".
+
+    Each cluster represents a single real-world news story that multiple sources
+    may have reported on with slightly different wording.
+
+    Parameters:
+        news_sources_intel_dictionary: Dict[str, List[str]] mapping source_name -> headlines
+        similarity_threshold: Minimum cosine similarity to consider two headlines as the same story.
+                              0.30 is intentionally permissive to catch paraphrased headlines.
+        minimum_cluster_size: Minimum number of headlines in a cluster (1 = include singles)
+        maximum_cluster_size: Maximum headlines per cluster to prevent mega-clusters
+
+    Returns:
+        List of cluster dictionaries, each containing:
+        - "cluster_id": integer index
+        - "representative_headline": the longest/most descriptive headline in the cluster
+        - "headlines": list of all headline strings in this cluster
+        - "source_names": list of source names that contributed headlines to this cluster
+        - "headline_count": number of headlines in the cluster
+        - "multi_source": True if headlines came from 2+ different sources
+    """
+    print("    Grouping similar headlines using TF-IDF + cosine similarity...")
+
+    # Step 1: Flatten all headlines into a single list, tracking which source each came from
+    all_headlines_flat_list = []
+    all_source_names_flat_list = []
+
+    for source_name in news_sources_intel_dictionary:
+        headlines_for_this_source = news_sources_intel_dictionary[source_name]
+        for headline_index in range(len(headlines_for_this_source)):
+            headline_text = headlines_for_this_source[headline_index]
+            all_headlines_flat_list.append(headline_text)
+            all_source_names_flat_list.append(source_name)
+
+    total_headline_count = len(all_headlines_flat_list)
+    print(f"    Total headlines to cluster: {total_headline_count}")
+
+    if total_headline_count < 2:
+        # Not enough headlines to cluster, just return each as its own cluster
+        single_cluster_list = []
+        for index in range(total_headline_count):
+            single_cluster_list.append({
+                "cluster_id": index,
+                "representative_headline": all_headlines_flat_list[index],
+                "headlines": [all_headlines_flat_list[index]],
+                "source_names": [all_source_names_flat_list[index]],
+                "headline_count": 1,
+                "multi_source": False
+            })
+        return single_cluster_list
+
+    # Step 2: Compute the similarity matrix
+    similarity_matrix = compute_headline_similarity_matrix(all_headlines_flat_list)
+
+    if similarity_matrix is None:
+        # Fallback: return each headline as its own cluster if similarity computation failed
+        fallback_clusters_list = []
+        for index in range(total_headline_count):
+            fallback_clusters_list.append({
+                "cluster_id": index,
+                "representative_headline": all_headlines_flat_list[index],
+                "headlines": [all_headlines_flat_list[index]],
+                "source_names": [all_source_names_flat_list[index]],
+                "headline_count": 1,
+                "multi_source": False
+            })
+        return fallback_clusters_list
+
+    # Step 3: Agglomerative-style clustering using greedy merging
+    # We assign each headline to a cluster. Start with each headline in its own cluster.
+    # Then merge clusters whose headlines have similarity above the threshold.
+
+    # Track which cluster each headline belongs to (initially, each headline is its own cluster)
+    cluster_assignment_list = []
+    for index in range(total_headline_count):
+        cluster_assignment_list.append(index)
+
+    # Find the root cluster ID for a headline (with path compression for union-find)
+    def find_cluster_root(headline_index):
+        # Follow the chain until we find a headline that points to itself
+        root_index = headline_index
+        while cluster_assignment_list[root_index] != root_index:
+            root_index = cluster_assignment_list[root_index]
+
+        # Path compression: point all intermediate nodes directly to root
+        current_index = headline_index
+        while current_index != root_index:
+            next_index = cluster_assignment_list[current_index]
+            cluster_assignment_list[current_index] = root_index
+            current_index = next_index
+
+        return root_index
+
+    # Merge headlines that are similar enough
+    for row_index in range(total_headline_count):
+        for col_index in range(row_index + 1, total_headline_count):
+            similarity_score = similarity_matrix[row_index][col_index]
+
+            if similarity_score >= similarity_threshold:
+                # These two headlines are similar enough to be the same story
+                root_of_row = find_cluster_root(row_index)
+                root_of_col = find_cluster_root(col_index)
+
+                if root_of_row != root_of_col:
+                    # Count how many headlines are already in each cluster
+                    count_for_row_cluster = 0
+                    count_for_col_cluster = 0
+                    for check_index in range(total_headline_count):
+                        check_root = find_cluster_root(check_index)
+                        if check_root == root_of_row:
+                            count_for_row_cluster = count_for_row_cluster + 1
+                        if check_root == root_of_col:
+                            count_for_col_cluster = count_for_col_cluster + 1
+
+                    merged_size = count_for_row_cluster + count_for_col_cluster
+
+                    # Only merge if the combined cluster wouldn't exceed our maximum
+                    if merged_size <= maximum_cluster_size:
+                        cluster_assignment_list[root_of_col] = root_of_row
+
+    # Step 4: Collect headlines into their final clusters
+    clusters_dictionary = {}
+    for headline_index in range(total_headline_count):
+        cluster_root = find_cluster_root(headline_index)
+        if cluster_root not in clusters_dictionary:
+            clusters_dictionary[cluster_root] = {
+                "headline_indices": []
+            }
+        clusters_dictionary[cluster_root]["headline_indices"].append(headline_index)
+
+    # Step 5: Build the output cluster list with metadata
+    output_clusters_list = []
+    cluster_id_counter = 0
+
+    for cluster_root_id in clusters_dictionary:
+        member_indices = clusters_dictionary[cluster_root_id]["headline_indices"]
+
+        cluster_headlines_list = []
+        cluster_source_names_list = []
+
+        for member_index in member_indices:
+            cluster_headlines_list.append(all_headlines_flat_list[member_index])
+            source_name = all_source_names_flat_list[member_index]
+            if source_name not in cluster_source_names_list:
+                cluster_source_names_list.append(source_name)
+
+        # Pick the representative headline as the longest one (usually most descriptive)
+        representative_headline = cluster_headlines_list[0]
+        for headline in cluster_headlines_list:
+            if len(headline) > len(representative_headline):
+                representative_headline = headline
+
+        is_multi_source = len(cluster_source_names_list) >= 2
+
+        output_clusters_list.append({
+            "cluster_id": cluster_id_counter,
+            "representative_headline": representative_headline,
+            "headlines": cluster_headlines_list,
+            "source_names": cluster_source_names_list,
+            "headline_count": len(cluster_headlines_list),
+            "multi_source": is_multi_source
+        })
+
+        cluster_id_counter = cluster_id_counter + 1
+
+    # Step 6: Sort clusters so multi-source clusters appear first (they represent
+    # more broadly reported stories), then by headline count descending
+    for outer_index in range(len(output_clusters_list)):
+        for inner_index in range(outer_index + 1, len(output_clusters_list)):
+            outer_cluster = output_clusters_list[outer_index]
+            inner_cluster = output_clusters_list[inner_index]
+
+            # Multi-source clusters get priority
+            outer_priority = 0
+            if outer_cluster["multi_source"]:
+                outer_priority = 1000 + outer_cluster["headline_count"]
+            else:
+                outer_priority = outer_cluster["headline_count"]
+
+            inner_priority = 0
+            if inner_cluster["multi_source"]:
+                inner_priority = 1000 + inner_cluster["headline_count"]
+            else:
+                inner_priority = inner_cluster["headline_count"]
+
+            if inner_priority > outer_priority:
+                temporary_swap = output_clusters_list[outer_index]
+                output_clusters_list[outer_index] = output_clusters_list[inner_index]
+                output_clusters_list[inner_index] = temporary_swap
+
+    # Print summary statistics
+    multi_source_count = 0
+    single_source_count = 0
+    for cluster in output_clusters_list:
+        if cluster["multi_source"]:
+            multi_source_count = multi_source_count + 1
+        else:
+            single_source_count = single_source_count + 1
+
+    print(f"    Headline grouping complete: {len(output_clusters_list)} clusters formed")
+    print(f"      → {multi_source_count} multi-source clusters (same story from 2+ sources)")
+    print(f"      → {single_source_count} single-source clusters (unique stories)")
+
+    # Print top 5 multi-source clusters for visibility
+    printed_multi_source_count = 0
+    for cluster in output_clusters_list:
+        if cluster["multi_source"] and printed_multi_source_count < 5:
+            sources_preview = ", ".join(cluster["source_names"][:3])
+            print(f"      [Cluster {cluster['cluster_id']}] ({cluster['headline_count']} headlines, Sources: {sources_preview})")
+            print(f"        Representative: {cluster['representative_headline'][:100]}")
+            printed_multi_source_count = printed_multi_source_count + 1
+
+    return output_clusters_list
+
+
+def build_clustered_dossier_sections(
+    story_clusters_list,
+    news_sources_intel_dictionary,
+    headline_sources_metadata_map=None
+):
+    """
+    Builds the intelligence dossier sections using pre-grouped story clusters
+    instead of raw source-by-source listing.
+
+    Multi-source clusters are presented as consolidated story blocks showing
+    the representative headline and all contributing sources, giving the LLM
+    a clearer picture of which stories are widely reported vs. niche exclusives.
+
+    Returns:
+        Dictionary with keys:
+        - "clustered_global_sections": list of formatted text blocks for global news
+        - "clustered_indian_sections": list of formatted text blocks for Indian defence
+        - "clustered_regional_sections": list of formatted text blocks for regional news
+        - "standalone_headlines_by_source": dict of source_name -> [headlines] for unclustered items
+    """
+    clustered_global_sections = []
+    clustered_indian_sections = []
+    clustered_regional_sections = []
+
+    for cluster in story_clusters_list:
+        # Build a formatted block for this cluster
+        representative = cluster["representative_headline"]
+        headlines_in_cluster = cluster["headlines"]
+        source_names_in_cluster = cluster["source_names"]
+        headline_count = cluster["headline_count"]
+
+        # Determine which section this cluster belongs to based on source types
+        has_indian_source = False
+        has_regional_source = False
+
+        for source_name in source_names_in_cluster:
+            if is_indian_defence_source_name_or_url(source_name):
+                has_indian_source = True
+            clean_source_lower = source_name.lower()
+            if "dawn" in clean_source_lower or "tribune" in clean_source_lower or "quwa" in clean_source_lower or "geo news" in clean_source_lower:
+                has_regional_source = True
+
+        # Format the cluster block
+        if headline_count >= 2 and cluster["multi_source"]:
+            # Multi-source cluster: show it as a consolidated story block
+            sources_attribution = ", ".join(source_names_in_cluster[:5])
+            cluster_block_lines = []
+            cluster_block_lines.append(f"\n--- WIDELY REPORTED STORY ({headline_count} reports from: {sources_attribution}) ---")
+            cluster_block_lines.append(f"• LEAD: {representative}")
+
+            # Show the other variant headlines from different sources
+            for variant_index in range(len(headlines_in_cluster)):
+                variant_headline = headlines_in_cluster[variant_index]
+                if variant_headline != representative:
+                    variant_source = ""
+                    if variant_index < len(source_names_in_cluster):
+                        variant_source = f" [{source_names_in_cluster[min(variant_index, len(source_names_in_cluster) - 1)]}]"
+                    cluster_block_lines.append(f"  → Also: {variant_headline}{variant_source}")
+
+            cluster_block_text = "\n".join(cluster_block_lines)
+        else:
+            # Single-source or single-headline cluster: show normally
+            source_attribution = source_names_in_cluster[0] if len(source_names_in_cluster) > 0 else "Unknown"
+            cluster_block_text = f"\n--- SOURCE: {source_attribution.upper()} ---\n• {representative}"
+
+        # Route to the appropriate section
+        if has_indian_source:
+            clustered_indian_sections.append(cluster_block_text)
+        elif has_regional_source:
+            clustered_regional_sections.append(cluster_block_text)
+        else:
+            clustered_global_sections.append(cluster_block_text)
+
+    return {
+        "clustered_global_sections": clustered_global_sections,
+        "clustered_indian_sections": clustered_indian_sections,
+        "clustered_regional_sections": clustered_regional_sections
+    }
+
+
+def compute_similarity_score_for_correlation(topic_text, headline_text):
+    """
+    Computes a TF-IDF cosine similarity score between a topic description
+    and a single headline. Used by correlate_topics_with_sources to improve
+    matching accuracy beyond simple word overlap.
+
+    Returns a float between 0.0 and 1.0.
+    """
+    if not SKLEARN_AVAILABLE:
+        return 0.0
+
+    cleaned_topic = clean_headline_text_for_similarity(topic_text)
+    cleaned_headline = clean_headline_text_for_similarity(headline_text)
+
+    if len(cleaned_topic) < 3 or len(cleaned_headline) < 3:
+        return 0.0
+
+    texts_to_compare = [cleaned_topic, cleaned_headline]
+
+    try:
+        tfidf_vectorizer = TfidfVectorizer(
+            ngram_range=(1, 2),
+            min_df=1,
+            stop_words='english',
+            sublinear_tf=True
+        )
+        tfidf_matrix = tfidf_vectorizer.fit_transform(texts_to_compare)
+        similarity_result = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])
+        return float(similarity_result[0][0])
+    except Exception:
+        return 0.0
+
+
 def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, curated_x_sources_tweets=None):
     """
     Finds and attaches ALL matching source headlines, source publication names,
@@ -2217,8 +2650,20 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                     has_bigram_match = True
                     break
 
-            # Skip headlines that don't match the primary subject of the label
-            if matched_label_tokens_count < minimum_required_tokens and not has_bigram_match:
+            # Compute TF-IDF cosine similarity between the full topic description
+            # and the headline. This catches semantic matches that word overlap misses,
+            # like when a headline uses synonyms or different phrasing for the same story.
+            topic_full_text = topic_label_string + " " + " ".join(topic_terms_list)
+            embedding_similarity = compute_similarity_score_for_correlation(topic_full_text, headline_text)
+
+            # Decide whether to skip this headline based on BOTH word overlap AND embedding similarity.
+            # Old approach: skip if word overlap was below threshold.
+            # New approach: also check embedding similarity before skipping.
+            word_overlap_is_insufficient = (matched_label_tokens_count < minimum_required_tokens and not has_bigram_match)
+            embedding_says_related = (embedding_similarity >= 0.25)
+
+            if word_overlap_is_insufficient and not embedding_says_related:
+                # Neither word overlap nor embedding similarity indicates a match
                 continue
 
             relevance_score = matched_label_tokens_count * 5
@@ -2238,6 +2683,10 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                 term_string_lower = str(term_item).lower()
                 if len(term_string_lower) > 5 and term_string_lower in headline_lower_string:
                     relevance_score = relevance_score + 10
+
+            # Scale the 0.0-1.0 embedding similarity to a 0-30 point bonus
+            embedding_bonus_points = int(embedding_similarity * 30)
+            relevance_score = relevance_score + embedding_bonus_points
 
             article_url = str(metadata_dictionary.get("url", "")).strip()
             if len(article_url) > 0 and article_url not in seen_article_urls_set:
@@ -2488,24 +2937,45 @@ def synthesize_topics_from_news_and_trends(
     regional_sections = []
     indian_exclusive_sections = []
 
-    for source_name_key in news_sources_intel_dictionary:
-        headlines_list = news_sources_intel_dictionary[source_name_key]
-        clean_source_name = sanitize_untrusted_text_for_prompt(source_name_key)
-        if len(headlines_list) > 0:
-            formatted_source_block = f"\n--- SOURCE: {clean_source_name.upper()} ---"
-            headline_lines = []
-            for headline_index in range(len(headlines_list)):
-                clean_headline = sanitize_untrusted_text_for_prompt(headlines_list[headline_index])
-                if len(clean_headline) > 0:
-                    headline_lines.append("• " + clean_headline)
-            full_block_text = formatted_source_block + "\n" + "\n".join(headline_lines)
+    # Use embedding-based clustering to group similar headlines BEFORE building the dossier.
+    # This way, the LLM sees related headlines from different sources grouped together,
+    # which leads to better topic synthesis and deduplication.
+    if SKLEARN_AVAILABLE and len(news_sources_intel_dictionary) > 0:
+        story_clusters_list = group_headlines_into_story_clusters(
+            news_sources_intel_dictionary,
+            similarity_threshold=0.25
+        )
 
-            if is_indian_defence_source_name_or_url(source_name_key):
-                indian_exclusive_sections.append(full_block_text)
-            elif "dawn" in clean_source_name.lower() or "tribune" in clean_source_name.lower() or "quwa" in clean_source_name.lower() or "geo news" in clean_source_name.lower():
-                regional_sections.append(full_block_text)
-            else:
-                global_news_sections.append(full_block_text)
+        # Build dossier sections from the clusters
+        clustered_sections = build_clustered_dossier_sections(
+            story_clusters_list,
+            news_sources_intel_dictionary
+        )
+
+        global_news_sections = clustered_sections["clustered_global_sections"]
+        regional_sections = clustered_sections["clustered_regional_sections"]
+        indian_exclusive_sections = clustered_sections["clustered_indian_sections"]
+    else:
+        # Fallback: build dossier the old way (source-by-source) if sklearn is not available
+        for source_name_key in news_sources_intel_dictionary:
+            headlines_list = news_sources_intel_dictionary[source_name_key]
+            clean_source_name = sanitize_untrusted_text_for_prompt(source_name_key)
+            if len(headlines_list) > 0:
+                formatted_source_block = f"\n--- SOURCE: {clean_source_name.upper()} ---"
+                headline_lines = []
+                for headline_index in range(len(headlines_list)):
+                    clean_headline = sanitize_untrusted_text_for_prompt(headlines_list[headline_index])
+                    if len(clean_headline) > 0:
+                        headline_lines.append("• " + clean_headline)
+                full_block_text = formatted_source_block + "\n" + "\n".join(headline_lines)
+
+                if is_indian_defence_source_name_or_url(source_name_key):
+                    indian_exclusive_sections.append(full_block_text)
+                elif "dawn" in clean_source_name.lower() or "tribune" in clean_source_name.lower() or "quwa" in clean_source_name.lower() or "geo news" in clean_source_name.lower():
+                    regional_sections.append(full_block_text)
+                else:
+                    global_news_sections.append(full_block_text)
+
 
     digest_sections_list = []
     if len(x_intel_lines) > 0:

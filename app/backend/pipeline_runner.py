@@ -7,6 +7,15 @@ import datetime
 import urllib.parse
 from typing import List, Dict, Any, Callable, Optional
 
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # Ensure project root is in sys.path so we can import root modules directly
 CURRENT_FILE_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT_DIRECTORY = os.path.dirname(os.path.dirname(CURRENT_FILE_DIRECTORY))

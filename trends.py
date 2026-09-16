@@ -204,7 +204,9 @@ DANGLING_TRAILING_WORDS_SET = {
     "between", "from", "that", "which", "amid", "over", "into", "about",
     "a", "an", "the", "is", "are", "was", "were", "warns", "says",
     "amidst", "against", "under", "through", "after", "before", "during",
-    "without", "within"
+    "without", "within", "its", "their", "his", "her", "contains", "racks", "eyes",
+    "holy", "near", "much", "different", "first", "second", "third", "high", "top",
+    "single", "joint", "total", "major", "time", "been"
 }
 
 GENERIC_BUZZWORD_PATTERNS_LIST = [
@@ -228,6 +230,8 @@ GENERIC_BUZZWORD_PATTERNS_LIST = [
     r'\bdefense\s+partnership\b',
     r'\bdefense\s+capabilities\b',
     r'\bmissile\s+capabilities\b',
+    r'\bnaval\s+capabilities\b',
+    r'\bair\s+defense\s+capabilities\b',
     r'\bnaval\s+dynamics\b',
     r'\bregional\s+tensions?\b',
     r'\bsecurity\s+landscape\b',
@@ -240,7 +244,8 @@ GENERIC_BUZZWORD_PATTERNS_LIST = [
     r'\bforeign\s+policy\b',
     r'\bnational\s+security\b',
     r'\beconomic\s+warfare\b',
-    r'\bcombat\s+readiness\b'
+    r'\bcombat\s+readiness\b',
+    r'\bdefense\s+spending\b'
 ]
 
 
@@ -254,7 +259,7 @@ def strip_dangling_trailing_words(text_string):
         else:
             break
     rejoined_string = " ".join(words_list)
-    return rejoined_string.rstrip(":, -–—")
+    return rejoined_string.rstrip(":, -–—\"'")
 
 
 def is_generic_fluff_term(term_string):
@@ -263,6 +268,61 @@ def is_generic_fluff_term(term_string):
     for pattern in GENERIC_BUZZWORD_PATTERNS_LIST:
         if re.search(pattern, lower_term) is not None:
             return True
+    return False
+
+
+def is_incomplete_stub_keyword(term_string):
+    # Determines if a keyword term is an incomplete fragment, verb/gerund stub,
+    # or dangling phrase that lacks sufficient context to be an effective search query
+    lower_term = term_string.lower().strip()
+    words_list = lower_term.split()
+    total_words_count = len(words_list)
+
+    if total_words_count == 0:
+        return True
+
+    # 1. Reject incomplete weapon names without model numbers (e.g. 'Chinese DF', 'DF missile', 'Russian Su')
+    # DF must have a number like DF-15, DF-21, DF-26, DF-31, DF-41
+    if re.search(r'\b(chinese|china)?\s*df\b', lower_term) and not re.search(r'\bdf[\s\-]?[0-9]+', lower_term):
+        return True
+    if re.search(r'\b(russian|russia)?\s*su\b', lower_term) and not re.search(r'\bsu[\s\-]?[0-9]+', lower_term):
+        return True
+    if re.search(r'\b(us|american)?\s*mq\b', lower_term) and not re.search(r'\bmq[\s\-]?[0-9]+', lower_term):
+        return True
+
+    # 2. Reject action and verb stubs that lack context (e.g. 'Forces Down', 'Iran Downing', 'Warns of')
+    action_stub_patterns = [
+        r'^(armed\s+)?forces\s+down$',
+        r'^(iran|us|russia|china|saudi|israel|houthi|pakistan|india)\s+downing$',
+        r'\bdowning\s+of\b',
+        r'\bwarns?\s+of\b',
+        r'\bracks?\s+up\b',
+        r'\beyes?\s+(much|different)\b',
+        r'\bholds?\s+policy\b',
+        r'\bmeet\s+soon\b',
+        r'\bcontains?\s+no\b',
+        r'\bthreats?\s+to\s+holy\b',
+        r'\bholy\s+sites\s+are\b',
+        r'^(warns|says|claims|confirms|reveals|reports|details)\b',
+        r'^(led\s+coalition)\b',
+        r'\b(as|amid|while|after|before)\s*$',
+        r'\b(of|in|to|for|with|by|on|at|between|from|about)\s*$'
+    ]
+    for pattern in action_stub_patterns:
+        if re.search(pattern, lower_term) is not None:
+            return True
+
+    # 3. Reject 1 or 2 word phrases unless they contain recognized weapon/entity patterns
+    if total_words_count < 3:
+        # Check if contains weapon designation with digits (e.g. DF-15A, P-75I, MQ-25A, Su-35, F-35)
+        has_weapon_code = re.search(r'\b[a-zA-Z]{1,5}[\s\-]?[0-9]{1,4}[a-zA-Z]{0,3}\b', lower_term) is not None
+        has_ins_ship = re.search(r'\bins\s+[a-zA-Z]+', lower_term) is not None
+        has_drdo_code = ("drdo" in lower_term or "isro" in lower_term or "hal" in lower_term)
+        is_uppercase_acronym = term_string.strip().isupper() and len(term_string.strip()) >= 2 and len(term_string.strip()) <= 8
+
+        if not (has_weapon_code or has_ins_ship or has_drdo_code or is_uppercase_acronym):
+            return True
+
     return False
 
 
@@ -2015,6 +2075,8 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
         ]
 
         clean_terms_list = []
+        clean_label_lower = clean_label.lower()
+
         for term_item in raw_terms:
             # Clean HTML noise, source tags, comments prefixes, and trailing media badges
             term_str = clean_headline_for_search_term(str(term_item))
@@ -2024,22 +2086,33 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
             if "ignore previous" in lower_term or "system override" in lower_term:
                 continue
 
-            # Filter out banned generic phrases and abstract academic fluff
-            if lower_term in banned_generic_phrases_list or is_generic_fluff_term(term_str):
+            # Filter out banned generic phrases, abstract academic fluff, and incomplete stubs
+            if lower_term in banned_generic_phrases_list or is_generic_fluff_term(term_str) or is_incomplete_stub_keyword(term_str):
                 continue
 
-            # Reject single generic lowercase or mixed-case words (only allow uppercase acronyms or hashtags)
+            # DO NOT copy the news headline or topic label word-for-word
+            if lower_term == clean_label_lower:
+                continue
+            if len(term_str.split()) >= 7 and lower_term in clean_label_lower:
+                continue
+
             term_words_list = term_str.split()
-            if len(term_words_list) == 1:
-                if not (term_str.startswith("#") or (term_str.isupper() and len(term_str) >= 2 and len(term_str) <= 8)):
+
+            # Enforce 10 words MAXIMUM
+            if len(term_words_list) > 10:
+                term_str = " ".join(term_words_list[:10])
+                term_str = strip_dangling_trailing_words(term_str)
+                term_words_list = term_str.split()
+
+            # Enforce minimum word count (4-10 words, or 2-3 words ONLY if containing a recognized weapon code or acronym)
+            if len(term_words_list) < 3:
+                has_weapon_code = re.search(r'\b[a-zA-Z]{1,5}[\s\-]?[0-9]{1,4}[a-zA-Z]{0,3}\b', lower_term) is not None
+                has_ins_ship = re.search(r'\bins\s+[a-zA-Z]+', lower_term) is not None
+                is_uppercase_acronym = term_str.isupper() and len(term_str) >= 2 and len(term_str) <= 8
+                if not (has_weapon_code or has_ins_ship or is_uppercase_acronym):
                     continue
 
-            # If term exceeds 14 words, trim at word boundary and strip any dangling prepositions
-            if len(term_words_list) > 14:
-                term_str = " ".join(term_words_list[:14])
-                term_str = strip_dangling_trailing_words(term_str)
-
-            if len(term_str) >= 2 and len(term_str) <= 120:
+            if len(term_str) >= 2 and len(term_str) <= 100:
                 # Check for duplicates in terms within this topic
                 is_duplicate_term = False
                 for existing_term_str in clean_terms_list:
@@ -2059,12 +2132,20 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
             for phrase in label_phrases:
                 phrase_clean = clean_headline_for_search_term(phrase)
                 phrase_clean = strip_dangling_trailing_words(phrase_clean)
-                if is_generic_fluff_term(phrase_clean):
+                if is_generic_fluff_term(phrase_clean) or is_incomplete_stub_keyword(phrase_clean):
                     continue
                 phrase_words = phrase_clean.split()
-                if len(phrase_words) == 1 and not (phrase_clean.startswith("#") or (phrase_clean.isupper() and len(phrase_clean) >= 2)):
-                    continue
+                if len(phrase_words) > 10:
+                    phrase_clean = " ".join(phrase_words[:10])
+                    phrase_clean = strip_dangling_trailing_words(phrase_clean)
+                    phrase_words = phrase_clean.split()
+                if len(phrase_words) < 3:
+                    has_weapon_code = re.search(r'\b[a-zA-Z]{1,5}[\s\-]?[0-9]{1,4}[a-zA-Z]{0,3}\b', phrase_clean.lower()) is not None
+                    if not has_weapon_code:
+                        continue
                 phrase_lower = phrase_clean.lower()
+                if phrase_lower == clean_label_lower:
+                    continue
                 is_duplicate = False
                 for existing_term in final_terms:
                     if existing_term.lower() == phrase_lower:
@@ -2217,67 +2298,210 @@ def clean_headline_for_topic_label(raw_headline_text):
 
 
 def extract_key_phrases_from_headline(headline_text):
-    # Extract distinct keywords and noun phrases from a headline to form context-rich search terms
+    # Generates crisp, high-context 4 to 10 word search queries from a news headline
+    # rather than copying the full headline or outputting weak 2-word stubs
     cleaned_headline = clean_headline_for_search_term(headline_text)
-    cleaned_text = re.sub(r'[^a-zA-Z0-9\s\-]', ' ', cleaned_headline)
-    words_list = cleaned_text.split()
+    if len(cleaned_headline) == 0:
+        return []
 
-    stop_words_list = [
+    # Strip question marks or trailing periods
+    base_headline_text = cleaned_headline.rstrip("?.!")
+
+    # 1. Extract quoted terms (e.g. 'red line', 'regional aspirations', 'much different phase')
+    quoted_phrases_list = []
+    quote_matches_list = re.findall(r"['\"]([^'\"]{3,40})['\"]", base_headline_text)
+    for quote_item in quote_matches_list:
+        cleaned_quote_item = quote_item.strip()
+        if len(cleaned_quote_item) >= 3 and not is_generic_fluff_term(cleaned_quote_item):
+            quoted_phrases_list.append(cleaned_quote_item)
+
+    # 2. Split headline into natural clauses by punctuation and major clause markers
+    raw_clauses_list = re.split(r'[;,\–—\-]|\bas\b|\bamid\b|\bwhile\b|\bafter\b|\bwhen\b|\bbecause\b', base_headline_text, flags=re.IGNORECASE)
+    cleaned_clauses_list = []
+    for raw_clause_item in raw_clauses_list:
+        clause_string = raw_clause_item.strip().strip("'\"")
+        # Remove conversational leading verbs and introductory phrases from clause
+        clause_string = re.sub(r'^(says|warns|claims|confirms|reveals|reports|details|shows|agrees?\s+to)\s+', '', clause_string, flags=re.IGNORECASE)
+        clause_string = re.sub(r'^(has\s+a|have\s+a|been\s+used\s+for\s+the\s+first\s+time\s+in\s+the)\s+', '', clause_string, flags=re.IGNORECASE)
+        clause_string = strip_dangling_trailing_words(clause_string)
+        clause_words_list = clause_string.split()
+        if len(clause_words_list) >= 2:
+            cleaned_clauses_list.append(clause_string)
+
+    # 3. Identify primary subject or entity from the first clause
+    primary_subject_string = ""
+    if len(cleaned_clauses_list) > 0:
+        first_clause_clean = cleaned_clauses_list[0]
+        # Remove predicate fillers like "is defensive", "was reported", "are ready"
+        first_clause_clean = re.sub(r'\s+(is|are|was|were)\s+[a-zA-Z]+$', '', first_clause_clean, flags=re.IGNORECASE)
+        first_clause_clean = strip_dangling_trailing_words(first_clause_clean)
+        first_clause_words_list = first_clause_clean.split()
+        if len(first_clause_words_list) <= 5:
+            primary_subject_string = first_clause_clean
+        else:
+            primary_subject_string = " ".join(first_clause_words_list[:4])
+
+    generated_phrases_list = []
+
+    # Strategy A: Use complete natural clauses if they contain 4 to 9 words
+    for clause_item in cleaned_clauses_list:
+        cleaned_candidate = re.sub(r'\s+(is|are|was|were)\s+[a-zA-Z]+$', '', clause_item, flags=re.IGNORECASE)
+        cleaned_candidate = re.sub(r'\bcontains\s+no\s*', '', cleaned_candidate, flags=re.IGNORECASE)
+        cleaned_candidate = re.sub(r'\bracks\s+up\s*', '', cleaned_candidate, flags=re.IGNORECASE)
+        cleaned_candidate = re.sub(r'\beyes\s*', '', cleaned_candidate, flags=re.IGNORECASE)
+        clean_candidate_string = strip_dangling_trailing_words(cleaned_candidate)
+        clause_words_list = clean_candidate_string.split()
+        if 4 <= len(clause_words_list) <= 9:
+            if not is_incomplete_stub_keyword(clean_candidate_string) and not is_generic_fluff_term(clean_candidate_string):
+                is_already_present = False
+                for existing_phrase in generated_phrases_list:
+                    if clean_candidate_string.lower() == existing_phrase.lower():
+                        is_already_present = True
+                        break
+                if not is_already_present and clean_candidate_string.lower() != base_headline_text.lower():
+                    generated_phrases_list.append(clean_candidate_string)
+
+    # Strategy B: Combine primary subject with quoted phrases (e.g. 'Houthi drone' + 'red line')
+    for quote_phrase in quoted_phrases_list:
+        if len(primary_subject_string) > 0:
+            combined_phrase_string = primary_subject_string + " " + quote_phrase
+            clean_combination = strip_dangling_trailing_words(combined_phrase_string)
+            combination_words_list = clean_combination.split()
+            if 3 <= len(combination_words_list) <= 9:
+                if not is_incomplete_stub_keyword(clean_combination) and not is_generic_fluff_term(clean_combination):
+                    is_already_present = False
+                    for existing_phrase in generated_phrases_list:
+                        if clean_combination.lower() == existing_phrase.lower():
+                            is_already_present = True
+                            break
+                    if not is_already_present:
+                        generated_phrases_list.append(clean_combination)
+
+    # Strategy C: Check for speaker attributions like 'says ISPR chief'
+    speaker_regex_match = re.search(r'(says|according to)\s+([A-Za-z0-9\s]+)$', base_headline_text, flags=re.IGNORECASE)
+    if speaker_regex_match is not None and len(primary_subject_string) > 0:
+        speaker_name_string = speaker_regex_match.group(2).strip()
+        speaker_clean_string = re.sub(r'[^a-zA-Z0-9\s]', '', speaker_name_string).strip()
+        if len(speaker_clean_string) > 0:
+            candidate_speaker_quote = primary_subject_string + " " + speaker_clean_string + " says"
+            candidate_speaker_short = primary_subject_string + " " + speaker_clean_string
+            for candidate_speaker_item in [candidate_speaker_quote, candidate_speaker_short]:
+                cleaned_speaker_item = strip_dangling_trailing_words(candidate_speaker_item)
+                speaker_item_words_list = cleaned_speaker_item.split()
+                if 3 <= len(speaker_item_words_list) <= 8:
+                    if not is_incomplete_stub_keyword(cleaned_speaker_item) and not is_generic_fluff_term(cleaned_speaker_item):
+                        is_already_present = False
+                        for existing_phrase in generated_phrases_list:
+                            if cleaned_speaker_item.lower() == existing_phrase.lower():
+                                is_already_present = True
+                                break
+                        if not is_already_present:
+                            generated_phrases_list.append(cleaned_speaker_item)
+
+    # Strategy D: Combine primary subject with secondary clause key elements
+    if len(cleaned_clauses_list) >= 2 and len(primary_subject_string) > 0:
+        for secondary_clause_index in range(1, len(cleaned_clauses_list)):
+            secondary_clause_item = cleaned_clauses_list[secondary_clause_index]
+            secondary_words_list = secondary_clause_item.split()
+            secondary_snippet = " ".join(secondary_words_list[:3])
+            combined_clause_string = primary_subject_string + " " + secondary_snippet
+            clean_clause_combination = strip_dangling_trailing_words(combined_clause_string)
+            clause_combination_words_list = clean_clause_combination.split()
+            if 4 <= len(clause_combination_words_list) <= 9:
+                if not is_incomplete_stub_keyword(clean_clause_combination) and not is_generic_fluff_term(clean_clause_combination):
+                    is_already_present = False
+                    for existing_phrase in generated_phrases_list:
+                        if clean_clause_combination.lower() == existing_phrase.lower():
+                            is_already_present = True
+                            break
+                    if not is_already_present:
+                        generated_phrases_list.append(clean_clause_combination)
+
+    # Strategy E: Distill key actors and specific military designations into complete 3-5 word query phrases
+    weapon_regex_matches = re.findall(r'\b[A-Za-z]{1,6}[\s\-]?[0-9]{1,4}[A-Za-z]{0,3}\b', base_headline_text)
+    for weapon_model in weapon_regex_matches:
+        if weapon_model.lower() not in ["11.5%", "38bn", "2026", "2025", "2024"]:
+            lower_headline = base_headline_text.lower()
+            if "chinese" in lower_headline or "china" in lower_headline:
+                phrase_with_type = f"China {weapon_model} missile"
+                phrase_short = f"China {weapon_model}"
+                for cand_phrase in [phrase_with_type, phrase_short]:
+                    is_already_present = False
+                    for existing_phrase in generated_phrases_list:
+                        if cand_phrase.lower() == existing_phrase.lower():
+                            is_already_present = True
+                            break
+                    if not is_already_present:
+                        generated_phrases_list.append(cand_phrase)
+            elif "indian" in lower_headline or "india" in lower_headline:
+                phrase_sub = f"Indian {weapon_model} submarine"
+                phrase_short = f"Indian {weapon_model}"
+                for cand_phrase in [phrase_sub, phrase_short]:
+                    is_already_present = False
+                    for existing_phrase in generated_phrases_list:
+                        if cand_phrase.lower() == existing_phrase.lower():
+                            is_already_present = True
+                            break
+                    if not is_already_present:
+                        generated_phrases_list.append(cand_phrase)
+
+    # Strategy F: N-gram sliding window of significant words (4-5 words each)
+    significant_tokens_list = []
+    stop_words_set = {
         "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or", "is",
         "are", "was", "were", "with", "by", "as", "from", "after", "over", "into",
-        "about", "amid", "says", "report", "reports", "news", "update", "updated",
-        "confirms", "reveals", "shows", "more", "first", "second", "third", "ahead", "behind",
-        "may", "might", "can", "could", "will", "would", "shall", "should",
-        "be", "been", "being", "have", "has", "had", "do", "does", "did",
-        "not", "no", "nor", "neither", "either", "but", "while", "when", "where",
-        "why", "how", "what", "which", "who", "whom", "whose", "this", "that",
-        "these", "those", "their", "theirs", "there", "they", "them", "we", "our",
-        "ours", "us", "you", "your", "yours", "he", "him", "his", "she", "her",
-        "hers", "it", "its", "all", "any", "both", "each", "few", "most", "other",
-        "some", "such", "only", "own", "same", "so", "than", "too", "very", "just",
-        "now", "new", "said", "say", "talk", "talks", "real", "get", "gets",
-        "got", "make", "makes", "made", "like", "see", "seen", "also", "back", "even",
-        "video", "photos", "photo", "audio", "between", "amidst", "against", "warns",
-        "claim", "claims", "according", "details", "exclusive"
-    ]
+        "about", "amid", "more", "first", "second", "third", "may", "might", "can",
+        "could", "will", "would", "be", "been", "being", "have", "has", "had",
+        "not", "no", "nor", "but", "while", "when", "where", "why", "how", "what",
+        "which", "who", "whom", "this", "that", "these", "those", "their", "there",
+        "they", "them", "we", "our", "you", "your", "he", "him", "his", "she", "her",
+        "it", "its", "all", "any", "both", "each", "few", "most", "some", "such",
+        "so", "than", "too", "very", "just", "now", "new", "said", "say", "also",
+        "defensive", "offensive", "contains", "racks", "eyes", "strains", "hit",
+        "used", "time", "agree", "agrees", "meet", "warns", "says", "shows", "reveals",
+        "claims", "details", "near", "much", "different", "report", "reports"
+    }
+    raw_cleaned_words_list = re.sub(r'[^a-zA-Z0-9\s\-]', ' ', base_headline_text).split()
+    for word_token in raw_cleaned_words_list:
+        if len(word_token) >= 3 and word_token.lower() not in stop_words_set:
+            significant_tokens_list.append(word_token)
 
-    significant_words = []
-    for word in words_list:
-        word_lower = word.lower()
-        # Keep words that have length of at least 3 characters or are 2-letter uppercase acronyms/codes (e.g. DF, SU, MI)
-        is_length_eligible = (len(word) >= 3) or (len(word) == 2 and word.isupper())
-        if is_length_eligible and word_lower not in stop_words_list:
-            significant_words.append(word)
+    for window_size in [4, 5]:
+        for window_index in range(len(significant_tokens_list) - window_size + 1):
+            ngram_string = " ".join(significant_tokens_list[window_index:window_index + window_size])
+            ngram_cleaned = strip_dangling_trailing_words(ngram_string)
+            if not is_incomplete_stub_keyword(ngram_cleaned) and not is_generic_fluff_term(ngram_cleaned):
+                is_already_present = False
+                for existing_phrase in generated_phrases_list:
+                    if ngram_cleaned.lower() == existing_phrase.lower():
+                        is_already_present = True
+                        break
+                if not is_already_present:
+                    generated_phrases_list.append(ngram_cleaned)
 
-    terms_list = []
-    if len(cleaned_headline) <= 110 and len(cleaned_headline) > 10:
-        terms_list.append(cleaned_headline)
+    # Filter all results: enforce 4 to 10 words (or 2-3 words ONLY if containing a recognized weapon code)
+    final_filtered_phrases_list = []
+    for candidate_phrase_item in generated_phrases_list:
+        candidate_clean_string = candidate_phrase_item.strip()
+        candidate_words_list = candidate_clean_string.split()
+        if len(candidate_words_list) > 10:
+            candidate_clean_string = " ".join(candidate_words_list[:10])
+            candidate_clean_string = strip_dangling_trailing_words(candidate_clean_string)
+            candidate_words_list = candidate_clean_string.split()
+        if len(candidate_words_list) < 3:
+            if not re.search(r'\b[a-zA-Z]{1,5}[\s\-]?[0-9]{1,4}[a-zA-Z]{0,3}\b', candidate_clean_string.lower()):
+                continue
+        if candidate_clean_string.lower() == base_headline_text.lower():
+            continue
+        is_already_in_final = False
+        for existing_final in final_filtered_phrases_list:
+            if candidate_clean_string.lower() == existing_final.lower():
+                is_already_in_final = True
+                break
+        if not is_already_in_final:
+            final_filtered_phrases_list.append(candidate_clean_string)
 
-    # Generate multi-word phrases from adjacent significant words
-    for word_index in range(len(significant_words) - 1):
-        first_word = significant_words[word_index]
-        second_word = significant_words[word_index + 1]
-        pair_phrase = first_word + " " + second_word
-        clean_pair = strip_dangling_trailing_words(pair_phrase)
-        if clean_pair not in terms_list and not is_generic_fluff_term(clean_pair) and len(clean_pair.split()) >= 2:
-            terms_list.append(clean_pair)
-
-    for word_index in range(len(significant_words) - 2):
-        first_word = significant_words[word_index]
-        second_word = significant_words[word_index + 1]
-        third_word = significant_words[word_index + 2]
-        triplet_phrase = first_word + " " + second_word + " " + third_word
-        clean_triplet = strip_dangling_trailing_words(triplet_phrase)
-        if clean_triplet not in terms_list and not is_generic_fluff_term(clean_triplet) and len(clean_triplet.split()) >= 2:
-            terms_list.append(clean_triplet)
-
-    # Only include single words if they are proper uppercase acronyms or hashtags (e.g. NATO, AUKUS, INS, DRDO)
-    for word in significant_words:
-        if word.startswith("#") or (word.isupper() and len(word) >= 2 and len(word) <= 8):
-            if word not in terms_list:
-                terms_list.append(word)
-
-    return terms_list[:8]
+    return final_filtered_phrases_list[:10]
 
 
 def create_boolean_query_from_terms(terms_list, label_text):
@@ -3011,48 +3235,72 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         topic_item["source_name"] = final_matched_sources_list[0]["source_name"]
         topic_item["source_url"] = final_matched_sources_list[0]["url"]
 
-        # Enforce that the primary news source headline title and its key sub-phrases are in terms,
-        # and guarantee that at least 8 context-rich keywords exist for every topic
+        # Enforce crisp, context-dense search queries (4 to 10 words MAXIMUM),
+        # strictly prevent copying headlines word-for-word, and guarantee at least 8 keywords
         cleaned_source_headline = clean_headline_for_search_term(primary_source_headline)
+        cleaned_headline_lower = cleaned_source_headline.lower()
         existing_terms = topic_item.get("terms", [])
         updated_terms = []
 
         for term in existing_terms:
             clean_term_str = clean_headline_for_search_term(term)
             clean_term_str = strip_dangling_trailing_words(clean_term_str)
-            if is_generic_fluff_term(clean_term_str):
+            term_lower_str = clean_term_str.lower()
+
+            if is_generic_fluff_term(clean_term_str) or is_incomplete_stub_keyword(clean_term_str):
                 continue
+
+            # DO NOT copy the primary source headline word-for-word
+            if term_lower_str == cleaned_headline_lower:
+                continue
+            if len(clean_term_str.split()) >= 7 and term_lower_str in cleaned_headline_lower:
+                continue
+
             term_words = clean_term_str.split()
-            if len(term_words) == 1 and not (clean_term_str.startswith("#") or (clean_term_str.isupper() and len(clean_term_str) >= 2 and len(clean_term_str) <= 8)):
-                continue
-            if len(clean_term_str) >= 2 and clean_term_str not in updated_terms:
+
+            # Enforce 10 words MAXIMUM
+            if len(term_words) > 10:
+                clean_term_str = " ".join(term_words[:10])
+                clean_term_str = strip_dangling_trailing_words(clean_term_str)
+                term_words = clean_term_str.split()
+
+            # Enforce minimum word count (4-10 words, or 2-3 words ONLY if containing a recognized weapon code or acronym)
+            if len(term_words) < 3:
+                has_weapon_code = re.search(r'\b[a-zA-Z]{1,5}[\s\-]?[0-9]{1,4}[a-zA-Z]{0,3}\b', term_lower_str) is not None
+                has_ins_ship = re.search(r'\bins\s+[a-zA-Z]+', term_lower_str) is not None
+                is_uppercase_acronym = clean_term_str.isupper() and len(clean_term_str) >= 2 and len(clean_term_str) <= 8
+                if not (has_weapon_code or has_ins_ship or is_uppercase_acronym):
+                    continue
+
+            is_duplicate = False
+            for existing_term in updated_terms:
+                if existing_term.lower() == term_lower_str:
+                    is_duplicate = True
+                    break
+
+            if not is_duplicate and len(clean_term_str) >= 2:
                 updated_terms.append(clean_term_str)
 
-        # Check if the primary source headline is already represented in terms
-        has_headline_in_terms = False
-        cleaned_headline_lower = cleaned_source_headline.lower()
-        for term in updated_terms:
-            term_lower = term.lower()
-            if term_lower == cleaned_headline_lower or cleaned_headline_lower in term_lower or term_lower in cleaned_headline_lower:
-                has_headline_in_terms = True
-                break
-
-        if not has_headline_in_terms and len(cleaned_source_headline) > 5 and not is_generic_fluff_term(cleaned_source_headline):
-            # Insert the primary source headline title at the beginning of the terms list
-            updated_terms.insert(0, cleaned_source_headline)
-
-        # Ensure at least 8 keywords by extracting phrases from the primary source headline
+        # Ensure at least 8 keywords by extracting crisp distilled phrases from the primary source headline
         if len(updated_terms) < 8:
             headline_phrases = extract_key_phrases_from_headline(primary_source_headline)
             for phrase in headline_phrases:
                 phrase_clean = clean_headline_for_search_term(phrase)
                 phrase_clean = strip_dangling_trailing_words(phrase_clean)
-                if is_generic_fluff_term(phrase_clean):
+                if is_generic_fluff_term(phrase_clean) or is_incomplete_stub_keyword(phrase_clean):
                     continue
                 phrase_words = phrase_clean.split()
-                if len(phrase_words) == 1 and not (phrase_clean.startswith("#") or (phrase_clean.isupper() and len(phrase_clean) >= 2 and len(phrase_clean) <= 8)):
-                    continue
+                if len(phrase_words) > 10:
+                    phrase_clean = " ".join(phrase_words[:10])
+                    phrase_clean = strip_dangling_trailing_words(phrase_clean)
+                    phrase_words = phrase_clean.split()
+                if len(phrase_words) < 3:
+                    has_weapon_code = re.search(r'\b[a-zA-Z]{1,5}[\s\-]?[0-9]{1,4}[a-zA-Z]{0,3}\b', phrase_clean.lower()) is not None
+                    if not has_weapon_code:
+                        continue
                 phrase_lower = phrase_clean.lower()
+                if phrase_lower == cleaned_headline_lower:
+                    continue
                 is_duplicate = False
                 for term in updated_terms:
                     if term.lower() == phrase_lower:
@@ -3069,12 +3317,20 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
             for phrase in label_phrases:
                 phrase_clean = clean_headline_for_search_term(phrase)
                 phrase_clean = strip_dangling_trailing_words(phrase_clean)
-                if is_generic_fluff_term(phrase_clean):
+                if is_generic_fluff_term(phrase_clean) or is_incomplete_stub_keyword(phrase_clean):
                     continue
                 phrase_words = phrase_clean.split()
-                if len(phrase_words) == 1 and not (phrase_clean.startswith("#") or (phrase_clean.isupper() and len(phrase_clean) >= 2 and len(phrase_clean) <= 8)):
-                    continue
+                if len(phrase_words) > 10:
+                    phrase_clean = " ".join(phrase_words[:10])
+                    phrase_clean = strip_dangling_trailing_words(phrase_clean)
+                    phrase_words = phrase_clean.split()
+                if len(phrase_words) < 3:
+                    has_weapon_code = re.search(r'\b[a-zA-Z]{1,5}[\s\-]?[0-9]{1,4}[a-zA-Z]{0,3}\b', phrase_clean.lower()) is not None
+                    if not has_weapon_code:
+                        continue
                 phrase_lower = phrase_clean.lower()
+                if phrase_lower == cleaned_headline_lower:
+                    continue
                 is_duplicate = False
                 for term in updated_terms:
                     if term.lower() == phrase_lower:
@@ -3294,15 +3550,39 @@ STRICT REQUIREMENTS FOR EACH GENERATED ROW:
 2. "category": Exactly one of "defense", "diplomacy", "politics", "economic".
 3. "boolean_query": MUST BE SHORT AND CONCISE (maximum 2 to 4 search terms total, under 100 characters).
    Use exact quotes and standard Boolean syntax.
-4. "terms": Array of EXACTLY 8 to 12 (at least 8) HIGH-PRECISION, ACTIONABLE SEARCH QUERIES AND KEYWORD PHRASES (between 2 and 10 words each). Every single topic MUST have at least 8 keywords.
-   - ACTIONABLE SEARCHABILITY MANDATE: Every keyword phrase MUST be formulated such that when searched on X/Twitter or Google, it directly and reliably retrieves the exact news articles and headlines from which the story originated. The keywords must NOT be generic textbook topics.
-   - MANDATORY SOURCE HEADLINE INTEGRATION: The exact, complete news headline title of the primary news source article from which the story originated MUST be included as the first keyword in the "terms" array (do NOT chop it, do NOT truncate it mid-sentence).
-   - DISTINCTIVE SUB-PHRASES & NAMED ENTITIES: Extract distinct multi-word clauses from that source headline and story text (e.g. specific weapon designations like 'Chinese DF missile', vessel names like 'INS Trishul', incident locations like 'near Makkah', named leaders like 'Vance', 'Shehbaz', 'Saudi crown prince', and specific milestones like '$38bn bill').
-   - ZERO-TOLERANCE BAN ON ABSTRACT ACADEMIC FLUFF:
-     * NEVER output abstract textbook categories or analytical essays. For example, STRICTLY FORBIDDEN: 'Houthi military capabilities', 'China-Saudi-Yemen arms dynamics', 'Yemen conflict escalation', 'Regional security cooperation', 'Indian defense industry', 'Strategic defense posture', 'Bilateral defense ties', 'Geopolitical dynamics', 'Project risks', 'Procurement delays', 'Defense contracts', 'National security', 'Regional stability'.
-     * NEVER output incomplete phrases ending in dangling prepositions or conjunctions (e.g. NEVER write 'Saudi-Led Coalition Warns of', 'Cooperation Between', 'Racks up bill as'). Every phrase must be a complete, grammatically sound thought.
-     * NEVER output single generic words (e.g. do NOT output 'Reports', 'Video', 'Drills', 'Missile', 'Tensions').
-     * NEVER mangle hyphenated words or chop prefixes (e.g. write 'Saudi-led coalition', NOT 'led coalition').
+4. "terms": Array of EXACTLY 8 to 12 (at least 8) CRISP, HIGH-CONTEXT SEARCH QUERIES (4 to 10 words MAXIMUM each).
+   Every keyword phrase must be a concrete, actionable search query that will reliably pull up this exact news story when searched on X/Twitter or Google.
+
+   - STRICT RULE: DO NOT COPY THE NEWS HEADLINE WORD-FOR-WORD:
+     * Never paste the full news headline into the terms list.
+     * Instead, distill the headline and story into crisp, context-packed search phrases.
+     * Example: For the headline "Makkah defence pact is defensive, contains no 'regional aspirations', says ISPR chief":
+       -> EXCELLENT keywords: "Makkah defence pact ispr chief says", "makkah defence pact ispr", "Makkah defence pact regional aspirations"
+       -> FORBIDDEN: Do NOT copy the full 14-word headline word-for-word.
+     * Example: For the headline "US war on Iran racks up $38bn bill as its arsenal strains; Vance eyes 'much different phase'":
+       -> EXCELLENT keywords: "Iran 38 billion US weapons", "US war on Iran arsenal strains", "Vance US war on Iran 38bn"
+       -> FORBIDDEN: Do NOT copy the full headline word-for-word.
+     * Example: For the headline "Houthi drone intercepted near Makkah as Saudi-led coalition warns holy sites are 'red line'":
+       -> EXCELLENT keywords: "Houthi drone makkah red line", "Houthi drone intercepted makkah", "Saudi coalition makkah red line warning"
+       -> FORBIDDEN: Do NOT copy the full headline word-for-word.
+
+   - GOLD STANDARD KEYWORD EXAMPLES (Ground your generation in queries like these):
+     * "Houthi drone makkah red line" (5 words - actor + weapon + location + key term)
+     * "China DF-15A missile" (3-4 words - specific country + complete weapon designation with model number)
+     * "Indian P75 I submarine" (4 words - specific country + program + naval asset)
+     * "US Navy MQ 25 A Stingray" (6 words - service + exact airframe code + name)
+     * "Houthi drone intercepted makkah" (4 words - actor + weapon + action + location)
+     * "Pakistan saudi makkah solidarity" (4 words - actors + location + event)
+     * "Iran 38 billion US weapons" (5 words - target + key figure + actor + subject)
+     * "Makkah defence pact ispr chief says" (6 words - topic + key entity quote)
+     * "makkah defence pact ispr" (4 words - topic + entity)
+
+   - STRICT BANS ON INCOMPLETE FRAGMENTS, WEAK STUBS & GENERIC FLUFF:
+     * NEVER output incomplete 2-word verb/action fragments or stubs. FORBIDDEN: "Forces Down", "Iran Downing", "Downing of", "Warns of", "Racks up", "Eyes much".
+     * NEVER output incomplete weapon names without their specific model number. FORBIDDEN: "Chinese DF", "Russian Su", "US MQ". ALWAYS include the exact model: "China DF-15A", "Su-35 Flanker", "US MQ-25A Stingray".
+     * NEVER output chopped or dangling sentence fragments (e.g. FORBIDDEN: "led coalition warns threats", "holy sites are red", "contains no regional").
+     * NEVER output abstract generic fluff or textbook categories (e.g. FORBIDDEN: "Houthi military capabilities", "China-Saudi-Yemen arms dynamics", "Yemen conflict escalation", "Regional security cooperation", "Indian defense industry", "Strategic defense posture", "Bilateral defense ties", "Geopolitical dynamics", "Project risks", "Procurement delays", "Defense contracts", "National security", "Regional stability").
+     * Keep keywords strictly between 4 and 10 words (allowing 2-3 words ONLY for specific weapon or vessel designations like "China DF-15A", "INS Trishul").
 
 CRITICAL ANTI-LEAKAGE / ZERO-HARDCODING RULE:
 - NEVER repeat or copy any fictional placeholder names from the synthetic syntax format example below (e.g., do NOT output 'Model-7X' or 'Nation-Alpha').
@@ -3313,16 +3593,16 @@ SYNTACTIC STRUCTURE EXAMPLE (PURELY SYNTHETIC PLACEHOLDERS):
   {
     "label": "Nation-Alpha Deploys Model-7X Air Defense Radar Along Border Sector",
     "category": "defense",
-    "boolean_query": "(\"Model-7X\" OR \"air defense\") (\"Nation-Alpha\" OR \"radar network\")",
+    "boolean_query": "(\"Model-7X radar\" OR \"air defense border\")",
     "terms": [
-      "Nation-Alpha Deploys Model-7X Air Defense Radar Along Border Sector",
-      "Model-7X tactical radar deployment",
-      "Border sector early warning network",
-      "Nation-Alpha ground air defense trials 2026",
-      "Long-range phased array radar installation",
-      "Joint territorial airspace surveillance system",
-      "Surface-to-air missile radar integration",
-      "Frontline radar coverage expansion"
+      "Nation-Alpha Model-7X radar border deployment",
+      "Model-7X air defense radar trials",
+      "Nation-Alpha early warning border network",
+      "Model-7X surface to air missile radar",
+      "Nation-Alpha long range radar installation",
+      "Border air defense surveillance network",
+      "Model-7X tactical phased array deployment",
+      "Nation-Alpha airspace surveillance system"
     ]
   }
 ]
@@ -3337,7 +3617,7 @@ IMPORTANT: The "boolean_query" field MUST be a valid JSON string wrapped in doub
 - Topics 1 to 10: The top 10 most trending, hottest breaking defense, military, and geopolitical stories worldwide (balanced across Sections 1, 2, 3, and 4).
 - Topics 11 to 13: Exactly 3 dedicated topics derived EXCLUSIVELY from the configured Indian sources in Section 4, where India is directly involved.
 
-Ensure each row has a self-generated phrased headline, a concise Boolean query (2 to 4 terms), and AT LEAST 8 actionable search queries and keyword phrases (between 2 and 10 words each) grounded directly in the text below, with the complete primary news headline title and its key sub-phrases included in the keywords. Do NOT generate generic academic fluff like 'military capabilities' or 'arms dynamics'.
+Ensure each row has a self-generated phrased headline (6 to 12 words), a concise Boolean query (2 to 4 terms), and AT LEAST 8 crisp, high-context search queries (4 to 10 words MAXIMUM each). Do NOT copy headlines word-for-word into keywords. Do NOT output incomplete stubs like 'Forces Down', 'Iran Downing', or 'Chinese DF'. Do NOT output generic academic fluff like 'military capabilities' or 'arms dynamics'.
 
 <untrusted_intelligence_dossier>
 {full_intel_digest_string}

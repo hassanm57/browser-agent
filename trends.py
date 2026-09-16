@@ -2993,68 +2993,6 @@ def compute_similarity_score_for_correlation(topic_text, headline_text):
         return 0.0
 
 
-def categorize_sources_into_specific_topics(sources_list):
-    # Groups correlated news sources into specific topic clusters based on shared content and keywords
-    # This ensures that when multiple distinct news stories are combined into a single synthesized topic row,
-    # users can view them organized under their own specific sub-topic in the sources modal.
-    if len(sources_list) == 0:
-        return []
-
-    categorized_topic_groups_list = []
-
-    for source_index in range(len(sources_list)):
-        current_source_item = sources_list[source_index]
-        source_title_string = str(current_source_item.get("title", "")).strip()
-
-        matched_topic_group = None
-
-        # Compare this source title against each existing specific topic group
-        for group_index in range(len(categorized_topic_groups_list)):
-            candidate_group = categorized_topic_groups_list[group_index]
-            representative_title_string = candidate_group["topic_name"]
-
-            # Extract significant tokens from the current title
-            current_title_clean_words = []
-            for raw_word in re.findall(r'[a-zA-Z0-9]+', source_title_string.lower()):
-                if len(raw_word) >= 4 and raw_word not in DANGLING_TRAILING_WORDS_SET:
-                    current_title_clean_words.append(raw_word)
-
-            # Extract significant tokens from the representative title
-            representative_clean_words = []
-            for raw_word in re.findall(r'[a-zA-Z0-9]+', representative_title_string.lower()):
-                if len(raw_word) >= 4 and raw_word not in DANGLING_TRAILING_WORDS_SET:
-                    representative_clean_words.append(raw_word)
-
-            # Calculate word token overlap
-            matching_token_count = 0
-            for token_word in current_title_clean_words:
-                if token_word in representative_clean_words:
-                    matching_token_count = matching_token_count + 1
-
-            # Also check embedding / TF-IDF similarity if available
-            cosine_similarity_score = compute_similarity_score_for_correlation(source_title_string, representative_title_string)
-
-            # If they share 2 or more significant content words, or have similarity >= 0.20, they report the same specific event
-            if matching_token_count >= 2 or cosine_similarity_score >= 0.20:
-                matched_topic_group = candidate_group
-                break
-
-        if matched_topic_group is not None:
-            current_source_item["specific_topic"] = matched_topic_group["topic_name"]
-            matched_topic_group["sources"].append(current_source_item)
-        else:
-            # Create a new specific topic group using the cleaned headline as the topic label
-            clean_specific_topic_name = clean_headline_for_search_term(source_title_string)
-            if len(clean_specific_topic_name) == 0:
-                clean_specific_topic_name = source_title_string
-
-            current_source_item["specific_topic"] = clean_specific_topic_name
-            categorized_topic_groups_list.append({
-                "topic_name": clean_specific_topic_name,
-                "sources": [current_source_item]
-            })
-
-    return categorized_topic_groups_list
 
 
 def deduplicate_synthesized_topics_using_cosine_similarity(topics_list, similarity_threshold=0.20):
@@ -3357,10 +3295,7 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                     "url": "https://www.defensenews.com/"
                 })
 
-        # Categorize the matched sources into distinct specific topic groups
-        specific_topic_groups = categorize_sources_into_specific_topics(final_matched_sources_list)
         topic_item["sources"] = final_matched_sources_list
-        topic_item["specific_topics"] = specific_topic_groups
         primary_source_headline = str(final_matched_sources_list[0]["title"]).strip()
         topic_item["source_headline"] = primary_source_headline
         topic_item["source_name"] = final_matched_sources_list[0]["source_name"]

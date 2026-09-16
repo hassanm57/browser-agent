@@ -87,6 +87,13 @@ export interface TopicSourceReference {
   title: string;
   source_name: string;
   url: string;
+  specific_topic?: string;
+  cluster_id?: number;
+}
+
+export interface SpecificTopicGroup {
+  topic_name: string;
+  sources: TopicSourceReference[];
 }
 
 export interface KeywordTopicItem {
@@ -99,6 +106,7 @@ export interface KeywordTopicItem {
   source_name?: string;
   source_url?: string;
   sources?: TopicSourceReference[];
+  specific_topics?: SpecificTopicGroup[];
 }
 
 export interface KeywordsData {

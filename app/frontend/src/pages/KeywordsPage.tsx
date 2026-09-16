@@ -79,7 +79,8 @@ export function KeywordsPage(props: KeywordsPageProps) {
           source_headline: topicItem.source_headline,
           source_name: topicItem.source_name,
           source_url: topicItem.source_url,
-          sources: topicItem.sources
+          sources: topicItem.sources,
+          specific_topics: topicItem.specific_topics
         });
       } else {
         updatedTopics.push(topicItem);
@@ -116,7 +117,8 @@ export function KeywordsPage(props: KeywordsPageProps) {
           source_headline: topicItem.source_headline,
           source_name: topicItem.source_name,
           source_url: topicItem.source_url,
-          sources: topicItem.sources
+          sources: topicItem.sources,
+          specific_topics: topicItem.specific_topics
         });
       } else {
         updatedTopics.push(topicItem);
@@ -167,7 +169,8 @@ export function KeywordsPage(props: KeywordsPageProps) {
           source_headline: topicItem.source_headline,
           source_name: topicItem.source_name,
           source_url: topicItem.source_url,
-          sources: topicItem.sources
+          sources: topicItem.sources,
+          specific_topics: topicItem.specific_topics
         });
       } else {
         updatedTopics.push(topicItem);
@@ -340,6 +343,18 @@ export function KeywordsPage(props: KeywordsPageProps) {
       });
     }
 
+    let topicSpecificTopicCount = 1;
+    if (topicItem.specific_topics && topicItem.specific_topics.length > 0) {
+      topicSpecificTopicCount = topicItem.specific_topics.length;
+    } else if (topicSourcesList.length > 0) {
+      const distinctNamesSet = new Set<string>();
+      for (let sIdx = 0; sIdx < topicSourcesList.length; sIdx++) {
+        const s = topicSourcesList[sIdx];
+        distinctNamesSet.add(s.specific_topic || s.title);
+      }
+      topicSpecificTopicCount = Math.max(1, distinctNamesSet.size);
+    }
+
     renderedTopicCards.push(
       <div
         key={topicItem.label + "_" + topicIndex}
@@ -374,10 +389,14 @@ export function KeywordsPage(props: KeywordsPageProps) {
                   setSelectedTopicForSourcesModal(topicItem);
                 }}
                 className="flex items-center gap-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1 rounded border border-blue-500/25 transition-colors cursor-pointer"
-                title="See all extracted website sources for this topic"
+                title="See all extracted website sources for this topic categorized by sub-topic"
               >
                 <Globe className="w-3.5 h-3.5" />
-                <span>See Sources ({topicSourcesList.length})</span>
+                <span>
+                  See Sources ({topicSourcesList.length}
+                  {topicSpecificTopicCount > 1 ? " · " + topicSpecificTopicCount + " topics" : ""}
+                  )
+                </span>
               </button>
             ) : null}
 
@@ -489,7 +508,12 @@ export function KeywordsPage(props: KeywordsPageProps) {
     );
   }
 
-  // Prepare sources for the right-hand slide-over modal
+  // Prepare and group sources for the right-hand slide-over modal by specific topic
+  interface ModalTopicGroup {
+    topicName: string;
+    sources: TopicSourceReference[];
+  }
+
   const modalSourcesList: TopicSourceReference[] = [];
   if (selectedTopicForSourcesModal !== null) {
     if (selectedTopicForSourcesModal.sources && selectedTopicForSourcesModal.sources.length > 0) {
@@ -505,59 +529,147 @@ export function KeywordsPage(props: KeywordsPageProps) {
     }
   }
 
-  const renderedModalSourceCards = [];
-  for (let sIndex = 0; sIndex < modalSourcesList.length; sIndex++) {
-    const sourceItem = modalSourcesList[sIndex];
-    renderedModalSourceCards.push(
-      <div
-        key={"modal_source_card_" + sIndex + "_" + sourceItem.url}
-        className="p-3.5 rounded-lg border border-border/80 bg-card hover:border-blue-500/40 transition-all space-y-2.5 group"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-mono">
-            #{sIndex + 1} · {sourceItem.source_name}
-          </span>
+  const modalTopicGroups: ModalTopicGroup[] = [];
+  if (selectedTopicForSourcesModal !== null) {
+    if (selectedTopicForSourcesModal.specific_topics && selectedTopicForSourcesModal.specific_topics.length > 0) {
+      for (let gIdx = 0; gIdx < selectedTopicForSourcesModal.specific_topics.length; gIdx++) {
+        const groupEntry = selectedTopicForSourcesModal.specific_topics[gIdx];
+        modalTopicGroups.push({
+          topicName: groupEntry.topic_name,
+          sources: groupEntry.sources || []
+        });
+      }
+    } else {
+      // Dynamic fallback grouping by specific_topic or headline title
+      for (let sIndex = 0; sIndex < modalSourcesList.length; sIndex++) {
+        const sourceItem = modalSourcesList[sIndex];
+        const candidateTopicName = sourceItem.specific_topic || sourceItem.title;
+
+        let matchedGroup: ModalTopicGroup | null = null;
+        for (let gIdx = 0; gIdx < modalTopicGroups.length; gIdx++) {
+          const existingGroup = modalTopicGroups[gIdx];
+          if (existingGroup.topicName.toLowerCase() === candidateTopicName.toLowerCase()) {
+            matchedGroup = existingGroup;
+            break;
+          }
+          // Check significant words overlap
+          const wordsA = candidateTopicName.toLowerCase().split(/\s+/).filter(function (w) { return w.length >= 4; });
+          const wordsB = existingGroup.topicName.toLowerCase().split(/\s+/).filter(function (w) { return w.length >= 4; });
+          let commonCount = 0;
+          for (let waIdx = 0; waIdx < wordsA.length; waIdx++) {
+            if (wordsB.indexOf(wordsA[waIdx]) !== -1) {
+              commonCount++;
+            }
+          }
+          if (commonCount >= 2) {
+            matchedGroup = existingGroup;
+            break;
+          }
+        }
+
+        if (matchedGroup !== null) {
+          matchedGroup.sources.push(sourceItem);
+        } else {
+          modalTopicGroups.push({
+            topicName: candidateTopicName,
+            sources: [sourceItem]
+          });
+        }
+      }
+    }
+  }
+
+  const renderedModalTopicGroupCards = [];
+  let globalSourceCounter = 1;
+  for (let gIndex = 0; gIndex < modalTopicGroups.length; gIndex++) {
+    const groupItem = modalTopicGroups[gIndex];
+
+    const renderedGroupSourceItems = [];
+    for (let sIndex = 0; sIndex < groupItem.sources.length; sIndex++) {
+      const sourceItem = groupItem.sources[sIndex];
+      const currentSourceNumber = globalSourceCounter;
+      globalSourceCounter++;
+
+      renderedGroupSourceItems.push(
+        <div
+          key={"modal_source_card_" + gIndex + "_" + sIndex + "_" + sourceItem.url}
+          className="p-3 rounded-lg border border-border/80 bg-card hover:border-blue-500/40 transition-all space-y-2 group shadow-2xs"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-mono">
+              #{currentSourceNumber} · {sourceItem.source_name}
+            </span>
+            {sourceItem.url ? (
+              <button
+                onClick={function () {
+                  handleCopySourceUrl(sourceItem.url);
+                }}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                title="Copy article URL"
+              >
+                {copiedUrlString === sourceItem.url ? (
+                  <>
+                    <Check className="w-3 h-3 text-emerald-500" />
+                    <span className="text-emerald-500 font-medium">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3" />
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+            ) : null}
+          </div>
+
+          <h5 className="text-xs font-semibold text-foreground leading-snug">
+            {sourceItem.title}
+          </h5>
+
           {sourceItem.url ? (
-            <button
-              onClick={function () {
-                handleCopySourceUrl(sourceItem.url);
-              }}
-              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              title="Copy article URL"
-            >
-              {copiedUrlString === sourceItem.url ? (
-                <>
-                  <Check className="w-3 h-3 text-emerald-500" />
-                  <span className="text-emerald-500 font-medium">Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3" />
-                  <span>Copy Link</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+              <a
+                href={sourceItem.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-mono hover:underline truncate max-w-full"
+                title={sourceItem.url}
+              >
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{sourceItem.url}</span>
+              </a>
+            </div>
           ) : null}
         </div>
+      );
+    }
 
-        <h4 className="text-xs font-semibold text-foreground leading-snug">
-          {sourceItem.title}
-        </h4>
-
-        {sourceItem.url ? (
-          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
-            <a
-              href={sourceItem.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-mono hover:underline truncate"
-              title={sourceItem.url}
-            >
-              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">{sourceItem.url}</span>
-            </a>
+    renderedModalTopicGroupCards.push(
+      <div
+        key={"modal_topic_group_" + gIndex}
+        className="p-3.5 rounded-xl border border-border/90 bg-muted/20 space-y-3"
+      >
+        {/* Topic Category Header */}
+        <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-border/60">
+          <div className="space-y-1 flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-mono uppercase tracking-wider">
+                Specific Topic {gIndex + 1}
+              </span>
+              <span className="text-[10px] font-mono text-muted-foreground">
+                {groupItem.sources.length} {groupItem.sources.length === 1 ? "source" : "sources"}
+              </span>
+            </div>
+            <h4 className="text-xs font-bold text-foreground leading-snug break-words">
+              {groupItem.topicName}
+            </h4>
           </div>
-        ) : null}
+        </div>
+
+        {/* Sources belonging to this specific topic */}
+        <div className="space-y-2">
+          {renderedGroupSourceItems}
+        </div>
       </div>
     );
   }
@@ -623,14 +735,24 @@ export function KeywordsPage(props: KeywordsPageProps) {
                   <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                     {selectedTopicForSourcesModal.label}
                   </p>
-                  <div className="flex items-center gap-2 pt-0.5">
+                  <div className="flex items-center gap-2 pt-0.5 flex-wrap">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase font-mono tracking-wider">
                       {selectedTopicForSourcesModal.category}
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono font-medium">
-                      {modalSourcesList.length} {modalSourcesList.length === 1 ? "source" : "sources"} extracted
+                      {modalSourcesList.length} {modalSourcesList.length === 1 ? "source" : "sources"}
                     </span>
+                    {modalTopicGroups.length > 1 ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-mono font-medium">
+                        {modalTopicGroups.length} distinct topics
+                      </span>
+                    ) : null}
                   </div>
+                  {modalTopicGroups.length > 1 ? (
+                    <p className="text-[11px] text-muted-foreground italic pt-1">
+                      Combined from {modalTopicGroups.length} distinct news stories to fulfill the 13-topic quota. Sources are categorized below by their specific story:
+                    </p>
+                  ) : null}
                 </div>
 
                 <button
@@ -645,14 +767,14 @@ export function KeywordsPage(props: KeywordsPageProps) {
               </div>
 
               {/* Modal Drawer Body */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-3.5">
-                {modalSourcesList.length === 0 ? (
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {modalTopicGroups.length === 0 ? (
                   <div className="p-8 text-center text-muted-foreground space-y-2">
                     <Newspaper className="w-6 h-6 mx-auto opacity-50" />
                     <p className="text-xs">No direct website URLs were linked to this topic.</p>
                   </div>
                 ) : (
-                  renderedModalSourceCards
+                  renderedModalTopicGroupCards
                 )}
               </div>
 

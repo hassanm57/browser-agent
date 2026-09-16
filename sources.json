@@ -357,6 +357,20 @@
     "enabled": true
   },
   {
+    "name": "Geo TV Front Page",
+    "category": "national_regional",
+    "type": "web",
+    "url": "https://www.geo.tv/",
+    "enabled": true
+  },
+  {
+    "name": "Geo TV World",
+    "category": "national_regional",
+    "type": "web",
+    "url": "https://www.geo.tv/category/world",
+    "enabled": true
+  },
+  {
     "name": "Defence Capital RSS",
     "category": "defense_military",
     "type": "rss",

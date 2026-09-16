@@ -2472,7 +2472,7 @@ def build_clustered_dossier_sections(
             if is_indian_defence_source_name_or_url(source_name):
                 has_indian_source = True
             clean_source_lower = source_name.lower()
-            if "dawn" in clean_source_lower or "tribune" in clean_source_lower or "quwa" in clean_source_lower or "geo news" in clean_source_lower:
+            if "dawn" in clean_source_lower or "tribune" in clean_source_lower or "quwa" in clean_source_lower or "geo news" in clean_source_lower or "geo tv" in clean_source_lower:
                 has_regional_source = True
 
         # Format the cluster block
@@ -2971,7 +2971,7 @@ def synthesize_topics_from_news_and_trends(
 
                 if is_indian_defence_source_name_or_url(source_name_key):
                     indian_exclusive_sections.append(full_block_text)
-                elif "dawn" in clean_source_name.lower() or "tribune" in clean_source_name.lower() or "quwa" in clean_source_name.lower() or "geo news" in clean_source_name.lower():
+                elif "dawn" in clean_source_name.lower() or "tribune" in clean_source_name.lower() or "quwa" in clean_source_name.lower() or "geo news" in clean_source_name.lower() or "geo tv" in clean_source_name.lower():
                     regional_sections.append(full_block_text)
                 else:
                     global_news_sections.append(full_block_text)
@@ -3024,6 +3024,7 @@ You must synthesize EXACTLY 13 topics in total, structured as a single JSON arra
 PART A: TOPICS 1 TO 10 (BALANCED GLOBAL & REGIONAL TRENDING MIX)
 - Synthesize the top 10 most trending, hottest breaking defense, military, and geopolitical intelligence stories from across the entire world (drawing from Sections 1, 2, 3, and 4).
 - Balance major global breaking news (e.g. DoD tech testbed expansion along borders, NATO subsea cable sabotage, deep space radar), live real-time scoops from X.com (e.g. Persian Gulf/Hormuz tanker projectile incidents, pilot search/rescue), and regional developments according to genuine real-time heat and freshness.
+- MANDATORY REGIONAL INCLUSION: At least 2 of the top 10 topics MUST originate from or prominently feature stories found in Section 3 (Regional Defense & Strategic Affairs — sources like Geo TV, Dawn, Express Tribune, Quwa). These regional sources carry front-page banner headlines that are among the most trending stories and MUST NOT be overlooked.
 - Sort Topics 1 to 10 strictly from most trending/hottest (#1) down to #10.
 
 PART B: TOPICS 11 TO 13 (DEDICATED INDIAN DEFENSE & STRATEGIC DEVELOPMENTS)
@@ -3268,6 +3269,101 @@ Remember: Respond ONLY with a valid, clean JSON array of 13 objects adhering str
         )
         for fallback_topic in fallback_synthesized_topics:
             final_validated_topics.append(fallback_topic)
+
+    # Enforce that at least 2 topics originate from Geo TV / Pakistani regional sources.
+    # Geo TV front page carries the most trending Pakistani and regional stories,
+    # and the user requires these to always appear in the output.
+    geo_regional_source_indicators = ["geo tv", "geo news", "dawn", "tribune", "quwa"]
+
+    def is_geo_or_regional_topic(topic):
+        """Check if a topic's label or terms mention content from Geo/regional sources."""
+        label_lower = topic.get("label", "").lower()
+        terms_joined = " ".join(topic.get("terms", [])).lower()
+        combined_text = label_lower + " " + terms_joined
+
+        # Check if any Geo/regional headlines from the input are reflected in this topic
+        for source_name_key in news_sources_intel_dictionary:
+            source_name_lower = source_name_key.lower()
+            is_geo_regional = False
+            for indicator in geo_regional_source_indicators:
+                if indicator in source_name_lower:
+                    is_geo_regional = True
+                    break
+
+            if not is_geo_regional:
+                continue
+
+            # Check if any headline from this regional source appears in the topic
+            for headline in news_sources_intel_dictionary[source_name_key]:
+                headline_words = clean_headline_text_for_similarity(headline).split()
+                matched_word_count = 0
+                for word in headline_words:
+                    if len(word) >= 4 and word in combined_text:
+                        matched_word_count = matched_word_count + 1
+                if matched_word_count >= 3:
+                    return True
+
+        return False
+
+    # Count how many existing topics are from Geo/regional sources
+    geo_regional_topic_count = 0
+    for topic in final_validated_topics:
+        if is_geo_or_regional_topic(topic):
+            geo_regional_topic_count = geo_regional_topic_count + 1
+
+    minimum_geo_regional_topics = 2
+    print(f"    DEBUG: Geo/regional topics found: {geo_regional_topic_count} (minimum: {minimum_geo_regional_topics})")
+
+    # If fewer than 2 Geo/regional topics, inject the top Geo headlines as new topics
+    if geo_regional_topic_count < minimum_geo_regional_topics:
+        topics_needed = minimum_geo_regional_topics - geo_regional_topic_count
+        print(f"    Enforcing Geo/regional minimum: injecting {topics_needed} additional topic(s) from Geo TV / regional sources...")
+
+        geo_headlines_for_injection = []
+        for source_name_key in news_sources_intel_dictionary:
+            source_name_lower = source_name_key.lower()
+            is_geo_regional = False
+            for indicator in geo_regional_source_indicators:
+                if indicator in source_name_lower:
+                    is_geo_regional = True
+                    break
+
+            if is_geo_regional:
+                for headline in news_sources_intel_dictionary[source_name_key]:
+                    if len(headline) > 20:
+                        geo_headlines_for_injection.append(headline)
+
+        # Deduplicate against existing topic labels to avoid creating duplicates
+        existing_labels_lower = []
+        for topic in final_validated_topics:
+            existing_labels_lower.append(topic.get("label", "").lower())
+
+        injected_count = 0
+        for headline in geo_headlines_for_injection:
+            if injected_count >= topics_needed:
+                break
+
+            cleaned_label = clean_headline_for_topic_label(headline)
+            if cleaned_label.lower() in existing_labels_lower:
+                continue
+
+            terms = extract_key_phrases_from_headline(headline)
+            boolean_query = create_boolean_query_from_terms(terms, cleaned_label)
+
+            injected_topic = {
+                "label": cleaned_label,
+                "category": "defense",
+                "boolean_query": boolean_query,
+                "terms": terms
+            }
+
+            # Insert before the Indian-dedicated topics (positions 11-13)
+            # so the regional topics appear in the top 10
+            insert_position = min(10, len(final_validated_topics))
+            final_validated_topics.insert(insert_position, injected_topic)
+            existing_labels_lower.append(cleaned_label.lower())
+            injected_count = injected_count + 1
+            print(f"      Injected: {cleaned_label[:80]}")
 
     # Return validated topics preserving natural trending order sorted from hottest down
     return final_validated_topics[:13]

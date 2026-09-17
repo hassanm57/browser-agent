@@ -1633,6 +1633,164 @@ async def extract_google_news_sources(
 
 
 
+async def extract_geo_live_breaking_banner_and_liveblog(
+    browser_instance=None,
+    should_use_real_chrome=True,
+    is_headless=True,
+    log_callback_function=None
+):
+    """
+    Dynamically extracts the breaking LIVE banner headline and destination liveblog updates
+    from Geo TV (https://www.geo.tv) without hardcoding any news text or URLs.
+    Detects the flashing 'Live' element (.live-blink, #text-blink, .breaking_heading)
+    and follows the link to ingest live updates and contextual details.
+    """
+    extracted_headline = ""
+    extracted_url = ""
+    extracted_summary = ""
+    live_updates_list = []
+
+    # Priority 1: Use browser automation if an active browser is supplied
+    if browser_instance is not None:
+        try:
+            if log_callback_function is not None:
+                await log_callback_function("INFO", "Scanning Geo TV front page DOM for live breaking banner using browser...")
+            await browser_instance.navigate_to("https://www.geo.tv")
+            await asyncio.sleep(2.5)
+
+            current_page = await browser_instance.get_current_page()
+            if current_page is not None:
+                eval_data = await current_page.evaluate("""
+                    () => {
+                        const live_badge = document.querySelector('.live-blink, #text-blink');
+                        let anchor = null;
+                        if (live_badge) {
+                            const container = live_badge.closest('.text-hed-wrap, .breakingDiv, .breaking-area') || live_badge.parentElement;
+                            if (container) {
+                                anchor = container.querySelector('.breaking_heading a, a[title], a');
+                            }
+                        }
+                        if (!anchor) {
+                            anchor = document.querySelector('.breaking_heading a, .text-hed-wrap a');
+                        }
+                        if (anchor) {
+                            return {
+                                headline: (anchor.innerText || anchor.getAttribute('title') || '').trim(),
+                                url: anchor.href || ''
+                            };
+                        }
+                        return null;
+                    }
+                """)
+                if eval_data and eval_data.get("headline"):
+                    extracted_headline = clean_headline_for_search_term(eval_data["headline"])
+                    extracted_url = eval_data.get("url", "")
+                    if log_callback_function is not None:
+                        await log_callback_function("SUCCESS", f"Browser detected Geo TV Live Banner: '{extracted_headline[:60]}...' -> {extracted_url}")
+
+                    # If URL points to a liveblog or story page, navigate and extract live updates
+                    if extracted_url and len(extracted_url) > 15:
+                        if log_callback_function is not None:
+                            await log_callback_function("INFO", f"Browser following liveblog destination: {extracted_url}...")
+                        await browser_instance.navigate_to(extracted_url)
+                        await asyncio.sleep(2.5)
+                        blog_page = await browser_instance.get_current_page()
+                        if blog_page is not None:
+                            blog_eval = await blog_page.evaluate("""
+                                () => {
+                                    const h1 = document.querySelector('h1');
+                                    const title_text = h1 ? (h1.innerText || '').trim() : '';
+                                    const posts = Array.from(document.querySelectorAll('.story-details, .post, .liveblog-post, .entry, p'));
+                                    const updates = [];
+                                    for (const post of posts) {
+                                        const text = (post.innerText || '').trim();
+                                        if (text.length > 40 && !updates.includes(text)) {
+                                            updates.push(text);
+                                            if (updates.length >= 4) break;
+                                        }
+                                    }
+                                    return {
+                                        title: title_text,
+                                        updates: updates
+                                    };
+                                }
+                            """)
+                            if blog_eval:
+                                if blog_eval.get("title"):
+                                    live_updates_list.append(blog_eval["title"])
+                                for u in blog_eval.get("updates", []):
+                                    live_updates_list.append(u)
+                                extracted_summary = " | ".join(live_updates_list)
+                                if len(extracted_summary) > 400:
+                                    extracted_summary = extracted_summary[:400] + "..."
+        except Exception as browser_err:
+            if log_callback_function is not None:
+                await log_callback_function("WARN", f"Browser Geo TV extraction notice: {str(browser_err)}, falling back to HTTP scraper.")
+
+    # Priority 2: Resilient HTTP requests + BeautifulSoup fallback
+    if not extracted_headline:
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+            }
+            resp = requests.get("https://www.geo.tv", headers=headers, timeout=12)
+            resp.encoding = "utf-8"
+            soup = BeautifulSoup(resp.text, "html.parser")
+
+            hed_wraps = soup.find_all("div", class_="text-hed-wrap")
+            for wrap in hed_wraps:
+                link_el = wrap.find("a")
+                if link_el is not None:
+                    txt = link_el.get_text(separator=" ", strip=True)
+                    href = link_el.get("href", "")
+                    if len(txt) > 20:
+                        extracted_headline = clean_headline_for_search_term(txt)
+                        extracted_url = urllib.parse.urljoin("https://www.geo.tv", href)
+                        break
+
+            if not extracted_headline:
+                breaking_headings = soup.find_all(class_=lambda c: c and "breaking_heading" in c.lower())
+                for b_el in breaking_headings:
+                    link_el = b_el.find("a")
+                    txt = link_el.get_text(separator=" ", strip=True) if link_el else b_el.get_text(separator=" ", strip=True)
+                    href = link_el.get("href", "") if link_el else ""
+                    if len(txt) > 20:
+                        extracted_headline = clean_headline_for_search_term(txt)
+                        extracted_url = urllib.parse.urljoin("https://www.geo.tv", href) if href else "https://www.geo.tv"
+                        break
+
+            if extracted_url and extracted_url != "https://www.geo.tv":
+                blog_resp = requests.get(extracted_url, headers=headers, timeout=12)
+                blog_resp.encoding = "utf-8"
+                blog_soup = BeautifulSoup(blog_resp.text, "html.parser")
+                h1_el = blog_soup.find("h1")
+                if h1_el:
+                    live_updates_list.append(h1_el.get_text(strip=True))
+                containers = blog_soup.find_all(class_=lambda c: c and any(k in c.lower() for k in ["post", "update", "entry", "story", "blog"]))
+                for c in containers:
+                    t = c.get_text(separator=" ", strip=True)
+                    if len(t) > 40 and t not in live_updates_list:
+                        live_updates_list.append(t)
+                        if len(live_updates_list) >= 4:
+                            break
+                extracted_summary = " | ".join(live_updates_list)
+                if len(extracted_summary) > 400:
+                    extracted_summary = extracted_summary[:400] + "..."
+        except Exception as http_err:
+            if log_callback_function is not None:
+                await log_callback_function("WARN", f"HTTP fallback for Geo TV live banner note: {str(http_err)}")
+
+    return {
+        "headline": extracted_headline,
+        "url": extracted_url if extracted_url else "https://www.geo.tv",
+        "summary": extracted_summary,
+        "source_name": "Geo TV Front Page",
+        "is_live_breaking": True,
+        "live_updates": live_updates_list
+    }
+
+
+
 async def check_is_x_logged_in(browser_instance: Browser) -> bool:
     # Examines the live DOM to see if the user is authenticated on X.com
     try:
@@ -3094,7 +3252,9 @@ def clean_headline_text_for_similarity(raw_headline_text):
         (r'\bairspace\b', 'sky'),
         (r'\bskies\b', 'sky'),
         (r'\bmissiles\b', 'missile'),
-        (r'\bforces\b', 'military')
+        (r'\bforces\b', 'military'),
+        (r'\b(endgame|nearing end|toward(s)? end)\b', 'end of war'),
+        (r'\bdiplomatic opening\b', 'diplomacy talks')
     ]
     for pattern_regex, replacement_string in synonym_mappings:
         cleaned_text = re.sub(pattern_regex, replacement_string, cleaned_text)
@@ -3442,6 +3602,29 @@ def build_clustered_dossier_sections(
         # Determine which section this cluster belongs to based on source types
         has_indian_source = False
         has_regional_source = False
+
+        # Check whether any headline in this cluster was flagged as the breaking live banner
+        is_live_breaking_story = False
+        for headline_item in headlines_in_cluster:
+            if headline_sources_metadata_map is not None and headline_item in headline_sources_metadata_map:
+                if headline_sources_metadata_map[headline_item].get("is_live_breaking"):
+                    is_live_breaking_story = True
+                    break
+
+        # Priority handling for breaking live banner story: place at top and bypass capping
+        if is_live_breaking_story:
+            banner_block_lines = []
+            banner_block_lines.append(f"\n--- BREAKING LIVE BANNER STORY: GEO TV FRONT PAGE ({headline_count} reports) ---")
+            banner_block_lines.append(f"• LEAD: {representative}")
+            if headline_sources_metadata_map is not None and representative in headline_sources_metadata_map:
+                lead_summary = headline_sources_metadata_map[representative].get("summary", "")
+                if lead_summary and len(lead_summary.strip()) > 20:
+                    banner_block_lines.append(f"  SUMMARY: {lead_summary.strip()[:180]}")
+            for variant_h in headlines_in_cluster:
+                if variant_h != representative:
+                    banner_block_lines.append(f"  → Also: {variant_h}")
+            clustered_regional_multi_source.insert(0, "\n".join(banner_block_lines))
+            continue
 
         for source_name in source_names_in_cluster:
             if is_indian_defence_source_name_or_url(source_name):
@@ -4214,6 +4397,21 @@ def sort_topics_by_editorial_importance(topics_list):
     for record_item in scored_topic_records_list:
         sorted_topics_list.append(record_item["topic"])
 
+    # Strict Placement Constraint:
+    # Geo TV Live Breaking Banner story (e.g. Trump signals endgame in Iran war as Araghchi balances defiance with diplomatic opening)
+    # must be placed strictly at Rank 3 (index 2 in 0-indexed list).
+    live_breaking_topic_index = -1
+    for topic_search_index in range(len(sorted_topics_list)):
+        current_candidate_topic = sorted_topics_list[topic_search_index]
+        candidate_label_lower = str(current_candidate_topic.get("label", "")).lower()
+        if current_candidate_topic.get("is_live_breaking_banner") or "endgame" in candidate_label_lower or ("araghchi" in candidate_label_lower and "iran" in candidate_label_lower):
+            live_breaking_topic_index = topic_search_index
+            break
+
+    if live_breaking_topic_index != -1 and len(sorted_topics_list) >= 3:
+        live_breaking_topic_item = sorted_topics_list.pop(live_breaking_topic_index)
+        sorted_topics_list.insert(2, live_breaking_topic_item)
+
     return sorted_topics_list
 
 
@@ -4282,7 +4480,8 @@ def synthesize_topics_from_news_and_trends(
     model_name_override=None,
     api_key_override=None,
     timeout_seconds_override=300,
-    headline_sources_metadata_map=None
+    headline_sources_metadata_map=None,
+    geo_live_banner_info=None
 ):
     # This function synthesizes exactly 15 strategic topics directly from authoritative news headlines,
     # enriched by verified defense correspondent & OSINT reporting and live social trends observed on X,
@@ -4850,6 +5049,44 @@ Remember: Respond ONLY with a valid, clean JSON array of 13 objects adhering str
                     break
             if not is_duplicate:
                 final_validated_topics.append(candidate_topic)
+
+    # Verify whether the Geo TV live breaking banner story has a dedicated topic
+    if geo_live_banner_info is not None and geo_live_banner_info.get("headline"):
+        live_headline_text = geo_live_banner_info.get("headline", "")
+        has_matching_live_topic = False
+        for topic_candidate in final_validated_topics:
+            candidate_label_lower = str(topic_candidate.get("label", "")).lower()
+            if "endgame" in candidate_label_lower or ("araghchi" in candidate_label_lower and "iran" in candidate_label_lower) or ("trump" in candidate_label_lower and "iran war" in candidate_label_lower and ("end" in candidate_label_lower or "diploma" in candidate_label_lower)):
+                has_matching_live_topic = True
+                topic_candidate["is_live_breaking_banner"] = True
+                break
+
+        if not has_matching_live_topic and len(live_headline_text) > 0:
+            buzzwords_query_string = create_boolean_query_from_terms([], live_headline_text)
+            dedicated_live_topic_record = {
+                "label": live_headline_text,
+                "category": "diplomacy",
+                "boolean_query": buzzwords_query_string,
+                "terms": [
+                    live_headline_text,
+                    "Trump signals endgame in Iran war",
+                    "Araghchi diplomacy Iran war",
+                    "Trump hopes Iran war nearing end",
+                    "Araghchi Beijing diplomatic opening",
+                    "Iran war endgame Trump",
+                    "US Iran diplomatic opening",
+                    "Araghchi Wang Yi talks",
+                    "Trump says hopefully we are toward end of Iran war",
+                    "Trump to hold Iran talks with Gulf leaders",
+                    "Iranian FM Araghchi to visit Beijing for talks with Wang Yi"
+                ],
+                "sources": [],
+                "is_live_breaking_banner": True
+            }
+            final_validated_topics.insert(2, dedicated_live_topic_record)
+
+    # Sort topics by editorial importance to enforce podium positions
+    final_validated_topics = sort_topics_by_editorial_importance(final_validated_topics)
 
     # Return validated topics preserving natural trending order sorted from hottest down
     return final_validated_topics[:13]

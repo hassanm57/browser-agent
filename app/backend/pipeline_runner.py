@@ -192,6 +192,7 @@ async def run_single_country_pipeline(
     configured_sources_list = trends.load_sources_configuration_file()
     news_sources_intel_dictionary: Dict[str, List[str]] = {}
     headline_sources_metadata_map: Dict[str, Dict[str, str]] = {}
+    geo_live_banner_data: Optional[Dict[str, Any]] = None
 
     # Step 1A: Extract top 10 articles and summaries from Google News search tabs (Latest, Pakistan, India) via browser-agent
     await log_and_record("STEP", "Extracting top 10 headlines and summaries from Google News tabs via browser-agent...")
@@ -210,6 +211,26 @@ async def run_single_country_pipeline(
         await log_and_record("SUCCESS", f"Extracted {len(google_metadata_map)} articles across Google News tabs (Latest, Pakistan, India).")
     except Exception as google_news_extraction_error:
         await log_and_record("WARN", f"Google News browser extraction warning: {str(google_news_extraction_error)}")
+
+    # Step 1B: Extract Geo TV live breaking banner and destination liveblog via browser-agent
+    await log_and_record("STEP", "Extracting Geo TV live breaking banner and live updates via browser-agent...")
+    try:
+        geo_live_banner_data = await trends.extract_geo_live_breaking_banner_and_liveblog(
+            browser_instance=None,
+            should_use_real_chrome=use_real_chrome_setting,
+            is_headless=is_headless_setting,
+            log_callback_function=log_and_record
+        )
+        if geo_live_banner_data and geo_live_banner_data.get("headline"):
+            live_headline = geo_live_banner_data["headline"]
+            if "Geo TV Front Page" not in news_sources_intel_dictionary:
+                news_sources_intel_dictionary["Geo TV Front Page"] = []
+            if live_headline not in news_sources_intel_dictionary["Geo TV Front Page"]:
+                news_sources_intel_dictionary["Geo TV Front Page"].insert(0, live_headline)
+            headline_sources_metadata_map[live_headline] = geo_live_banner_data
+            await log_and_record("SUCCESS", f"Captured Geo TV Live Breaking Story: '{live_headline[:70]}...' -> {geo_live_banner_data.get('url')}")
+    except Exception as geo_live_error:
+        await log_and_record("WARN", f"Geo TV live banner extraction warning: {str(geo_live_error)}")
 
     for source_entry in configured_sources_list:
         if cancellation_event.is_set():
@@ -736,11 +757,17 @@ async def run_single_country_pipeline(
                 model_name,
                 settings_dictionary.get("vllm_api_key", "EMPTY"),
                 timeout_seconds,
-                headline_sources_metadata_map
+                headline_sources_metadata_map,
+                geo_live_banner_data
             )
             await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} hot trending story rows with context-rich keywords and Boolean queries.")
             # Correlate synthesized topics with their exact news source headlines and direct URLs
             trends.correlate_topics_with_sources(synthesized_topics_list, headline_sources_metadata_map, curated_x_sources_tweets)
+            # Re-sort to enforce editorial podium placement with freshly populated sources
+            resorted_topics = trends.sort_topics_by_editorial_importance(synthesized_topics_list)
+            synthesized_topics_list.clear()
+            for topic_resorted in resorted_topics:
+                synthesized_topics_list.append(topic_resorted)
             for topic_preview_index in range(min(3, len(synthesized_topics_list))):
                 preview_item = synthesized_topics_list[topic_preview_index]
                 await log_and_record("INFO", f"  Topic {topic_preview_index + 1}: {preview_item.get('label')} -> Boolean: {preview_item.get('boolean_query')}")

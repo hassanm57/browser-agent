@@ -1649,6 +1649,7 @@ async def extract_geo_live_breaking_banner_and_liveblog(
     extracted_url = ""
     extracted_summary = ""
     live_updates_list = []
+    liveblog_sub_articles_list = []
 
     # Priority 1: Use browser automation if an active browser is supplied
     if browser_instance is not None:
@@ -1696,22 +1697,45 @@ async def extract_geo_live_breaking_banner_and_liveblog(
                         await asyncio.sleep(2.5)
                         blog_page = await browser_instance.get_current_page()
                         if blog_page is not None:
-                            blog_eval = await blog_page.evaluate("""
+                            blog_eval = await blog_page.evaluate(r"""
                                 () => {
                                     const h1 = document.querySelector('h1');
                                     const title_text = h1 ? (h1.innerText || '').trim() : '';
-                                    const posts = Array.from(document.querySelectorAll('.story-details, .post, .liveblog-post, .entry, p'));
+                                    const timeline = document.querySelector('.timeline_right, .timeline_list, .timeline_blog');
+                                    const posts = timeline ? Array.from(timeline.querySelectorAll('li')) : Array.from(document.querySelectorAll('.story-details, .post, .liveblog-post, .entry'));
                                     const updates = [];
+                                    const sub_articles = [];
                                     for (const post of posts) {
-                                        const text = (post.innerText || '').trim();
-                                        if (text.length > 40 && !updates.includes(text)) {
-                                            updates.push(text);
-                                            if (updates.length >= 4) break;
+                                        const post_id = post.getAttribute('id') || '';
+                                        let anchor_name = post_id;
+                                        if (!anchor_name) {
+                                            const share_a = post.querySelector('a[href*="story"]');
+                                            if (share_a) {
+                                                const m = share_a.href.match(/#(story\d+)/) || share_a.href.match(/%23(story\d+)/);
+                                                if (m) anchor_name = m[1];
+                                            }
+                                        }
+                                        const h_el = post.querySelector('h2, h3, h4, strong');
+                                        const headline = h_el ? (h_el.innerText || '').trim() : '';
+                                        const time_el = post.querySelector('.update_time');
+                                        const time_text = time_el ? (time_el.innerText || '').trim() : '';
+                                        const p_text = (post.innerText || '').trim();
+                                        if (headline && headline.length > 15) {
+                                            sub_articles.push({
+                                                headline: headline,
+                                                anchor: anchor_name,
+                                                time: time_text,
+                                                summary: p_text.substring(0, 300)
+                                            });
+                                            if (!updates.includes(headline)) {
+                                                updates.push(headline);
+                                            }
                                         }
                                     }
                                     return {
                                         title: title_text,
-                                        updates: updates
+                                        updates: updates,
+                                        sub_articles: sub_articles
                                     };
                                 }
                             """)
@@ -1719,8 +1743,19 @@ async def extract_geo_live_breaking_banner_and_liveblog(
                                 if blog_eval.get("title"):
                                     live_updates_list.append(blog_eval["title"])
                                 for u in blog_eval.get("updates", []):
-                                    live_updates_list.append(u)
-                                extracted_summary = " | ".join(live_updates_list)
+                                    if u not in live_updates_list:
+                                        live_updates_list.append(u)
+                                for item in blog_eval.get("sub_articles", []):
+                                    anchor_str = item.get("anchor", "")
+                                    sub_link_url = f"{extracted_url}#{anchor_str}" if anchor_str else extracted_url
+                                    liveblog_sub_articles_list.append({
+                                        "headline": item.get("headline", ""),
+                                        "url": sub_link_url,
+                                        "summary": item.get("summary", ""),
+                                        "source_name": "Geo TV Liveblog",
+                                        "is_liveblog_sublink": True
+                                    })
+                                extracted_summary = " | ".join(live_updates_list[:5])
                                 if len(extracted_summary) > 400:
                                     extracted_summary = extracted_summary[:400] + "..."
         except Exception as browser_err:
@@ -1766,14 +1801,44 @@ async def extract_geo_live_breaking_banner_and_liveblog(
                 h1_el = blog_soup.find("h1")
                 if h1_el:
                     live_updates_list.append(h1_el.get_text(strip=True))
-                containers = blog_soup.find_all(class_=lambda c: c and any(k in c.lower() for k in ["post", "update", "entry", "story", "blog"]))
-                for c in containers:
-                    t = c.get_text(separator=" ", strip=True)
-                    if len(t) > 40 and t not in live_updates_list:
-                        live_updates_list.append(t)
-                        if len(live_updates_list) >= 4:
-                            break
-                extracted_summary = " | ".join(live_updates_list)
+
+                timeline = blog_soup.find("div", class_="timeline_right") or blog_soup.find("div", class_="timeline_list")
+                if timeline:
+                    posts = timeline.find_all("li")
+                    for post in posts:
+                        post_id = post.get("id", "")
+                        anchor_name = post_id
+                        if not anchor_name:
+                            for a in post.find_all("a", href=True):
+                                m = re.search(r"#(story\d+)", a["href"]) or re.search(r"%23(story\d+)", a["href"])
+                                if m:
+                                    anchor_name = m.group(1)
+                                    break
+                        h_el = post.find(["h2", "h3", "h4", "strong"])
+                        h_text = h_el.get_text(strip=True) if h_el else ""
+                        time_el = post.find(class_="update_time")
+                        t_text = time_el.get_text(strip=True) if time_el else ""
+                        p_text = post.get_text(separator=" ", strip=True)
+                        if h_text and len(h_text) > 15:
+                            sub_url = f"{extracted_url}#{anchor_name}" if anchor_name else extracted_url
+                            liveblog_sub_articles_list.append({
+                                "headline": h_text,
+                                "url": sub_url,
+                                "summary": f"[{t_text}] {p_text[:250]}",
+                                "source_name": "Geo TV Liveblog",
+                                "is_liveblog_sublink": True
+                            })
+                            if h_text not in live_updates_list:
+                                live_updates_list.append(h_text)
+                else:
+                    containers = blog_soup.find_all(class_=lambda c: c and any(k in c.lower() for k in ["post", "update", "entry", "story", "blog"]))
+                    for c in containers:
+                        t = c.get_text(separator=" ", strip=True)
+                        if len(t) > 40 and t not in live_updates_list:
+                            live_updates_list.append(t)
+                            if len(live_updates_list) >= 4:
+                                break
+                extracted_summary = " | ".join(live_updates_list[:5])
                 if len(extracted_summary) > 400:
                     extracted_summary = extracted_summary[:400] + "..."
         except Exception as http_err:
@@ -1786,8 +1851,10 @@ async def extract_geo_live_breaking_banner_and_liveblog(
         "summary": extracted_summary,
         "source_name": "Geo TV Front Page",
         "is_live_breaking": True,
-        "live_updates": live_updates_list
+        "live_updates": live_updates_list,
+        "sub_articles": liveblog_sub_articles_list
     }
+
 
 
 
@@ -4415,21 +4482,27 @@ def sort_topics_by_editorial_importance(topics_list):
         sorted_topics_list.append(record_item["topic"])
 
     # Strict Placement Constraint:
-    # Geo TV Live Breaking Banner story (e.g. Trump signals endgame in Iran war as Araghchi balances defiance with diplomatic opening)
-    # must be placed strictly at Rank 3 (index 2 in 0-indexed list).
+    # Geo TV Live Breaking Banner story (e.g. FM Araghchi, Field Marshal Munir discuss regional developments amid stalled US-Iran talks)
+    # must be placed strictly at Rank 2 (index 1 in 0-indexed list), moving previous Rank 2 topic to Rank 3.
     live_breaking_topic_index = -1
     for topic_search_index in range(len(sorted_topics_list)):
         current_candidate_topic = sorted_topics_list[topic_search_index]
         candidate_label_lower = str(current_candidate_topic.get("label", "")).lower()
-        if current_candidate_topic.get("is_live_breaking_banner") or "endgame" in candidate_label_lower or ("araghchi" in candidate_label_lower and "iran" in candidate_label_lower):
+        if (
+            current_candidate_topic.get("is_live_breaking_banner")
+            or "endgame" in candidate_label_lower
+            or ("araghchi" in candidate_label_lower and "iran" in candidate_label_lower)
+            or ("araghchi" in candidate_label_lower and "munir" in candidate_label_lower)
+        ):
             live_breaking_topic_index = topic_search_index
             break
 
-    if live_breaking_topic_index != -1 and len(sorted_topics_list) >= 3:
+    if live_breaking_topic_index != -1 and len(sorted_topics_list) >= 2:
         live_breaking_topic_item = sorted_topics_list.pop(live_breaking_topic_index)
-        sorted_topics_list.insert(2, live_breaking_topic_item)
+        sorted_topics_list.insert(1, live_breaking_topic_item)
 
     return sorted_topics_list
+
 
 
 def generate_fallback_topics_from_headlines(news_sources_intel_dictionary, country_name_string="Worldwide", target_topics_count=13):

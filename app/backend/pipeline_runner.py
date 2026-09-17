@@ -229,8 +229,20 @@ async def run_single_country_pipeline(
                 news_sources_intel_dictionary["Geo TV Front Page"].insert(0, live_headline)
             headline_sources_metadata_map[live_headline] = geo_live_banner_data
             await log_and_record("SUCCESS", f"Captured Geo TV Live Breaking Story: '{live_headline[:70]}...' -> {geo_live_banner_data.get('url')}")
+
+            # Ingest all liveblog sub-articles with direct anchor URLs
+            liveblog_sub_articles = geo_live_banner_data.get("sub_articles", [])
+            for sub_item in liveblog_sub_articles:
+                sub_headline_title = sub_item.get("headline", "")
+                if sub_headline_title:
+                    if sub_headline_title not in news_sources_intel_dictionary["Geo TV Front Page"]:
+                        news_sources_intel_dictionary["Geo TV Front Page"].append(sub_headline_title)
+                    headline_sources_metadata_map[sub_headline_title] = sub_item
+            if liveblog_sub_articles:
+                await log_and_record("SUCCESS", f"Ingested {len(liveblog_sub_articles)} live updates from Geo TV liveblog ({geo_live_banner_data.get('url')})")
     except Exception as geo_live_error:
         await log_and_record("WARN", f"Geo TV live banner extraction warning: {str(geo_live_error)}")
+
 
     for source_entry in configured_sources_list:
         if cancellation_event.is_set():

@@ -506,16 +506,16 @@
       "category": "defense",
       "boolean_query": "india new tariffs oil impact",
       "terms": [
-        "India warns new US",
-        "US tariffs over Russian",
-        "tariffs over Russian oil",
-        "over Russian oil could",
-        "Russian oil could impact",
-        "oil could impact ties",
         "India warns new US tariffs",
-        "new US tariffs over Russian",
+        "Russian oil could impact ties",
+        "India warns new US tariffs Russian oil",
+        "tariffs over Russian oil",
         "US tariffs over Russian oil",
-        "tariffs over Russian oil could"
+        "new US tariffs over Russian oil",
+        "tariffs over Russian oil could impact ties",
+        "India US Russian oil tariffs",
+        "India warns US tariffs impact ties",
+        "India US ties Russian oil tariffs"
       ],
       "sources": [
         {

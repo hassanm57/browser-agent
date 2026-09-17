@@ -206,7 +206,18 @@ DANGLING_TRAILING_WORDS_SET = {
     "amidst", "against", "under", "through", "after", "before", "during",
     "without", "within", "its", "their", "his", "her", "contains", "racks", "eyes",
     "holy", "near", "much", "different", "first", "second", "third", "high", "top",
-    "single", "joint", "total", "major", "time", "been"
+    "single", "joint", "total", "major", "time", "been",
+    "could", "would", "should", "might", "will", "can", "may", "new", "also",
+    "says", "urges", "claims", "hopes", "signals", "seeks",
+    "russian", "chinese", "indian", "pakistani", "american"
+}
+
+DANGLING_LEADING_WORDS_SET = {
+    "over", "under", "in", "to", "for", "and", "or", "as", "with", "by", "on", "at",
+    "between", "from", "that", "which", "amid", "into", "about", "could", "would",
+    "should", "will", "can", "also", "after", "before", "during", "without", "within",
+    "says", "warns", "claims", "urges", "amidst", "because", "while", "when",
+    "the", "a", "an"
 }
 
 GENERIC_BUZZWORD_PATTERNS_LIST = [
@@ -247,6 +258,19 @@ GENERIC_BUZZWORD_PATTERNS_LIST = [
     r'\bcombat\s+readiness\b',
     r'\bdefense\s+spending\b'
 ]
+
+
+def strip_dangling_leading_words(text_string):
+    # Iteratively removes leading prepositions, conjunctions, or articles that start a phrase abruptly
+    words_list = text_string.strip().split()
+    while len(words_list) > 0:
+        first_word_cleaned = re.sub(r'[^a-zA-Z]', '', words_list[0]).lower()
+        if first_word_cleaned in DANGLING_LEADING_WORDS_SET:
+            words_list.pop(0)
+        else:
+            break
+    rejoined_string = " ".join(words_list)
+    return rejoined_string.lstrip(":, -–—\"'")
 
 
 def strip_dangling_trailing_words(text_string):
@@ -303,9 +327,10 @@ def is_incomplete_stub_keyword(term_string):
         r'\bcontains?\s+no\b',
         r'\bthreats?\s+to\s+holy\b',
         r'\bholy\s+sites\s+are\b',
-        r'^(warns|says|claims|confirms|reveals|reports|details)\b',
-        r'^(led\s+coalition)\b',
         r'\b(as|amid|while|after|before)\s*$',
+        r'\b(could\s+impact|would\s+impact|will\s+impact)\s*$',
+        r'\b(new\s+us)\s*$',
+        r'^(oil\s+could)\b',
         r'\b(of|in|to|for|with|by|on|at|between|from|about)\s*$'
     ]
     for pattern in action_stub_patterns:
@@ -371,9 +396,10 @@ def clean_and_sanitize_keyword_phrase(raw_term_string):
     # 10. Normalize internal whitespace
     cleaned_phrase = re.sub(r'\s+', ' ', cleaned_phrase).strip()
 
-    # 11. Strip any trailing punctuation and dangling prepositions/conjunctions
+    # 11. Strip any trailing or leading punctuation and dangling prepositions/conjunctions
     cleaned_phrase = cleaned_phrase.rstrip(":, -–—\"'")
     cleaned_phrase = strip_dangling_trailing_words(cleaned_phrase)
+    cleaned_phrase = strip_dangling_leading_words(cleaned_phrase)
 
     return cleaned_phrase.strip()
 
@@ -3130,13 +3156,14 @@ def extract_key_phrases_from_headline(headline_text):
             quoted_phrases_list.append(cleaned_quote_item)
 
     # 2. Split headline into natural clauses by punctuation and major clause markers (do not split internal hyphens)
-    raw_clauses_list = re.split(r'\s+[-–—]\s+|[;,]|\bas\b|\bamid\b|\bwhile\b|\bafter\b|\bwhen\b|\bbecause\b', base_headline_text, flags=re.IGNORECASE)
+    raw_clauses_list = re.split(r'\s+[-–—]\s+|[;,]|\bas\b|\bamid\b|\bwhile\b|\bafter\b|\bwhen\b|\bbecause\b|\bover\b|\bahead of\b|\bfollowing\b|\bdespite\b', base_headline_text, flags=re.IGNORECASE)
     cleaned_clauses_list = []
     for raw_clause_item in raw_clauses_list:
         clause_string = raw_clause_item.strip().strip("'\"")
         # Remove conversational leading verbs and introductory phrases from clause
         clause_string = re.sub(r'^(says|warns|claims|confirms|reveals|reports|details|shows|agrees?\s+to)\s+', '', clause_string, flags=re.IGNORECASE)
         clause_string = re.sub(r'^(has\s+a|have\s+a|been\s+used\s+for\s+the\s+first\s+time\s+in\s+the)\s+', '', clause_string, flags=re.IGNORECASE)
+        clause_string = strip_dangling_leading_words(clause_string)
         clause_string = strip_dangling_trailing_words(clause_string)
         clause_words_list = clause_string.split()
         if len(clause_words_list) >= 2:
@@ -3270,6 +3297,7 @@ def extract_key_phrases_from_headline(headline_text):
                 for start_word_index in range(len(raw_words_list) - window_size + 1):
                     window_phrase_candidate = " ".join(raw_words_list[start_word_index:start_word_index + window_size])
                     clean_window_phrase = strip_dangling_trailing_words(window_phrase_candidate)
+                    clean_window_phrase = strip_dangling_leading_words(clean_window_phrase)
                     clean_window_phrase = clean_and_sanitize_keyword_phrase(clean_window_phrase)
                     window_words = clean_window_phrase.split()
                     if 4 <= len(window_words) <= 10:
@@ -3287,10 +3315,52 @@ def extract_key_phrases_from_headline(headline_text):
                 if len(generated_phrases_list) >= 10:
                     break
 
+    # Strategy G: Entity and topic combinations if still below 8 phrases
+    if len(generated_phrases_list) < 8:
+        raw_words_split = base_headline_text.split()
+        capitalized_entities_list = []
+        for word_token in raw_words_split:
+            cleaned_token = re.sub(r'[^a-zA-Z0-9]', '', word_token)
+            if len(cleaned_token) >= 2 and (cleaned_token[0].isupper() or cleaned_token.isdigit()):
+                if cleaned_token.lower() not in DANGLING_LEADING_WORDS_SET and cleaned_token not in capitalized_entities_list:
+                    capitalized_entities_list.append(cleaned_token)
+
+        thematic_keywords_list = []
+        for word_token in raw_words_split:
+            cleaned_token = re.sub(r'[^a-zA-Z0-9]', '', word_token).lower()
+            if len(cleaned_token) >= 3 and cleaned_token not in DANGLING_TRAILING_WORDS_SET and cleaned_token not in DANGLING_LEADING_WORDS_SET:
+                if cleaned_token not in [e.lower() for e in capitalized_entities_list] and cleaned_token not in thematic_keywords_list:
+                    thematic_keywords_list.append(cleaned_token)
+
+        if len(capitalized_entities_list) >= 2 and len(thematic_keywords_list) >= 1:
+            lead_entities_string = " ".join(capitalized_entities_list[:3])
+            for thematic_word in thematic_keywords_list:
+                for second_thematic in thematic_keywords_list:
+                    if thematic_word != second_thematic:
+                        candidate_combo = f"{lead_entities_string} {thematic_word} {second_thematic}"
+                        cleaned_combo = clean_and_sanitize_keyword_phrase(candidate_combo)
+                        combo_words = cleaned_combo.split()
+                        if 4 <= len(combo_words) <= 9:
+                            if not is_incomplete_stub_keyword(cleaned_combo) and not is_generic_fluff_term(cleaned_combo):
+                                is_already_present = False
+                                for existing_phrase in generated_phrases_list:
+                                    if cleaned_combo.lower() == existing_phrase.lower():
+                                        is_already_present = True
+                                        break
+                                if not is_already_present:
+                                    generated_phrases_list.append(cleaned_combo)
+                                    if len(generated_phrases_list) >= 10:
+                                        break
+                if len(generated_phrases_list) >= 10:
+                    break
+
     # Filter all results: enforce 4 to 10 words (or 2-3 words ONLY if containing a recognized weapon code)
     final_filtered_phrases_list = []
     for candidate_phrase_item in generated_phrases_list:
         candidate_clean_string = candidate_phrase_item.strip()
+        candidate_clean_string = strip_dangling_leading_words(candidate_clean_string)
+        candidate_clean_string = strip_dangling_trailing_words(candidate_clean_string)
+        candidate_clean_string = clean_and_sanitize_keyword_phrase(candidate_clean_string)
         candidate_words_list = candidate_clean_string.split()
         if len(candidate_words_list) > 10:
             candidate_clean_string = " ".join(candidate_words_list[:10])
@@ -3300,6 +3370,8 @@ def extract_key_phrases_from_headline(headline_text):
             if not re.search(r'\b[a-zA-Z]{1,5}[\s\-]?[0-9]{1,4}[a-zA-Z]{0,3}\b', candidate_clean_string.lower()):
                 continue
         if candidate_clean_string.lower() == base_headline_text.lower():
+            continue
+        if is_incomplete_stub_keyword(candidate_clean_string) or is_generic_fluff_term(candidate_clean_string):
             continue
         is_already_in_final = False
         for existing_final in final_filtered_phrases_list:

@@ -3418,9 +3418,18 @@ def build_clustered_dossier_sections(
         - "clustered_regional_sections": list of formatted text blocks for regional news
         - "standalone_headlines_by_source": dict of source_name -> [headlines] for unclustered items
     """
-    clustered_global_sections = []
-    clustered_indian_sections = []
-    clustered_regional_sections = []
+    # Lists to separate multi-source clusters from single-source clusters per section
+    clustered_global_multi_source = []
+    clustered_global_single_source = []
+
+    clustered_indian_multi_source = []
+    clustered_indian_single_source = []
+
+    clustered_regional_multi_source = []
+    clustered_regional_single_source = []
+
+    # Maximum single-source clusters per section to ensure dossier stays within LLM context limit
+    maximum_single_source_per_section = 25
 
     for cluster in story_clusters_list:
         # Build a formatted block for this cluster
@@ -3428,6 +3437,7 @@ def build_clustered_dossier_sections(
         headlines_in_cluster = cluster["headlines"]
         source_names_in_cluster = cluster["source_names"]
         headline_count = cluster["headline_count"]
+        is_multi_source = (headline_count >= 2 and cluster["multi_source"])
 
         # Determine which section this cluster belongs to based on source types
         has_indian_source = False
@@ -3441,7 +3451,7 @@ def build_clustered_dossier_sections(
                 has_regional_source = True
 
         # Format the cluster block
-        if headline_count >= 2 and cluster["multi_source"]:
+        if is_multi_source:
             # Multi-source cluster: show it as a consolidated story block
             sources_attribution = ", ".join(source_names_in_cluster[:5])
             cluster_block_lines = []
@@ -3464,6 +3474,13 @@ def build_clustered_dossier_sections(
                     cluster_block_lines.append(f"  → Also: {variant_headline}{variant_source}")
 
             cluster_block_text = "\n".join(cluster_block_lines)
+
+            if has_indian_source:
+                clustered_indian_multi_source.append(cluster_block_text)
+            elif has_regional_source:
+                clustered_regional_multi_source.append(cluster_block_text)
+            else:
+                clustered_global_multi_source.append(cluster_block_text)
         else:
             # Single-source or single-headline cluster: show normally
             source_attribution = source_names_in_cluster[0] if len(source_names_in_cluster) > 0 else "Unknown"
@@ -3473,13 +3490,35 @@ def build_clustered_dossier_sections(
                 if single_summary_text and len(single_summary_text.strip()) > 20:
                     cluster_block_text = cluster_block_text + f"\n  SUMMARY: {single_summary_text.strip()[:180]}"
 
-        # Route to the appropriate section
-        if has_indian_source:
-            clustered_indian_sections.append(cluster_block_text)
-        elif has_regional_source:
-            clustered_regional_sections.append(cluster_block_text)
-        else:
-            clustered_global_sections.append(cluster_block_text)
+            # Keep only up to the maximum single-source clusters per section to prevent context window overflow
+            if has_indian_source:
+                if len(clustered_indian_single_source) < maximum_single_source_per_section:
+                    clustered_indian_single_source.append(cluster_block_text)
+            elif has_regional_source:
+                if len(clustered_regional_single_source) < maximum_single_source_per_section:
+                    clustered_regional_single_source.append(cluster_block_text)
+            else:
+                if len(clustered_global_single_source) < maximum_single_source_per_section:
+                    clustered_global_single_source.append(cluster_block_text)
+
+    # Combine multi-source clusters first, followed by capped single-source clusters
+    clustered_global_sections = []
+    for item_block in clustered_global_multi_source:
+        clustered_global_sections.append(item_block)
+    for item_block in clustered_global_single_source:
+        clustered_global_sections.append(item_block)
+
+    clustered_indian_sections = []
+    for item_block in clustered_indian_multi_source:
+        clustered_indian_sections.append(item_block)
+    for item_block in clustered_indian_single_source:
+        clustered_indian_sections.append(item_block)
+
+    clustered_regional_sections = []
+    for item_block in clustered_regional_multi_source:
+        clustered_regional_sections.append(item_block)
+    for item_block in clustered_regional_single_source:
+        clustered_regional_sections.append(item_block)
 
     return {
         "clustered_global_sections": clustered_global_sections,
@@ -4531,7 +4570,7 @@ Remember: Respond ONLY with a valid, clean JSON array of 13 objects adhering str
             else:
                 print("    Notice: LLM returned empty choices list.")
         else:
-            print(f"    Notice: LLM endpoint returned HTTP status code {http_response_object.status_code}")
+            print(f"    Notice: LLM endpoint returned HTTP status code {http_response_object.status_code}: {http_response_object.text[:300]}")
     except Exception as llm_execution_error:
         print(f"    Notice: LLM topic synthesis call error or timeout: {llm_execution_error}")
         raw_model_completion_text = ""

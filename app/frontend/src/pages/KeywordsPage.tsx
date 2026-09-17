@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { KeywordsData, KeywordTopicItem, TopicSourceReference } from "../types";
-import { Tags, Plus, X, Trash2, Download, Check, Copy, ExternalLink, Globe, Newspaper } from "lucide-react";
+import { Tags, Plus, X, Trash2, Download, Check, Copy, ExternalLink, Globe, Newspaper, Flame } from "lucide-react";
 
 interface KeywordsPageProps {
   keywordsData: KeywordsData | null;
@@ -343,19 +343,39 @@ export function KeywordsPage(props: KeywordsPageProps) {
       });
     }
 
+    const isTopTrendingTopic = topicIndex < 3;
+
     renderedTopicCards.push(
       <div
         key={topicItem.label + "_" + topicIndex}
-        className="rounded-lg bg-card border border-border overflow-hidden space-y-3 p-4"
+        className={
+          isTopTrendingTopic
+            ? "rounded-lg bg-amber-500/[0.04] dark:bg-amber-400/[0.03] border-2 border-amber-500/40 dark:border-amber-400/35 shadow-sm shadow-amber-500/10 overflow-hidden space-y-3 p-4 relative transition-all"
+            : "rounded-lg bg-card border border-border overflow-hidden space-y-3 p-4 transition-all"
+        }
       >
         {/* Topic Card Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-border/60">
           <div className="flex items-center gap-2.5">
-            <span className="w-6 h-6 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center text-xs font-bold font-mono">
+            <span
+              className={
+                isTopTrendingTopic
+                  ? "w-7 h-7 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 flex items-center justify-center text-xs font-black font-mono shadow-xs"
+                  : "w-6 h-6 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center text-xs font-bold font-mono"
+              }
+            >
               {topicIndex + 1}
             </span>
             <div>
-              <h3 className="text-xs font-bold text-foreground">{topicItem.label}</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xs font-bold text-foreground">{topicItem.label}</h3>
+                {isTopTrendingTopic ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full shadow-xs shrink-0">
+                    <Flame className="w-3 h-3 fill-amber-500 text-amber-500 animate-pulse" />
+                    Trending #{topicIndex + 1}
+                  </span>
+                ) : null}
+              </div>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase font-mono tracking-wider">
                   {topicItem.category}

@@ -3254,7 +3254,12 @@ def clean_headline_text_for_similarity(raw_headline_text):
         (r'\bmissiles\b', 'missile'),
         (r'\bforces\b', 'military'),
         (r'\b(endgame|nearing end|toward(s)? end)\b', 'end of war'),
-        (r'\bdiplomatic opening\b', 'diplomacy talks')
+        (r'\bdiplomatic opening\b', 'diplomacy talks'),
+        (r'\b(munitions?|warheads?)\b', 'missile'),
+        (r'\b(shortfalls?|shortages?|deplet(ed|ing|ion)|exhaust(ed|ion))\b', 'depleted'),
+        (r'\b(expenditure|spending|expenses?)\b', 'cost'),
+        (r'\b(stockpiles?|inventor(y|ies)|replenish(ment|ing)?)\b', 'stockpile'),
+        (r'\b(intercepts?|interceptors?)\b', 'interceptor')
     ]
     for pattern_regex, replacement_string in synonym_mappings:
         cleaned_text = re.sub(pattern_regex, replacement_string, cleaned_text)
@@ -3951,14 +3956,25 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                 summary_text=article_summary_text
             )
 
-            # Check if summary matches provide additional token confidence
+            # Match term keywords against headline words
+            matched_term_tokens_count = 0
+            for term_word in term_keywords_list:
+                for headline_word in headline_words_list:
+                    if term_word == headline_word:
+                        matched_term_tokens_count = matched_term_tokens_count + 1
+                        break
+
+            # Check if summary matches or term matches provide additional token confidence
             effective_tokens_count = matched_label_tokens_count
-            if matched_label_tokens_count < minimum_required_tokens and matched_summary_tokens_count >= 2:
-                effective_tokens_count = matched_label_tokens_count + 1
+            if matched_label_tokens_count < minimum_required_tokens:
+                if matched_summary_tokens_count >= 2:
+                    effective_tokens_count = effective_tokens_count + 1
+                if matched_term_tokens_count >= 2:
+                    effective_tokens_count = effective_tokens_count + 1
 
             # Decide whether to skip this headline based on BOTH word overlap AND embedding similarity
             word_overlap_is_insufficient = (effective_tokens_count < minimum_required_tokens and not has_bigram_match)
-            embedding_says_related = (embedding_similarity >= 0.18)
+            embedding_says_related = (embedding_similarity >= 0.14)
 
             # For substantive topic labels (>= 5 keywords), matching only 1 or 2 tokens
             # with low semantic similarity represents broad or unrelated op-eds
@@ -4053,9 +4069,9 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         final_matched_sources_list = []
         if len(scored_candidates_list) > 0:
             highest_score = scored_candidates_list[0]["score"]
-            # Dynamic relative cutoff: 48% of top score, capped at 32.0 to prevent
+            # Dynamic relative cutoff: 40% of top score, capped at 26.0 to prevent
             # long verbatim headlines from unfairly raising the bar above concise wire reports
-            score_cutoff = min(highest_score * 0.48, 32.0)
+            score_cutoff = min(highest_score * 0.40, 26.0)
             if score_cutoff < 12.0:
                 score_cutoff = 12.0
 
@@ -4068,8 +4084,9 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                 candidate_has_bigram = candidate_item.get("has_bigram", False)
                 candidate_summary_tokens = candidate_item.get("matched_summary_tokens", 0)
                 passes_semantic_safety = (
-                    candidate_embedding_similarity >= 0.20
-                    and (candidate_matched_tokens >= 3 or candidate_has_bigram or candidate_summary_tokens >= 2)
+                    (candidate_embedding_similarity >= 0.13 and candidate_matched_tokens >= 3)
+                    or (candidate_matched_tokens >= 3 and (candidate_has_bigram or candidate_summary_tokens >= 2))
+                    or (candidate_embedding_similarity >= 0.18 and candidate_matched_tokens >= 2)
                 )
 
                 if passes_score_threshold or passes_semantic_safety:

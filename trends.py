@@ -3265,7 +3265,7 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         final_matched_sources_list = []
         if len(scored_candidates_list) > 0:
             highest_score = scored_candidates_list[0]["score"]
-            score_cutoff = highest_score * 0.40
+            score_cutoff = highest_score * 0.48
             if score_cutoff < 10:
                 score_cutoff = 10
 

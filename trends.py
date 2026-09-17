@@ -479,8 +479,15 @@ def fetch_headlines_from_configured_sources(sources_list):
                         title_element = current_feed_item.find("title")
                         if title_element is not None and title_element.text is not None:
                             cleaned_headline = title_element.text.strip()
-                            if len(cleaned_headline) > 10 and not is_bot_challenge_text(cleaned_headline) and len(extracted_headlines_list) < 20:
-                                extracted_headlines_list.append(cleaned_headline)
+                            if len(cleaned_headline) > 10 and not is_bot_challenge_text(cleaned_headline):
+                                # Immediately reject entertainment, sports, and celebrity gossip noise
+                                if is_entertainment_or_lifestyle_noise(cleaned_headline):
+                                    continue
+                                # For general wire feeds, require strategic defense/geopolitical relevance
+                                if not is_specialized_defense_domain(source_url) and not is_strategic_or_defense_trend(cleaned_headline):
+                                    continue
+                                if cleaned_headline not in extracted_headlines_list and len(extracted_headlines_list) < 20:
+                                    extracted_headlines_list.append(cleaned_headline)
             else:
                 # Parse HTML web page
                 http_response_object = requests.get(source_url, headers=request_headers_dictionary, timeout=12)
@@ -495,8 +502,9 @@ def fetch_headlines_from_configured_sources(sources_list):
                             raw_breaking_headline = breaking_candidate.get_text(separator=" ", strip=True)
                             clean_breaking_headline = clean_headline_for_search_term(raw_breaking_headline)
                             if len(clean_breaking_headline) > 25 and len(clean_breaking_headline) < 160 and not is_bot_challenge_text(clean_breaking_headline):
-                                if clean_breaking_headline not in extracted_headlines_list and len(extracted_headlines_list) < 20:
-                                    extracted_headlines_list.append(clean_breaking_headline)
+                                if not is_entertainment_or_lifestyle_noise(clean_breaking_headline):
+                                    if clean_breaking_headline not in extracted_headlines_list and len(extracted_headlines_list) < 20:
+                                        extracted_headlines_list.append(clean_breaking_headline)
 
                 # Look for headings and article links
                 headings_collection = html_soup_parser.find_all(["h1", "h2", "h3", "a"])
@@ -514,52 +522,16 @@ def fetch_headlines_from_configured_sources(sources_list):
                         if is_bot_challenge_text(heading_text):
                             continue
 
-                        if heading_text not in extracted_headlines_list:
-                            # If it comes from a specialized defense, strategic affairs, or think tank domain, all articles are relevant
-                            lower_text = heading_text.lower()
-                            specialized_defense_domains = [
-                                "foreignaffairs.com", "janes.com", "csis.org", "atlanticcouncil.org",
-                                "iiss.org", "defensenews.com", "breakingdefense.com", "defenseone.com",
-                                "armscontrol.org", "sipri.org", "carnegieendowment.org", "stimson.org",
-                                "disarmament.un.org", "idrw.org", "livefistdefence.com", "quwa.org",
-                                "defense.gov", "airandspaceforces.com", "navalnews.com", "usni.org",
-                                "warontherocks.com", "thediplomat.com", "iaea.org", "scmp.com",
-                                "defencexp.com", "defence.in", "defenceupdate.in", "nationaldefence.in",
-                                "alphadefense.in", "iadnews.in", "indiandefencereview.com",
-                                "defencecapital.in", "indiandefensenews.in"
-                            ]
+                        # Immediately reject entertainment, sports, and celebrity gossip noise
+                        if is_entertainment_or_lifestyle_noise(heading_text):
+                            continue
 
-                            is_from_specialized_domain = False
-                            for domain_item in specialized_defense_domains:
-                                if domain_item in source_url:
-                                    is_from_specialized_domain = True
-                                    break
+                        # For general web sources, require strategic defense/geopolitical relevance
+                        if not is_specialized_defense_domain(source_url) and not is_strategic_or_defense_trend(heading_text):
+                            continue
 
-                            general_strategic_keywords = [
-                                "pakistan", "army", "military", "strike", "attack", "iran", "israel",
-                                "china", "us", "trump", "navy", "security", "court", "forces", "treaty",
-                                "pact", "russia", "border", "missile", "defense", "defence", "nato",
-                                "taiwan", "ukraine", "hormuz", "sanctions", "nuclear", "warhead",
-                                "proliferation", "deterrence", "doctrine", "disarmament", "iaea",
-                                "bmd", "hypersonic", "drone", "uav", "cbm", "air force",
-                                "india", "indian", "mod", "drdo", "hal", "tejas", "iaf", "ladakh",
-                                "lac", "loc", "kashmir", "brahmos", "agni", "ins ", "coast guard",
-                                "indo-pacific"
-                            ]
-
-                            has_strategic_keyword = False
-                            for keyword_item in general_strategic_keywords:
-                                if keyword_item in lower_text:
-                                    has_strategic_keyword = True
-                                    break
-
-                            if is_from_specialized_domain or has_strategic_keyword:
-                                is_relevant = True
-                            else:
-                                is_relevant = False
-
-                            if is_relevant and len(extracted_headlines_list) < 20:
-                                extracted_headlines_list.append(heading_text)
+                        if heading_text not in extracted_headlines_list and len(extracted_headlines_list) < 20:
+                            extracted_headlines_list.append(heading_text)
 
             print(f"        -> Extracted {len(extracted_headlines_list)} headlines.")
         except Exception as fetch_error:
@@ -721,12 +693,46 @@ STRATEGIC_DEFENSE_INDICATORS = [
 ]
 
 ENTERTAINMENT_SPORTS_NOISE = [
-    "cricket", "football", "soccer", "ipl", "world cup", "worldcup", "match",
-    "tournament", "album", "song", "music", "trailer", "movie", "cinema",
-    "boxoffice", "actor", "actress", "episode", "season", "drama", "biggboss",
-    "birthday", "hbd", "sale", "discount", "fashion", "gaming", "game", "gamer",
-    "bollywood", "hollywood", "horoscope", "comedy", "meme"
+    # Sports & tournaments
+    "cricket", "football", "soccer", "ipl", "psl", "bcci", "pcb", "fifa", "uefa",
+    "world cup", "worldcup", "match", "tournament", "wimbledon", "champions league",
+    "premier league", "tennis", "atp", "wta", "grand slam", "golf", "pga", "formula 1",
+    "f1", "nascar", "nba", "nfl", "mlb", "baseball", "basketball", "olympics", "athletics",
+    "wicket", "innings", "batsman", "bowler", "century",
+
+    # Entertainment, movies, music, TV, streaming
+    "album", "song", "music", "trailer", "movie", "cinema", "boxoffice", "box office",
+    "actor", "actress", "episode", "season", "drama", "biggboss", "bigg boss",
+    "reality show", "celebrity", "celebrities", "bollywood", "hollywood", "lollywood",
+    "showbiz", "netflix", "pop star", "pop music", "singer", "concert", "tour",
+    "grammy", "grammys", "vma", "vmas", "oscar", "oscars", "emmy", "emmys",
+    "americana awards", "film festival", "red carpet", "billboard",
+
+    # Gossip, personal life, lifestyle & viral trivia
+    "birthday", "hbd", "sale", "discount", "fashion", "gaming", "game", "gamer", "esports",
+    "horoscope", "astrology", "zodiac", "comedy", "comedian", "meme",
+    "dating", "breakup", "break up", "divorce", "fiancé", "fiance", "fiancée",
+    "wedding", "married", "marriage", "surrogate", "fatherhood", "motherhood",
+    "baby bump", "pregnancy", "pregnant", "ponzi scheme", "scam", "scammed",
+    "viral video", "tiktok", "instagram", "fans who want", "secret connection",
+    "lottery", "jackpot"
 ]
+
+
+def is_entertainment_or_lifestyle_noise(headline_text_to_check):
+    # Procedurally inspects a headline to determine if it is celebrity, entertainment, or sports noise
+    if not headline_text_to_check:
+        return False
+    headline_lower = str(headline_text_to_check).lower()
+    for noise_phrase in ENTERTAINMENT_SPORTS_NOISE:
+        if len(noise_phrase) <= 4:
+            boundary_pattern = r'\b' + re.escape(noise_phrase) + r'\b'
+            if re.search(boundary_pattern, headline_lower):
+                return True
+        else:
+            if noise_phrase in headline_lower:
+                return True
+    return False
 
 
 def is_strategic_or_defense_trend(trend_text_string):
@@ -734,9 +740,8 @@ def is_strategic_or_defense_trend(trend_text_string):
     cleaned_trend_text = trend_text_string.lower().replace("#", " ").replace("_", " ")
 
     # Reject entertainment, sports, and casual noise immediately
-    for noise_phrase in ENTERTAINMENT_SPORTS_NOISE:
-        if noise_phrase in cleaned_trend_text:
-            return False
+    if is_entertainment_or_lifestyle_noise(cleaned_trend_text):
+        return False
 
     # Match against strategic domain indicators
     for strategic_indicator in STRATEGIC_DEFENSE_INDICATORS:
@@ -756,6 +761,30 @@ def is_strategic_or_defense_trend(trend_text_string):
             if strategic_indicator in cleaned_trend_text:
                 return True
 
+    return False
+
+
+SPECIALIZED_DEFENSE_DOMAINS = [
+    "foreignaffairs.com", "janes.com", "csis.org", "atlanticcouncil.org",
+    "iiss.org", "defensenews.com", "breakingdefense.com", "defenseone.com",
+    "armscontrol.org", "sipri.org", "carnegieendowment.org", "stimson.org",
+    "disarmament.un.org", "idrw.org", "livefistdefence.com", "quwa.org",
+    "defense.gov", "airandspaceforces.com", "navalnews.com", "usni.org",
+    "warontherocks.com", "thediplomat.com", "iaea.org", "scmp.com",
+    "defencexp.com", "defence.in", "defenceupdate.in", "nationaldefence.in",
+    "alphadefense.in", "iadnews.in", "indiandefencereview.com",
+    "defencecapital.in", "indiandefensenews.in"
+]
+
+
+def is_specialized_defense_domain(url_or_source_string):
+    # Procedurally verifies if a URL or source name belongs to a dedicated defense/military/thinktank domain
+    if not url_or_source_string:
+        return False
+    source_lower = str(url_or_source_string).lower()
+    for defense_domain in SPECIALIZED_DEFENSE_DOMAINS:
+        if defense_domain in source_lower:
+            return True
     return False
 
 
@@ -1594,10 +1623,17 @@ async def extract_google_news_sources(
                     extracted_items_list = []
 
             category_headlines_list = []
-            for item_dictionary in extracted_items_list[:10]:
+            for item_dictionary in extracted_items_list[:12]:
                 headline_text = clean_dom_tags_and_markdown(item_dictionary.get("headline", ""))
                 if len(headline_text) < 15:
                     continue
+
+                # Filter out celebrity, entertainment, and sports gossip from Google News tabs
+                if is_entertainment_or_lifestyle_noise(headline_text):
+                    continue
+
+                if len(category_headlines_list) >= 10:
+                    break
 
                 raw_href_value = item_dictionary.get("raw_href", "")
                 resolved_article_url = resolve_google_destination_url(raw_href_value)
@@ -3954,6 +3990,10 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
 
         # Step 1: Compare topic against all ingested news headlines
         for headline_text, metadata_dictionary in headline_sources_metadata_map.items():
+            # Exclude celebrity, entertainment, or sports noise headlines completely
+            if is_entertainment_or_lifestyle_noise(headline_text):
+                continue
+
             # Clean headline tokens using same normalization so synonyms and transliterations match
             clean_headline_string = clean_headline_text_for_similarity(headline_text)
             headline_words_list = clean_headline_string.split()
@@ -4442,10 +4482,6 @@ def sort_topics_by_editorial_importance(topics_list):
                 editorial_priority_score = editorial_priority_score + 300
                 break
 
-        # Priority boost for top breaking international crises
-        if "makkah" in topic_label_lower or "mecca" in topic_label_lower:
-            editorial_priority_score = editorial_priority_score + 500
-
         breaking_hot_keywords_list = [
             "intercepted", "interception", "incursion", "collision", "shot down"
         ]
@@ -4700,8 +4736,8 @@ You must synthesize EXACTLY 13 topics in total, structured as a single JSON arra
 
 STRICT ANTI-DUPLICATION RULE (CRITICAL):
 - NO DUPLICATE STORIES OR OVERLAPPING TOPICS ACROSS THE 13 ROWS: Every single row among the 13 topics MUST cover a completely different, unique news story.
-- If multiple news sources report on the same event (e.g. a Houthi drone intercepted near Makkah/Mecca reported by both Geo TV and Saudi/Reuters wires), cover it in ONLY ONE TOPIC.
-- NEVER create two separate topics for the same event with different titles or rephrasings (e.g., do NOT output Topic 1 as "Houthi Drone Intercepted Near Makkah..." and Topic 4 as "Saudi Forces Down Houthi Drone Near Mecca's Airspace"). Each topic must be 100% unique!
+- If multiple news sources report on the same event (e.g. an air defense interception over the Red Sea reported by both regional and international wires), cover it in ONLY ONE TOPIC.
+- NEVER create two separate topics for the same event with different titles or rephrasings (e.g., do NOT output Topic 1 as "Air Defense Battery Neutralizes Drone Incursion..." and Topic 4 as "Allied Forces Down Hostile Unmanned Aircraft"). Each topic must be 100% unique!
 
 PART A: TOPICS 1 TO 10 (BALANCED GLOBAL & REGIONAL TRENDING MIX)
 - Synthesize the top 10 most trending, hottest breaking defense, military, and geopolitical intelligence stories from across the entire world (drawing from Sections 1, 2, 3, and 4).
@@ -4719,10 +4755,10 @@ STRICT REQUIREMENTS FOR EACH GENERATED ROW:
    Instead, generate a self-generated, short-phrased headline of the specific top/hot news story or breaking event (6 to 12 words).
 2. "category": Exactly one of "defense", "diplomacy", "politics", "economic".
 3. "boolean_query": MUST BE A 4 TO 6 WORD BUZZWORD SEARCH QUERY (under 80 characters).
-   - MUST include distinctive buzzwords from the headline: named entities/people (e.g. "Dhiraj Seth", "Araghchi"), military ranks/roles (e.g. "Army Chief", "Warship"), locations (e.g. "Moscow", "Makkah"), and event actions (e.g. "visit", "collision", "red line").
+   - MUST include distinctive buzzwords from the headline: named entities/people (e.g. "Dhiraj Seth", "Araghchi"), military ranks/roles (e.g. "Army Chief", "Warship"), locations (e.g. "Moscow", "Hormuz"), and event actions (e.g. "visit", "collision", "red line").
    - NEVER output generic category clichés or textbook labels.
      * FORBIDDEN (too generic): "India Russia defence ties", "Iran regional order foreign forces", "Regional security cooperation", "Strategic defense posture".
-     * REQUIRED (buzzword queries): "india army chief russia visit" OR "india dhiraj seth moscow visit" OR "india army chief dhiraj seth russia", "iran araghchi foreign forces exclusion", "houthi drone makkah red line".
+     * REQUIRED (buzzword queries): "india army chief russia visit" OR "india dhiraj seth moscow visit" OR "india army chief dhiraj seth russia", "iran araghchi foreign forces exclusion", "strait hormuz tanker incident".
    - This query is searched directly on Google and X.com, so it must reliably surface this exact breaking story.
 4. "terms": Array of EXACTLY 10 to 12 CRISP, HIGH-CONTEXT SEARCH QUERIES (4 to 10 words MAXIMUM each).
    Every keyword phrase must be a concrete, actionable search query that will reliably pull up this exact news story when searched on X/Twitter or Google.
@@ -4735,26 +4771,25 @@ STRICT REQUIREMENTS FOR EACH GENERATED ROW:
    - STRICT RULE: DO NOT COPY THE NEWS HEADLINE WORD-FOR-WORD:
      * Never paste the full news headline into the terms list.
      * Instead, distill the headline and story into crisp, context-packed search phrases.
-     * Example: For the headline "Makkah defence pact is defensive, contains no 'regional aspirations', says ISPR chief":
-       -> EXCELLENT keywords: "Makkah defence pact ispr chief says", "makkah defence pact ispr", "Makkah defence pact regional aspirations"
-       -> FORBIDDEN: Do NOT copy the full 14-word headline word-for-word.
+     * Example: For the headline "Chinese Navy deploys guided-missile destroyer flotilla for South China Sea combat patrol":
+       -> EXCELLENT keywords: "China destroyer combat patrol South China Sea", "Chinese Navy missile destroyer flotilla", "PLA Navy combat readiness drill"
+       -> FORBIDDEN: Do NOT copy the full headline word-for-word.
      * Example: For the headline "US war on Iran racks up $38bn bill as its arsenal strains; Vance eyes 'much different phase'":
        -> EXCELLENT keywords: "Iran 38 billion US weapons", "US war on Iran arsenal strains", "Vance US war on Iran 38bn"
        -> FORBIDDEN: Do NOT copy the full headline word-for-word.
-     * Example: For the headline "Houthi drone intercepted near Makkah as Saudi-led coalition warns holy sites are 'red line'":
-       -> EXCELLENT keywords: "Houthi drone makkah red line", "Houthi drone intercepted makkah", "Saudi coalition makkah red line warning"
+     * Example: For the headline "Baltic Sea critical undersea communications cable severed near Gotland island":
+       -> EXCELLENT keywords: "Baltic undersea communication cable severed", "Gotland island subsea sabotage", "NATO Baltic critical infrastructure protection"
        -> FORBIDDEN: Do NOT copy the full headline word-for-word.
 
    - GOLD STANDARD KEYWORD EXAMPLES (Ground your generation in queries like these):
-     * "Houthi drone makkah red line" (5 words - actor + weapon + location + key term)
+     * "Baltic undersea communication cable severed" (5 words - location + asset + action)
      * "China DF-15A missile" (3-4 words - specific country + complete weapon designation with model number)
      * "Indian P75 I submarine" (4 words - specific country + program + naval asset)
      * "US Navy MQ 25 A Stingray" (6 words - service + exact airframe code + name)
-     * "Houthi drone intercepted makkah" (4 words - actor + weapon + action + location)
-     * "Pakistan saudi makkah solidarity" (4 words - actors + location + event)
+     * "Taiwan strait air defense identification zone" (6 words - location + system + zone)
      * "Iran 38 billion US weapons" (5 words - target + key figure + actor + subject)
-     * "Makkah defence pact ispr chief says" (6 words - topic + key entity quote)
-     * "makkah defence pact ispr" (4 words - topic + entity)
+     * "Red Sea commercial tanker escort operation" (6 words - location + vessel + mission)
+     * "dhiraj seth moscow visit" (4 words - entity + location + event)
 
    - STRICT BANS ON INCOMPLETE FRAGMENTS, WEAK STUBS & GENERIC FLUFF:
      * NEVER output incomplete 2-word verb/action fragments or stubs. FORBIDDEN: "Forces Down", "Iran Downing", "Downing of", "Warns of", "Racks up", "Eyes much".

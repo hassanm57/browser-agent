@@ -280,6 +280,13 @@ async def run_single_country_pipeline(
                         if title_element is not None and title_element.text:
                             clean_title = trends.clean_dom_tags_and_markdown(title_element.text)
                             if len(clean_title) > 15 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
+                                # Immediately reject entertainment, sports, and celebrity gossip noise
+                                if trends.is_entertainment_or_lifestyle_noise(clean_title):
+                                    continue
+                                # For general wire feeds, require strategic defense/geopolitical relevance
+                                if not trends.is_specialized_defense_domain(source_url) and not trends.is_strategic_or_defense_trend(clean_title):
+                                    continue
+
                                 headlines_for_source.append(clean_title)
                                 article_link = source_url
                                 if link_element is not None and link_element.text and len(link_element.text.strip()) > 0:
@@ -306,17 +313,18 @@ async def run_single_country_pipeline(
                                 raw_breaking = breaking_candidate.get_text(separator=" ", strip=True)
                                 clean_breaking = trends.clean_headline_for_search_term(raw_breaking)
                                 if len(clean_breaking) > 25 and len(clean_breaking) < 160 and not trends.is_bot_challenge_text(clean_breaking):
-                                    if clean_breaking not in headlines_for_source and len(headlines_for_source) < 20:
-                                        headlines_for_source.append(clean_breaking)
-                                        b_link_href = breaking_candidate.get("href")
-                                        if not b_link_href and breaking_candidate.parent and breaking_candidate.parent.name == "a":
-                                            b_link_href = breaking_candidate.parent.get("href")
-                                        b_article_link = urllib.parse.urljoin(source_url, b_link_href) if b_link_href else source_url
-                                        headline_sources_metadata_map[clean_breaking] = {
-                                            "source_name": source_name,
-                                            "headline": clean_breaking,
-                                            "url": b_article_link
-                                        }
+                                    if not trends.is_entertainment_or_lifestyle_noise(clean_breaking):
+                                        if clean_breaking not in headlines_for_source and len(headlines_for_source) < 20:
+                                            headlines_for_source.append(clean_breaking)
+                                            b_link_href = breaking_candidate.get("href")
+                                            if not b_link_href and breaking_candidate.parent and breaking_candidate.parent.name == "a":
+                                                b_link_href = breaking_candidate.parent.get("href")
+                                            b_article_link = urllib.parse.urljoin(source_url, b_link_href) if b_link_href else source_url
+                                            headline_sources_metadata_map[clean_breaking] = {
+                                                "source_name": source_name,
+                                                "headline": clean_breaking,
+                                                "url": b_article_link
+                                            }
 
                     for header_tag in html_soup.find_all(["h1", "h2", "h3", "h4", "a"]):
                         raw_text = header_tag.get_text(separator=" ", strip=True)
@@ -327,50 +335,15 @@ async def run_single_country_pipeline(
                             continue
 
                         if len(clean_title) > 25 and len(clean_title) < 160 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
-                            # If it comes from a specialized defense, strategic affairs, or think tank domain, all articles are relevant
-                            lower_title = clean_title.lower()
-                            specialized_defense_domains = [
-                                "foreignaffairs.com", "janes.com", "csis.org", "atlanticcouncil.org",
-                                "iiss.org", "defensenews.com", "breakingdefense.com", "defenseone.com",
-                                "armscontrol.org", "sipri.org", "carnegieendowment.org", "stimson.org",
-                                "disarmament.un.org", "idrw.org", "livefistdefence.com", "quwa.org",
-                                "defense.gov", "airandspaceforces.com", "navalnews.com", "usni.org",
-                                "warontherocks.com", "thediplomat.com", "iaea.org", "scmp.com",
-                                "defencexp.com", "defence.in", "defenceupdate.in", "nationaldefence.in",
-                                "alphadefense.in", "iadnews.in", "indiandefencereview.com",
-                                "defencecapital.in", "indiandefensenews.in"
-                            ]
+                            # Immediately reject entertainment, sports, and celebrity gossip noise
+                            if trends.is_entertainment_or_lifestyle_noise(clean_title):
+                                continue
 
-                            is_from_specialized_domain = False
-                            for domain_item in specialized_defense_domains:
-                                if domain_item in source_url:
-                                    is_from_specialized_domain = True
-                                    break
+                            # For general web sources, require strategic defense/geopolitical relevance
+                            if not trends.is_specialized_defense_domain(source_url) and not trends.is_strategic_or_defense_trend(clean_title):
+                                continue
 
-                            general_strategic_keywords = [
-                                "pakistan", "army", "military", "strike", "attack", "iran", "israel",
-                                "china", "us", "trump", "navy", "security", "court", "forces", "treaty",
-                                "pact", "russia", "border", "missile", "defense", "defence", "nato",
-                                "taiwan", "ukraine", "hormuz", "sanctions", "nuclear", "warhead",
-                                "proliferation", "deterrence", "doctrine", "disarmament", "iaea",
-                                "bmd", "hypersonic", "drone", "uav", "cbm", "air force",
-                                "india", "indian", "mod", "drdo", "hal", "tejas", "iaf", "ladakh",
-                                "lac", "loc", "kashmir", "brahmos", "agni", "ins ", "coast guard",
-                                "indo-pacific"
-                            ]
-
-                            has_strategic_keyword = False
-                            for keyword_item in general_strategic_keywords:
-                                if keyword_item in lower_title:
-                                    has_strategic_keyword = True
-                                    break
-
-                            if is_from_specialized_domain or has_strategic_keyword:
-                                is_relevant = True
-                            else:
-                                is_relevant = False
-
-                            if is_relevant and len(headlines_for_source) < 20:
+                            if len(headlines_for_source) < 20:
                                 headlines_for_source.append(clean_title)
                                 link_href = header_tag.get("href")
                                 if not link_href and header_tag.parent and header_tag.parent.name == "a":

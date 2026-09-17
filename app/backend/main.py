@@ -1003,8 +1003,9 @@ def resolve_source_website_url(source_name_string: str) -> str:
     # 2. Known domain mappings fallback
     lowercased_source_name = source_name_string.lower()
 
-    if "geo tv world" in lowercased_source_name or "geo news world" in lowercased_source_name or "geo world" in lowercased_source_name:
+    if "geo tv world" in lowercased_source_name or "geo world" in lowercased_source_name:
         return "https://www.geo.tv/category/world"
+
     if "geo tv" in lowercased_source_name or "geo news" in lowercased_source_name or "geo.tv" in lowercased_source_name:
         return "https://www.geo.tv"
     if "nationaldefence" in lowercased_source_name or "national defence" in lowercased_source_name:
@@ -1055,6 +1056,9 @@ def extract_curated_top_trends(raw_intelligence_dictionary: Dict[str, Any], requ
     def attempt_add_headline(source_title: str, candidate_headline: str, category_name: str):
         if len(curated_trends_list) >= requested_limit:
             return
+        # Completely exclude Geo News World celebrity entertainment feed
+        if "geo news world" in source_title.lower():
+            return
         cleaned_text = candidate_headline.strip()
         if not is_genuine_news_headline(cleaned_text):
             return
@@ -1097,7 +1101,7 @@ def extract_curated_top_trends(raw_intelligence_dictionary: Dict[str, Any], requ
     # 1. Podium Rank 1: Geo TV Front Page (the LIVE / breaking headline)
     geo_front_page_key = find_matching_source_key(
         ["geo tv front page", "geo tv", "geo news"],
-        ["world", "rss"]
+        ["world", "rss", "news world"]
     )
     if len(geo_front_page_key) > 0:
         geo_headlines = news_sources_intel_map.get(geo_front_page_key, [])
@@ -1112,11 +1116,15 @@ def extract_curated_top_trends(raw_intelligence_dictionary: Dict[str, Any], requ
             attempt_add_headline(national_defence_key, nd_headlines[0], "Indian Defence")
 
     # 3. Podium Rank 3: Geo TV World (https://www.geo.tv/category/world)
-    geo_world_key = find_matching_source_key(["geo tv world", "geo news world", "geo world"])
+    geo_world_key = find_matching_source_key(
+        ["geo tv world", "geo world"],
+        ["rss", "news world"]
+    )
     if len(geo_world_key) > 0:
         world_headlines = news_sources_intel_map.get(geo_world_key, [])
         if len(world_headlines) > 0:
             attempt_add_headline(geo_world_key, world_headlines[0], "World News")
+
 
     # Fallback if any podium position was missed
     if len(curated_trends_list) < 1:

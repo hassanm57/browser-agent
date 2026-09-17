@@ -350,13 +350,6 @@
     "enabled": true
   },
   {
-    "name": "Geo News World",
-    "category": "national_regional",
-    "type": "rss",
-    "url": "https://www.geo.tv/rss/1/5",
-    "enabled": true
-  },
-  {
     "name": "Geo TV Front Page",
     "category": "national_regional",
     "type": "web",

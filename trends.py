@@ -2334,6 +2334,255 @@ def handle_alternate_spelling_keywords(terms_list):
     return working_terms_list[:15]
 
 
+GENERIC_CATEGORY_SEARCH_CLICHES = [
+    "defence ties", "defense ties", "bilateral ties", "strategic ties",
+    "regional order", "military cooperation", "strategic partnership",
+    "security cooperation", "defence partnership", "defense partnership",
+    "military relations", "defence strategy", "defense strategy",
+    "strategic expansion", "strategic relations", "timeline risks",
+    "nuclear cooperation", "foreign military", "international relations"
+]
+
+GENERIC_CATEGORY_SEARCH_WORDS = {
+    "defence", "defense", "ties", "relations", "relationship", "partnership",
+    "cooperation", "strategic", "security", "regional", "region", "order", "forces",
+    "bilateral", "stability", "posture", "dialogue", "talks", "framework",
+    "policy", "concerns", "raises", "discuss", "discusses", "strengthen",
+    "strengthens", "strengthening", "promotes", "advocates", "dynamics",
+    "perspectives", "overview", "review", "development", "developments",
+    "matter", "issues", "engagement", "engagements", "expansion", "risks",
+    "challenges", "details", "answers", "questions", "implications", "future",
+    "tensions", "tension"
+}
+
+BUZZWORD_STOP_WORDS = {
+    "a", "an", "the", "and", "or", "but", "if", "then", "of", "at", "by",
+    "for", "with", "about", "against", "between", "into", "through",
+    "during", "before", "after", "above", "below", "to", "from", "up",
+    "down", "in", "out", "on", "off", "over", "under", "again", "further",
+    "then", "once", "here", "there", "when", "where", "why", "how", "all",
+    "any", "both", "each", "few", "more", "most", "other", "some", "such",
+    "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very",
+    "can", "will", "just", "should", "now", "says", "said", "tells", "urges",
+    "amid", "amidst", "claims", "faces", "calls", "warns", "remains", "takes",
+    "makes", "made", "seen", "reportedly", "allegedly", "updated", "hours", "ago",
+    "begins", "began", "starts", "started", "part", "near", "across", "ahead",
+    "first", "second", "third", "its", "their", "our", "could", "would", "marks",
+    "shows", "as", "is", "are", "was", "were", "be", "being", "been", "holy", "sites"
+}
+
+BUZZWORD_COUNTRY_NORMALIZATION_MAP = {
+    "indian": "india", "india": "india",
+    "pakistani": "pakistan", "pakistan": "pakistan",
+    "russian": "russia", "russia": "russia",
+    "chinese": "china", "china": "china",
+    "iranian": "iran", "iran": "iran",
+    "american": "us", "u.s.": "us", "u.s": "us", "us": "us", "usa": "us",
+    "saudi": "saudi", "yemeni": "yemen", "british": "uk", "uk": "uk",
+    "israeli": "israel", "indonesia": "indonesia", "indonesian": "indonesia"
+}
+
+
+def get_word_buzzword_weight(clean_word_string):
+    # Penalize generic category buzzwords that dilute search precision on Google and X
+    if clean_word_string in GENERIC_CATEGORY_SEARCH_WORDS:
+        return -5
+
+    # Stop words and very short tokens provide zero search discrimination
+    if clean_word_string in BUZZWORD_STOP_WORDS or len(clean_word_string) < 2:
+        return 0
+
+    # Primary national actors provide baseline geographic grounding
+    primary_countries_list = ["india", "pakistan", "china", "russia", "us", "iran", "saudi", "indonesia", "uk", "israel", "yemen"]
+    if clean_word_string in primary_countries_list:
+        return 2
+
+    # Military branches, command ranks, and operational roles provide context
+    military_roles_list = ["army", "navy", "chief", "air", "space", "general", "admiral", "corvette", "warship", "minister", "envoy", "diplomat", "ispr"]
+    if clean_word_string in military_roles_list:
+        return 4
+
+    # High-impact event actions, weapon categories, locations, and triggers
+    event_action_words_list = [
+        "visit", "collision", "collide", "intercepted", "red", "line",
+        "incursion", "eez", "strike", "attack", "export", "stealth",
+        "drone", "weapons", "missile", "expo", "squadrons", "sidelined",
+        "shortlisted", "hal", "terror", "moscow", "makkah", "mecca",
+        "taiwan", "exclusion", "pipeline", "ban", "arms", "race"
+    ]
+    if clean_word_string in event_action_words_list:
+        return 5
+
+    # Numeric codes or alphanumeric model designations (e.g., DF-15A, P-75I, MQ-25A)
+    if len(clean_word_string) >= 4 and not clean_word_string.isalpha():
+        return 6
+
+    # Distinctive proper nouns and breaking story entities (e.g., Dhiraj, Seth, Araghchi, Hunain, Kolkata, BrahMos, Ghatak, AMCA, Dong, Jun, Xiangshan)
+    return 6
+
+
+def extract_headline_buzzwords_list(headline_text_string):
+    # Extracts all high-weight buzzwords from a headline for query scoring
+    clean_text = re.sub(r"[^a-zA-Z0-9\s]", " ", headline_text_string)
+    words_list = clean_text.split()
+    buzzwords_list = []
+    seen_words_set = set()
+
+    for raw_word in words_list:
+        cleaned_word = raw_word.lower()
+        normalized_word = BUZZWORD_COUNTRY_NORMALIZATION_MAP.get(cleaned_word, cleaned_word)
+        if normalized_word in seen_words_set:
+            continue
+        word_weight = get_word_buzzword_weight(normalized_word)
+        if word_weight >= 4:
+            seen_words_set.add(normalized_word)
+            buzzwords_list.append(normalized_word)
+
+    return buzzwords_list
+
+
+def is_boolean_query_generic_or_missing_buzzwords(query_string, label_text_string, primary_headline_string=""):
+    # Determines whether a boolean query is too generic (e.g. contains 'defence ties' or misses named entities)
+    cleaned_query = str(query_string).lower().replace('"', '').replace("'", "").strip()
+    if len(cleaned_query) == 0:
+        return True
+
+    # Check for known generic clichés
+    for generic_cliche in GENERIC_CATEGORY_SEARCH_CLICHES:
+        if generic_cliche in cleaned_query:
+            return True
+
+    # Check if the combined headline has key proper entities or action buzzwords
+    combined_headline_text = label_text_string + " " + (primary_headline_string or "")
+    headline_buzzwords = extract_headline_buzzwords_list(combined_headline_text)
+
+    # Check how many key headline buzzwords appear in the query
+    query_words_list = cleaned_query.split()
+    matched_buzzwords_count = 0
+    for buzzword in headline_buzzwords:
+        matched_this_buzzword = False
+        for query_word in query_words_list:
+            if buzzword == query_word or (len(buzzword) >= 4 and buzzword in query_word):
+                matched_this_buzzword = True
+                break
+        if matched_this_buzzword:
+            matched_buzzwords_count = matched_buzzwords_count + 1
+
+    # A good query must contain at least 2 strong buzzwords from the headline
+    if matched_buzzwords_count < 2:
+        return True
+
+    return False
+
+
+def get_primary_country_actor_from_label(label_text_string):
+    # Extracts the leading country actor from the topic label so it can ground the search query
+    label_lower_text = label_text_string.lower()
+    if label_lower_text.startswith("u.s.") or label_lower_text.startswith("us ") or label_lower_text.startswith("u.s "):
+        return "us"
+
+    clean_text = re.sub(r"[^a-zA-Z0-9\s]", " ", label_text_string)
+    label_words_list = clean_text.lower().split()
+    for word_index in range(min(4, len(label_words_list))):
+        current_word = label_words_list[word_index]
+        if current_word in BUZZWORD_COUNTRY_NORMALIZATION_MAP:
+            return BUZZWORD_COUNTRY_NORMALIZATION_MAP[current_word]
+
+    return ""
+
+
+def refine_boolean_query_with_buzzwords(candidate_query_string, label_text_string, terms_list=None, primary_headline_string=""):
+    # Refines a boolean query so it contains the news headline's key buzzwords,
+    # ensuring that searching it on Google or X.com returns the exact news story.
+    cleaned_candidate = str(candidate_query_string or "").replace('"', '').replace("'", "").strip().lower()
+    candidate_words_list = cleaned_candidate.split()
+
+    # If the candidate query already has 3 to 7 words, has no generic clichés, and covers key buzzwords, keep it
+    if len(cleaned_candidate) > 0 and 3 <= len(candidate_words_list) <= 7:
+        if not is_boolean_query_generic_or_missing_buzzwords(cleaned_candidate, label_text_string, primary_headline_string):
+            return cleaned_candidate
+
+    # The candidate query is generic or missing buzzwords. Look through the terms list for the best buzzword-dense query
+    combined_headline_text = label_text_string + " " + (primary_headline_string or "")
+    headline_buzzwords = extract_headline_buzzwords_list(combined_headline_text)
+
+    best_candidate_term = ""
+    best_candidate_score = -999
+
+    if terms_list and len(terms_list) > 0:
+        for term_item in terms_list:
+            cleaned_term = str(term_item).replace('"', '').replace("'", "").strip().lower()
+            term_words_list = cleaned_term.split()
+
+            # Skip terms that are too short, too long, or contain banned clichés
+            if len(term_words_list) < 3 or len(term_words_list) > 7:
+                continue
+
+            has_cliche = False
+            for generic_cliche in GENERIC_CATEGORY_SEARCH_CLICHES:
+                if generic_cliche in cleaned_term:
+                    has_cliche = True
+                    break
+            if has_cliche:
+                continue
+
+            term_score = 0
+            for term_word in term_words_list:
+                term_score = term_score + get_word_buzzword_weight(term_word)
+
+            # Bonus for matching critical headline buzzwords (extra weight for proper names and assets)
+            for buzzword in headline_buzzwords:
+                if buzzword in term_words_list:
+                    buzzword_weight = get_word_buzzword_weight(buzzword)
+                    if buzzword_weight >= 6:
+                        term_score = term_score + 8
+                    else:
+                        term_score = term_score + 4
+
+            if term_score > best_candidate_score:
+                best_candidate_score = term_score
+                best_candidate_term = cleaned_term
+
+    # If an excellent candidate was found in the terms list, ensure the primary country is included
+    if len(best_candidate_term) > 0 and best_candidate_score >= 12:
+        primary_country = get_primary_country_actor_from_label(label_text_string)
+        if len(primary_country) > 0:
+            term_words = best_candidate_term.split()
+            if primary_country not in term_words and len(term_words) <= 5:
+                return f"{primary_country} {best_candidate_term}"
+        return best_candidate_term
+
+    # Fallback: construct directly from the topic label's most impactful buzzwords
+    clean_label_text = re.sub(r"[^a-zA-Z0-9\s]", " ", label_text_string)
+    selected_query_words = []
+    seen_query_words_set = set()
+
+    primary_country = get_primary_country_actor_from_label(label_text_string)
+    if len(primary_country) > 0:
+        selected_query_words.append(primary_country)
+        seen_query_words_set.add(primary_country)
+
+    for raw_label_word in clean_label_text.split():
+        cleaned_label_word = raw_label_word.lower()
+        normalized_label_word = BUZZWORD_COUNTRY_NORMALIZATION_MAP.get(cleaned_label_word, cleaned_label_word)
+        if normalized_label_word in seen_query_words_set:
+            continue
+        if normalized_label_word in BUZZWORD_STOP_WORDS:
+            continue
+        word_weight = get_word_buzzword_weight(normalized_label_word)
+        if word_weight >= 4:
+            seen_query_words_set.add(normalized_label_word)
+            selected_query_words.append(normalized_label_word)
+            if len(selected_query_words) >= 6:
+                break
+
+    if len(selected_query_words) >= 3:
+        return " ".join(selected_query_words)
+
+    # Last resort fallback to first 5 words of label
+    return " ".join(clean_label_text.lower().split()[:5])
+
+
 def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_name="Worldwide"):
     # Validates and sanitizes topics returned by the language model to prevent
     # any injected scripts, malicious markdown, or malformed fields from reaching downstream consumers.
@@ -2467,21 +2716,14 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
                 if len(final_terms) >= 8:
                     break
 
-        # 4. Validate and tighten boolean_query
+        # 4. Validate and tighten boolean_query using headline buzzwords
         raw_query = topic_item.get("boolean_query", "")
         if not isinstance(raw_query, str):
             raw_query = str(raw_query)
         clean_query = re.sub(r'<[^>]*>', '', raw_query).strip()
 
-        # If boolean query is too long (> 110 chars) or has excessive OR operators (> 3) or is trailing with OR
-        if len(clean_query) > 110 or clean_query.count(" OR ") > 3 or clean_query.endswith(" OR") or len(clean_query) == 0:
-            # Formulate a tight, high-precision Boolean query using top terms
-            if len(final_terms) >= 2:
-                clean_query = f'("{final_terms[0]}" OR "{final_terms[1]}")'
-            elif len(final_terms) == 1:
-                clean_query = f'"{final_terms[0]}"'
-            else:
-                clean_query = f'"{clean_label[:50]}"'
+        # Refine boolean query to guarantee distinctive headline buzzwords are included
+        clean_query = refine_boolean_query_with_buzzwords(clean_query, clean_label, final_terms)
 
         validated_topics_list.append({
             "label": clean_label,
@@ -2781,14 +3023,9 @@ def extract_key_phrases_from_headline(headline_text):
     return final_filtered_phrases_list[:10]
 
 
-def create_boolean_query_from_terms(terms_list, label_text):
-    # Formulates a high-precision, concise Boolean query
-    if len(terms_list) >= 2:
-        return f'("{terms_list[0]}" OR "{terms_list[1]}")'
-    elif len(terms_list) == 1:
-        return f'"{terms_list[0]}"'
-    else:
-        return f'"{label_text[:50]}"'
+def create_boolean_query_from_terms(terms_list, label_text, primary_headline=""):
+    # Formulates a buzzword-dense, high-precision query for searching on Google and X.com
+    return refine_boolean_query_with_buzzwords("", label_text, terms_list, primary_headline)
 
 
 # =====================================================================================
@@ -3752,6 +3989,15 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
 
         topic_item["terms"] = updated_terms[:12]
 
+        # Re-evaluate and refine boolean query with buzzwords from headline and updated terms
+        # so searching on X.com or Google will reliably surface the exact news story
+        topic_item["boolean_query"] = refine_boolean_query_with_buzzwords(
+            topic_item.get("boolean_query", ""),
+            topic_item.get("label", ""),
+            topic_item.get("terms", []),
+            primary_source_headline
+        )
+
     # Re-order topics by editorial importance: major international news from Geo TV,
     # Express Tribune, Dawn News, and BBC appear at the top, followed by regional
     # defence news (Livefist, Indian Defence News, IDRW, etc.), and finally think-tank analyses.
@@ -4144,8 +4390,12 @@ STRICT REQUIREMENTS FOR EACH GENERATED ROW:
 1. "label": DO NOT generate generic category topics (such as "Naval Modernization" or "Border Security").
    Instead, generate a self-generated, short-phrased headline of the specific top/hot news story or breaking event (6 to 12 words).
 2. "category": Exactly one of "defense", "diplomacy", "politics", "economic".
-3. "boolean_query": MUST BE SHORT AND CONCISE (maximum 2 to 4 search terms total, under 100 characters).
-   Use exact quotes and standard Boolean syntax.
+3. "boolean_query": MUST BE A 4 TO 6 WORD BUZZWORD SEARCH QUERY (under 80 characters).
+   - MUST include distinctive buzzwords from the headline: named entities/people (e.g. "Dhiraj Seth", "Araghchi"), military ranks/roles (e.g. "Army Chief", "Warship"), locations (e.g. "Moscow", "Makkah"), and event actions (e.g. "visit", "collision", "red line").
+   - NEVER output generic category clichés or textbook labels.
+     * FORBIDDEN (too generic): "India Russia defence ties", "Iran regional order foreign forces", "Regional security cooperation", "Strategic defense posture".
+     * REQUIRED (buzzword queries): "india army chief russia visit" OR "india dhiraj seth moscow visit" OR "india army chief dhiraj seth russia", "iran araghchi foreign forces exclusion", "houthi drone makkah red line".
+   - This query is searched directly on Google and X.com, so it must reliably surface this exact breaking story.
 4. "terms": Array of EXACTLY 10 to 12 CRISP, HIGH-CONTEXT SEARCH QUERIES (4 to 10 words MAXIMUM each).
    Every keyword phrase must be a concrete, actionable search query that will reliably pull up this exact news story when searched on X/Twitter or Google.
 
@@ -4194,7 +4444,7 @@ SYNTACTIC STRUCTURE EXAMPLE (PURELY SYNTHETIC PLACEHOLDERS):
   {
     "label": "Nation-Alpha Deploys Model-7X Air Defense Radar Along Border Sector",
     "category": "defense",
-    "boolean_query": "(\"Model-7X radar\" OR \"air defense border\")",
+    "boolean_query": "nation alpha model 7x radar border deployment",
     "terms": [
       "Nation-Alpha Model-7X radar border deployment",
       "Model-7X air defense radar trials",
@@ -4220,7 +4470,7 @@ IMPORTANT: The "boolean_query" field MUST be a valid JSON string wrapped in doub
 
 STRICT REQUIREMENTS:
 1. NO DUPLICATE STORIES: Every row MUST be a completely unique news event. NEVER create two topics for the same event with different phrasings.
-2. Ensure each row has a self-generated phrased headline (6 to 12 words), a concise Boolean query (2 to 4 terms), and 10 to 12 CRISP, HIGH-CONTEXT search queries (4 to 10 words MAXIMUM each).
+2. Ensure each row has a self-generated phrased headline (6 to 12 words), a buzzword-dense Boolean query (4 to 6 words including proper names/actions/locations, NEVER generic category clichés like 'defence ties'), and 10 to 12 CRISP, HIGH-CONTEXT search queries (4 to 10 words MAXIMUM each).
 3. Do NOT copy headlines word-for-word into keywords.
 4. Do NOT output incomplete stubs or cut-off phrases like 'Forces Down', 'Iran Downing', or 'Chinese DF'.
 5. Do NOT output generic academic fluff like 'military capabilities' or 'arms dynamics'.

@@ -67,7 +67,7 @@
     {
       "label": "Houthi Drone Intercepted Near Makkah as Saudi-led Coalition Warns Holy Sites Are 'Red Line'",
       "category": "defense",
-      "boolean_query": "Houthi drone makkah red line",
+      "boolean_query": "houthi drone makkah red line",
       "terms": [
         "Houthi drone makkah red line",
         "Houthi drone intercepted makkah",
@@ -127,7 +127,7 @@
     {
       "label": "Pakistan Protests Indian Navy's 'Provocative' Maneuvers in Arabian Sea EEZ",
       "category": "diplomacy",
-      "boolean_query": "Pakistan protests Indian navy EEZ",
+      "boolean_query": "pakistan protests indian navy eez",
       "terms": [
         "Pakistan protests Indian navy EEZ",
         "INS Kolkata EEZ incursion",
@@ -197,7 +197,7 @@
     {
       "label": "U.S. Military Warns of 'On-Orbit' Space Weapons Amid Global Arms Race",
       "category": "defense",
-      "boolean_query": "US space weapons arms race",
+      "boolean_query": "us space weapons arms race",
       "terms": [
         "US military space weapons",
         "Space weapons global race",
@@ -251,7 +251,7 @@
     {
       "label": "Iran's Araghchi Advocates Regional Order Excluding Foreign Forces Amid Gulf Tensions",
       "category": "politics",
-      "boolean_query": "Iran regional order foreign forces",
+      "boolean_query": "iran araghchi foreign forces exclusion",
       "terms": [
         "Iran regional order foreign forces",
         "Araghchi foreign forces exclusion",
@@ -285,7 +285,7 @@
     {
       "label": "Indian Army Chief Dhiraj Seth Strengthens Russia Defence Ties During Moscow Visit",
       "category": "defense",
-      "boolean_query": "India Russia defence ties",
+      "boolean_query": "india army chief dhiraj seth russia",
       "terms": [
         "India Russia defence ties",
         "Army chief Dhiraj Seth Russia",
@@ -322,7 +322,7 @@
     {
       "label": "India's BrahMos Missile Export to Indonesia Marks Strategic Expansion",
       "category": "economic",
-      "boolean_query": "India BrahMos export Indonesia",
+      "boolean_query": "india brahmos export indonesia",
       "terms": [
         "India BrahMos export Indonesia",
         "BrahMos missile export 2026",
@@ -364,7 +364,7 @@
     {
       "label": "DRDO Showcases Indigenous Weapons at Africa Aerospace and Defence Expo 2026",
       "category": "economic",
-      "boolean_query": "DRDO indigenous weapons expo",
+      "boolean_query": "drdo indigenous weapons expo",
       "terms": [
         "DRDO indigenous weapons expo",
         "DRDO africa aerospace expo",
@@ -396,7 +396,7 @@
     {
       "label": "Chinese Defence Chief Avoids Mention of Taiwan, South China Sea Ahead of Xi-Trump Summit",
       "category": "diplomacy",
-      "boolean_query": "China defence chief taiwan south china sea",
+      "boolean_query": "china defence chief taiwan south china sea",
       "terms": [
         "China defence chief taiwan south china sea",
         "Dong Jun xiangshan forum no taiwan mention",
@@ -475,7 +475,7 @@
     {
       "label": "India's AMCA Stealth Jet Program Faces Timeline Risks Amid Private Sector Involvement",
       "category": "defense",
-      "boolean_query": "India AMCA stealth jet timeline",
+      "boolean_query": "india amca stealth jet timeline",
       "terms": [
         "India AMCA stealth jet timeline",
         "AMCA development delays",
@@ -504,7 +504,7 @@
     {
       "label": "India Greenlights 4 Squadrons of Ghatak Stealth Bomber Drone for Strategic Operations",
       "category": "defense",
-      "boolean_query": "India Ghatak stealth drone",
+      "boolean_query": "india ghatak stealth drone",
       "terms": [
         "India Ghatak stealth drone",
         "Ghatak drone squadrons 2026",
@@ -531,7 +531,7 @@
     {
       "label": "AI and the Nuclear Balance of Terror: Risks of Autonomous Weapons in Nuclear Deterrence",
       "category": "defense",
-      "boolean_query": "AI nuclear balance of terror",
+      "boolean_query": "ai nuclear balance of terror",
       "terms": [
         "AI nuclear balance of terror",
         "Autonomous weapons nuclear deterrence",
@@ -588,7 +588,7 @@
     {
       "label": "U.S.-Saudi Agreement for Civil Nuclear Cooperation: FAQs and Security Concerns",
       "category": "economic",
-      "boolean_query": "US saudi nuclear cooperation",
+      "boolean_query": "us saudi civil nuclear agreement",
       "terms": [
         "US saudi nuclear cooperation",
         "Saudi civil nuclear agreement",

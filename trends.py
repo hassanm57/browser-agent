@@ -2970,15 +2970,16 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
                 if not is_duplicate_term:
                     clean_terms_list.append(term_str)
 
-        # Keep up to 12 context-rich phrases
-        final_terms = handle_alternate_spelling_keywords(clean_terms_list[:12])
+        # Keep 5 to 7 context-rich phrases
+        final_terms = handle_alternate_spelling_keywords(clean_terms_list[:7])
 
-        # If fewer than 8 terms were generated, enrich using key phrases from clean_label to guarantee at least 8 keywords
-        if len(final_terms) < 8:
+        # If fewer than 5 terms were generated, enrich using key phrases from clean_label to guarantee at least 5 keywords
+        if len(final_terms) < 5:
             label_phrases = extract_key_phrases_from_headline(clean_label)
             for phrase in label_phrases:
                 phrase_clean = clean_and_sanitize_keyword_phrase(phrase)
                 phrase_clean = strip_dangling_trailing_words(phrase_clean)
+                phrase_clean = strip_dangling_leading_words(phrase_clean)
                 if is_generic_fluff_term(phrase_clean) or is_incomplete_stub_keyword(phrase_clean):
                     continue
                 phrase_words = phrase_clean.split()
@@ -3000,8 +3001,10 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
                         break
                 if not is_duplicate and len(phrase_clean) >= 3:
                     final_terms.append(phrase_clean)
-                if len(final_terms) >= 8:
+                if len(final_terms) >= 7:
                     break
+
+        final_terms = final_terms[:7]
 
         # 4. Validate and tighten boolean_query using headline buzzwords
         raw_query = topic_item.get("boolean_query", "")
@@ -3381,7 +3384,7 @@ def extract_key_phrases_from_headline(headline_text):
         if not is_already_in_final:
             final_filtered_phrases_list.append(candidate_clean_string)
 
-    return final_filtered_phrases_list[:10]
+    return final_filtered_phrases_list[:7]
 
 
 def create_boolean_query_from_terms(terms_list, label_text, primary_headline=""):
@@ -4860,8 +4863,8 @@ STRICT REQUIREMENTS FOR EACH GENERATED ROW:
      * FORBIDDEN (too generic): "India Russia defence ties", "Iran regional order foreign forces", "Regional security cooperation", "Strategic defense posture".
      * REQUIRED (buzzword queries): "india army chief russia visit" OR "india dhiraj seth moscow visit" OR "india army chief dhiraj seth russia", "iran araghchi foreign forces exclusion", "strait hormuz tanker incident".
    - This query is searched directly on Google and X.com, so it must reliably surface this exact breaking story.
-4. "terms": Array of EXACTLY 10 to 12 CRISP, HIGH-CONTEXT SEARCH QUERIES (4 to 10 words MAXIMUM each).
-   Every keyword phrase must be a concrete, actionable search query that will reliably pull up this exact news story when searched on X/Twitter or Google.
+4. "terms": Array of EXACTLY 5 to 7 CRISP, HIGH-CONTEXT SEARCH QUERIES (4 to 9 words MAXIMUM each).
+   Every keyword phrase MUST include the niche, proper nouns, and distinct entity words from the headline (e.g. specific country, named leader, warship name, military system, location, or bilateral treaty). When searched on Google or X, each query must reliably pull up the actual news sources for this exact event.
 
    - CLEANLINESS & SEARCH QUALITY:
      * Output clean, natural human-readable search queries without stray quotes, cut-off words, trailing prepositions, or strange punctuation marks.
@@ -4914,9 +4917,7 @@ SYNTACTIC STRUCTURE EXAMPLE (PURELY SYNTHETIC PLACEHOLDERS):
       "Nation-Alpha early warning border network",
       "Model-7X surface to air missile radar",
       "Nation-Alpha long range radar installation",
-      "Border air defense surveillance network",
-      "Model-7X tactical phased array deployment",
-      "Nation-Alpha airspace surveillance system"
+      "Border air defense surveillance network"
     ]
   }
 ]
@@ -4933,7 +4934,7 @@ IMPORTANT: The "boolean_query" field MUST be a valid JSON string wrapped in doub
 
 STRICT REQUIREMENTS:
 1. NO DUPLICATE STORIES: Every row MUST be a completely unique news event. NEVER create two topics for the same event with different phrasings.
-2. Ensure each row has a self-generated phrased headline (6 to 12 words), a buzzword-dense Boolean query (4 to 6 words including proper names/actions/locations, NEVER generic category clichés like 'defence ties'), and 10 to 12 CRISP, HIGH-CONTEXT search queries (4 to 10 words MAXIMUM each).
+2. Ensure each row has a self-generated phrased headline (6 to 12 words), a buzzword-dense Boolean query (4 to 6 words including proper names/actions/locations, NEVER generic category clichés like 'defence ties'), and 5 to 7 CRISP, HIGH-CONTEXT search queries (4 to 9 words MAXIMUM each) containing the niche, proper nouns, and distinct title words.
 3. Do NOT copy headlines word-for-word into keywords.
 4. Do NOT output incomplete stubs or cut-off phrases like 'Forces Down', 'Iran Downing', or 'Chinese DF'.
 5. Do NOT output generic academic fluff like 'military capabilities' or 'arms dynamics'.
@@ -5281,34 +5282,46 @@ Remember: Respond ONLY with a valid, clean JSON array of 13 objects adhering str
         has_matching_live_topic = False
         for topic_candidate in final_validated_topics:
             candidate_label_lower = str(topic_candidate.get("label", "")).lower()
-            if "endgame" in candidate_label_lower or ("araghchi" in candidate_label_lower and "iran" in candidate_label_lower) or ("trump" in candidate_label_lower and "iran war" in candidate_label_lower and ("end" in candidate_label_lower or "diploma" in candidate_label_lower)):
+            similarity_to_live = compute_similarity_score_for_correlation(candidate_label_lower, live_headline_text.lower())
+            if similarity_to_live >= 0.20 or candidate_label_lower == live_headline_text.lower():
                 has_matching_live_topic = True
                 topic_candidate["is_live_breaking_banner"] = True
                 break
 
         if not has_matching_live_topic and len(live_headline_text) > 0:
             buzzwords_query_string = create_boolean_query_from_terms([], live_headline_text)
+            # Dynamically extract 5 to 7 clean key phrases from the live headline
+            dynamic_live_terms = extract_key_phrases_from_headline(live_headline_text)
+            clean_live_terms = []
+            for raw_term in dynamic_live_terms:
+                sanitized_term = clean_and_sanitize_keyword_phrase(raw_term)
+                if len(sanitized_term) >= 2 and not is_generic_fluff_term(sanitized_term) and not is_incomplete_stub_keyword(sanitized_term):
+                    clean_live_terms.append(sanitized_term)
+
+            # If fewer than 5 terms from headline alone, check sub-articles from liveblog
+            liveblog_sub_articles = geo_live_banner_info.get("sub_articles", [])
+            for sub_art in liveblog_sub_articles:
+                if len(clean_live_terms) >= 7:
+                    break
+                sub_title = sub_art.get("title", "")
+                if len(sub_title) > 15:
+                    sub_phrases = extract_key_phrases_from_headline(sub_title)
+                    for sub_p in sub_phrases:
+                        clean_sub = clean_and_sanitize_keyword_phrase(sub_p)
+                        if len(clean_sub) >= 2 and clean_sub not in clean_live_terms:
+                            clean_live_terms.append(clean_sub)
+                            if len(clean_live_terms) >= 7:
+                                break
+
             dedicated_live_topic_record = {
                 "label": live_headline_text,
                 "category": "diplomacy",
                 "boolean_query": buzzwords_query_string,
-                "terms": [
-                    live_headline_text,
-                    "Trump signals endgame in Iran war",
-                    "Araghchi diplomacy Iran war",
-                    "Trump hopes Iran war nearing end",
-                    "Araghchi Beijing diplomatic opening",
-                    "Iran war endgame Trump",
-                    "US Iran diplomatic opening",
-                    "Araghchi Wang Yi talks",
-                    "Trump says hopefully we are toward end of Iran war",
-                    "Trump to hold Iran talks with Gulf leaders",
-                    "Iranian FM Araghchi to visit Beijing for talks with Wang Yi"
-                ],
+                "terms": clean_live_terms[:7],
                 "sources": [],
                 "is_live_breaking_banner": True
             }
-            final_validated_topics.insert(2, dedicated_live_topic_record)
+            final_validated_topics.insert(1, dedicated_live_topic_record)
 
     # Sort topics by editorial importance to enforce podium positions
     final_validated_topics = sort_topics_by_editorial_importance(final_validated_topics)

@@ -2096,6 +2096,9 @@ def validate_and_sanitize_synthesized_topics(raw_topics_data, default_country_na
         if not isinstance(raw_label, str):
             raw_label = str(raw_label)
         clean_label = re.sub(r'<[^>]*>', '', raw_label).strip()
+        if "scroll element" in clean_label.lower():
+            # Drop browser automation DOM artifact topics
+            continue
         if len(clean_label) == 0:
             clean_label = f"{default_country_name} Strategic Development"
         if len(clean_label) > 150:
@@ -2562,8 +2565,16 @@ def clean_headline_text_for_similarity(raw_headline_text):
     # Remove URLs that might be embedded in headline text
     cleaned_text = re.sub(r'https?://\S+', '', cleaned_text)
 
+    # Remove browser automation scroll artifacts
+    cleaned_text = re.sub(r'\|?\s*scroll\s+element[^|\n]*\|?', '', cleaned_text, flags=re.IGNORECASE)
+
     # Lowercase for consistent comparison
     cleaned_text = cleaned_text.lower()
+
+    # Normalize financial quantity abbreviations so "38bn" matches "38 billion"
+    cleaned_text = re.sub(r'\b(\d+)\s*(bn|bln)\b', r'\1 billion', cleaned_text)
+    cleaned_text = re.sub(r'\b(\d+)\s*(mn|mil)\b', r'\1 million', cleaned_text)
+    cleaned_text = re.sub(r'\b(\d+)\s*tr\b', r'\1 trillion', cleaned_text)
 
     # Normalize transliterations and spelling variants
     transliteration_mappings = [
@@ -3095,20 +3106,15 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         topic_label_string = str(topic_item.get("label", "")).lower()
         topic_terms_list = topic_item.get("terms", [])
 
-        # Clean label characters to remove punctuation
-        clean_label_characters = []
-        for character in topic_label_string:
-            if character.isalnum() or character == " ":
-                clean_label_characters.append(character)
-            else:
-                clean_label_characters.append(" ")
-        clean_label_string = "".join(clean_label_characters)
+        # Clean label text using full similarity cleaner to normalize transliterations (e.g. Makkah -> mecca)
+        # and military synonyms (e.g. shot down -> intercepted)
+        clean_label_string = clean_headline_text_for_similarity(topic_label_string)
         raw_label_words = clean_label_string.split()
 
-        # Extract significant words from label
+        # Extract significant words from label (including numeric digits like '38', '15', etc.)
         label_keywords_list = []
         for word in raw_label_words:
-            if len(word) >= 3 and word not in stop_words_list:
+            if (len(word) >= 3 or word.isdigit()) and word not in stop_words_list:
                 label_keywords_list.append(word)
 
         # Build 2-word phrases from adjacent words in label for phrase matching
@@ -3121,15 +3127,9 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         # Extract significant words from terms
         term_keywords_list = []
         for term_item in topic_terms_list:
-            clean_term_characters = []
-            for character in str(term_item).lower():
-                if character.isalnum() or character == " ":
-                    clean_term_characters.append(character)
-                else:
-                    clean_term_characters.append(" ")
-            clean_term_string = "".join(clean_term_characters)
+            clean_term_string = clean_headline_text_for_similarity(str(term_item))
             for term_word in clean_term_string.split():
-                if len(term_word) >= 4 and term_word not in stop_words_list and term_word not in label_keywords_list:
+                if (len(term_word) >= 4 or term_word.isdigit()) and term_word not in stop_words_list and term_word not in label_keywords_list:
                     if term_word not in term_keywords_list:
                         term_keywords_list.append(term_word)
 
@@ -3138,16 +3138,8 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
 
         # Step 1: Compare topic against all ingested news headlines
         for headline_text, metadata_dictionary in headline_sources_metadata_map.items():
-            headline_lower_string = headline_text.lower()
-
-            # Clean headline tokens
-            clean_headline_characters = []
-            for character in headline_lower_string:
-                if character.isalnum() or character == " ":
-                    clean_headline_characters.append(character)
-                else:
-                    clean_headline_characters.append(" ")
-            clean_headline_string = "".join(clean_headline_characters)
+            # Clean headline tokens using same normalization so synonyms and transliterations match
+            clean_headline_string = clean_headline_text_for_similarity(headline_text)
             headline_words_list = clean_headline_string.split()
 
             # Match label keywords against headline words using stem prefix check
@@ -3168,13 +3160,17 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                     matched_label_tokens_count = matched_label_tokens_count + 1
 
             # Determine minimum tokens required based on label length
+            # For substantive topic labels (>= 5 keywords), matching only 1 or 2 tokens
+            # represents broad or unrelated op-eds (e.g. just mentioning "iran war" in passing)
             minimum_required_tokens = 2
-            if len(label_keywords_list) < 3:
+            if len(label_keywords_list) >= 5:
+                minimum_required_tokens = 3
+            elif len(label_keywords_list) < 3:
                 minimum_required_tokens = 1
 
             has_bigram_match = False
             for bigram in label_bigrams_list:
-                if bigram in headline_lower_string:
+                if bigram in clean_headline_string:
                     has_bigram_match = True
                     break
 
@@ -3184,11 +3180,14 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
             topic_full_text = topic_label_string + " " + " ".join(topic_terms_list)
             embedding_similarity = compute_similarity_score_for_correlation(topic_full_text, headline_text)
 
-            # Decide whether to skip this headline based on BOTH word overlap AND embedding similarity.
-            # Old approach: skip if word overlap was below threshold.
-            # New approach: also check embedding similarity before skipping.
+            # Decide whether to skip this headline based on BOTH word overlap AND embedding similarity
             word_overlap_is_insufficient = (matched_label_tokens_count < minimum_required_tokens and not has_bigram_match)
             embedding_says_related = (embedding_similarity >= 0.18)
+
+            # For substantive topic labels (>= 5 keywords), matching only 1 or 2 tokens
+            # with low semantic similarity represents broad or unrelated op-eds
+            if matched_label_tokens_count < minimum_required_tokens and not embedding_says_related:
+                continue
 
             if word_overlap_is_insufficient and not embedding_says_related:
                 # Neither word overlap nor embedding similarity indicates a match
@@ -3208,9 +3207,10 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
 
             # Check direct term string matches
             for term_item in topic_terms_list:
-                term_string_lower = str(term_item).lower()
-                if len(term_string_lower) > 5 and term_string_lower in headline_lower_string:
+                clean_term_phrase = clean_headline_text_for_similarity(str(term_item))
+                if len(clean_term_phrase) > 5 and clean_term_phrase in clean_headline_string:
                     relevance_score = relevance_score + 10
+                    break
 
             # Scale the 0.0-1.0 embedding similarity to a 0-30 point bonus
             embedding_bonus_points = int(embedding_similarity * 30)
@@ -3225,17 +3225,20 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                     "score": relevance_score,
                     "title": candidate_title,
                     "source_name": candidate_source_name,
-                    "url": article_url
+                    "url": article_url,
+                    "embedding_similarity": embedding_similarity,
+                    "matched_tokens": matched_label_tokens_count,
+                    "has_bigram": has_bigram_match
                 })
 
         # Step 2: Check X tweets if available
         if curated_x_sources_tweets is not None:
             for account_name, tweets_list in curated_x_sources_tweets.items():
                 for tweet_text in tweets_list:
-                    tweet_lower = tweet_text.lower()
+                    cleaned_tweet = clean_headline_text_for_similarity(tweet_text)
                     tweet_matched_tokens = 0
                     for label_word in label_keywords_list:
-                        if label_word in tweet_lower:
+                        if label_word in cleaned_tweet:
                             tweet_matched_tokens = tweet_matched_tokens + 1
 
                     if tweet_matched_tokens >= 2:
@@ -3250,7 +3253,10 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                                 "score": tweet_score,
                                 "title": candidate_title,
                                 "source_name": f"X.com ({account_name})",
-                                "url": tweet_url
+                                "url": tweet_url,
+                                "embedding_similarity": 0.0,
+                                "matched_tokens": tweet_matched_tokens,
+                                "has_bigram": False
                             })
 
         # Sort candidates descending by score using procedural bubble sort
@@ -3265,12 +3271,25 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         final_matched_sources_list = []
         if len(scored_candidates_list) > 0:
             highest_score = scored_candidates_list[0]["score"]
-            score_cutoff = highest_score * 0.48
-            if score_cutoff < 10:
-                score_cutoff = 10
+            # Dynamic relative cutoff: 48% of top score, capped at 32.0 to prevent
+            # long verbatim headlines from unfairly raising the bar above concise wire reports
+            score_cutoff = min(highest_score * 0.48, 32.0)
+            if score_cutoff < 12.0:
+                score_cutoff = 12.0
 
             for candidate_item in scored_candidates_list:
-                if candidate_item["score"] >= score_cutoff:
+                passes_score_threshold = candidate_item["score"] >= score_cutoff
+                # Semantic safety net: if an article has strong semantic similarity
+                # and matches key event tokens or a bigram, keep it even if its score is slightly below cutoff
+                candidate_embedding_similarity = candidate_item.get("embedding_similarity", 0.0)
+                candidate_matched_tokens = candidate_item.get("matched_tokens", 0)
+                candidate_has_bigram = candidate_item.get("has_bigram", False)
+                passes_semantic_safety = (
+                    candidate_embedding_similarity >= 0.20
+                    and (candidate_matched_tokens >= 3 or candidate_has_bigram)
+                )
+
+                if passes_score_threshold or passes_semantic_safety:
                     final_matched_sources_list.append({
                         "title": candidate_item["title"],
                         "source_name": candidate_item["source_name"],

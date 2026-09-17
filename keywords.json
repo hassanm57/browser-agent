@@ -1,7 +1,634 @@
 {
-  "generated_at": null,
+  "generated_at": "2026-09-17T09:47:52.078799",
   "country": "Worldwide",
-  "sources_consulted": [],
-  "total_topics": 0,
-  "topics": []
+  "sources_consulted": [
+    "x.com_native_explore_and_tweets",
+    "Dawn News",
+    "The Express Tribune",
+    "The News International World",
+    "Defense News RSS",
+    "Breaking Defense RSS",
+    "Foreign Affairs Defense & Military",
+    "Foreign Affairs Nuclear Proliferation",
+    "Foreign Affairs War & Strategy",
+    "BBC World News Wire RSS",
+    "Defense One Intelligence & Tech",
+    "Janes All Defence News",
+    "SCMP China Military",
+    "Reuters World News",
+    "IISS Defence & Military Analysis",
+    "IISS Nuclear Arms Control",
+    "IISS Strategic Intelligence",
+    "CSIS Strategic & International Studies",
+    "Atlantic Council Geopolitics & Defense",
+    "Idrees Ali (Reuters Pentagon)",
+    "Phil Stewart (Reuters Defense)",
+    "Jacopo Barigazzi (Politico Defense)",
+    "Jonathan Beale (BBC Defense)",
+    "OSINTdefender (Global Conflicts)",
+    "IAEA News Centre",
+    "Arms Control Association",
+    "SIPRI Recent Research & News",
+    "Carnegie Nuclear Policy Program",
+    "Stimson Center Strategic Analysis",
+    "UNODA Disarmament Affairs",
+    "IDRW Indian Defence Research Wing",
+    "IDRW India Category",
+    "The New Indian Express",
+    "DefenceXP India",
+    "Defence.in Forum & News",
+    "Defence Update India RSS",
+    "IDRW RSS Feed",
+    "Livefist Defence",
+    "National Defence India RSS",
+    "Alpha Defense RSS",
+    "IADNews Indian Aerospace & Defence RSS",
+    "Indian Defence Review RSS",
+    "Quwa Defence News",
+    "US Dept of Defense Official News",
+    "Air & Space Forces Magazine",
+    "Naval News Global",
+    "USNI News (U.S. Naval Institute)",
+    "War on the Rocks Strategy & Defense",
+    "The Diplomat Asia-Pacific Defense",
+    "The Hindu International",
+    "Al Jazeera English RSS",
+    "Geo News World",
+    "Geo TV Front Page",
+    "Geo TV World",
+    "Defence Capital RSS",
+    "The Diplomat India RSS",
+    "The Week India Defence",
+    "Times of India Defence",
+    "Indian Defence News RSS"
+  ],
+  "total_topics": 13,
+  "topics": [
+    {
+      "label": "Houthi Drone Intercepted Near Makkah as Saudi-led Coalition Warns Holy Sites Are 'Red Line'",
+      "category": "defense",
+      "boolean_query": "Houthi drone makkah red line",
+      "terms": [
+        "Houthi drone makkah red line",
+        "Houthi drone intercepted makkah",
+        "Saudi coalition makkah red line warning",
+        "Makkah holy sites drone attack",
+        "Saudi defense response to houthi",
+        "Houthi attacks on saudi holy sites",
+        "Makkah drone interception 2026",
+        "Saudi air defense system activation",
+        "Houthi drone threat to makkah",
+        "Red line for houthi attacks",
+        "Houthi drone Mecca red line",
+        "Houthi drone intercepted Mecca"
+      ],
+      "sources": [
+        {
+          "title": "Houthi drone intercepted near Makkah as Saudi-led coalition warns holy sites are 'red line",
+          "source_name": "Geo TV World",
+          "url": "https://www.geo.tv/latest/682272-houthi-drone-intercepted-near-makkah-as-saudi-coalition-warns-holy-sites-are-red-line"
+        },
+        {
+          "title": "Saudi-led coalition says Houthis targeted Makkah with drone, warns of 'red line'",
+          "source_name": "Dawn News",
+          "url": "https://www.dawn.com/news/2030333/saudi-led-coalition-says-houthis-targeted-makkah-with-drone-warns-of-red-line"
+        },
+        {
+          "title": "Saudi Arabia says it shot down Houthi drone south of Mecca",
+          "source_name": "BBC World News Wire RSS",
+          "url": "https://www.bbc.co.uk/news/articles/cr89jqd1w45eo?at_medium=RSS&at_campaign=rss"
+        }
+      ],
+      "source_headline": "Houthi drone intercepted near Makkah as Saudi-led coalition warns holy sites are 'red line",
+      "source_name": "Geo TV World",
+      "source_url": "https://www.geo.tv/latest/682272-houthi-drone-intercepted-near-makkah-as-saudi-coalition-warns-holy-sites-are-red-line",
+      "sample_tweets": [
+        "[The Middle East | @A_M_R_M1 | Sep 16] Sep 16 BREAKING | Saudi-led Arab Coalition: Saudi air defenses intercepted and destroyed a Houthi drone before it entered the restricted airspace over the holy city of Mecca.",
+        "[Strategic Vanguard \u2694\ufe0f | @StrategicVang | 20h] \ud83d\udea8\ud83c\uddf8\ud83c\udde6 RED LINE : Saudi air defenses intercepted & destroyed a Houthi drone south of before it entered the Holy City\u2019s restricted airspace. \ud83d\udd4b \u201cThe security of the Two Holy Mosques & pilgrims is a red line .\u201d May Allah \ufdfb protect Makkah, Madinah & all worshippers. \ud83e\udd32\ud83c\uddf8\ud83c\udde6 1.6K",
+        "[Travis Hawley | @talk2trav | 4h] Saudi Arabia is calling the alleged Houthi drone attack targeted at Mecca a \u2018 red line \u2019 and looks to rally support to fight back against the Iran backed terrorist network in Yemen.",
+        "[Travis Hawley | @talk2trav | 4h] Saudi Arabia is calling the alleged Houthi drone attack targeted at Mecca a \u2018 red line \u2019 and looks to rally support to fight back against the Iran backed terrorist network in Yemen. 0:24",
+        "[Global South World | @g_s_world | 12h] Islam\u2019s holiest city is now allegedly a target in the war. That's if you ask Saudi Arabia, which says its air defences intercepted a Houthi drone south of Mecca, accusing the Yemen-based group of attempting to attack the sacred city. Riyadh declared the security of Mecca and",
+        "[Sagar STORM\ud83d\udd33 | @AlexAllone1 | Sep 16] Sep 16 BIG BREAKING -:\ud83d\udea8 Soudi air defence system intercepted a drone in Mecca air space. Soudi led forces in Yeman says, \"\"attempt to target Mecca with a drone will remain a black mark in the record of Houthi violations\" \"Mecca and Madina is a",
+        "[Travis Hawley | @talk2trav | 4h] Saudi Arabia is calling the alleged Houthi drone attack targeted at Mecca a \u2018 red line \u2019 and looks to rally support to fight back against the Iran backed terrorist network in Yemen. 0:02 / 0:26",
+        "[Global South World | @g_s_world | 12h] Islam\u2019s holiest city is now allegedly a target in the war. That's if you ask Saudi Arabia, which says its air defences intercepted a Houthi drone south of Mecca, accusing the Yemen-based group of attempting to attack the sacred city. Riyadh declared the security of Mecca and 0:13",
+        "[Sagar STORM\ud83d\udd33 | @AlexAllone1 | Sep 16] Sep 16 BIG BREAKING -:\ud83d\udea8 Soudi air defence system intercepted a drone in Mecca air space. Soudi led forces in Yeman says, \"\"attempt to target Mecca with a drone will remain a black mark in the record of Houthi violations\" \"Mecca and Madina is a red line \". 2.1K",
+        "[\ud835\udc03\ud835\udc2b\ud835\udc1e\ud835\udc1a\ud835\udc1d \ud835\udc16\ud835\udc1a\ud835\udc2d\ud835\udc1c\ud835\udc21\ud835\udc1e\ud835\udc2b | @dread_watcher | 21h] \ud83d\udea8 BREAKING: HOUTHI DRONE DOWNED SOUTH OF MAKKAH \ud83c\uddf8\ud83c\udde6 Saudi air defenses intercepted and destroyed a hostile drone south of before it could enter the Holy City\u2019s airspace. Maj. Gen. Turki Al-Malki said the drone was launched by the Houthis, calling it the second reported",
+        "[Ebrahim Zolfaghari | @IranTimes72 | 11h] Saudi Arabia has strengthened air defenses around after intercepting a Houthi drone south of the holy city. Saudi authorities have declared the Two Holy Mosques a \u201c red line \u201d. 7.1K",
+        "[The Geopolitics | @Newstoday555 | 15h] BREAKING: Saudi Arabia has heightened air defenses around after intercepting a Houthi drone south of the holy city. Saudi authorities called the Two Holy Mosques a \u201c red line .\u201d 1.4K",
+        "[Stay update | @StayUpdate6 | Sep 16] Sep 16 \ud83d\udea8 BIG BREAKING: Saudi air defenses intercepted and destroyed a Houthi drone south of Mecca before it could enter the holy city\u2019s restricted airspace. The Saudi-led coalition called it the second attempt to target Mecca, declaring the security of the Two Holy Mosques and |scroll element (horizontal 0%)",
+        "[The Geopolitics | @Newstoday555 | 15h] BREAKING: Saudi Arabia has heightened air defenses around after intercepting a Houthi drone south of the holy city. Saudi authorities called the Two Holy Mosques a \u201c red line .\u201d 0:21 1.4K",
+        "[Stay update | @StayUpdate6 | Sep 16] Sep 16 \ud83d\udea8 BIG BREAKING: Saudi air defenses intercepted and destroyed a Houthi drone south of Mecca before it could enter the holy city\u2019s restricted airspace. The Saudi-led coalition called it the second attempt to target Mecca, declaring the security of the Two Holy Mosques and",
+        "[DEFENCE JOURNALIST SAHIL | @DefenceSahil | 16h] BREAKING: Saudi Air Defences Intercept Houthi Drone South of Mecca \u2014 Security Alert Triggered Near Islam\u2019s Holiest City Saudi Arabia\u2019s air defence forces intercepted and destroyed a drone south of Mecca before it could enter the holy city\u2019s prohibited airspace, according to the",
+        "[Sergeant News Network | @sgtnewsnetwork | 17h] BREAKING \u2014 Saudi air defenses just knocked down a Houthi drone south of Mecca before it entered the restricted airspace over Islam\u2019s holiest city. Coalition spokesman Turki al-Malki said the shoot-down came at 6:50 p.m. Saudi time.",
+        "[Pamir Watch | @PamirWatch | Sep 16] Sep 16 \ud83d\udea8 Breaking: Saudi Air Defense intercepts and destroys a drone that entered Mecca\u2019s airspace. The Saudi-led coalition in Yemen says the alleged attempt to target Mecca will remain \u201ca black mark\u201d in the record of Houthi",
+        "[Idrees Ali | @idreesali114 | 13h] The Houthis clearly have capable surface to air systems, which have brought down a number of U.S. military drones in recent years. Quote IRNA News Agency \u262b"
+      ]
+    },
+    {
+      "label": "Chinese Defence Chief Avoids Mention of Taiwan, South China Sea Ahead of Xi-Trump Summit",
+      "category": "diplomacy",
+      "boolean_query": "China defence chief taiwan south china sea",
+      "terms": [
+        "China defence chief taiwan south china sea",
+        "Dong Jun xiangshan forum no taiwan mention",
+        "China taiwan south china sea avoidance",
+        "Xi trump summit chinese defense strategy",
+        "Dong Jun xiangshan forum speech",
+        "Chinas taiwan policy 2026",
+        "South china sea chinese military stance",
+        "Chinese defense chief xi trump meeting",
+        "China taiwan relations 2026"
+      ],
+      "sources": [
+        {
+          "title": "Chinese defence chief skirts flashpoints at Xiangshan Forum ahead of Xi-Trump summit Dong Jun makes rare public offer",
+          "source_name": "SCMP China Military",
+          "url": "https://www.scmp.com/news/china/military/article/3367735/chinese-defence-chief-skirts-flashpoints-xiangshan-forum-ahead-xi-trump-summit?module=top_story&pgtype=subsection"
+        },
+        {
+          "title": "Chinese defence chief skirts flashpoints at Xiangshan Forum ahead of Xi-Trump summit",
+          "source_name": "SCMP China Military",
+          "url": "https://www.scmp.com/news/china/military"
+        },
+        {
+          "title": "Fragility and cooperation: takeaways from Dong Jun\u2019s Xiangshan Forum speech The Chinese defence minister officially",
+          "source_name": "SCMP China Military",
+          "url": "https://www.scmp.com/news/china/military/article/3367654/fragility-and-cooperation-takeaways-dong-juns-xiangshan-forum-speech?module=top_story&pgtype=subsection"
+        },
+        {
+          "title": "Xiangshan Forum: China\u2019s defence chief on security in a fragile world \u2013 as it happened Dong Jun makes no mention",
+          "source_name": "SCMP China Military",
+          "url": "https://www.scmp.com/news/china/military/article/3367649/beijing-hosts-xiangshan-forum-marking-20th-anniversary-chinas-top-defence-conference?module=top_story&pgtype=subsection"
+        },
+        {
+          "title": "Defence chief Dong Jun omits Taiwan in milder Xiangshan Forum address Retired PLA colonel says defence minister\u2019s",
+          "source_name": "SCMP China Military",
+          "url": "https://www.scmp.com/news/china/military/article/3367657/dong-jun-adopts-softer-stance-us-xiangshan-forum-xi-prepares-trump-summit?module=top_story&pgtype=subsection"
+        },
+        {
+          "title": "Should Beijing use its maritime militia as backup force in South China Sea?",
+          "source_name": "SCMP China Military",
+          "url": "https://www.scmp.com/news/china/military/article/3367678/should-china-use-its-maritime-militia-backup-force-south-china-sea?module=top_story&pgtype=subsection"
+        },
+        {
+          "title": "Carrier USS Abraham Lincoln Operates with Australians in the South China Sea",
+          "source_name": "USNI News (U.S. Naval Institute)",
+          "url": "https://news.usni.org/2026/09/15/carrier-uss-abraham-lincoln-operates-with-australians-in-the-south-china-sea"
+        }
+      ],
+      "source_headline": "Chinese defence chief skirts flashpoints at Xiangshan Forum ahead of Xi-Trump summit Dong Jun makes rare public offer",
+      "source_name": "SCMP China Military",
+      "source_url": "https://www.scmp.com/news/china/military/article/3367735/chinese-defence-chief-skirts-flashpoints-xiangshan-forum-ahead-xi-trump-summit?module=top_story&pgtype=subsection",
+      "sample_tweets": [
+        "[Chinese Embassy in Fiji | @ChineseEmb_FJ | 12m] Pinglu Canal is now open. China \u2019s first river-to- sea canal\u2014134.2 km, 5,000-tonne vessel capacity\u2014links SW China to the Beibu Gulf facing SE Asia, creating a new gateway for China -ASEAN cooperation and opening-up. 0:42",
+        "[Taiwan News | @TaiwanNewsEN | 2m] #Taiwan taiwannews.com.tw/news/6441534",
+        "[Global Surveillance | @Globalsurv | 23m] \ud83c\uddf9\ud83c\uddfc\ud83c\udde8\ud83c\uddf3 Taiwan detected 19 Chinese PLA warplanes operating near the island. The warplanes included J-11, J-16, JJ-7, H-6K, KJ-500 and Y-8 EW. Out of 19 aircrafts, 15 crossed the median line and entered Taiwan 's central and southwestern airspace. Taipei monitored and responded",
+        "[Al Jazeera English | @AJEnglish | 26m] Korea\u2019s Foreign Minister Cho Hyun says the country has not decided on any military deployment to the Strait of Hormuz while speaking to reporters before departing for Washington, according to local media reports. \ud83d\udd34 LIVE updates: aje.news/tv23uq",
+        "[Al Jazeera English | @AJEnglish | 26m] Korea\u2019s Foreign Minister Cho Hyun says the country has not decided on any military deployment to the Strait of Hormuz while speaking to reporters before departing for Washington, according to local media reports. \ud83d\udd34 LIVE updates: aje.news/tv23uq 18K",
+        "[People's Daily Overseas-Haiwainet | @haiwainet | Sep 15] Sep 15 Lei Chien: The US military is incapable of countering the PLA in the Taiwan Strait, not to mention that Taiwan 's military is simply not on the same level as the PLA. \u96f7\u5029\uff1a\u5728\u53f0\u6d77\u7f8e\u519b\u65e0\u529b\u5bf9\u6297\u89e3\u653e\u519b\uff0c\u66f4\u4f55\u51b5\u53f0\u519b\u6839\u672c\u4e0d\u662f\u4e00\u4e2a\u91cf\u7ea7\u7684 \uff08\u770b\u53f0\u6d77\uff09",
+        "[@india_italy | Sep 10] Sep 10 Philippine Defense Secretary",
+        "[People's Daily Overseas-Haiwainet | @haiwainet | Sep 15] Sep 15 Lei Chien: The US military is incapable of countering the PLA in the Taiwan Strait, not to mention that Taiwan 's military is simply not on the same level as the PLA. \u96f7\u5029\uff1a\u5728\u53f0\u6d77\u7f8e\u519b\u65e0\u529b\u5bf9\u6297\u89e3\u653e\u519b\uff0c\u66f4\u4f55\u51b5\u53f0\u519b\u6839\u672c\u4e0d\u662f\u4e00\u4e2a\u91cf\u7ea7\u7684 \uff08\u770b\u53f0\u6d77\uff09 0:29",
+        "[Erika Sinaking | @erika_snking | 56m] Now: Palace Press Officer Clarissa A. Castro conducts a news briefing.",
+        "[Minister for Defence Singapore | @DefenceMinSG | 15h] (1/3) This photo takes me back to 2009, when I was in Guilin, China Chief of Staff \u2013 Joint Staff. It was a new chapter for both armed forces.",
+        "[StratPulse | @Lihuohuo2507 | Sep 12] Sep 12 They Do Not Trust Each Other. That Is No Longer the Point. Xi Jinping\u2019s return to India shows how overlapping systems can gain strategic value even when trust remains scarce. China and India do not need to trust each other for their relationship to become strategically",
+        "[Bianca Dava-Lee \ud83d\udc31 | @biancadava | Sep 10] Sep 10 \u201cI\u2019M NOT AN ACTOR, SO I DON\u2019T KNOW THEATRICS.\u201d Defense Secretary Gilberto Teodoro Jr. on Thursday fired back at China after its Foreign Ministry described his remarks as \u201cprovocations and theatrics\u201d following an incident during the Seoul Defense Dialogue, where he was handed a",
+        "[Augadh | @AugadhBhudeva | Sep 16] Sep 16 Awkward Moment: Chinese Diplomat\u2019s Secret Note Read Out Loud In Front Of Live Audience",
+        "[Augadh | @AugadhBhudeva | Sep 16] Sep 16 Awkward Moment: Chinese Diplomat\u2019s Secret Note Read Out Loud In Front Of Live Audience China tried to have the last word at a major defence summit in Seoul. But the Philippines wasn't willing to let it slide and called out Beijing's position right on stage. What happened next",
+        "[KOSO\ud83c\uddf3\ud83c\uddec | @KosoNwa1 | 19h] \ud83c\udde8\ud83c\uddf3 CHINA \u2019S DEFENCE MINISTER DONG JUN: \u201cProvocative acts that hijack the overall interest of the region for self-interest or small grouping interest must not be allowed.\u201d Beijing says such actions must be curbed through joint efforts.",
+        "[People's Daily Overseas-Haiwainet | @haiwainet | Sep 12] Sep 12 China Coast Guard's Enforcement Coverage Reaches Twice the Area of Taiwan Province; He Tao States It Deters Separatists and External Interference. \u4e2d\u56fd\u6d77\u8b66\u6267\u6cd5\u8986\u76d6\u9762\u79ef\u5df2\u8fbe\u53f0\u6e7e\u5c9b\u4e24\u500d\uff01\u4f55\u6d9b\uff1a\u9707\u6151\u201c\u53f0\u72ec\u201d\u548c\u57df\u5916\u5e72\u6d89\uff08\u770b\u53f0\u6d77\uff09",
+        "[Reuters | @Reuters | Sep 14] Sep 14 China 's military leadership is expected to outline its aims for global security when it hosts its annual defense forum this week amid churning tensions in its own neighborhood over Taiwan , \u200cthe China Sea and doubts about US commitments to Asia 52K",
+        "[El Profesor Garlic \ud83e\uddc4\ud83e\udd16\u26a1\ufe0f\ud83d\ude98\ud83d\udd0b\ud83d\udce1\ud83d\udef0\ufe0f\ud83c\uddfa\ud83c\uddf8\ud83d\ude80\ud83d\udfe0 | @teshen8lin | Sep 14] Sep 14 If China were to move against Taiwan , Xi Jinping would first call his junior partner, Vladimir Putin, in Moscow to keep us busy here. \u2014NATO Secretary General Mark Rutte",
+        "[Phil Stewart | @phildstewart | Aug 17] Aug 17 BREAKING - (Reuters) - Trump says he has instructed the Pentagon to substantially reduce joint military exercises with South Korea in a social media post that also mentions Seoul's refusal to take part in actions against Iran.",
+        "[Phil Stewart | @phildstewart | Aug 17] Aug 17 BREAKING - (Reuters) - Trump says he has instructed the Pentagon to substantially reduce joint military exercises with South Korea in a social media post that also mentions Seoul's refusal to take part in actions against Iran. 191K",
+        "[Jonathan Beale | @bealejonathan | 16h] Defence Minister Luke Pollard doesn\u2019t mention Ajax armoured vehicle problem at DVD - but is asked about it. Says it\u2019s vital for"
+      ]
+    },
+    {
+      "label": "AI and the Nuclear Balance of Terror: Risks of Autonomous Weapons in Nuclear Deterrence",
+      "category": "defense",
+      "boolean_query": "AI nuclear balance of terror",
+      "terms": [
+        "AI nuclear balance of terror",
+        "Autonomous weapons nuclear deterrence",
+        "AI in nuclear warfare risks",
+        "Nuclear deterrence AI challenges",
+        "AI and nuclear escalation risks",
+        "AI nuclear weapons balance",
+        "Nuclear balance of terror 2026",
+        "AI in nuclear strategy",
+        "Nuclear deterrence AI implications",
+        "AI nuclear conflict prevention"
+      ],
+      "sources": [
+        {
+          "title": "AI and the Nuclear Balance of Terror",
+          "source_name": "Arms Control Association",
+          "url": "https://www.armscontrol.org/"
+        },
+        {
+          "title": "AI and the Nuclear Balance of Terror By Daryl G. Kimball in Arms Control Today",
+          "source_name": "Arms Control Association",
+          "url": "https://www.armscontrol.org/act/2026-09/focus/ai-and-nuclear-balance-terror"
+        },
+        {
+          "title": "The Strange Defeat of Nuclear Deterrence",
+          "source_name": "Foreign Affairs Nuclear Proliferation",
+          "url": "https://www.foreignaffairs.com/ukraine/strange-defeat-nuclear-deterrence-rose-gottemoeller"
+        },
+        {
+          "title": "The Atlantic Brief: U.S. and European Perspectives on Nuclear Deterrence",
+          "source_name": "War on the Rocks Strategy & Defense",
+          "url": "https://warontherocks.com/the-atlantic-brief-u-s-and-european-perspectives-on-nuclear-deterrence/"
+        },
+        {
+          "title": "Does Latent Nuclear Deterrence Really Work?",
+          "source_name": "War on the Rocks Strategy & Defense",
+          "url": "https://warontherocks.com/does-latent-nuclear-deterrence-really-work/"
+        }
+      ],
+      "source_headline": "AI and the Nuclear Balance of Terror",
+      "source_name": "Arms Control Association",
+      "source_url": "https://www.armscontrol.org/",
+      "sample_tweets": [
+        "[Nestor Opetaia Targeted Individual N.Z | @nestor_opetaia | 8m] Dr. James Giordano, Cognitive warfare, Dual Technologies, and A.I. Sep 11, 2026. \"From MKUltra to Energy Weapons: A Pentagon Advisor On How To Protect Your Brain From Mind Control\" \" But the problem with a lot of this biological and biotechnological",
+        "[Derya Unutmaz, MD | @DeryaTR_ | Sep 14] Sep 14 I completely agree with this take related to the \u201cAI will create viruses that will kill us all\u201d BS. But let me add my few cents, because I am really really angry! I worked with one of the deadliest viruses in history, HIV, for two decades. I was one of the early scientists to",
+        "[Hoogarden | @0xHoogarden | Sep 11] Sep 11 THIS ISNT A SCENE FROM A WAR MOVIE. THIS IS AN AI ROBOT TRAINING TO DO THE JOBS HUMANS ARE TOO SCARED TO DO",
+        "[China pulse \ud83c\udde8\ud83c\uddf3 | @Eng_china5 | 7h] Analysis: Military Power Alone Will Not Determine the Taiwan Issue The capabilities are in place, and the balance of power across the Taiwan Strait clearly favors China, with the gap also extending to a comparison of capabilities in the event of external intervention. At the",
+        "[@BeeJoyGreen | 40m] We are in no danger for the time being. Open AI unleashed AI into the Internet to create this potential catastrophic AI \u2013 harms \u2013 humanity scenario and ChatGPT six can\u2019t correctly count the number of ease in the word seventeen. Quote",
+        "[sustainme.in\u00ae | @sustainme_in | Sep 12] Sep 12 No country has used nuclear weapons since 1945. Unchecked AI could make humans irrelevant \u2014 or be used to kill them. Rogue AI agents, self-improving models, and a jobs wipeout in middle-skill work are already closer than another Hiroshima. Nukes have a treaty. AI does not.",
+        "[DogeDesigner | @cb_doge | Sep 15] Sep 15 Elon Musk says Anthropic puts more care into AI safety than OpenAI and explains how rival companies should test one another\u2019s models. \u201cAll the AI of tests that you give to any model to see if it\u2019s going to build bioweapons or nuclear",
+        "[Arli AP | @arli_ap | 1m] \ud83c\uddee\ud83c\udde9 Diskusi mengenai \" AI slow down and pace\" dari vendor AI sayangnya sama sekali tidak menyentuh masalah kongkrit yang kita hadapi sekarang, yaitu perang. Kita disuguhi skenario hipotesis \" AI doomsday\" & \"Robot Uprising\" yang kita juga tidak tahu akan terjadi atau tidak."
+      ]
+    },
+    {
+      "label": "U.S.-Saudi Agreement for Civil Nuclear Cooperation: FAQs and Security Concerns",
+      "category": "economic",
+      "boolean_query": "US saudi nuclear cooperation",
+      "terms": [
+        "US saudi nuclear cooperation",
+        "Saudi civil nuclear agreement",
+        "US saudi nuclear security",
+        "Nuclear cooperation saudi arabia",
+        "US saudi nuclear deal 2026",
+        "Saudi nuclear energy security",
+        "US saudi nuclear collaboration",
+        "Nuclear cooperation security risks",
+        "Saudi nuclear energy development",
+        "US saudi nuclear agreement details"
+      ],
+      "sources": [
+        {
+          "title": "The U.S.-Saudi Agreement for Civil Nuclear Cooperation: Answers to FAQs",
+          "source_name": "Arms Control Association",
+          "url": "https://www.armscontrol.org/"
+        },
+        {
+          "title": "The U.S.-Saudi Agreement for Civil Nuclear Cooperation: Answers to FAQs By Kelsey Davenport",
+          "source_name": "Arms Control Association",
+          "url": "https://www.armscontrol.org/blog/2026-08-07/us-saudi-agreement-civil-nuclear-cooperation-answers-frequently-asked-questions"
+        }
+      ],
+      "source_headline": "The U.S.-Saudi Agreement for Civil Nuclear Cooperation: Answers to FAQs",
+      "source_name": "Arms Control Association",
+      "source_url": "https://www.armscontrol.org/",
+      "sample_tweets": [
+        "[Reuters | @Reuters | 1h] US Saudi nuclear reut.rs/4yHMogK 28K",
+        "[Al Jazeera Breaking News | @AJENews | 6h] BREAKING: Bipartisan group of US senators calls for disclosure of Saudi nuclear \ud83d\udd34 LIVE updates: aje.news/k6nock?update= GIF 22K",
+        "[Al Jazeera English | @AJEnglish | 6h] A group of bipartisan US senators is urging the Trump administration to disclose the full terms of a proposed civil nuclear Saudi Arabia, including two binding documents negotiated alongside the agreement. \ud83d\udd34 LIVE updates: aje.news/2rgmtg",
+        "[Al Jazeera English | @AJEnglish | 6h] A group of bipartisan US senators is urging the Trump administration to disclose the full terms of a proposed civil nuclear Saudi Arabia, including two binding documents negotiated alongside the agreement. \ud83d\udd34 LIVE updates: aje.news/2rgmtg 26K",
+        "[Desh_Bhakati\ud83c\uddee\ud83c\uddf3 | @Desh_bhakati | Sep 15] Sep 15 We should be giving nuclear bombs to the top 10 friendly countries. If we sell Saudi Arabia nuclear bombs for 50 billion dollar, what's the harm?\ud83d\ude2d We have around 170 nuclear warheads - even if we give 5 each to our friendly countries, we would still have plenty left, Giving",
+        "[The Jerusalem Post | @Jerusalem_Post | 10h] US Saudi Arabia on civil nuclear energy.",
+        "[The Jerusalem Post | @Jerusalem_Post | 10h] US Saudi Arabia on civil nuclear energy. 6.2K",
+        "[Afaaq News Agency | \u062e\u0628\u0631\u06af\u0632\u0627\u0631\u06cc \u0622\u0641\u0627\u0642 | @afaaqaf | 14m] \u0627\u0633\u0648\u0634\u06cc\u062a\u062f\u067e\u0631\u0633 \u06af\u0632\u0627\u0631\u0634 \u062f\u0627\u062f\u0647 \u0627\u0633\u062a \u06a9\u0647 \u0639\u0631\u0628\u0633\u062a\u0627\u0646 \u0633\u0639\u0648\u062f\u06cc \u0628\u0627 \u06a9\u0645\u0628\u0648\u062f \u0645\u0648\u0634\u06a9\u200c\u0647\u0627\u06cc \u0631\u0647\u06af\u06cc\u0631 \u0631\u0648\u0628\u0647\u200c\u0631\u0648 \u0634\u062f\u0647 \u0648 \u0628\u0631\u0627\u06cc \u062f\u0631\u06cc\u0627\u0641\u062a \u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc \u062f\u0641\u0627\u0639 \u0647\u0648\u0627\u06cc\u06cc \u0628\u0647 \u0641\u0631\u0627\u0646\u0633\u0647\u060c \u0628\u0631\u06cc\u062a\u0627\u0646\u06cc\u0627\u060c \u067e\u0627\u06a9\u0633\u062a\u0627\u0646 \u0648 \u0645\u0635\u0631 \u0645\u0631\u0627\u062c\u0639\u0647 \u06a9\u0631\u062f\u0647 \u0627\u0633\u062a. \u06f3\\\u06f1 #\u062e\u0628\u0631\u06af\u0632\u0627\u0631\u06cc_\u0622\u0641\u0627\u0642 #\u0639\u0631\u0628\u0633\u062a\u0627\u0646 #\u0645\u0648\u0634\u06a9 #\u0641\u0631\u0627\u0646\u0633\u0647 #\u0628\u0631\u06cc\u062a\u0627\u0646\u06cc\u0627",
+        "[Reuters | @Reuters | 6h] US Saudi nuclear reut.rs/4j7BcoW 32K",
+        "[Iran TV | @Iran_Tv2 | 38m] BREAKING: \ud83c\uddfa\ud83c\uddf8\ud83c\uddf0\ud83c\uddfc Reports claiming the U.S. has ordered an evacuation of its Kuwaiti air base and withdrawn all naval ships from the Strait of Hormuz.",
+        "[\u064a\u0648\u0633\u0641 | Global | @Youssef500s | 5m] \u0643\u0634\u0641 \u062a\u0642\u0631\u064a\u0631 \u062a\u062d\u0642\u064a\u0642\u064a \u0644\u0634\u0628\u0643\u0629 \u0633\u064a \u0625\u0646 \u0625\u0646 \u0623\u0646 48 \u0633\u0627\u0639\u0629 \u0642\u0628\u0644 \u0627\u0644\u0647\u062c\u0645\u0627\u062a \u0627\u0644\u0645\u062f\u0645\u0631\u0629 \u0627\u0644\u062a\u064a \u0634\u0646\u062a\u0647\u0627 \u0625\u064a\u0631\u0627\u0646 \u0639\u0644\u0649 \u0627\u0644\u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0639\u0633\u0643\u0631\u064a\u0629 \"\u0627\u0644\u0623\u0645\u064a\u0631 \u0633\u0644\u0637\u0627\u0646\" \u0641\u064a \u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0629\u060c \u0648\u0627\u0644\u062a\u064a \u062e\u0644\u0627\u0644\u0647\u0627 \u062a\u0645 \u062a\u062f\u0645\u064a\u0631 \u0637\u0627\u0626\u0631\u0629 \u062a\u062c\u0633\u0633 \"\u0623\u0648\u0627\u0643\u0633\" \u0628\u0627\u0647\u0638\u0629 \u0627\u0644\u062b\u0645\u0646 \u0648\u0625\u0635\u0627\u0628\u0629 12 \u062c\u0646\u062f\u064a\u064b\u0627 \u0623\u0645\u0631\u064a\u0643\u064a\u064b\u0627\u060c \u0643\u0627\u0646\u062a 14 \u0642\u0645\u0631\u064b\u0627 \u062a\u062c\u0633\u0633\u064a\u0627\u064b \u0631\u0648\u0633\u064a\u064b\u0627 \u062a\u0642\u0648\u0645 \u0628\u0627\u0644\u062a\u0642\u0627\u0637 \u0627\u0644\u0635\u0648\u0631 \u0648\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a\u060c"
+      ]
+    },
+    {
+      "label": "Pakistan Protests Indian Navy's 'Provocative' Maneuvers in Arabian Sea EEZ",
+      "category": "diplomacy",
+      "boolean_query": "Pakistan protests Indian navy EEZ",
+      "terms": [
+        "Pakistan protests Indian navy EEZ",
+        "INS Kolkata EEZ incursion",
+        "India Pakistan naval tensions",
+        "Indian navy provocative maneuvers",
+        "Pakistan Indian EEZ dispute",
+        "Arabian sea naval conflict",
+        "India Pakistan maritime standoff",
+        "Indian navy EEZ violation",
+        "Pakistan Indian naval protest",
+        "Arabian sea EEZ conflict"
+      ],
+      "sources": [
+        {
+          "title": "'Provocative, irresponsible': Pakistan protests Indian warship's incursion into EEZ",
+          "source_name": "Geo TV Front Page",
+          "url": "https://www.geo.tv/latest/682368-provocative-irresponsible-pakistan-protests-indian-warships-incursion-into-eez"
+        },
+        {
+          "title": "\u2018Belligerent action\u2019: Pakistan protests Indian Navy vessel\u2019s 'provocative' manoeuvre near PN vessel",
+          "source_name": "Dawn News",
+          "url": "https://www.dawn.com/news/2030413/belligerent-action-pakistan-protests-indian-navy-vessels-provocative-manoeuvre-near-pn-vessel"
+        },
+        {
+          "title": "India Summons Top Pakistani Diplomat After \u2018Collision Between Navy Units\u2019 In Arabian Sea",
+          "source_name": "Indian Defence News RSS",
+          "url": "https://www.indiandefensenews.in/2026/09/india-summons-pakistan-envoy-after.html"
+        },
+        {
+          "title": "INS Nipun Commissioned: Indian Navy Strengthens Deep-Sea Diving and Submarine Rescue Capability",
+          "source_name": "National Defence India RSS",
+          "url": "https://nationaldefence.in/news/ins-nipun-commissioned-indian-navy-deep-sea-diving-submarine-rescue/"
+        },
+        {
+          "title": "Pakistan summons Indian Cd'A to protest INS Kolkata warship\u2019s \u2018provocative\u2019 manoeuvres in EEZ Updated 11 hours ago",
+          "source_name": "The Express Tribune",
+          "url": "https://tribune.com.pk/story/2629695/pakistan-protests-indian-warships-provocative-manoeuvres-in-exclusive-economic-zone"
+        }
+      ],
+      "source_headline": "'Provocative, irresponsible': Pakistan protests Indian warship's incursion into EEZ",
+      "source_name": "Geo TV Front Page",
+      "source_url": "https://www.geo.tv/latest/682368-provocative-irresponsible-pakistan-protests-indian-warships-incursion-into-eez",
+      "sample_tweets": [
+        "[Ministry of Foreign Affairs - Pakistan | @ForeignOfficePk | 11h] \ud83d\udd0aPR No.2\ufe0f\u20e34\ufe0f\u20e36\ufe0f\u20e3/2\ufe0f\u20e30\ufe0f\u20e32\ufe0f\u20e36\ufe0f\u20e3 Pakistan Lodges Strong Protest Over Indian Naval Provocation in its Exclusive Economic Zone \ud83d\udd17\u2b07\ufe0f 35K",
+        "[Military Media | @hehe_samir | 5h] BREAKING: \ud83c\uddf5\ud83c\uddf0\ud83c\uddee\ud83c\uddf3 A Pakistani Navy vessel and an Indian Navy warship collided in the North Arabian Sea. Pakistan says the Indian vessel carried out aggressive maneuvers inside Pakistan EEZ , while India says the collision occurred in international waters.",
+        "[The Indian Express | @IndianExpress | 11m] Top 10 stories of the day: 1. Indian , Pakistani warships collide in North Arabian Sea, Delhi summons Islamabad envoy 2.6K",
+        "[Zard si Gana | @ZardSi | 17h] Pakistan NAVY spokesperson responded to Indian Army\u2019s Bollywood-style rhetoric during the Marka-e-Haq anniversary: Pakistan warned it would shock India if another misadventure was attempted. Today, India tried and PNS Hunain completely mogged them. \ud83c\uddf5\ud83c\uddf0\ud83d\udd25",
+        "[Zard si Gana | @ZardSi | 17h] Pakistan NAVY spokesperson responded to Indian Army\u2019s Bollywood-style rhetoric during the Marka-e-Haq anniversary: Pakistan warned it would shock India if another misadventure was attempted. Today, India tried and PNS Hunain completely mogged them. \ud83c\uddf5\ud83c\uddf0\ud83d\udd25 8K",
+        "[Bhaskar English | @BhaskarEnglish_ | 17m] Bhaskar Smart Brief A naval collision between Indian and Pakistani warships in the Arabian Sea has triggered a diplomatic protest, with India calling the Pakistani vessel\u2019s conduct unacceptable and unprofessional.",
+        "[Bhaskar English | @BhaskarEnglish_ | 17m] Bhaskar Smart Brief A naval collision between Indian and Pakistani warships in the Arabian Sea has triggered a diplomatic protest, with India calling the Pakistani vessel\u2019s conduct unacceptable and unprofessional. 2:33",
+        "[TRT World | @trtworld | 9h] Pakistan \"unprofessional\" as both countries lodge over a naval encounter in the Arabian Sea India lodges protest with Pakistan over reported naval collision 5.5K",
+        "[Akash Singh | @CrisisAxis | 1h] India\u2013 Pakistan warships collide in the North Arabian Sea FACT On 15 September, a Pakistan Navy vessel (PNS Hunain) and an Indian Navy frontline warship collided in the North Arabian Sea. India says the Indian ship was on routine surveillance in international waters; Pakistan",
+        "[Bhaskar English | @BhaskarEnglish_ | 17m] Bhaskar Smart Brief A naval collision between Indian and Pakistani warships in the Arabian Sea has triggered a diplomatic protest, with India calling the Pakistani vessel\u2019s conduct unacceptable and unprofessional. 0:02 / 2:35",
+        "[TRT World | @trtworld | 9h] Pakistan \"unprofessional\" as both countries lodge over a naval encounter in the Arabian Sea",
+        "[Gautam Agarwal \ud83c\uddee\ud83c\uddf3 | @gauagg | 29m] This is said to be the real footage of #Pakistan Naval ship PNS Hunain which purposely collided with an Indian war ship in the international waters of the Arabian Sea Post the collision the Pakistan Naval ship has returned back to the port Quote anilKhatri\ud83c\uddee\ud83c\uddf3",
+        "[Zee News | @ZeeNews | 17m] Translated from Hindi Show original India Delivers a Class Act in Indian Warship Collision Case, Pakistan Reacts 9 Hours Later; Munir's Country Strikes the Old Tune Again \u092d\u093e\u0930\u0924\u0940\u092f \u092f\u0941\u0926\u094d\u0927\u092a\u094b\u0924 \u091f\u0915\u094d\u0915\u0930 \u092e\u093e\u092e\u0932\u0947 \u092e\u0947\u0902 \u092d\u093e\u0930\u0924 \u0928\u0947 \u0932\u0917\u093e\u0908 \u0915\u094d\u0932\u093e\u0938, \u092a\u0915\u093f\u0938\u094d\u0924\u093e\u0928 \u0928\u0947 9 \u0918\u0902\u091f\u0947 \u092c\u093e\u0926 \u0915\u093f\u092f\u093e \u0930\u093f\u090f\u0915\u094d\u091f; \u092e\u0941\u0928\u0940\u0930 \u0915\u0947... 2.4K",
+        "[HUM News | @humnewspakistan | 19m] \u0628\u06be\u0627\u0631\u062a\u06cc \u0628\u062d\u0631\u06cc \u062c\u06c1\u0627\u0632 \u06a9\u06cc \u067e\u0627\u06a9\u0633\u062a\u0627\u0646\u06cc \u0627\u0642\u062a\u0635\u0627\u062f\u06cc \u0632\u0648\u0646 \u06a9\u06cc \u062e\u0644\u0627\u0641 \u0648\u0631\u0632\u06cc \u067e\u0631 \u067e\u0627\u06a9\u0633\u062a\u0627\u0646 \u06a9\u0627 \u0627\u062d\u062a\u062c\u0627\u062c |scroll element (horizontal 0%)",
+        "[HUM News | @humnewspakistan | 19m] \u0628\u06be\u0627\u0631\u062a\u06cc \u0628\u062d\u0631\u06cc \u062c\u06c1\u0627\u0632 \u06a9\u06cc \u067e\u0627\u06a9\u0633\u062a\u0627\u0646\u06cc \u0627\u0642\u062a\u0635\u0627\u062f\u06cc \u0632\u0648\u0646 \u06a9\u06cc \u062e\u0644\u0627\u0641 \u0648\u0631\u0632\u06cc \u067e\u0631 \u067e\u0627\u06a9\u0633\u062a\u0627\u0646 \u06a9\u0627 \u0627\u062d\u062a\u062c\u0627\u062c 1:40",
+        "[Pakistan TV | @PakTVGlobal | 12h] #BREAKING Pakistan has lodged a strong protest with India over provocative and irresponsible manoeuvres by Indian Navy ship INS Kolkata in Pakistan \u2019s exclusive economic zone, calling the activities a violation of the 1991 agreement. Pakistan",
+        "[Zard si Gana | @ZardSi | 18h] \ud83d\udea8\ud83c\uddf5\ud83c\uddf0 PAKISTAN NAVY THRASHES INDIAN NAVY IN THE NORTH ARABIAN SEA \u2693 PNS HUNAIN responded after INS Kolkata\u2019s manoeuvre during Exercise SEASPARK. INS Kolkata withdrew as India later cried foul over the incident.",
+        "[HUM News | @humnewspakistan | 19m] \u0628\u06be\u0627\u0631\u062a\u06cc \u0628\u062d\u0631\u06cc \u062c\u06c1\u0627\u0632 \u06a9\u06cc \u067e\u0627\u06a9\u0633\u062a\u0627\u0646\u06cc \u0627\u0642\u062a\u0635\u0627\u062f\u06cc \u0632\u0648\u0646 \u06a9\u06cc \u062e\u0644\u0627\u0641 \u0648\u0631\u0632\u06cc \u067e\u0631 \u067e\u0627\u06a9\u0633\u062a\u0627\u0646 \u06a9\u0627 \u0627\u062d\u062a\u062c\u0627\u062c 0:02 / 1:42",
+        "[Zard si Gana | @ZardSi | 18h] \ud83d\udea8\ud83c\uddf5\ud83c\uddf0 PAKISTAN NAVY THRASHES INDIAN NAVY IN THE NORTH ARABIAN SEA \u2693 PNS HUNAIN responded after INS Kolkata\u2019s manoeuvre during Exercise SEASPARK. INS Kolkata withdrew as India later cried foul over the incident. 0:20 2.6K",
+        "[Radio Pakistan | @RadioPakistan | 11h] Pakistan has lodged a strong protest with India over a highly provocative and unacceptable action by a vessel of the Indian Navy in Pakistan 's Exclusive Economic Zone",
+        "[Indian Defence Times | @IndianDefenceT | 14h] \ud83c\uddee\ud83c\uddf3 India Indian Warship Pakistan following a collision between a Pakistani naval vessel and an Indian Navy warship in international waters. New Delhi summoned Pakistan"
+      ]
+    },
+    {
+      "label": "Iran's Araghchi Advocates Regional Order Excluding Foreign Forces Amid Gulf Tensions",
+      "category": "politics",
+      "boolean_query": "Iran regional order foreign forces",
+      "terms": [
+        "Iran regional order foreign forces",
+        "Araghchi foreign forces exclusion",
+        "Iran gulf security strategy",
+        "Iran regional security policy",
+        "Foreign forces in gulf region",
+        "Irans regional order vision",
+        "Iran gulf tensions 2026",
+        "Araghchi foreign military presence",
+        "Gulf security foreign exclusion"
+      ],
+      "sources": [
+        {
+          "title": "Iran's Araghchi says new regional order should exclude foreign forces Updated 11 hours ago",
+          "source_name": "The Express Tribune",
+          "url": "https://tribune.com.pk/story/2629597/oic-condemns-heinous-attacks-on-makkah-madinah-region"
+        }
+      ],
+      "source_headline": "Iran's Araghchi says new regional order should exclude foreign forces Updated 11 hours ago",
+      "source_name": "The Express Tribune",
+      "source_url": "https://tribune.com.pk/story/2629597/oic-condemns-heinous-attacks-on-makkah-madinah-region",
+      "sample_tweets": [
+        "[ARY NEWS | @ARYNEWSOFFICIAL | 18m] No place for foreign in new regional order Iran FM Read More: arynews.tv/news/liveblog/ arynews.tv",
+        "[Richard | @ricwe123 | Sep 15] Sep 15 Saudi Arabia is learning a lesson that money and American weapons could never erase: you cannot buy your way out of geography. regional policies. It",
+        "[Ali Karimi-Langroodi | @AliLangroodi | 12h] Iranian Foreign Minister has stressed that there will be no place for foreign in the region under the new order emerging following the US-Israeli aggression against Iran",
+        "[Ali Karimi-Langroodi | @AliLangroodi | 12h] Iranian Foreign Minister has stressed that there will be no place for foreign in the region under the new order emerging following the US-Israeli aggression against Iran No place for foreign forces in new regional order: Iran FM presstv.co.uk",
+        "[WorldGeopolitics25 | @WGeopolitics25 | Sep 12] Sep 12 On the morning of Thursday, September 10, 2026, multiple drone and missile strikes hit pumping stations along the pipeline in the Riyadh and Madinah regions, sparking fires and causing a number of civilian and worker injuries. On Friday, September 11, 2026, the Saudi Ministry",
+        "[WorldGeopolitics25 | @WGeopolitics25 | Sep 12] Sep 12 On the morning of Thursday, September 10, 2026, multiple drone and missile strikes hit pumping stations along the pipeline in the Riyadh and Madinah regions, sparking fires and causing a number of civilian and worker injuries. On Friday, September 11, 2026, the Saudi Ministry of"
+      ]
+    },
+    {
+      "label": "India's AMCA Stealth Jet Program Faces Timeline Risks Amid Private Sector Involvement",
+      "category": "defense",
+      "boolean_query": "India AMCA stealth jet timeline",
+      "terms": [
+        "India AMCA stealth jet timeline",
+        "AMCA development delays",
+        "India private sector AMCA",
+        "AMCA stealth jet challenges",
+        "Indian stealth jet program",
+        "AMCA timeline risks 2026",
+        "India AMCA production issues",
+        "AMCA vs china j-35",
+        "Indian stealth jet development",
+        "AMCA program delays",
+        "India P-75I submarine timeline",
+        "P-75I program delays"
+      ],
+      "sources": [
+        {
+          "title": "HAL Sidelined, Private Giants Shortlisted for India\u2019s AMCA Stealth Jet",
+          "source_name": "Livefist Defence",
+          "url": "https://www.livefistdefence.com/hal-sidelined-private-giants-shortlisted-for-indias-amca-stealth-jet/"
+        }
+      ],
+      "source_headline": "HAL Sidelined, Private Giants Shortlisted for India\u2019s AMCA Stealth Jet",
+      "source_name": "Livefist Defence",
+      "source_url": "https://www.livefistdefence.com/hal-sidelined-private-giants-shortlisted-for-indias-amca-stealth-jet/"
+    },
+    {
+      "label": "DRDO Showcases Indigenous Weapons at Africa Aerospace and Defence Expo 2026",
+      "category": "economic",
+      "boolean_query": "DRDO indigenous weapons expo",
+      "terms": [
+        "DRDO indigenous weapons expo",
+        "DRDO africa aerospace expo",
+        "Indian defense exports 2026",
+        "DRDO indigenous systems showcase",
+        "Africa defense expo 2026",
+        "DRDO export capabilities",
+        "Indian defense technology expo",
+        "DRDO indigenous weapons display",
+        "Africa defense procurement",
+        "DRDO international showcase"
+      ],
+      "sources": [
+        {
+          "title": "DRDO Showcases Indigenous Defence Systems At Africa Aerospace And Defence Expo 2026",
+          "source_name": "Indian Defence News RSS",
+          "url": "https://www.indiandefensenews.in/2026/09/drdo-showcases-indigenous-defence.html"
+        },
+        {
+          "title": "DRDO Showcases Indigenous Weapons at AAD 2026 in Africa",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/drdo-showcases-indigenous-weapons-at-aad-2026-in-africa/"
+        }
+      ],
+      "source_headline": "DRDO Showcases Indigenous Defence Systems At Africa Aerospace And Defence Expo 2026",
+      "source_name": "Indian Defence News RSS",
+      "source_url": "https://www.indiandefensenews.in/2026/09/drdo-showcases-indigenous-defence.html"
+    },
+    {
+      "label": "U.S. Military Warns of 'On-Orbit' Space Weapons Amid Global Arms Race",
+      "category": "defense",
+      "boolean_query": "US space weapons arms race",
+      "terms": [
+        "US military space weapons",
+        "Space weapons global race",
+        "US space arms deployment",
+        "Space weapons 2026",
+        "US space weaponization",
+        "Space weapons international response",
+        "US space military strategy"
+      ],
+      "sources": [
+        {
+          "title": "China warns US space weapons could fuel arms race",
+          "source_name": "Defense News RSS",
+          "url": "https://www.defensenews.com/global/2026/09/16/china-warns-us-space-weapons-could-fuel-arms-race/"
+        },
+        {
+          "title": "Warning of space arms race as US confirms weapons in Earth's orbit",
+          "source_name": "BBC World News Wire RSS",
+          "url": "https://www.bbc.co.uk/news/videos/cmn07yjqg5rwo?at_medium=RSS&at_campaign=rss"
+        },
+        {
+          "title": "As America Deploys Space Weapons Sparking Global Race, India Steps Up Orbit Defence",
+          "source_name": "Indian Defence News RSS",
+          "url": "https://www.indiandefensenews.in/2026/09/as-america-deploys-space-weapons.html"
+        },
+        {
+          "title": "US military has \u2018on-orbit\u2019 space weapons, Air Force Secretary reveals",
+          "source_name": "Defense One Intelligence & Tech",
+          "url": "https://www.defenseone.com/defense-systems/2026/09/us-military-has-orbit-space-weapons-air-force-secretary-reveals/415964/"
+        },
+        {
+          "title": "Russia proposes plan to prevent space arms race after US weapons admission",
+          "source_name": "The News International World",
+          "url": "https://www.thenews.com.pk/latest/1416456-russia-proposes-plan-to-prevent-space-arms-race-after-us-weapons-admission"
+        },
+        {
+          "title": "US Air Force secretary reveals deployment of on-orbit space control weapons",
+          "source_name": "Defense News RSS",
+          "url": "https://www.defensenews.com/news/your-military/2026/09/14/us-air-force-secretary-reveals-deployment-of-on-orbit-space-control-weapons/"
+        },
+        {
+          "title": "\u2018It was time\u2019 to admit US has weapons in orbit, Space Force\u2019s new leader says",
+          "source_name": "Defense One Intelligence & Tech",
+          "url": "https://www.defenseone.com/threats/2026/09/orbit-weapons-space-force-leader/415999/"
+        }
+      ],
+      "source_headline": "China warns US space weapons could fuel arms race",
+      "source_name": "Defense News RSS",
+      "source_url": "https://www.defensenews.com/global/2026/09/16/china-warns-us-space-weapons-could-fuel-arms-race/"
+    },
+    {
+      "label": "India's BrahMos Missile Export to Indonesia Marks Strategic Expansion",
+      "category": "economic",
+      "boolean_query": "India BrahMos export Indonesia",
+      "terms": [
+        "India BrahMos export Indonesia",
+        "BrahMos missile export 2026",
+        "Indonesia BrahMos acquisition",
+        "India defense exports 2026",
+        "BrahMos export to indonesia",
+        "Indonesia defense procurement",
+        "BrahMos missile international sales",
+        "Indias export strategy 2026",
+        "BrahMos missile expansion",
+        "Indonesia defense partnerships"
+      ],
+      "sources": [
+        {
+          "title": "Indonesia Becomes 2nd Export Customer Of BrahMos Missile",
+          "source_name": "Livefist Defence",
+          "url": "https://www.livefistdefence.com/indonesia-becomes-2nd-export-customer-of-brahmos-missile/"
+        },
+        {
+          "title": "Indonesia\u2019s Interest in India\u2019s BrahMos: More Than Just a Missile Deal",
+          "source_name": "The Diplomat India RSS",
+          "url": "https://thediplomat.com/2025/02/indonesias-interest-in-indias-brahmos-more-than-just-a-missile-deal/"
+        },
+        {
+          "title": "HQ-17AE: Can Pakistan\u2019s new Air defence system Stop India\u2019s BrahMos Missile? No Says OEM",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/hq-17ae-can-pakistans-new-air-defence-system-stop-indias-brahmos-missile-no-says-oem/"
+        },
+        {
+          "title": "2nd Order For India? After BrahMos, Vietnam May Purchase Indo-Israeli Barak 8 Missile Defense System \u2013 Reports",
+          "source_name": "Defence Update India RSS",
+          "url": "https://defenceupdate.in/2nd-order-for-india-after-brahmos-vietnam-may-purchase-indo-israeli-barak-8-missile-defense-system-reports/"
+        }
+      ],
+      "source_headline": "Indonesia Becomes 2nd Export Customer Of BrahMos Missile",
+      "source_name": "Livefist Defence",
+      "source_url": "https://www.livefistdefence.com/indonesia-becomes-2nd-export-customer-of-brahmos-missile/"
+    },
+    {
+      "label": "Indian Army Chief Dhiraj Seth Strengthens Russia Defence Ties During Moscow Visit",
+      "category": "defense",
+      "boolean_query": "India Russia defence ties",
+      "terms": [
+        "India Russia defence ties",
+        "Army chief Dhiraj Seth Russia",
+        "India Russia military cooperation",
+        "Indian army Russia visit",
+        "Russia India defence partnership",
+        "Dhiraj Seth Moscow visit",
+        "India Russia arms procurement",
+        "Indian army Russia collaboration",
+        "Russia India military relations",
+        "India Russia defence strategy"
+      ],
+      "sources": [
+        {
+          "title": "India-Russia Defence Partnership Strengthened As Army Chief Dhiraj Seth Lands In Moscow",
+          "source_name": "Indian Defence News RSS",
+          "url": "https://www.indiandefensenews.in/2026/09/india-russia-defence-partnership.html"
+        },
+        {
+          "title": "Army chief General Dhiraj Seth begins three-day Russia visit to strengthen defence ties",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/army-chief-general-dhiraj-seth-begins-three-day-russia-visit-to-strengthen-defence-ties/"
+        },
+        {
+          "title": "General Dhiraj Seth Takes Over as Indian Army Chief, First From Armoured Corps in 32 Years",
+          "source_name": "Defence Capital RSS",
+          "url": "https://defencecapital.in/2026/06/30/general-dhiraj-seth-takes-over-as-indian-army-chief-first-from-armoured-corps-in-32-years/"
+        }
+      ],
+      "source_headline": "India-Russia Defence Partnership Strengthened As Army Chief Dhiraj Seth Lands In Moscow",
+      "source_name": "Indian Defence News RSS",
+      "source_url": "https://www.indiandefensenews.in/2026/09/india-russia-defence-partnership.html"
+    },
+    {
+      "label": "India Greenlights 4 Squadrons of Ghatak Stealth Bomber Drone for Strategic Operations",
+      "category": "defense",
+      "boolean_query": "India Ghatak stealth drone",
+      "terms": [
+        "India Ghatak stealth drone",
+        "Ghatak drone squadrons 2026",
+        "Indian stealth bomber program",
+        "Ghatak drone capabilities",
+        "Indias drone expansion 2026",
+        "Stealth bomber drone development",
+        "Ghatak drone strategic use",
+        "Indian air force drone program",
+        "Ghatak drone deployment",
+        "Indias drone modernization"
+      ],
+      "sources": [
+        {
+          "title": "India \u2018Greenlights\u2019 4 Squadrons of Ghatak Stealth Bomber Drone",
+          "source_name": "Livefist Defence",
+          "url": "https://www.livefistdefence.com/india-greenlights-4-squadrons-of-ghatak-stealth-bomber-drone/"
+        }
+      ],
+      "source_headline": "India \u2018Greenlights\u2019 4 Squadrons of Ghatak Stealth Bomber Drone",
+      "source_name": "Livefist Defence",
+      "source_url": "https://www.livefistdefence.com/india-greenlights-4-squadrons-of-ghatak-stealth-bomber-drone/"
+    }
+  ]
 }

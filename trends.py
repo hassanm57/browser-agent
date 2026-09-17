@@ -1986,7 +1986,10 @@ def sanitize_untrusted_text_for_prompt(raw_text_string):
         cleaned_lines_list.append(stripped_line)
     sanitized_text = " ".join(cleaned_lines_list)
 
-    # 5. Cap text length to prevent context flooding attacks (max 500 characters per item)
+    # 5. Remove browser automation scroll artifacts
+    sanitized_text = re.sub(r'\|?\s*scroll\s+element[^|\n]*\|?', '', sanitized_text, flags=re.IGNORECASE).strip()
+
+    # 6. Cap text length to prevent context flooding attacks (max 500 characters per item)
     if len(sanitized_text) > 500:
         sanitized_text = sanitized_text[:500] + "..."
 
@@ -2707,6 +2710,8 @@ def group_headlines_into_story_clusters(
         headlines_for_this_source = news_sources_intel_dictionary[source_name]
         for headline_index in range(len(headlines_for_this_source)):
             headline_text = headlines_for_this_source[headline_index]
+            if "scroll element" in headline_text.lower():
+                continue
             all_headlines_flat_list.append(headline_text)
             all_source_names_flat_list.append(source_name)
 
@@ -3427,6 +3432,185 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                     break
 
         topic_item["terms"] = updated_terms[:12]
+
+    # Re-order topics by editorial importance: major international news from Geo TV,
+    # Express Tribune, Dawn News, and BBC appear at the top, followed by regional
+    # defence news (Livefist, Indian Defence News, IDRW, etc.), and finally think-tank analyses.
+    sorted_topics_list = sort_topics_by_editorial_importance(topics_list)
+    topics_list.clear()
+    for sorted_topic_item in sorted_topics_list:
+        topics_list.append(sorted_topic_item)
+
+
+def sort_topics_by_editorial_importance(topics_list):
+    """
+    Sorts topics by journalistic and editorial relevance:
+    1. Hottest international breaking news from reputable general outlets:
+       - Geo TV (World / Front Page)
+       - The Express Tribune
+       - Dawn News
+       - BBC World News / Reuters
+    2. Regional strategic and defence developments (Pakistan, India, Iran, China, Space):
+       - Livefist Defence
+       - Indian Defence News / IDRW / Defence Capital / National Defence India / DefenceXP
+       - Defense News RSS / SCMP China Military / USNI News
+    3. Trailing positions feature think-tank or specialist policy analyses:
+       - Arms Control Association, Foreign Affairs, War on the Rocks
+    4. Rigorously purges any topic with 'scroll element' DOM artifacts.
+    """
+    tier_1_keywords_list = [
+        "geo tv", "geo news", "geo.tv", "dawn news", "dawn.com",
+        "express tribune", "tribune.com.pk", "tribune",
+        "bbc", "bbc world", "bbc.co.uk", "reuters", "the news international", "thenews.com.pk"
+    ]
+
+    tier_2_keywords_list = [
+        "livefist", "livefist defence", "indiandefensenews", "indian defence news",
+        "idrw", "idrw rss", "national defence", "nationaldefence", "defence capital",
+        "defencecapital", "defencexp", "defense news", "defensenews", "scmp",
+        "south china morning post", "usni", "usni news", "quwa"
+    ]
+
+    cleaned_topics_list = []
+    for topic_item in topics_list:
+        label_text = str(topic_item.get("label", "")).strip()
+        # Drop completely any topics that contain browser automation scroll artifacts
+        if "scroll element" in label_text.lower():
+            continue
+        cleaned_topics_list.append(topic_item)
+
+    scored_topic_records_list = []
+    for topic_item in cleaned_topics_list:
+        topic_label_lower = str(topic_item.get("label", "")).lower()
+        topic_sources_list = topic_item.get("sources", [])
+
+        found_tier_1_outlets_list = []
+        found_tier_2_outlets_list = []
+
+        for source_record in topic_sources_list:
+            source_name_lower = str(source_record.get("source_name", "")).lower()
+            source_url_lower = str(source_record.get("url", "")).lower()
+            combined_source_text = source_name_lower + " " + source_url_lower
+
+            is_tier_1 = False
+            for tier_1_keyword in tier_1_keywords_list:
+                if tier_1_keyword in combined_source_text:
+                    is_tier_1 = True
+                    break
+
+            if is_tier_1:
+                normalized_tier_1_identifier = ""
+                if "geo" in combined_source_text:
+                    normalized_tier_1_identifier = "geo"
+                elif "dawn" in combined_source_text:
+                    normalized_tier_1_identifier = "dawn"
+                elif "tribune" in combined_source_text:
+                    normalized_tier_1_identifier = "tribune"
+                elif "bbc" in combined_source_text:
+                    normalized_tier_1_identifier = "bbc"
+                elif "reuters" in combined_source_text:
+                    normalized_tier_1_identifier = "reuters"
+                elif "the news" in combined_source_text or "thenews" in combined_source_text:
+                    normalized_tier_1_identifier = "thenews"
+                else:
+                    normalized_tier_1_identifier = source_name_lower
+
+                if normalized_tier_1_identifier not in found_tier_1_outlets_list:
+                    found_tier_1_outlets_list.append(normalized_tier_1_identifier)
+            else:
+                is_tier_2 = False
+                for tier_2_keyword in tier_2_keywords_list:
+                    if tier_2_keyword in combined_source_text:
+                        is_tier_2 = True
+                        break
+
+                if is_tier_2:
+                    normalized_tier_2_identifier = ""
+                    if "livefist" in combined_source_text:
+                        normalized_tier_2_identifier = "livefist"
+                    elif "indiandefensenews" in combined_source_text or "indian defence news" in combined_source_text:
+                        normalized_tier_2_identifier = "indiandefensenews"
+                    elif "idrw" in combined_source_text:
+                        normalized_tier_2_identifier = "idrw"
+                    elif "defence capital" in combined_source_text or "defencecapital" in combined_source_text:
+                        normalized_tier_2_identifier = "defencecapital"
+                    elif "national defence" in combined_source_text or "nationaldefence" in combined_source_text:
+                        normalized_tier_2_identifier = "nationaldefence"
+                    elif "defencexp" in combined_source_text:
+                        normalized_tier_2_identifier = "defencexp"
+                    elif "scmp" in combined_source_text:
+                        normalized_tier_2_identifier = "scmp"
+                    elif "defense news" in combined_source_text or "defensenews" in combined_source_text:
+                        normalized_tier_2_identifier = "defensenews"
+                    elif "usni" in combined_source_text:
+                        normalized_tier_2_identifier = "usni"
+                    elif "quwa" in combined_source_text:
+                        normalized_tier_2_identifier = "quwa"
+                    else:
+                        normalized_tier_2_identifier = source_name_lower
+
+                    if normalized_tier_2_identifier not in found_tier_2_outlets_list:
+                        found_tier_2_outlets_list.append(normalized_tier_2_identifier)
+
+        # Base scoring:
+        # Tier 1 general news stories (Geo TV, Dawn, Tribune, BBC) receive highest priority:
+        # 1000 points per distinct major outlet
+        editorial_priority_score = len(found_tier_1_outlets_list) * 1000
+
+        # Tier 2 regional defence stories receive 250 points per distinct defense outlet
+        editorial_priority_score = editorial_priority_score + (len(found_tier_2_outlets_list) * 250)
+
+        # Multi-source confirmation bonus: stories confirmed by multiple distinct outlets receive extra weight
+        total_distinct_outlets_count = len(found_tier_1_outlets_list) + len(found_tier_2_outlets_list)
+        editorial_priority_score = editorial_priority_score + (total_distinct_outlets_count * 50)
+
+        # Bonus for Geo TV Front Page / Live breaking headline
+        for source_record in topic_sources_list:
+            source_name_lower = str(source_record.get("source_name", "")).lower()
+            if "geo tv front page" in source_name_lower or "geo tv world" in source_name_lower:
+                editorial_priority_score = editorial_priority_score + 300
+                break
+
+        # Priority boost for top breaking international crises
+        if "makkah" in topic_label_lower or "mecca" in topic_label_lower:
+            editorial_priority_score = editorial_priority_score + 500
+
+        breaking_hot_keywords_list = [
+            "intercepted", "interception", "incursion", "collision", "shot down"
+        ]
+        for breaking_keyword in breaking_hot_keywords_list:
+            if breaking_keyword in topic_label_lower:
+                editorial_priority_score = editorial_priority_score + 300
+                break
+
+        # Boost specifically for military leadership visits & bilateral defense ties
+        # (e.g. Indian Army Chief Dhiraj Seth Moscow visit, BrahMos export deal)
+        strategic_defence_keywords_list = [
+            "army chief", "dhiraj seth", "brahmos", "amca", "ghatak", "drdo"
+        ]
+        for defence_keyword in strategic_defence_keywords_list:
+            if defence_keyword in topic_label_lower:
+                editorial_priority_score = editorial_priority_score + 100
+                break
+
+        scored_topic_records_list.append({
+            "score": editorial_priority_score,
+            "topic": topic_item
+        })
+
+    # Procedural bubble sort descending by editorial score
+    for outer_index in range(len(scored_topic_records_list)):
+        for inner_index in range(outer_index + 1, len(scored_topic_records_list)):
+            if scored_topic_records_list[inner_index]["score"] > scored_topic_records_list[outer_index]["score"]:
+                temporary_record = scored_topic_records_list[outer_index]
+                scored_topic_records_list[outer_index] = scored_topic_records_list[inner_index]
+                scored_topic_records_list[inner_index] = temporary_record
+
+    sorted_topics_list = []
+    for record_item in scored_topic_records_list:
+        sorted_topics_list.append(record_item["topic"])
+
+    return sorted_topics_list
 
 
 def generate_fallback_topics_from_headlines(news_sources_intel_dictionary, country_name_string="Worldwide", target_topics_count=13):

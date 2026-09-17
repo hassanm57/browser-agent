@@ -38,6 +38,7 @@ from app.backend.database import (
     clear_all_scraped_tweets
 )
 from app.backend.twitter_handles_runner import run_parallel_twitter_handles_pipeline
+import trends
 
 # Initialize the SQLite tables on startup
 initialize_database()
@@ -235,6 +236,9 @@ def get_latest_pipeline_results():
             if run_record["keywords_json"]:
                 try:
                     keywords = json.loads(run_record["keywords_json"])
+                    if keywords and keywords.get("topics"):
+                        keywords["topics"] = trends.sort_topics_by_editorial_importance(keywords["topics"])
+                        keywords["total_topics"] = len(keywords["topics"])
                 except Exception:
                     pass
             return {
@@ -260,6 +264,9 @@ def get_latest_pipeline_results():
         try:
             with open(KEYWORDS_FILE_PATH, "r", encoding="utf-8") as file_pointer:
                 keywords_disk = json.load(file_pointer)
+                if keywords_disk and keywords_disk.get("topics"):
+                    keywords_disk["topics"] = trends.sort_topics_by_editorial_importance(keywords_disk["topics"])
+                    keywords_disk["total_topics"] = len(keywords_disk["topics"])
         except Exception:
             pass
             
@@ -268,13 +275,13 @@ def get_latest_pipeline_results():
         "country_name": "Worldwide",
         "started_at": None,
         "finished_at": None,
-        "status": "completed" if (keywords_disk and keywords_disk.get("topics")) else "idle",
+        "status": "idle",
         "raw_sources": raw_sources_disk,
         "keywords": keywords_disk
     }
 
 @app.get("/api/runs/{run_identifier}")
-def get_single_run(run_identifier: int):
+def get_single_run_details(run_identifier: int):
     record = get_pipeline_run_details(run_identifier)
     if not record:
         raise HTTPException(status_code=404, detail="Run not found")
@@ -289,6 +296,9 @@ def get_single_run(run_identifier: int):
     if record["keywords_json"]:
         try:
             keywords = json.loads(record["keywords_json"])
+            if keywords and keywords.get("topics"):
+                keywords["topics"] = trends.sort_topics_by_editorial_importance(keywords["topics"])
+                keywords["total_topics"] = len(keywords["topics"])
         except Exception:
             pass
 
@@ -1185,6 +1195,9 @@ def load_latest_keywords_dictionary(specific_run_identifier: Optional[int] = Non
         if run_record and run_record.get("keywords_json"):
             try:
                 parsed_keywords = json.loads(run_record["keywords_json"])
+                if parsed_keywords and parsed_keywords.get("topics"):
+                    parsed_keywords["topics"] = trends.sort_topics_by_editorial_importance(parsed_keywords["topics"])
+                    parsed_keywords["total_topics"] = len(parsed_keywords["topics"])
                 return (specific_run_identifier, parsed_keywords)
             except Exception:
                 pass
@@ -1197,6 +1210,8 @@ def load_latest_keywords_dictionary(specific_run_identifier: Optional[int] = Non
             try:
                 parsed_keywords = json.loads(run_record["keywords_json"])
                 if parsed_keywords and parsed_keywords.get("topics"):
+                    parsed_keywords["topics"] = trends.sort_topics_by_editorial_importance(parsed_keywords["topics"])
+                    parsed_keywords["total_topics"] = len(parsed_keywords["topics"])
                     return (run_summary["id"], parsed_keywords)
             except Exception:
                 pass
@@ -1207,6 +1222,8 @@ def load_latest_keywords_dictionary(specific_run_identifier: Optional[int] = Non
             with open(KEYWORDS_FILE_PATH, "r", encoding="utf-8") as file_pointer:
                 file_keywords_data = json.load(file_pointer)
                 if file_keywords_data and file_keywords_data.get("topics"):
+                    file_keywords_data["topics"] = trends.sort_topics_by_editorial_importance(file_keywords_data["topics"])
+                    file_keywords_data["total_topics"] = len(file_keywords_data["topics"])
                     latest_run_id = all_runs_list[0]["id"] if len(all_runs_list) > 0 else None
                     return (latest_run_id, file_keywords_data)
         except Exception:
@@ -1339,7 +1356,11 @@ def get_keywords_endpoint(
             "category": topic_item.get("category", ""),
             "boolean_query": topic_item.get("boolean_query", ""),
             "terms": topic_item.get("terms", []),
-            "sample_tweets": topic_item.get("sample_tweets", [])
+            "sample_tweets": topic_item.get("sample_tweets", []),
+            "source_headline": topic_item.get("source_headline", ""),
+            "source_name": topic_item.get("source_name", ""),
+            "source_url": topic_item.get("source_url", ""),
+            "sources": topic_item.get("sources", [])
         })
         topic_counter = topic_counter + 1
 

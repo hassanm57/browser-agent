@@ -21,6 +21,7 @@ dist-ssr/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+PIPELINE_ANALYSIS_REPORT.pdf
 
 # SQLite databases & runtime storage
 *.db

@@ -3259,6 +3259,34 @@ def extract_key_phrases_from_headline(headline_text):
                     if not is_already_present:
                         generated_phrases_list.append(cand_phrase)
 
+    # Strategy F: Substantive sliding window phrases from significant headline words
+    if len(generated_phrases_list) < 6:
+        raw_words_list = [
+            clean_word for clean_word in re.sub(r'[^a-zA-Z0-9\s\-]', ' ', base_headline_text).split()
+            if len(clean_word) >= 2
+        ]
+        if len(raw_words_list) >= 4:
+            for window_size in [4, 5, 6, 7]:
+                for start_word_index in range(len(raw_words_list) - window_size + 1):
+                    window_phrase_candidate = " ".join(raw_words_list[start_word_index:start_word_index + window_size])
+                    clean_window_phrase = strip_dangling_trailing_words(window_phrase_candidate)
+                    clean_window_phrase = clean_and_sanitize_keyword_phrase(clean_window_phrase)
+                    window_words = clean_window_phrase.split()
+                    if 4 <= len(window_words) <= 10:
+                        if not is_incomplete_stub_keyword(clean_window_phrase) and not is_generic_fluff_term(clean_window_phrase):
+                            if clean_window_phrase.lower() != base_headline_text.lower():
+                                is_already_present = False
+                                for existing_phrase in generated_phrases_list:
+                                    if clean_window_phrase.lower() == existing_phrase.lower():
+                                        is_already_present = True
+                                        break
+                                if not is_already_present:
+                                    generated_phrases_list.append(clean_window_phrase)
+                                    if len(generated_phrases_list) >= 10:
+                                        break
+                if len(generated_phrases_list) >= 10:
+                    break
+
     # Filter all results: enforce 4 to 10 words (or 2-3 words ONLY if containing a recognized weapon code)
     final_filtered_phrases_list = []
     for candidate_phrase_item in generated_phrases_list:
@@ -4274,7 +4302,7 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                 updated_terms.append(clean_term_str)
 
         # Ensure at least 8 keywords by extracting crisp distilled phrases from the primary source headline only if needed
-        if len(updated_terms) < 6:
+        if len(updated_terms) < 8:
             headline_phrases = extract_key_phrases_from_headline(primary_source_headline)
             for phrase in headline_phrases:
                 phrase_clean = clean_and_sanitize_keyword_phrase(phrase)
@@ -4303,8 +4331,8 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                 if len(updated_terms) >= 8:
                     break
 
-        # If still under 6 keywords, extract phrases from the topic label
-        if len(updated_terms) < 6:
+        # If still under 8 keywords, extract phrases from the topic label
+        if len(updated_terms) < 8:
             label_phrases = extract_key_phrases_from_headline(topic_item.get("label", ""))
             for phrase in label_phrases:
                 phrase_clean = clean_and_sanitize_keyword_phrase(phrase)

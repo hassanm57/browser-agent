@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17T11:45:57.831887",
+  "generated_at": "2026-09-17T16:01:00.304191",
   "country": "Worldwide",
   "sources_consulted": [
     "x.com_native_explore_and_tweets",
@@ -64,94 +64,114 @@
   "total_topics": 13,
   "topics": [
     {
-      "label": "Houthi Drone Intercepted Near Makkah as Saudi-led Coalition Warns Holy Sites Are 'Red Line'",
-      "category": "defense",
-      "boolean_query": "houthi drone makkah red line",
+      "label": "India Protests Pakistani Navy Ship Collision in Arabian Sea",
+      "category": "diplomacy",
+      "boolean_query": "india pakistan navy collision protest",
       "terms": [
-        "Houthi drone intercepted makkah",
-        "Saudi coalition makkah red line warning",
-        "Houthi attack on makkah holy sites",
-        "Saudi air defenses down houthi drone",
-        "Makkah holy sites red line declaration",
-        "Houthi drone threat to makkah",
-        "Saudi-led coalition intercepts houthi drone",
-        "Houthi drone near makkah intercepted",
-        "Makkah security alert houthi drone",
-        "Houthi drone makkah red line warning",
-        "Houthi drone intercepted Mecca",
-        "Saudi coalition Mecca red line warning"
+        "India protests Pakistan navy collision",
+        "Arabian Sea naval collision incident",
+        "India Pakistan maritime dispute",
+        "PNS Hunain collision with Indian ship",
+        "India summons Pakistani diplomat collision",
+        "Pakistani navy ship collision incident",
+        "India Pakistan naval relations tension",
+        "Arabian Sea collision diplomatic row",
+        "India Pakistan maritime conflict",
+        "PNS Hunain collision diplomatic protest"
       ],
       "sources": [
         {
-          "title": "Houthi drone intercepted near Makkah as Saudi-led coalition warns holy sites are 'red line",
-          "source_name": "Geo TV World",
-          "url": "https://www.geo.tv/latest/682272-houthi-drone-intercepted-near-makkah-as-saudi-coalition-warns-holy-sites-are-red-line"
+          "title": "India Protests After Pakistani Navy Ship Collision with Navy Ship",
+          "source_name": "IDRW India Category",
+          "url": "https://idrw.org/india-protests-after-pakistani-navy-ship-collision/#respond"
         },
         {
-          "title": "Saudi Arabia says it shot down Houthi drone south of Mecca",
-          "source_name": "BBC World News Wire RSS",
-          "url": "https://www.bbc.co.uk/news/articles/cr89jqd1w45eo?at_medium=RSS&at_campaign=rss"
+          "title": "India Summons Top Pakistani Diplomat After ‘Collision Between Navy Units’ In Arabian Sea",
+          "source_name": "Indian Defence News RSS",
+          "url": "https://www.indiandefensenews.in/2026/09/india-summons-pakistan-envoy-after.html"
         },
         {
-          "title": "Saudi coalition says Houthi drone destroyed near Mecca",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/saudi-coalition-says-houthi-drone-destroyed-near-mecca/article71470972.ece"
+          "title": "Pakistani Warship PNS Hunain Suffers Heavy Damage After Collision With Indian Navy Vessel In Arabian Sea: Report",
+          "source_name": "Indian Defence News RSS",
+          "url": "https://www.indiandefensenews.in/2026/09/pakistani-warship-pns-hunain-suffers.html"
         },
         {
-          "title": "Saudi Arabia calls attempted Mecca attack 'red line' as Iran-backed Houthis deny they did it",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/saudi-arabia-calls-attempted-mecca-attack-red-line-as-iran-backed-houthis-deny-they-did-it/article71471868.ece"
+          "title": "PNS Hunain Damaged After Collision With Indian Navy Ship Returns to Port",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/pns-hunain-damaged-after-collision-with-indian-navy-ship-returns-to-port/"
         },
         {
-          "title": "Yemeni forces clash with Houthis near Saudi border",
+          "title": "India summons Pakistani diplomat after incident in Arabian Sea",
+          "source_name": "Al Jazeera",
+          "url": "https://www.aljazeera.com/news/2026/9/16/india-summons-pakistani-diplomat-after-incident-in-arabian-sea"
+        },
+        {
+          "title": "Indian, Pakistani Naval Vessels Collide in Arabian Sea, Prompting Diplomatic Tensions",
+          "source_name": "The Diplomat Asia-Pacific Defense",
+          "url": "https://thediplomat.com/2026/09/indian-pakistani-naval-vessels-collide-in-arabian-sea-prompting-diplomatic-tensions/"
+        },
+        {
+          "title": "Modi Commissions Three Indian Navy Ships in Kolkata, Links Shipbuilding to National Growth",
+          "source_name": "Defence Capital RSS",
+          "url": "https://defencecapital.in/2026/06/21/modi-commissions-three-indian-navy-ships-in-kolkata-links-shipbuilding-to-national-growth/"
+        },
+        {
+          "title": "Pakistan Claims Indian Ship Provoked Naval Collision",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/pakistan-claims-indian-ship-provoked-naval-collision/"
+        },
+        {
+          "title": "‘Belligerent action’: Pakistan protests Indian Navy vessel’s 'provocative' manoeuvre near PN vessel",
           "source_name": "Dawn News",
-          "url": "https://www.dawn.com/news/2030410/yemeni-forces-clash-with-houthis-near-saudi-border"
+          "url": "https://www.dawn.com/news/2030413/belligerent-action-pakistan-protests-indian-navy-vessels-provocative-manoeuvre-near-pn-vessel"
         },
         {
-          "title": "Saudi Arabia, other Muslim countries condemn Houthi attempt to attack Makkah",
-          "source_name": "Arab News",
-          "url": "https://www.arabnews.com/saudi-arabia/saudi-arabia-other-muslim-countries-condemn-houthi-attempt-to-attack-makkah-3001918"
+          "title": "India and Pakistan summon diplomats after ships collide in international waters",
+          "source_name": "BBC",
+          "url": "https://www.bbc.com/news/articles/ckge48jggv8go"
         },
         {
-          "title": "Yemen\u2019s Houthis say shot down Saudi fighter jet",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/yemens-houthis-say-shot-down-saudi-fighter-jet/article71471293.ece"
+          "title": "Ex-Navy Officer Calls PNS Hunain Collision ‘Hostile Act’",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/ex-navy-officer-calls-pns-hunain-collision-hostile-act/"
         },
         {
-          "title": "West Asia war updates: Saudi Arabia warns it will react 'firmly' to Houthi attacks",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/west-asia-war-live-updates-saudi-arabia-houthi-attacks-red-sea-us-iran-september-15-2026/article71466658.ece"
+          "title": "INS Nipun Commissioned: Indian Navy Strengthens Deep-Sea Diving and Submarine Rescue Capability",
+          "source_name": "National Defence India RSS",
+          "url": "https://nationaldefence.in/news/ins-nipun-commissioned-indian-navy-deep-sea-diving-submarine-rescue/"
         }
       ],
-      "source_headline": "Houthi drone intercepted near Makkah as Saudi-led coalition warns holy sites are 'red line",
-      "source_name": "Geo TV World",
-      "source_url": "https://www.geo.tv/latest/682272-houthi-drone-intercepted-near-makkah-as-saudi-coalition-warns-holy-sites-are-red-line",
+      "source_headline": "India Protests After Pakistani Navy Ship Collision with Navy Ship",
+      "source_name": "IDRW India Category",
+      "source_url": "https://idrw.org/india-protests-after-pakistani-navy-ship-collision/#respond",
       "sample_tweets": [
-        "[Mossad Commentary | @MOSSADil | Sep 16] Sep 16 SAUDI ARABIA INTERCEPTS HOUTHI DRONE NEAR MECCA Saudi air defenses destroyed a Houthi drone south of Mecca before it entered restricted airspace over Islam\u2019s holiest city. Saudi Arabia says this was the Houthis\u2019 second attempt to target Mecca, following a ballistic missile",
-        "[Ahmed Quraishi | @_AhmedQuraishi | Sep 16] Sep 16 Breaking: #Saudi Air Defense intercepted and destroyed a drone that entered #Mecca 's airspace. The Saudi-led military coalition in #Yemen says the \"attempt to target Mecca with a drone will remain a black mark in the record of Houthi violations\" and that the security of the holy",
-        "[Global South World | @g_s_world | 14h] Islam\u2019s holiest city is now allegedly a target in the war. That's if you ask Saudi Arabia, which says its air defences intercepted a",
-        "[Global South World | @g_s_world | 14h] Islam\u2019s holiest city is now allegedly a target in the war. That's if you ask Saudi Arabia, which says its air defences intercepted a Houthi drone south of Mecca, accusing the Yemen-based group of attempting to attack the sacred city. Riyadh declared the security of Mecca and",
-        "[The Middle East | @A_M_R_M1 | Sep 16] Sep 16 BREAKING | Saudi-led Arab Coalition: Saudi air defenses intercepted and destroyed a Houthi drone before it entered the restricted airspace over the holy city of Mecca.",
-        "[Hazal Aksoy | @HazalAksoy_ | 22h] \u2694\ufe0f Attack on one is attack on all. \ud83c\uddf9\ud83c\uddf7 Turkey & \ud83c\uddf5\ud83c\uddf0 Pakistan on high alert after Houthi drone strike near . The Holy Places were, are and always will be a red line . \ud83d\udeab Any harm to them will NOT be ignored.",
-        "[Dr. Bu Abdullah | @Dr_BuAbdullah | 22h] Saudi Arabia confirms it intercepted a Houthi drone south of before it entered the holy city's restricted airspace. \ud83c\uddf8\ud83c\udde6 The Kingdom has made it clear: The security of the holy sites and pilgrims is a \" red line .\" May Allah protect the Two Holy Sanctuaries. \ud83d\udd4b\ud83e\udd32",
-        "[Sagar STORM\ud83d\udd33 | @AlexAllone1 | Sep 16] Sep 16 BIG BREAKING -:\ud83d\udea8 Soudi air defence system intercepted a drone in Mecca air space. Soudi led forces in Yeman says, \"\"attempt to target Mecca with a drone will remain a black mark in the record of Houthi violations\" \"Mecca and Madina is a red line \". 2.2K",
-        "[Strategic Vanguard \u2694\ufe0f | @StrategicVang | 22h] \ud83d\udea8\ud83c\uddf8\ud83c\udde6 RED LINE : Saudi air defenses intercepted & destroyed a Houthi drone south of before it entered the Holy City\u2019s restricted airspace. \ud83d\udd4b \u201cThe security of the Two Holy Mosques & pilgrims is a",
-        "[Sagar STORM\ud83d\udd33 | @AlexAllone1 | Sep 16] Sep 16 BIG BREAKING -:\ud83d\udea8 Soudi air defence system intercepted a drone in Mecca air space. Soudi led forces in Yeman says, \"\"attempt to target Mecca with a 0:33 2.2K",
-        "[Strategic Vanguard \u2694\ufe0f | @StrategicVang | 22h] \ud83d\udea8\ud83c\uddf8\ud83c\udde6 RED LINE : Saudi air defenses intercepted & destroyed a Houthi drone south of before it entered the Holy City\u2019s restricted airspace. \ud83d\udd4b \u201cThe security of the Two Holy Mosques & pilgrims is a red line .\u201d May Allah \ufdfb protect Makkah, Madinah & all worshippers. \ud83e\udd32\ud83c\uddf8\ud83c\udde6 1.6K",
-        "[The Geopolitics | @Newstoday555 | 17h] BREAKING: Saudi Arabia has heightened air defenses around after intercepting a Houthi drone south of the holy city. Saudi authorities called the Two Holy Mosques a \u201c red line .\u201d 1.5K",
-        "[annunaki Africa | @Monkey2003aafr | 22h] \ud83d\udea8\ud83c\uddf8\ud83c\udde6 MECCA ON HIGH ALERT Saudi Arabia has reinforced air-defense readiness around Mecca after a",
-        "[The Geopolitics | @Newstoday555 | 17h] BREAKING: Saudi Arabia has heightened air defenses around after intercepting a Houthi drone south of the holy city. Saudi authorities called the Two Holy Mosques a \u201c red line .\u201d 0:21 1.5K",
-        "[annunaki Africa | @Monkey2003aafr | 22h] \ud83d\udea8\ud83c\uddf8\ud83c\udde6 MECCA ON HIGH ALERT Saudi Arabia has reinforced air-defense readiness around Mecca after a Houthi drone was intercepted south of the holy city before it could enter the restricted airspace. Saudi officials say the security of Mecca is a \u201c red line .\u201d",
-        "[Stay update | @StayUpdate6 | Sep 16] Sep 16 \ud83d\udea8 BIG BREAKING: Saudi air defenses intercepted and destroyed a Houthi drone south of Mecca before it could enter the holy city\u2019s restricted airspace. The Saudi-led coalition called it the second attempt to target Mecca, declaring the security of the Two Holy Mosques and",
-        "[Idrees Ali | @idreesali114 | 15h] The Houthis clearly have capable surface to air systems, which have brought down a number of U.S. military drones in recent years. Quote IRNA News Agency \u262b"
+        "[Yasir Saiyid | @SaiyidYasir | 2h] ⚓ BREAKING: CLOSE ENCOUNTER IN THE ARABIAN SEA 🌊 PNS Hunain and an Indian Navy warship were involved in a collision in the North Arabian Sea on September 15. Pakistan and India have lodged diplomatic protests, with each side giving a different account of the manoeuvring.",
+        "[IDU | @defencealerts | 6h] Pakistan has officially acknowledged the September 15 naval collision in the North Arabian Sea, but India and Pakistan have presented sharply different accounts. Pakistan says an Indian Navy vessel carried out aggressive manoeuvres near a Pakistani ship during SEASPARK-26 inside",
+        "[Vardi Ka Dum 🇮🇳🙏 | @DumVardi | 23h] INDIA PROTESTS NAVAL COLLISION India has reportedly lodged a strong protest Pakistan , citing an alleged violation of the 1991 bilateral agreement. ⚓ No major damage reported. #India #Pakistan #IndianNavy |scroll element| (horizontal 0%) 2:02",
+        "[Vardi Ka Dum 🇮🇳🙏 | @DumVardi | 23h] INDIA PROTESTS NAVAL COLLISION India has reportedly lodged a strong protest Pakistan , citing an alleged violation of the 1991 bilateral agreement. ⚓ No major damage reported. #India #Pakistan #IndianNavy |scroll element| (horizontal 0%) 2:00",
+        "[OsintTV 📺 | @OsintTV | 6m] 🚨🇵🇰🚢 Zor zor se chillao aur cheekho! 😂 On the INS Kolkata and PNS Hunain skirmish, Pakistani anchors are probably one shout away from declaring the Arabian Sea under emergency. 😂 1.3K",
+        "[LoveKush | @RaamLoveKush | 29m] Fan account समंदर में टक्कर! पाकिस्तानी जहाज को भारी नुकसान Quote IDU",
+        "[Hemant Kamble | @DaddyDabang | 23h] 🚨 BREAKING | Arabian Sea Sources claim that a Pakistani naval vessel approached an Indian",
+        "[Vardi Ka Dum 🇮🇳🙏 | @DumVardi | 23h] INDIA PROTESTS NAVAL COLLISION India has reportedly lodged a strong protest Pakistan , citing an alleged violation of the 1991 bilateral agreement. ⚓ No major damage reported. #India #Pakistan #IndianNavy |scroll element| (horizontal 0%) 1:59",
+        "[Hemant Kamble | @DaddyDabang | 23h] 🚨 BREAKING | Arabian Sea Sources claim that a Pakistani naval vessel approached an Indian Navy warship at high speed and carried out an unsafe, unprofessional manoeuvre in international waters, reportedly resulting in a collision . No major damage has been reported. The incident",
+        "[Defense24/7 | @Defense247 | 2h] 🇮🇳 India Pakistan Warships Collide in Arabian Sea PNS Hunain closed in on an Indian Navy warship at high speed in the North Arabian Sea, leading to a collision PNS Hunain reportedly suffered damage and returned to harbour, while Indian warship continued its mission #推しモン",
+        "[IDU | @defencealerts | 6h] Pakistan has officially acknowledged the September 15 naval collision in the North Arabian Sea, but India and Pakistan have presented sharply different accounts. Pakistan says an Indian Navy vessel carried out aggressive manoeuvres near a Pakistani ship during SEASPARK-26 inside 0:02 / 0:10",
+        "[Defense24/7 | @Defense247 | 2h] 🇮🇳 India Pakistan Warships Collide in Arabian Sea PNS Hunain closed in on an Indian Navy warship at high speed in the North Arabian Sea, leading to a collision PNS Hunain reportedly suffered damage and returned to harbour, while Indian warship continued its mission #推しモン 2:00",
+        "[Mohsin Ali | @Mohsin_o2 | Sep 16] Sep 16 #BREAKING An Indian Navy vessel was involved in a collision with a Pakistan Navy ship in international waters. Fortunately, the incident caused no significant damage or injuries to the Pakistani ship or its crew. This action by the Indian Navy directly violates Article 10 of",
+        "[Defense News IN | @DefenseNewsIN | Sep 16] Sep 16 Commentary account India has lodged a diplomatic demarche following a high-speed collision between a Pakistan Navy vessel and an Indian warship in the North Arabian Sea. New Delhi cited a direct breach of Article 10 of the 1991 bilateral military accord. No casualties or major damage reported.",
+        "[Secret behind Walls | @scrtbehindwalls | 23h] Pakistan Navy vessel came close to an Indian Navy warship in the North Arabian Sea on 15 September, leading to a minor collision , according to Indian reports. India described the manoeuvre as unsafe and lodged a diplomatic protest #PakistanNavy #IndianNavy #ArabianSea 1.6K",
+        "[Military Media | @hehe_samir | 11h] BREAKING: 🇵🇰🇮🇳 A Pakistani Navy vessel and an Indian Navy warship collided in the North Arabian Sea. Pakistan says the Indian vessel carried out aggressive maneuvers inside Pakistan ’s EEZ, while India says the collision occurred in international waters.",
+        "[Military Media | @hehe_samir | 11h] BREAKING: 🇵🇰🇮🇳 A Pakistani Navy vessel and an Indian Navy warship collided in the North Arabian Sea. Pakistan says the Indian vessel carried out aggressive maneuvers inside Pakistan ’s EEZ, while India says the collision occurred in international waters. 1:51 Ironclad",
+        "[Secular Chad | @SachabhartiyaRW | Sep 16] Sep 16 An incident of Pakistani Naval ship collision with Indian war ship in International Water happened. Pakistani envoy summoned by India #Indiannavy 6.5K",
+        "[Developing Pakistan | @developingpak | Sep 16] Sep 16 A significant naval incident occurred in the North Arabian Sea yesterday during #Pakistan #SEASPARK -2026 naval exercises. After detecting surveillance activities by the #IndianNavy 's 7,400-tonne destroyer INS #Kolkata , the Pakistan Navy dispatched its 2,600-tonne corvette"
       ]
     },
     {
-      "label": "FM Araghchi, Field Marshal Munir discuss regional developments amid stalled US-Iran talks",
+      "label": "Pakistan stresses dialogue, diplomacy over ‘coercive measures' for Mideast peace",
       "category": "diplomacy",
-      "boolean_query": "fm araghchi field marshal munir stalled",
+      "boolean_query": "pakistan stresses diplomacy coercive measures mideast",
       "terms": [
-        "FM Araghchi Field Marshal Munir discuss regional developments amid stalled",
+        "Pakistan stresses dialogue diplomacy over coercive measures for Mideast peace",
         "Trump signals endgame in Iran war",
         "Araghchi diplomacy Iran war",
         "Trump hopes Iran war nearing end",
@@ -165,267 +185,424 @@
       ],
       "sources": [
         {
-          "title": "FM Araghchi, Field Marshal Munir discuss regional developments amid stalled US-Iran talks",
+          "title": "Pakistan stresses dialogue, diplomacy over ‘coercive measures' for Mideast peace",
           "source_name": "Geo TV Front Page",
           "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates"
         },
         {
-          "title": "CDF Munir, Iran\u2019s Araghchi discuss regional developments as US-Iran talks stall",
-          "source_name": "Geo TV Liveblog",
-          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34548"
-        },
-        {
-          "title": "Trump to hold Iran talks with Gulf leaders next week, Axios reports",
-          "source_name": "Geo TV Liveblog",
-          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34544"
-        },
-        {
-          "title": "US 'hopefully' nearing end of Iran war, signals talks with Tehran, says Trump",
-          "source_name": "Geo TV Liveblog",
-          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34543"
-        },
-        {
-          "title": "Araghchi says Iran-China consultations will shape regional balance",
-          "source_name": "Geo TV Liveblog",
-          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34545"
-        },
-        {
-          "title": "Araghchi says Iran ready to defend sovereignty, open to diplomatic solutions",
-          "source_name": "Geo TV Liveblog",
-          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34542"
-        },
-        {
-          "title": "Number of ships transiting Strait of Hormuz falls to three on Wednesday, shows data",
-          "source_name": "Geo TV Liveblog",
-          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34547"
-        },
-        {
-          "title": "South Korea says no decision made on military deployment to Strait of Hormuz",
-          "source_name": "Geo TV Liveblog",
-          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34546"
-        },
-        {
-          "title": "\u2018Houthis must stop their activities\u2019: Pakistan stresses dialogue over \u2018coercive measures\u2019",
+          "title": "‘Houthis must stop their activities’: Pakistan stresses dialogue over ‘coercive measures’",
           "source_name": "Geo TV Liveblog",
           "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34550"
-        },
-        {
-          "title": "Trump to hold Iran talks with Gulf leaders next week in New York: Axios",
-          "source_name": "The Express Tribune",
-          "url": "https://tribune.com.pk/story/2629806/trump-to-hold-iran-talks-with-gulf-leaders-next-week-in-new-york-axios"
-        },
-        {
-          "title": "Iranian FM Araghchi to visit Beijing for talks with Wang Yi",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/iranian-fm-araghchi-to-visit-beijing-for-talks-with-wang-yi/article71470974.ece"
-        },
-        {
-          "title": "Trump says 'hopefully we are towards end' of Iran war",
-          "source_name": "Reuters World News",
-          "url": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxNNVZBS2JnVTZ6bnkwemhVOGRlX2puQkR2RHNnZnpLaHRzcHMxNktCNGwtNkU2ZTJaTzRMSFZzYXRzeHVnanUtaTNIdjVZTm5wVjd5bm9iMHNndXFwRzFOSmh3QWI0T3lqU3MwVE9UenMwNWZWYURMWm1ZOHNDTzVBVmlZVjBHT0F6cEJoRE5BYTVqRVFnM3N3cjZZU3RKWFJSeGZLVUhUVkVQZW9tb0FhRThfSEpmcVZM?oc=5"
         }
       ],
       "is_live_breaking_banner": true,
-      "source_headline": "FM Araghchi, Field Marshal Munir discuss regional developments amid stalled US-Iran talks",
+      "source_headline": "Pakistan stresses dialogue, diplomacy over ‘coercive measures' for Mideast peace",
       "source_name": "Geo TV Front Page",
       "source_url": "https://www.geo.tv/liveblog/israeliran-war-live-updates",
       "sample_tweets": [
-        "[Al Jazeera English | @AJEnglish | 1h] Iranian FM Araghchi has held a telephone call with Pakistani army chief Field Marshal Munir where they discussed the latest regional developments and issues of mutual interest, according to Iranian media. \ud83d\udd34 LIVE updates: aje.news/v4kpcj 27K",
-        "[Anas Mallick | @AnasMallick | 1h] Iran's Foreign Minister during his visit to Beijing has held a telephone conversation with Pakistan's Army Chief Field Marshal Munir , as per a statement from his office. 1.6K",
-        "[Saad Kaiser \ud83c\uddf5\ud83c\uddf0 | @TheSaadKaiser | 3h] Keep calm and believe in Field Marshal Munir Shah, one of the greatest strategists in history and our pride! \ud83c\uddf5\ud83c\uddf0 1.4K",
-        "[\u0628\u0631\u0647\u0627\u0646 \u0627\u0644\u062f\u06cc\u0646 \u200f| Burhan uddin | @burhan_uddin_0 | Sep 12] Sep 12 Field Marshal Munir wants to meet Mohammed bin Salman, but Mohammed bin Salman is not agreeing to meet him. Because what Pakistan needs is not just meetings, photo opportunities, and handshakes. Pakistan needs cash. On one hand, Pakistan is talking about carrying out",
-        "[Maheen Yousafzai | @maheen_you47788 | 1h] Field Marshal Munir \ud83c\uddf5\ud83c\uddf0 \ud83d\udd25 #CDFForStability #IronManCDF #ShieldOfNationCDF #PillarOfStrengthCDF #NationWithCDF",
-        "[Mohsin Ali | @Mohsin_o2 | 32s] Powerus, a U.S. drone company, said in an interview with Reuters that it has signed an agreement with Pakistan Army for an initial order of unmanned aerial systems, though the deal's value has not been disclosed. Field Marshal Munir",
-        "[\u0628\u0631\u0647\u0627\u0646 \u0627\u0644\u062f\u06cc\u0646 \u200f| Burhan uddin | @burhan_uddin_0 | Sep 12] Sep 12 Munir forcefully became a Field Marshal and then had Pakistan declare victory over India \ud83c\uddee\ud83c\uddf3. Even though it did not respond to the attacks on its airbases. Munir need to become President?",
-        "[Zard si Gana | @ZardSi | Sep 15] Sep 15 \ud83c\uddf5\ud83c\uddf0 Field Marshal Munir once said Pakistan is blessed and chosen by Allah to protect the two Holy Mosques in Makkah and Madinah. This is what every Muslim wants: keep political wars away from the Holy Sites. Any threat to them will face severe consequences. 1.5K 51K",
-        "[ASIA ONE NEWS | @AsiaOne_News | Sep 11] Sep 11 Iran FM Araghchi Speaks With Pakistan Field Marshal Munir #Asiaone #Iran #Pakistan #Araghchi #AsimMunir",
-        "[ASIA ONE NEWS | @AsiaOne_News | Sep 11] Sep 11 Iran FM Araghchi Speaks With Pakistan Field Marshal Munir #Asiaone #Iran #Pakistan #Araghchi #AsimMunir 0:37",
-        "[Fyza \ud83c\uddf5\ud83c\uddf0 | @F0XR0MZ | Sep 10] Sep 10 Field Marshal Munir has become a nightmare for India 1.6K",
-        "[Ushna Shah | @UshnaShahccgh | 1h] One man, Zero doubt. Field Marshal Munir , Chief of Defence Forces. The enemy already knows the name. \ud83d\udcaa #CDFForStability #IronManCDF #ShieldOfNationCDF #PillarOfStrengthCDF #NationWithCDF",
-        "[ASIA ONE NEWS | @AsiaOne_News | Sep 11] Sep 11 Iran FM Araghchi Speaks With Pakistan Field Marshal Munir #Asiaone #Iran #Pakistan #Araghchi #AsimMunir 0:02 / 0:39",
-        "[Ushna Shah | @UshnaShahccgh | 1h] One man, Zero doubt. Field Marshal Munir , Chief of Defence Forces. The enemy already knows the name. \ud83d\udcaa #CDFForStability #IronManCDF #ShieldOfNationCDF #PillarOfStrengthCDF #NationWithCDF 0:17",
-        "[Fatima Khan | @FatimaKhang2mf | 1h] Field Marshal Munir , The man who turned command into iron. Pakistan\u2019s first Chief of Defence Forces. Unmatched. Unbreakable. \ud83c\uddf5\ud83c\uddf0\u2694\ufe0f #CDFForStability #IronManCDF #ShieldOfNationCDF #PillarOfStrengthCDF #NationWithCDF",
-        "[Pakistan Armed Forces News \ud83c\uddf5\ud83c\uddf0 | @PakistanFauj | 17h] #ISPR Press Release A delegation of POWERUS, called on Field Marshal Munir , NI (M), HJ, Chief of Army Staff and Chief of Defence Forces (COAS & CDF) at GHQ, Rawalpindi, Pakistan POWERUS is a US-based company specialising in defence and critical infrastructure"
+        "[Geo English | @geonews_english | 2h] Pakistan dialogue, diplomacy over ‘ coercive ' for Mideast peace Read more: geo.tv/liveblog/israe",
+        "[Al Jazeera English | @AJEnglish | Sep 11] Sep 11 Pakistan has asked Iran to restrain its Houthi allies' Islamabad faces growing pressure to honour its defence commitments to Saudi Arabia while keeping diplomatic channel to Tehran open, say analysts. Read here aje.news/3624cp 1.2K 159K",
+        "[CGTN Europe | @CGTNEurope | 4m] Ishaq Dar, Deputy Prime Minister and Minister of Foreign Affairs of Pakistan",
+        "[Pakistan Economic Network | @NetPakistan | 7m] Pakistan remains committed to the intent and spirit of the Makkah Joint Defense Agreement with Saudi Arabia and Türkiye, but operational details of any possible response to att@cks against a member state cannot be disclosed at this stage, the Foreign Office said on Thursday.",
+        "[Shabeena 🇧🇩🇫🇷 | @Shab9080 | 2m] 1/2: They call it a balanced strategic framework, but it's just a cover for exploitation. Pakistan trades its military manpower for loans while its economy stays stagnant.",
+        "[Al Arabiya English | @AlArabiya_Eng | Sep 16] Sep 16 Pakistan is a BIG PROPONENT of PEACE in the region.”",
+        "[Al Arabiya English | @AlArabiya_Eng | Sep 16] Sep 16 Pakistan is a BIG PROPONENT of PEACE in the region.” Pakistan Pakistan ’s multi-alignment policy gives it a unique position to mediate between Tehran and Washington. 16K",
+        "[Baba Thoka | @ThokaReturns | Sep 16] Sep 16 Pakistan is a BIG PROPONENT of PEACE in the region.” Pakistan Pakistan ’s multi-alignment policy gives it a unique position to mediate between Tehran and Washington.",
+        "[USmilitary update 🇺🇸 | @USmilitaryupdt | 8m] Commentary account 🚨 MBS VS PAKISTANI LEADERSHIP: THE RELATIONS STRAIN! ⚡ 🇸🇦 Saudi Crown Prince MBS: \"Islamabad, our financial lifelines and oil aid are not a blank check! If you cannot align completely with our strategic security priorities and stop playing both sides, our patience will",
+        "[Shabeena 🇧🇩🇫🇷 | @Shab9080 | 1m] 1/2: The mask is off. While ordinary Pakistanis suffer economic decay, their military high command hosts arch-terrorist Masood Azhar in private luxury guesthouses.",
+        "[Baba Thoka (Special Edition) | @OfficialThoka | Sep 16] Sep 16 Pakistan is a BIG PROPONENT of PEACE in the region.” Pakistan Pakistan ’s multi-alignment policy gives it a unique position to mediate between Tehran and Washington.",
+        "[Brian Mitchel | @chrmitxc | 11m] 1/2: While Pakistan signs fancy global defense pacts, reality exposes its true core: state sponsorship of terror. Asim Munir holding a secret 2.5-hour meeting with Masood Azhar proves Islamabad never changed. 1/2 @iamthedrifte",
+        "[Tahreem Akhtar | @Tahz42 | 30m] 1/2: #Pakistani Officials preach \"development\" from air-conditioned rooms while families are forced to drink filthy water from roadside puddles. This isn't progress.",
+        "[Permanent Mission of Pakistan to the UN | @PakistanUN_NY | Sep 16] Sep 16 Statement by Ambassador Asim Iftikhar Ahmad, Permanent Representative of Pakistan to the UN, At the UN Security Council Emergency Meeting on Yemen (15 September 2026)"
       ]
     },
     {
-      "label": "Saudi East-West Pipeline Damage Sparks Supply Chain Concerns",
+      "label": "India-US Agree to Strengthen Energy Security Partnership Amid Tariff Threats",
       "category": "economic",
-      "boolean_query": "saudi east-west pipeline damage",
+      "boolean_query": "india us energy trade",
       "terms": [
-        "Saudi east-west pipeline attack damage",
-        "East-West pipeline Saudi closure",
-        "Pipeline damage Saudi Arabia supply chain",
-        "Saudi oil infrastructure attack",
-        "East-West pipeline repair timeline",
-        "Saudi pipeline damage supply disruption",
-        "Houthi attack on Saudi pipeline",
-        "Saudi pipeline damage assessment",
-        "East-West pipeline Saudi Arabia closure",
-        "Pipeline damage Saudi oil exports"
+        "India US energy security agreement",
+        "India US energy cooperation",
+        "Energy security India US",
+        "India US oil import partnership",
+        "India US energy trade",
+        "India US energy policy",
+        "India US energy collaboration",
+        "India US energy security",
+        "India US energy strategy",
+        "India US energy partnership"
       ],
       "sources": [
         {
-          "title": "Inside Brazil\u2019s 3D-Printed Gun Supply Chain",
+          "title": "India, US Agree To Strengthen Energy Security Partnership",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/india-us-agree-to-strengthen-energy-security-partnership/"
+        },
+        {
+          "title": "'Will protect trade, economic interests': India committed to energy security, says MEA amid US tariff threat",
+          "source_name": "The New Indian Express",
+          "url": "https://www.newindianexpress.com/india/2026/Sep/17/will-protect-trade-economic-interests-india-committed-to-energy-security-says-mea-amid-us-tariff-threat"
+        },
+        {
+          "title": "India warns new US tariffs over Russian oil could hit ties, vows to protect energy security",
+          "source_name": "Geo TV World",
+          "url": "https://www.geo.tv/category/world"
+        },
+        {
+          "title": "Geopolitics & Energy Security",
+          "source_name": "Atlantic Council Geopolitics & Defense",
+          "url": "https://www.atlanticcouncil.org/issue/geopolitics-energy-security/"
+        },
+        {
+          "title": "From Hormuz to the Caucasus: The New Geography of Energy Security",
           "source_name": "War on the Rocks Strategy & Defense",
-          "url": "https://warontherocks.com/inside-brazils-3d-printed-gun-supply-chain/"
+          "url": "https://warontherocks.com/from-hormuz-to-the-caucasus-the-new-geography-of-energy-security/"
         },
         {
-          "title": "Meet the Winners of the IAEA Innovations in Nuclear Fuel Supply Chain Challenge",
-          "source_name": "IAEA News Centre",
-          "url": "http://www.iaea.org/newscenter/news/meet-the-winners-of-the-iaea-innovations-in-nuclear-fuel-supply-chain-challenge"
+          "title": "Energy Security and Climate Change Program",
+          "source_name": "CSIS Strategic & International Studies",
+          "url": "https://www.csis.org/programs/energy-security-and-climate-change-program"
         },
         {
-          "title": "Pakistan warns any attack on oil tanker stuck near Saudi pipeline will be 'act of war'",
-          "source_name": "Geo News",
-          "url": "https://www.geo.tv/latest/682356-pakistan-warns-any-attack-on-oil-tanker-stuck-near-saudi-pipeline-will-be-act-of-war"
+          "title": "US House Clears Russia Sanctions Bill After Senate, Tariff Threat Over India’s Energy Trade Looms",
+          "source_name": "Indian Defence News RSS",
+          "url": "https://www.indiandefensenews.in/2026/09/us-house-clears-russia-sanctions-bill.html"
         },
         {
-          "title": "[Idrees Ali | @idreesali114 | 15h] DUBAI/LONDON, Sept 16 (Reuters) - Two pumping stations serving the vital East-West Pipeline in Saudi Arab",
-          "source_name": "X.com (Idrees Ali (Reuters Pentagon))",
-          "url": "https://x.com/Idrees Ali (Reuters Pentagon)"
-        },
-        {
-          "title": "Satellite image reveals major damage that shut crucial Saudi oil pipeline",
+          "title": "India faces 100% tariff threat over Russian oil after US House vote",
           "source_name": "BBC World News Wire RSS",
-          "url": "https://www.bbc.co.uk/news/articles/c65yw2gq2nrno?at_medium=RSS&at_campaign=rss"
+          "url": "https://www.bbc.co.uk/news/articles/c3lyrn4p870yo?at_medium=RSS&at_campaign=rss"
         },
         {
-          "title": "Oil extends losses as Saudi Arabia reportedly offers ship-to-ship crude transfers after pipeline hit",
-          "source_name": "CNBC",
-          "url": "https://www.cnbc.com/2026/09/17/oil-prices-today-wti-brent-hormuz-iran-war.html"
-        },
-        {
-          "title": "Saudi Arabia calls attempted Mecca attack 'red line' as Iran-backed Houthis deny they did it",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/saudi-arabia-calls-attempted-mecca-attack-red-line-as-iran-backed-houthis-deny-they-did-it/article71471868.ece"
-        },
-        {
-          "title": "West Asia war updates: Saudi Arabia warns it will react 'firmly' to Houthi attacks",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/west-asia-war-live-updates-saudi-arabia-houthi-attacks-red-sea-us-iran-september-15-2026/article71466658.ece"
-        },
-        {
-          "title": "Houthis, Yemen Fighting Continues, Saudi Arabia Faces Pipeline Challenges",
-          "source_name": "USNI News (U.S. Naval Institute)",
-          "url": "https://news.usni.org/2026/09/14/houthis-yemen-fighting-continues-saudi-arabia-faces-pipeline-challenges"
+          "title": "India’s Security Map is Changing: From Territorial Threats to Networked Vulnerabilities",
+          "source_name": "IADNews Indian Aerospace & Defence RSS",
+          "url": "https://iadnews.in/indias-security-map-is-changing-from-territorial-threats-to-networked-vulnerabilities/"
         }
       ],
-      "source_headline": "Inside Brazil\u2019s 3D-Printed Gun Supply Chain",
-      "source_name": "War on the Rocks Strategy & Defense",
-      "source_url": "https://warontherocks.com/inside-brazils-3d-printed-gun-supply-chain/",
+      "source_headline": "India, US Agree To Strengthen Energy Security Partnership",
+      "source_name": "IDRW RSS Feed",
+      "source_url": "https://idrw.org/india-us-agree-to-strengthen-energy-security-partnership/",
       "sample_tweets": [
-        "[Al Jazeera English | @AJEnglish | Sep 12] Sep 12 Saudi East West oil pipeline after a drone attack. Riyadh says the attack originated in Iraq. The pipeline allowed Riyadh to bypass the Strait of Hormuz. 1:35 1.7K 224K",
-        "[OSINTtechnical | @Osinttechnical | Sep 11] Sep 11 CNN reports that pumping stations on Saudi Arabia\u2019s key east west pipeline were hit on Thursday, with one severely damaged. The pipeline currently carries 7+ million barrels of crude oil per day bypassing Hormuz. 3.6K 325K",
-        "[RT | @RT_com | Sep 14] Sep 14 \u2757\ufe0f ANSARALLAH BOMBING of Saudi EAST WEST PIPELINE MAJOR DAMAGE to pumping station",
-        "[RT | @RT_com | Sep 14] Sep 14 \u2757\ufe0f ANSARALLAH BOMBING of Saudi EAST WEST PIPELINE MAJOR DAMAGE to pumping station 0:14 2.7K 103K",
-        "[Donald J Trump Posts TruthSocial | @TruthTrumpPost | Sep 14] Sep 14 Commentary account Saudi East West pipeline , which carries about 4 million barrels a day to the Red Sea port of Yanbu, was shut down Friday. The number that should worry people isn't the 4%, it's the 5 to 7 days. A damaged pipeline is a supply problem with a known fix; a stockpile that",
-        "[Soar Atlas | @SoarAtlas | Sep 14] Sep 14 Saudi East West oil pipeline strike. The pumping station has been destroyed, with fire damage across the facility. Explore and Compare: tinyurl.com/vcf2h6mz #SaudiArabia #Houthi #MiddleEast 105K",
-        "[Aimen Jamil | @jamil_aimen | Sep 15] Sep 15 \ud83d\udea8UPDATE Satellite imagery shows fire",
-        "[Soar Atlas | @SoarAtlas | Sep 14] Sep 14 Saudi East West oil pipeline strike. The pumping station has been destroyed, with fire damage across the facility. Explore and Compare: tinyurl.com/vcf2h6mz #SaudiArabia #Houthi #MiddleEast 0:59 105K",
-        "[Aimen Jamil | @jamil_aimen | Sep 15] Sep 15 \ud83d\udea8UPDATE Satellite imagery shows fire damage at pumping stations on Saudi East West pipeline , the primary route used to move crude to Yanbu and bypass the Strait of Hormuz. Saudi authorities shut the line following drone strikes.",
-        "[RT | @RT_com | Sep 11] Sep 11 SAUDI ARABIA\u2019S KEY EAST WEST PIPELINE SYSTEM HIT by \u2018PROJECTILES\u2019 \u2014 CNN \u2018EXTENSIVE FIRE DAMAGE \u2019 at \u2018PUMP STATIONS\u2019 SPOTTED FROM SPACE ATTACKER UNKNOWN \u2014 \u2018DRONES FROM IRAQ\u2019",
-        "[Al Jazeera English | @AJEnglish | Sep 15] Sep 15 BREAKING: Oil loadings have stopped at Saudi East West pipeline . \ud83d\udd34 LIVE updates: aje.news/og1uce GIF 113K",
-        "[Avinash K S\ud83c\uddee\ud83c\uddf3 | @AvinashKS14 | Sep 12] Sep 12 SAUDI ARABIA\u2019S KEY EAST WEST PIPELINE SYSTEM HIT by \u2018PROJECTILES\u2019 \u2014 CNN \u2018EXTENSIVE FIRE DAMAGE \u2019 at \u2018PUMP STATIONS\u2019 SPOTTED FROM SPACE ATTACKER UNKNOWN \u2014 \u2018DRONES FROM IRAQ\u2019 |scroll element (horizontal 0%)",
-        "[Al Jazeera English | @AJEnglish | Sep 15] Sep 15 BREAKING: Oil loadings have stopped at Saudi East West pipeline . \ud83d\udd34 LIVE updates: aje.news/og1uce",
-        "[Avinash K S\ud83c\uddee\ud83c\uddf3 | @AvinashKS14 | Sep 12] Sep 12 SAUDI ARABIA\u2019S KEY EAST WEST PIPELINE SYSTEM HIT by \u2018PROJECTILES\u2019 \u2014 CNN \u2018EXTENSIVE FIRE DAMAGE \u2019 at \u2018PUMP STATIONS\u2019 SPOTTED FROM SPACE ATTACKER UNKNOWN \u2014 \u2018DRONES FROM IRAQ\u2019 0:04",
-        "[DD Geopolitics | @DD_Geopolitics | Sep 14] Sep 14 \ud83c\uddf8\ud83c\udde6 New satellite imagery reveals extensive damage to Saudi East West Pipeline High-resolution satellite imagery shows severe fire damage at a pumping facility on Saudi Arabia\u2019s strategic East West oil pipeline southeast of Medina following the September 10 drone",
-        "[DD Geopolitics | @DD_Geopolitics | Sep 11] Sep 11 \ud83c\uddfe\ud83c\uddea\ud83c\uddf8\ud83c\udde6 BREAKING!! LARGE FIRE NEAR MEDINA ALONG THE EAST WEST PIPELINE !!! Satellite fire data is showing multiple major thermal anomalies along the corridor of Saudi Arabia\u2019s strategic East West oil pipeline south of Medina. The Petroline is currently Saudi Arabia\u2019s critical",
-        "[Soar Atlas | @SoarAtlas | Sep 15] Sep 15 \ud83d\udea8 This is starting to look MUCH bigger than a single strike on Saudi East West oil pipeline . Satellite imagery has now showed significant damage at Pump Station 9, while possible damage is also visible at Pump Station 8, both along the same critical pipeline system.",
-        "[Tomthunkit\u2122 | @TomthunkitsMind | Sep 12] Sep 12 Saudi East West crude oil pipeline after it comes under attack by Houthis, reportedly pipeline has suffered catastrophic damage in at least 8 locations. pipeline",
-        "[KOSO\ud83c\uddf3\ud83c\uddec | @KosoNwa1 | Sep 14] Sep 14 \ud83c\uddf8\ud83c\udde6\ud83c\uddfe\ud83c\uddea Satellite imagery shows extensive damage to Saudi East West crude oil pipeline following Yemeni strikes. Repairs are expected to take several months to as long as a year.",
-        "[Idrees Ali | @idreesali114 | 15h] DUBAI/LONDON, Sept 16 (Reuters) - Two pumping stations serving the vital East-West Pipeline in Saudi Arabia were damaged in an attack last week, with a repair timeline unclear, according to assessments from three oil and security sources. 5.8K",
-        "[Idrees Ali | @idreesali114 | Sep 15] Sep 15 LONDON, Sept 15 (Reuters) - Oil loadings at Saudi Arabia's Red Sea port of Yanbu have been suspended, days after the world's biggest crude exporter closed its East-West pipeline due to an attack by Yemen's Iran-aligned Houthis, shipping industry sources said on Tuesday. 83K",
-        "[Idrees Ali | @idreesali114 | Sep 14] Sep 14 LONDON, Sept 14 (Reuters) - Oil prices rose more than 3% on Monday after new strikes on Saudi Arabian energy infrastructure and attacks on ships in the \u200cMiddle East compounded supply concerns. 2.5K"
+        "[News Algebra | @NewsAlgebraIND | 5h] \"For China and India , It would be better if you improve your performance. Buy your oil and gas from somewhere else\" - US lawmaker Senator Blumenthal Trump Govt passes bill imposing 100% tariffs on countries importing Russian energy 0:22 Sidhant Sibal 1.5K 100K",
+        "[Nabila Jamal | @nabilajamal_ | 3h] #BREAKING INDIA RESPONDS TO 100% US TARIFF THREAT India energy security first as a US India will continue sourcing energy from diverse suppliers to meet the needs of",
+        "[Global Explainer | @Globalexplainer | 2h] Breaking: India told US that imposing 100% tarrifs over India for buying Russian oil will have potential consequences. India said it have Right to secure energy needs for 1.4 billion people. Follow",
+        "[Al Jazeera English | @AJEnglish | 1h] India has warned the US that new measures to levy tariffs over the purchase of Russian oil could impact ⁠bilateral ties, hours after the US Congress approved a bill that would give President Trump new abilities to punish buyers of Russian oil.",
+        "[Global Explainer | @Globalexplainer | 2h] Breaking: India told US that imposing 100% tarrifs over India for buying Russian oil will have potential consequences. 0:18 2.5K",
+        "[Al Jazeera English | @AJEnglish | 1h] India has warned the US that new measures to levy tariffs over the purchase of Russian oil could impact ⁠bilateral ties, hours after the US Congress approved a bill that would give President Trump new abilities to punish buyers of Russian oil. 35K",
+        "[Reuters | @Reuters | 5h] India said that it remained firmly committed to ensuring energy security for its people and will continue to source supplies from diverse sellers based on market dynamics, hours after the US 39K",
+        "[Bloomberg | @business | 3h] India warned that a US bill imposing sanctions on buyers of Russian oil could hurt ties between New Delhi and Washington and disrupt global energy 33K",
+        "[Indian Tech & Infra | @IndianTechGuide | 3h] 🚨 The USA has passed a bill that could slap up to 100% tariffs on goods from countries buying Russian energy , including India India 's response: energy security.\" 2.3K 43K",
+        "[World updates | @itswpceo | 4h] 🇮🇳 India US 🇺🇸 US : You can’t ignore Mighty American power. Buy your oil somewhere else or face 100% tariffs. 🇮🇳 India : Do what you want. We don’t care about your sanctions. 🇺🇸 US : You’re funding Putin. Last warning. 🇮🇳 India : 1.4 billion",
+        "[Indian Tech & Infra | @IndianTechGuide | 3h] 🚨 The USA has passed a bill that could slap up to 100% tariffs on goods from countries buying Russian 's response: energy security.\" 2.3K 43K",
+        "[Sidhant Sibal | @sidhant | 1h] US India could be tariffed for importing Russian energy . Delhi unfazed, says, energy security paramount but adds, development can have \"potential implications\" for ties, intl energy market. Reporting: 10K",
+        "[Ababeel | @AbabeelMilitary | 32m] United States imposes 100% tariffs on India and says, “It would be better if you improve your performance, get your oil and gas from somewhere else.” India has been facing continuous diplomatic setbacks after losing war against Pakistan",
+        "[Strategic Warfare | @WarUpdatespp | 2h] 🚨🇮🇳 INDIA UNDER PRESSURE AGAIN! The U.S. House has passed a bill that could allow Trump to slap up to 100% tariffs on countries buying Russian oil and gas. Washington’s message to India : “Buy your oil and gas somewhere else.” After all that hype, another reality check for New",
+        "[Sidhant Sibal | @sidhant | 1h] US India could be tariffed for importing Russian energy . Delhi unfazed, says, energy security paramount but adds, development can have \"potential implications\" for ties, intl energy market. Reporting:",
+        "[Ababeel | @AbabeelMilitary | 32m] United States imposes 100% tariffs on India and says, “It would be better if you improve your performance, get your oil and gas from somewhere else.” India has been facing continuous diplomatic setbacks after losing war against Pakistan 0:21",
+        "[Sputnik India | @Sputnik_India | 4h] 🚨 100% US tariffs on India energy security first India is firmly committed to the energy security of its 1.4 bln citizens, the MEA said after the US Congress cleared a Russia-Iran sanctions bill that could hit India and China, the top buyers of Russian oil. Early",
+        "[IDU | @defencealerts | 6h] For China and India US lawmaker Senator Blumenthal after passage of bill that imposes tariffs on those importing Russian",
+        "[Sputnik India | @Sputnik_India | 4h] 🚨 100% US tariffs on India energy security first India is firmly committed to the energy security of its 1.4 bln citizens, the MEA said after the",
+        "[IDU | @defencealerts | 6h] For China and India US lawmaker Senator Blumenthal after passage of bill that imposes tariffs on those importing Russian energy 12K",
+        "[Sidhant Sibal | @sidhant | 6h] \"For China and India US lawmaker Senator Blumenthal after passage of bill that imposes tariffs on those importing Russian energy Video source: Senator Blumenthal X 2.4K 366K",
+        "[RT_India | @RT_India_news | 5h] ⚡' India Firmly Committed To Ensuring Energy Security For Its 1.4BN People' - MEA Responds To US Russia Sanctions Bill New Delhi said the legislation’s potential impact on India-US ties and global"
       ]
     },
     {
-      "label": "Pakistan Warns Any Attack on Oil Tanker Near Saudi Pipeline Is 'Act of War'",
-      "category": "defense",
-      "boolean_query": "pakistan saudi pipeline attack warning",
+      "label": "US House Passes Russia Sanctions Bill with 100% Tariff Threat on India",
+      "category": "economic",
+      "boolean_query": "us india russia sanctions 100 tariff",
       "terms": [
-        "Pakistan Saudi pipeline attack warning",
-        "Oil tanker Saudi pipeline Pakistan",
-        "Pakistan warns pipeline attack",
-        "Saudi pipeline security Pakistan",
-        "Pakistan-Saudi pipeline conflict",
-        "Pipeline attack warning Pakistan",
-        "Saudi pipeline Pakistan security",
-        "Pakistan oil tanker warning",
-        "Saudi pipeline attack Pakistan",
-        "Pipeline security Pakistan-Saudi"
+        "US India Russia sanctions bill",
+        "India faces 100 tariff Russia oil",
+        "US Russia sanctions impact India",
+        "India US energy security concerns",
+        "Russia sanctions India economic impact",
+        "US India trade Russia sanctions",
+        "India Russia oil imports tariffs",
+        "US India economic relations sanctions",
+        "Russia sanctions India energy trade",
+        "India US trade Russia sanctions",
+        "India US energy security agreement",
+        "India US energy cooperation"
       ],
       "sources": [
         {
-          "title": "Pakistan warns any attack on oil tanker stuck near Saudi pipeline will be 'act of war'",
-          "source_name": "Geo News",
-          "url": "https://www.geo.tv/latest/682356-pakistan-warns-any-attack-on-oil-tanker-stuck-near-saudi-pipeline-will-be-act-of-war"
+          "title": "India, others face 100% tariffs as US House advances Russia sanctions Bill",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/india-others-face-100-tariffs-as-us-house-advances-russia-sanctions-bill/"
         },
         {
-          "title": "Pakistan to stand by Saudi Arabia 'practically and diplomatically' if Yemen conflict escalates: Asif",
-          "source_name": "Dawn News",
-          "url": "https://www.dawn.com/news/2030407/pakistan-to-stand-by-saudi-arabia-practically-and-diplomatically-if-yemen-conflict-escalates-asif"
+          "title": "US House Clears Russia Sanctions Bill After Senate, Tariff Threat Over India’s Energy Trade Looms",
+          "source_name": "Indian Defence News RSS",
+          "url": "https://www.indiandefensenews.in/2026/09/us-house-clears-russia-sanctions-bill.html"
         },
         {
-          "title": "West Asia war updates: Saudi Arabia warns it will react 'firmly' to Houthi attacks",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/west-asia-war-live-updates-saudi-arabia-houthi-attacks-red-sea-us-iran-september-15-2026/article71466658.ece"
-        },
-        {
-          "title": "Satellite image reveals major damage that shut crucial Saudi oil pipeline",
+          "title": "India faces 100% tariff threat over Russian oil after US House vote",
           "source_name": "BBC World News Wire RSS",
-          "url": "https://www.bbc.co.uk/news/articles/c65yw2gq2nrno?at_medium=RSS&at_campaign=rss"
+          "url": "https://www.bbc.co.uk/news/articles/c3lyrn4p870yo?at_medium=RSS&at_campaign=rss"
         },
         {
-          "title": "Oil extends losses as Saudi Arabia reportedly offers ship-to-ship crude transfers after pipeline hit",
-          "source_name": "CNBC",
-          "url": "https://www.cnbc.com/2026/09/17/oil-prices-today-wti-brent-hormuz-iran-war.html"
+          "title": "India to take 'all necessary measures' to protect economic interests after US passes Russia sanctions bill",
+          "source_name": "Dawn News",
+          "url": "https://www.dawn.com/news/2030596/india-to-take-all-necessary-measures-to-protect-economic-interests-after-us-passes-russia-sanctions-bill"
+        },
+        {
+          "title": "'Will protect trade, economic interests': India committed to energy security, says MEA amid US tariff threat",
+          "source_name": "The New Indian Express",
+          "url": "https://www.newindianexpress.com/india/2026/Sep/17/will-protect-trade-economic-interests-india-committed-to-energy-security-says-mea-amid-us-tariff-threat"
         }
       ],
-      "source_headline": "Pakistan warns any attack on oil tanker stuck near Saudi pipeline will be 'act of war'",
-      "source_name": "Geo News",
-      "source_url": "https://www.geo.tv/latest/682356-pakistan-warns-any-attack-on-oil-tanker-stuck-near-saudi-pipeline-will-be-act-of-war",
+      "source_headline": "India, others face 100% tariffs as US House advances Russia sanctions Bill",
+      "source_name": "IDRW RSS Feed",
+      "source_url": "https://idrw.org/india-others-face-100-tariffs-as-us-house-advances-russia-sanctions-bill/",
       "sample_tweets": [
-        "[Ihtisham Ul Haq | @iihtishamm | 16h] Pakistan warns any attack on an empty oil tanker stranded near Saudi Arabia\u2019s East-West Pipeline would be treated as an \u201cact of war,\u201d Bloomberg reports. 2.6K 73K",
-        "[INTELLIGENCE FRONT\u26a1\ufe0f | @IntelFrontUnit | 5h] Pakistan Issues Stern Warning Over Stranded Oil Tanker Pakistan has warned that any attack on an empty Pakistani oil tanker stranded in the Red Sea near Saudi Arabia\u2019s East-West Pipeline would be treated as an \u201cact of war.\u201d",
-        "[Economic Times | @EconomicTimes | 31m] Pakistan abandons Mecca pact ally Saudi Arabia in fight against Houthis in Bab el-Mandeb Strait. Kingdom reaches out to rival Israel for help Pakistan abandons Mecca pact ally Saudi Arabia in fight against Houthis in Bab el-Mandeb Strait.... Saudi Arabia has indirectly approached Israel for intelligence assistance against the Houthis through US Central Command, despite not recognising Israel or maintaining diplomatic ties with it. The... 3.3K",
-        "[Avinash K S\ud83c\uddee\ud83c\uddf3 | @AvinashKS14 | Sep 12] Sep 12 SAUDI ARABIA\u2019S KEY EAST-WEST PIPELINE SYSTEM HIT by \u2018PROJECTILES\u2019 \u2014 CNN \u2018EXTENSIVE FIRE DAMAGE\u2019 at \u2018PUMP STATIONS\u2019 SPOTTED FROM SPACE ATTACKER UNKNOWN \u2014 \u2018DRONES FROM IRAQ\u2019",
-        "[Economic Times | @EconomicTimes | 31m] Pakistan abandons Mecca pact ally Saudi Arabia in fight against Houthis in Bab el-Mandeb Strait. Kingdom reaches out to rival Israel for help Pakistan abandons Mecca pact ally Saudi Arabia in fight against Houthis in Bab el-Mandeb Strait.... Saudi Arabia has indirectly approached Israel for intelligence assistance against the Houthis through US Central Command, despite not recognising Israel or maintaining diplomatic ties with it. The...",
-        "[Firstpost | @firstpost | 17m] LIVE: Saudi #FirstpostLive",
-        "[RT | @RT_com | Sep 11] Sep 11 SAUDI ARABIA\u2019S KEY EAST-WEST PIPELINE SYSTEM HIT by \u2018PROJECTILES\u2019 \u2014 CNN \u2018EXTENSIVE FIRE DAMAGE\u2019 at \u2018PUMP STATIONS\u2019 SPOTTED FROM SPACE ATTACKER UNKNOWN \u2014 \u2018DRONES FROM IRAQ\u2019 177K",
-        "[Pakistan TV | @PakTVGlobal | Sep 12] Sep 12 GCC strongly condemns a drone attack on Saudi Arabia\u2019s East-West pipeline , calling it a dangerous escalation and urging Iraq to prevent its territory from being used for attacks. #GCC #SaudiArabia #MiddleEast #DroneAttack #PakistanTV",
-        "[The Pakistan | @thepakistan2021 | Sep 12] Sep 12 Saudi Arabia Shuts Major Oil Pipeline After Drone Attack From Iraq . thepakistan.pk/saudi-arabia-o",
-        "[Gulf News | @gulf_news | Sep 12] Sep 12 Saudi pipeline attacks prompt shutdown; authorities urge public to follow safety guidance. mrf.lu/23kZC 5.1K",
-        "[TifaniesweTs | @TifaniesweTs | Sep 11] Sep 11 Attacks force Saudi Arabia to \u2018temporarily\u2019 shut East-West pipeline Multiple injured RT",
-        "[TifaniesweTs | @TifaniesweTs | Sep 11] Sep 11 Attacks force Saudi Arabia to \u2018temporarily\u2019 shut East-West pipeline Multiple injured RT 0:02",
-        "[Sharma Talks | @network_piyush | 22h] \ud83d\udea8\ud83c\uddf8\ud83c\udde6 SAUDI ARABIA UNDER PRESSURE - BUT WHERE IS PAKISTAN ? \ud83c\uddf5\ud83c\uddf0 Saudi Arabia\u2019s energy infrastructure is facing serious disruption. The East-West oil pipeline was temporarily shut after a drone attack , while escalating Houthi attacks are putting additional pressure on Saudi energy",
-        "[Pakistan Strategic Prism | @pakstratprism1 | Sep 14] Sep 14 \ud83d\udea8 Saudi Oil Pipeline Hit \u2014 Satellite Imagery Reveals Damage Satellite imagery reportedly shows two Saudi pipeline pump stations damaged in the September 10 drone attack. One near Medina shows a ~12-hectare burn scar and oil spill, while Pump Station 9 \u2014 also targeted in 2019",
-        "[TifaniesweTs | @TifaniesweTs | Sep 11] Sep 11 Attacks force Saudi Arabia to \u2018temporarily\u2019 shut East-West pipeline Multiple injured RT 0:02 / 0:04",
-        "[Pakistan Strategic Prism | @pakstratprism1 | Sep 14] Sep 14 \ud83d\udea8 Saudi Oil Pipeline Hit \u2014 Satellite Imagery Reveals Damage Satellite imagery reportedly shows two Saudi pipeline pump stations damaged in the September 10 drone attack. One near Medina shows a ~12-hectare burn scar and oil spill, while Pump Station 9 \u2014 also targeted in 2019 Made with AI",
-        "[\u200b\ud835\udc00\ud835\udc0c\ud835\udc04\ud835\udc11\ud835\udc08\ud835\udc02\ud835\udc00\ud835\udc0d \ud835\udc05\ud835\udc0e\ud835\udc11\ud835\udc02\ud835\udc04 \u2694\ufe0f\ud83c\uddfa\ud83c\uddf8 | @Americanforce0 | Sep 16] Sep 16 Parody account \ud83d\udd25 BREAKING: MBS IS FURIOUS! \ud83c\uddf8\ud83c\udde6 \" WARNING : WE WILL REACT FIRMLY!\" Saudi Arabia to Iran-backed Houthis after cowardly missile attack on Khamis Mushait, Abha, Taif! 13 civilians injured \u2014 Saudi says ENOUGH IS ENOUGH! \u2694\ufe0f Saudi F-15 fleet on FULL HIGH ALERT \u2694\ufe0f Defense Ministry:",
-        "[Idrees Ali | @idreesali114 | 15h] DUBAI/LONDON, Sept 16 (Reuters) - Two pumping stations serving the vital East-West Pipeline in Saudi Arabia were damaged in an attack last week, with a repair timeline unclear, according to assessments from three oil and security sources. 5.8K",
-        "[Idrees Ali | @idreesali114 | Sep 15] Sep 15 LONDON, Sept 15 (Reuters) - Oil loadings at Saudi Arabia's Red Sea port of Yanbu have been suspended, days after the world's biggest crude exporter closed its East-West pipeline due to an attack by Yemen's Iran-aligned Houthis, shipping industry sources said on Tuesday. 83K",
-        "[Idrees Ali | @idreesali114 | Sep 14] Sep 14 LONDON, Sept 14 (Reuters) - Oil prices rose more than 3% on Monday after new strikes on Saudi Arabian energy infrastructure and attacks on ships in the \u200cMiddle East compounded supply concerns. 2.5K",
-        "[OSINTdefender | @sentdefender | 11h] The U.S. is investigating whether Iran or an Iran aligned actor cyberattacked two energy tankers bound for Texas, in what would represent an expansion of the conflict into maritime cyber operations far beyond the Middle East. The Wall Street Journal reports the attacks occurred"
+        "[Nabila Jamal | @nabilajamal_ | 3h] #BREAKING INDIA RESPONDS TO US TARIFF THREAT India puts energy security first as a US bill opens the door to tariffs of up to India will continue sourcing energy from diverse suppliers to meet the needs of",
+        "[Global Explainer | @Globalexplainer | 2h] Breaking: India told US that imposing % tarrifs over India for buying Russian oil will have potential consequences. India said it have Right to secure energy needs for 1.4 billion people. Follow",
+        "[Sputnik India | @Sputnik_India | 4h] US tariffs on India ? Bharat puts energy security first India is firmly committed to the energy security of its 1.4 bln citizens, the MEA said after the US Congress cleared a Russia -Iran bill that could hit India and China, the top buyers of Russian oil. Early",
+        "[World updates | @itswpceo | 4h] 🇮🇳 India US 🇺🇸 US : You can’t ignore Mighty American power. Buy your oil somewhere else or face % tariffs. 🇮🇳",
+        "[Sputnik India | @Sputnik_India | 4h] US tariffs on India ? Bharat puts energy security first India is firmly committed to the energy security of its 1.4 bln citizens, the MEA said after the US Congress cleared a Russia -Iran bill that could hit 0:11 3.4K",
+        "[World updates | @itswpceo | 4h] 🇮🇳 India US 🇺🇸 US : You can’t ignore Mighty American power. Buy your oil somewhere else or face % tariffs. 🇮🇳 India : Do what you want. We don’t care about your . 🇺🇸 US : You’re funding Putin. Last warning. 🇮🇳 India : 1.4 billion",
+        "[News Algebra | @NewsAlgebraIND | 5h] \"For China and India , It would be better if you improve your performance. Buy your oil and gas from somewhere else\" - US lawmaker Senator Blumenthal Trump Govt passes bill imposing % tariffs on countries importing Russian energy. 1.5K 100K",
+        "[Global Explainer | @Globalexplainer | Sep 16] Sep 16 Breaking: US congress passed Russia sanctioned bill which will impose % tarrif on india and china for buying Russian oil.",
+        "[Global Explainer | @Globalexplainer | Sep 16] Sep 16 Breaking: US congress passed Russia sanctioned bill which will impose % tarrif on india and china for buying Russian oil. 30K",
+        "[Anadolu English | @anadoluagency | 7s] 🇮🇳 India says will take 'all necessary measures' to protect economic interests after US Russia bill 🔷 New Delhi says potential implications of Russia bill on bilateral relations 'very clearly articulated by Indian side' to US v.aa.com.tr/4059820",
+        "[Shashank Mattoo | @MattooShashank | Sep 16] Sep 16 Breaking: US tariff bill on India 568K",
+        "[Shashank Mattoo | @MattooShashank | Sep 16] Sep 16 Breaking: US tariff bill on India 0:21 568K",
+        "[Global Surveillance | @Globalsurv | 20h] 🇷🇺🇪🇺 Russia Warns A War With Europe Will Be Very Short!! Russian Foreign Minister Sergei Lavrov stated today that Russia Russia , we're to attack Russian",
+        "[Beate Landefeld | @BeateLandefeld | Sep 12] Sep 12 Russia capable of building aircraft independently Putin told Modi that despite Western Russia has fully localized aircraft production. \"We were forced to, but we succeeded,\" he stated, noting that even Europe and the US rely on broader international partnerships for",
+        "[Military Observer | @TheMilObserverr | Sep 10] Sep 10 🇮🇳 Russia is pushing hard for a Su-57 deal ahead of Putin's visit, and India still isn't buying it. Moscow's latest offer is generous. Full tech transfer, local manufacturing at HAL, even the newer twin-seat Su-57D, which completed its first test flight back in May. Russian",
+        "[Shashank Mattoo | @MattooShashank | Sep 16] Sep 16 Breaking: US tariff bill on India 0:02 / 0:23 568K",
+        "[Sputnik India | @Sputnik_India | Sep 10] Sep 10 🚨 BREAKING: Russia to supply 105 fully -proof Il-114-300 regional jets to India United Aircraft Corporation (UAC) has signed agreements with Indian airlines for the supply of Il-114-300 aircraft at the Innoprom exhibition in India . 🔶 50 aircraft will be delivered for",
+        "[OSINTdefender | @sentdefender | 12h] The House has passed the Lindsey O. Graham Sanctioning Russia and Iran Act of 2026 by a vote of 262–159, sending the legislation forward after the Senate previously approved it. The bill imposes additional sanctions related to Russia and Iran and includes provisions allowing"
       ]
     },
     {
-      "label": "Iran War Drains $38 Billion from US, Depletes Two-Thirds of Missile Interceptors",
-      "category": "economic",
-      "boolean_query": "iran war 38 billion us interceptors",
+      "label": "US Drone Maker Powerus Signs MoU with Pakistan Army for Drone Orders",
+      "category": "defense",
+      "boolean_query": "powerus pakistan army drone moou",
       "terms": [
-        "Iran war 38 billion us cost",
-        "US missile interceptors depleted",
-        "Iran conflict us financial burden",
-        "US military spending iran war",
-        "Iran war economic impact us",
-        "US interceptors stockpile depletion",
-        "Iran war cost analysis cbo",
-        "US defense budget iran conflict",
-        "Iran war financial strain",
-        "US military expenditure iran",
-        "US military munitions shortfall Iran war",
-        "US missile expenditure Iran war patriot thaad"
+        "Powerus Pakistan Army drone deal",
+        "US drone firm signs Pakistan MoU",
+        "Pakistan Army drone procurement",
+        "Powerus Pakistan military collaboration",
+        "Pakistan drone technology acquisition",
+        "Powerus Pakistan drone orders",
+        "Pakistan Army drone system",
+        "US Pakistan drone cooperation",
+        "Powerus Pakistan military contract"
+      ],
+      "sources": [
+        {
+          "title": "US drone maker Powerus says it signed MoU with Pakistan Army, gets initial order",
+          "source_name": "Dawn News",
+          "url": "https://www.dawn.com/news/2030619/us-drone-maker-powerus-says-it-signed-mou-with-pakistan-army-gets-initial-order"
+        },
+        {
+          "title": "US drone maker Powerus signs Pakistan Army MOU, gets initial order",
+          "source_name": "The Express Tribune",
+          "url": "https://tribune.com.pk/story/2629835/us-drone-maker-powerus-signs-pakistan-army-mou-gets-initial-order"
+        },
+        {
+          "title": "Iran’s Araghchi, Pakistan army chief discuss regional developments as US-Iran talks stall",
+          "source_name": "Al Arabiya English",
+          "url": "https://english.alarabiya.net/News/middle-east/2026/09/17/iran-s-araghchi-pakistan-army-chief-discuss-regional-developments-as-usiran-talks-stall"
+        },
+        {
+          "title": "ASELSAN ŞAHİN: Pakistan’s 40 mm Counter-Drone System",
+          "source_name": "Quwa Defence News",
+          "url": "https://quwa.org/pakistan/air-defence-pk/aselsan-sahin-pakistans-40-mm-counter-drone-system/"
+        },
+        {
+          "title": "SMPP Delivers 106 Jet-Based Kamikaze Drones to Indian Army, Boosts Deep-Strike Capability",
+          "source_name": "Defence Capital RSS",
+          "url": "https://defencecapital.in/2026/06/11/smpp-delivers-106-jet-based-kamikaze-drones-to-indian-army-boosts-deep-strike-capability/"
+        }
+      ],
+      "source_headline": "US drone maker Powerus says it signed MoU with Pakistan Army, gets initial order",
+      "source_name": "Dawn News",
+      "source_url": "https://www.dawn.com/news/2030619/us-drone-maker-powerus-says-it-signed-mou-with-pakistan-army-gets-initial-order",
+      "sample_tweets": [
+        "[Ariba Shahid | @AribaShahid | 5h] , a U.S. drone Pakistan Army for an initial order of unmanned aerial systems, though its value remains undisclosed. US drone maker Powerus signs Pakistan Army MOU, gets initial order 65K",
+        "[International Defence Analysis | @Defence_IDA | 1h] #Breaking 🇺🇸🤝🇵🇰 US based drone manufacturer has signed a Memorandum of Understanding (MoU) with the Pakistan Army , which includes an initial order for unmanned aerial systems, according to company co-founder Brett Velicovich, as reported by Reuters. Velicovich did not",
+        "[Pakistan Armed Forces News 🇵🇰 | @PakistanFauj | 1h] , a U.S. drone firm tells Reuters during an interview that it has signed a deal with the Pakistan Army for an order of unmanned aerial systems. reuters.com/world/asia-pac DG ISPR and Quote Pakistan Armed Forces News 🇵🇰",
+        "[Pakistan Defence🇵🇰 | @PakDefence_ | 31m] 🇵🇰🇺🇸 Pakistan Army drone deal with U.S. defense company PowerUS . PowerUS has secured an initial order for unmanned aerial systems from the",
+        "[Pakistan Armed Forces News 🇵🇰 | @PakistanFauj | 1h] reuters.com/world/asia-pac DG ISPR and Quote Pakistan Armed Forces News 🇵🇰",
+        "[Pakistan Defence🇵🇰 | @PakDefence_ | 31m] 🇵🇰🇺🇸 Pakistan Army drone deal with U.S. defense company PowerUS . PowerUS has secured an initial order for unmanned aerial systems from the Pakistan Army , with the deal’s value undisclosed. The delegation of meet with Field Marshal Asim Munir",
+        "[Startup Pakistan | @PakStartup | 5m] The Pakistan Army has signed a memorandum of understanding with US drone company that includes an initial order for unmanned aerial systems, according to company co-founder Brett Velicovich. Details of the order, including its value and specific equipment, have not been",
+        "[Armed Forces Update | @ArmedUpdat1947 | 3h] is known for Developing Heavy-Lift UAVs, Tactical Drones and Counter- Drone Interceptors. 🇺🇸🇵🇰 Its Heavy-Lift UAVs can carry Payloads Upto 675 kg, while the Guardian Series is Designed to Detect and Intercept Adversary Drones. is also integrating AI-enabled",
+        "[Armed Forces Update | @ArmedUpdat1947 | 3h] Pakistan Army has Singed an MOU with U.S Drone Maker \" \", during its Visit to GHQ Rawalpindi. The Deal includes an Initial Order for Unmanned Aerial Systems, but the Quantity and Value are still Classified.",
+        "[Armed Forces Update | @ArmedUpdat1947 | 3h] Pakistan Army has Singed an MOU with U.S Drone Maker \" \", during its Visit to GHQ Rawalpindi. The Deal includes an Initial Order for Unmanned Aerial Systems, but the Quantity and Value are still Classified. 5K",
+        "[Paradox (8-nil) | @altfoxb | 3h] portfolio does not include any long range OWADs that are of particular interest for Pakistan & neither any MALE/HALE category drones. They make FPVs & some large hexacopters but nothing long range. Maybe any autonomous software to operate FPVs in swarm but other than... Quote Ariba Shahid",
+        "[Insider Paper | @TheInsiderPaper | 1h] JUST IN - U.S. drone has signed a MoU with the Pakistan Army that includes an initial drone 8.4K",
+        "[News18 | @CNNnews18 | 39m] POWERUS Meets Asim Munir After $22.3M Deal: Is US Drone Tech Eyeing Pak's Iran Border? #Exclusive",
+        "[Armed Forces Update | @ArmedUpdat1947 | 3h] Pakistan Army has Singed an MOU with U.S Drone Maker \"Powerus\", during its Visit to GHQ Rawalpindi. The Deal includes an Initial Order for Unmanned Aerial Systems, but the Quantity and Value are still Classified. 3K",
+        "[Paradox (8-nil) | @altfoxb | 3h] portfolio does not include any long range OWADs that are of particular interest for Quote Ariba Shahid",
+        "[IndiaToday | @IndiaToday | 2h] #𝐏𝐚𝐤 𝐬𝐢𝐠𝐧𝐬 #𝐌𝐨𝐔 𝐰𝐢𝐭𝐡 #𝐔𝐒 𝐝𝐫𝐨𝐧𝐞 𝐟𝐢𝐫𝐦 𝐬𝐞𝐭 𝐭𝐨 𝐦𝐞𝐫𝐠𝐞 𝐰𝐢𝐭𝐡 𝐜𝐨𝐦𝐩𝐚𝐧𝐲 𝐛𝐚𝐜𝐤𝐞𝐝 𝐛𝐲 𝐓𝐫𝐮𝐦𝐩'𝐬 𝐬𝐨𝐧𝐬 US drone has signed an MoU with the Pakistan Army that includes an initial drone -related order. The agreement",
+        "[Mohsin Ali | @Mohsin_o2 | 4h] , a U.S. drone Pakistan Army for an initial order of unmanned aerial systems, though the deal's value has not been disclosed. The delegation of meet with Field Marshal Asim Munir",
+        "[Mohsin Ali | @Mohsin_o2 | 1h] Aims to Set Up Drone Manufacturing in Pakistan ' founder and chief executive, said that Pakistan 's private defence sector remains \"emerging but still not mature,\" leaving room for U.S. firms to move faster. \"The goal would be a joint technology relationship,",
+        "[Mossad Commentary | @MOSSADil | 10h] 🚨 TRUMP SONS-BACKED FIRM LANDS PAKISTAN ARMY DRONE DEAL U.S. drone maker signed an MOU with the Pakistan Army — and immediately secured an initial order for drone power systems. “Today we signed a very important MOU. As part of that MOU, we received an initial order",
+        "[Idrees Ali | @idreesali114 | 19h] The Houthis clearly have capable surface to air systems, which have brought down a number of U.S. military drones in recent years. Quote IRNA News Agency ☫",
+        "[Jonathan Beale | @bealejonathan | Aug 18] Aug 18 This isn't the first time Russia's accused the UK of supplying drones to Ukraine which have been used to target Russian territory. Two years ago Russia's Foreign Ministry said this : tass.com/politics/18382 1.5K"
+      ]
+    },
+    {
+      "label": "Houthi Drone Intercepted Near Makkah as Saudi-led Coalition Warns of Red Line",
+      "category": "defense",
+      "boolean_query": "houthi drone makkah red line",
+      "terms": [
+        "Houthi drone intercepted near Makkah",
+        "Saudi coalition warns holy sites red line",
+        "Yemen Houthi drone attack Makkah",
+        "Saudi air defense intercepts Houthi drone",
+        "Saudi Arabia Houthi drone interception",
+        "Makkah security alert Houthi drone",
+        "Houthi drone attack Saudi holy sites",
+        "Saudi air defense system response",
+        "Houthi drone intercepted near Mecca",
+        "Yemen Houthi drone attack Mecca"
+      ],
+      "sources": [
+        {
+          "title": "Houthi drone intercepted near Makkah as Saudi-led coalition warns holy sites are 'red line",
+          "source_name": "Geo TV World",
+          "url": "https://www.geo.tv/latest/682272-houthi-drone-intercepted-near-makkah-as-saudi-coalition-warns-holy-sites-are-red-line"
+        },
+        {
+          "title": "Saudi Arabia says it shot down Houthi drone south of Mecca",
+          "source_name": "BBC World News Wire RSS",
+          "url": "https://www.bbc.co.uk/news/articles/cr89jqd1w45eo?at_medium=RSS&at_campaign=rss"
+        },
+        {
+          "title": "Turkish defence ministry condemns Houthi drone attack on Saudi Arabia",
+          "source_name": "Geo TV Liveblog",
+          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34551"
+        }
+      ],
+      "source_headline": "Houthi drone intercepted near Makkah as Saudi-led coalition warns holy sites are 'red line",
+      "source_name": "Geo TV World",
+      "source_url": "https://www.geo.tv/latest/682272-houthi-drone-intercepted-near-makkah-as-saudi-coalition-warns-holy-sites-are-red-line",
+      "sample_tweets": [
+        "[Mossad Commentary | @MOSSADil | Sep 16] Sep 16 SAUDI ARABIA INTERCEPTS HOUTHI DRONE NEAR MECCA Saudi air defenses destroyed a Houthi drone south of Mecca before it entered restricted airspace over Islam’s holiest city. Saudi Arabia says this was the Houthis’ second attempt to target Mecca, following a ballistic missile",
+        "[Global South World | @g_s_world | 19h] Islam’s holiest city is now allegedly a target in the war. That's if you ask Saudi Arabia, which says its air defences intercepted a Houthi drone south of Mecca, accusing the Yemen-based group of attempting to attack the sacred city. Riyadh declared the security of Mecca and",
+        "[The Middle East | @A_M_R_M1 | Sep 16] Sep 16 BREAKING | Saudi-led Arab Coalition: Saudi air defenses intercepted and destroyed a Houthi drone before it entered the restricted airspace over the holy city of Mecca.",
+        "[Strategic Vanguard ⚔️ | @StrategicVang | Sep 16] Sep 16 🚨🇸🇦 RED LINE : Saudi air defenses intercepted & destroyed a Houthi drone south of before it entered the Holy City’s restricted airspace. 🕋 “The security of the Two Holy Mosques & pilgrims is a red line .” May Allah ﷻ protect Makkah, Madinah & all worshippers. 🤲🇸🇦 1.6K",
+        "[Sagar STORM🔳 | @AlexAllone1 | Sep 16] Sep 16 BIG BREAKING -:🚨 Soudi air defence system intercepted a",
+        "[Strategic Vanguard ⚔️ | @StrategicVang | Sep 16] Sep 16 🚨🇸🇦 RED LINE : Saudi air defenses intercepted & destroyed a .” May Allah ﷻ protect Makkah, Madinah & all worshippers. 🤲🇸🇦 0:55 1.6K",
+        "[Sagar STORM🔳 | @AlexAllone1 | Sep 16] Sep 16 BIG BREAKING -:🚨 Soudi air defence system intercepted a drone in Mecca air space. Soudi led forces in Yeman says, \"\"attempt to target Mecca with a drone will remain a black mark in the record of Houthi violations\" \"Mecca and Madina is a red line \". 2.2K",
+        "[The Geopolitics | @Newstoday555 | 21h] BREAKING: Saudi Arabia has heightened air defenses around after intercepting a Houthi drone south of the holy city. Saudi authorities called the Two Holy Mosques a “ red line .” 1.7K",
+        "[Ahmed Quraishi | @_AhmedQuraishi | Sep 16] Sep 16 Breaking: #Saudi Air Defense intercepted and destroyed a drone that entered",
+        "[The Geopolitics | @Newstoday555 | 21h] BREAKING: Saudi Arabia has heightened air defenses around after intercepting a Houthi drone south of the holy city. Saudi authorities called the Two Holy Mosques a “ red line .” 0:21 1.7K",
+        "[Ahmed Quraishi | @_AhmedQuraishi | Sep 16] Sep 16 Breaking: #Saudi Air Defense intercepted and destroyed a drone that entered #Mecca 's airspace. The Saudi-led military coalition in #Yemen says the \"attempt to target Mecca with a drone will remain a black mark in the record of Houthi violations\" and that the security of the holy",
+        "[Stay update | @StayUpdate6 | Sep 16] Sep 16 🚨 BIG BREAKING: Saudi air defenses intercepted and destroyed a Houthi drone south of Mecca before it could enter the holy city’s restricted airspace. The Saudi-led coalition called it the second attempt to target Mecca, declaring the security of the Two Holy Mosques and",
+        "[The Geopolitics | @Newstoday555 | 21h] BREAKING: Saudi Arabia has heightened air defenses around after intercepting a Houthi drone south of the holy city. Saudi authorities called the Two Holy Mosques a “ red line .” 0:02 / 0:23 1.7K",
+        "[Hazal Aksoy | @HazalAksoy_ | Sep 16] Sep 16 ⚔️ Attack on one is attack on all. 🇹🇷 Turkey & 🇵🇰 Pakistan on high alert after Houthi drone strike near . The Holy Places were, are and always will be a red line . 🚫 Any harm to them will NOT be ignored.",
+        "[T.M | @BlueMist911 | Sep 16] Sep 16 𝗠𝗔𝗞𝗞𝗔𝗛 𝗨𝗡𝗗𝗘𝗥 𝗔𝗧𝗧𝗔𝗖𝗞: 𝗦𝗔𝗨𝗗𝗜 𝗗𝗘𝗙𝗘𝗡𝗦𝗘𝗦 𝗗𝗘𝗦𝗧𝗥𝗢𝗬 𝗛𝗢𝗨𝗧𝗛𝗜 𝗗𝗥𝗢𝗡𝗘 🇵🇰🇸🇦 Saudi Air Defense intercepted a Houthi drone in the sky before it could hit Holy .",
+        "[The Kobeissi Letter | @KobeissiLetter | Sep 16] Sep 16 BREAKING: Chinese gold ETFs added +11 tonnes of gold in August, marking their 2nd consecutive monthly increase. This brings their total gold holdings up to 293 tonnes, the highest level since April and the 3rd-highest reading on record. This comes as investor demand surged,",
+        "[Idrees Ali | @idreesali114 | 19h] The Houthis clearly have capable surface to air systems, which have brought down a number of U.S. military drones in recent years. Quote IRNA News Agency ☫"
+      ]
+    },
+    {
+      "label": "India warns new US tariffs over Russian oil could impact ties",
+      "category": "defense",
+      "boolean_query": "india new tariffs oil impact",
+      "terms": [
+        "India warns new US",
+        "US tariffs over Russian",
+        "tariffs over Russian oil",
+        "over Russian oil could",
+        "Russian oil could impact",
+        "oil could impact ties",
+        "India warns new US tariffs",
+        "new US tariffs over Russian",
+        "US tariffs over Russian oil",
+        "tariffs over Russian oil could"
+      ],
+      "sources": [
+        {
+          "title": "India warns new US tariffs over Russian oil could impact ties",
+          "source_name": "Al Jazeera",
+          "url": "https://www.aljazeera.com/news/2026/9/17/india-warns-new-us-tariffs-over-russian-oil-could-impact-ties"
+        },
+        {
+          "title": "India warns new US tariffs over Russian oil could hit ties, vows to protect energy security",
+          "source_name": "Geo TV World",
+          "url": "https://www.geo.tv/category/world"
+        },
+        {
+          "title": "India faces 100% tariff threat over Russian oil after US House vote",
+          "source_name": "BBC World News Wire RSS",
+          "url": "https://www.bbc.co.uk/news/articles/c3lyrn4p870yo?at_medium=RSS&at_campaign=rss"
+        },
+        {
+          "title": "India, others face 100% tariffs as US House advances Russia sanctions Bill",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/india-others-face-100-tariffs-as-us-house-advances-russia-sanctions-bill/"
+        },
+        {
+          "title": "India-US Technology Ties Deepen Amid New Washington Consensus",
+          "source_name": "The Diplomat India RSS",
+          "url": "https://thediplomat.com/2024/06/india-us-technology-ties-deepen-amid-new-washington-consensus/"
+        }
+      ],
+      "source_headline": "India warns new US tariffs over Russian oil could impact ties",
+      "source_name": "Al Jazeera",
+      "source_url": "https://www.aljazeera.com/news/2026/9/17/india-warns-new-us-tariffs-over-russian-oil-could-impact-ties"
+    },
+    {
+      "label": "Pakistan Committed to Makkah Defense Pact Implementation",
+      "category": "defense",
+      "boolean_query": "pakistan makkah defense pact implementation",
+      "terms": [
+        "Pakistan implements Makkah defense pact",
+        "Makkah defense pact Pakistan commitment",
+        "Makkah agreement Pakistan military",
+        "Pakistan Makkah defense pact details",
+        "Saudi Arabia Pakistan defense pact",
+        "Makkah defense pact regional security",
+        "Pakistan Makkah agreement implementation",
+        "Saudi Pakistan defense collaboration",
+        "Makkah defense pact Pakistan military",
+        "Pakistan implements Mecca defense pact",
+        "Mecca defense pact Pakistan commitment"
+      ],
+      "sources": [
+        {
+          "title": "Pakistan committed to implementing Saudi defence pact, Makkah agreement: FO",
+          "source_name": "Dawn News",
+          "url": "https://www.dawn.com/news/2030603/pakistan-committed-to-implementing-saudi-defence-pact-makkah-agreement-fo"
+        },
+        {
+          "title": "The Mecca Pact’s Credibility Gap",
+          "source_name": "War on the Rocks Strategy & Defense",
+          "url": "https://warontherocks.com/the-mecca-pacts-credibility-gap/"
+        },
+        {
+          "title": "Pakistan remains committed to Makkah accord, but operational details cannot be disclosed: FO",
+          "source_name": "The Express Tribune",
+          "url": "https://tribune.com.pk/story/2629811/pakistan-remains-committed-to-makkah-accord-but-operational-details-cannot-be-disclosed-fo"
+        }
+      ],
+      "source_headline": "Pakistan committed to implementing Saudi defence pact, Makkah agreement: FO",
+      "source_name": "Dawn News",
+      "source_url": "https://www.dawn.com/news/2030603/pakistan-committed-to-implementing-saudi-defence-pact-makkah-agreement-fo"
+    },
+    {
+      "label": "US Military Costs in Iran War Reach $38 Billion, Depleting Missile Stockpiles",
+      "category": "economic",
+      "boolean_query": "iran war us military costs 38 billion",
+      "terms": [
+        "US Iran war costs 38 billion dollars",
+        "US missile stockpiles depleted Iran conflict",
+        "Iran war financial burden on US",
+        "US military expenditure Iran war",
+        "Iran conflict economic impact US",
+        "US defense budget Iran war costs",
+        "Iran war missile stockpile depletion",
+        "US military spending Iran war",
+        "Iran war economic strain on US",
+        "US military costs Iran conflict",
+        "UN finds US war crimes in Iran",
+        "Iran crimes against humanity UN"
       ],
       "sources": [
         {
@@ -439,29 +616,14 @@
           "url": "https://www.geo.tv/latest/682247-iran-war-drains-38bn-from-us-as-weapons-stockpiles-face-five-year-replenishment"
         },
         {
-          "title": "War on Iran cost U.S. more than $38 billion: Congressional Budget Office",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/war-on-iran-cost-us-more-than-38b-congressional-budget-office/article71469949.ece"
-        },
-        {
-          "title": "U.S. military says Iran war has led to munitions shortfall",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/us-military-says-iran-war-has-led-to-munitions-shortfall/article71466628.ece"
-        },
-        {
           "title": "Cheap Drones, Dry Taps: The Iran War Opens a New Era of Water Infrastructure Risk",
           "source_name": "War on the Rocks Strategy & Defense",
           "url": "https://warontherocks.com/cheap-drones-dry-taps-the-iran-war-opens-a-new-era-of-water-infrastructure-risk/"
         },
         {
-          "title": "Trump says 'hopefully we are towards end' of Iran war",
-          "source_name": "Reuters World News",
-          "url": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxNNVZBS2JnVTZ6bnkwemhVOGRlX2puQkR2RHNnZnpLaHRzcHMxNktCNGwtNkU2ZTJaTzRMSFZzYXRzeHVnanUtaTNIdjVZTm5wVjd5bm9iMHNndXFwRzFOSmh3QWI0T3lqU3MwVE9UenMwNWZWYURMWm1ZOHNDTzVBVmlZVjBHT0F6cEJoRE5BYTVqRVFnM3N3cjZZU3RKWFJSeGZLVUhUVkVQZW9tb0FhRThfSEpmcVZM?oc=5"
-        },
-        {
-          "title": "US Missile Expenditure in short war with Iran Sends a Warning to India",
-          "source_name": "IDRW RSS Feed",
-          "url": "https://idrw.org/us-missile-expenditure-in-short-war-with-iran-sends-a-warning-to-india/"
+          "title": "US 'hopefully' nearing end of Iran war, signals talks with Tehran, says Trump",
+          "source_name": "Geo TV Liveblog",
+          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34543"
         }
       ],
       "source_headline": "Iran war has cost $38 billion, depleted two-thirds of US missile interceptors, CBO says",
@@ -469,100 +631,100 @@
       "source_url": "https://www.defensenews.com/news/your-military/2026/09/15/iran-war-has-cost-38-billion-depleted-two-thirds-of-us-missile-interceptors-cbo-says/"
     },
     {
-      "label": "North Korea Claims US Arms Buildup Justifies Nuclear Expansion",
-      "category": "politics",
-      "boolean_query": "north korea us arms nuclear expansion",
+      "label": "IG Defence Demonstrates T-SHUL BEAM Counter-UAS System at Indian Air Force Dronathan 2026",
+      "category": "defense",
+      "boolean_query": "ig defence t-shul beam counter-uas",
       "terms": [
-        "North Korea US arms buildup nuclear",
-        "North Korea nuclear expansion justification",
-        "US arms buildup North Korea response",
-        "North Korea nuclear strategy 2026",
-        "North Korea nuclear expansion 2026",
-        "US military buildup North Korea",
-        "US-North Korea defense escalation",
-        "North Korea nuclear expansion claims",
-        "DPRK US arms buildup nuclear",
-        "DPRK nuclear expansion justification"
+        "IG Defence T-SHUL BEAM counter-UAS",
+        "Indian Air Force Dronathan 2026",
+        "T-SHUL BEAM drone interception",
+        "Indias counter-UAS system T-SHUL",
+        "IG Defence drone defense system",
+        "T-SHUL BEAM UAS interception",
+        "Indian Air Force counter-UAS tech",
+        "T-SHUL BEAM drone defense",
+        "IG Defence Dronathan 2026 demo",
+        "Indias T-SHUL BEAM system"
       ],
       "sources": [
         {
-          "title": "North Korea says US-led arms buildup justifies expanding nuclear force",
-          "source_name": "Reuters World News",
-          "url": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxQNU0zRU9hZ181OVZyTUp5OFNoY2NmUGlmZ2o0dGhXU3dKSG5oeC0wU1dpSEY3OHZtTkVDODNBUEhkcUl5XzVyWUlGNnlHdkV6VXBDSHV4QW8wbC0tZkxJV2xuS21QVjFmaGd6OHNhV0xhVTZTZHBmakdvTWQ1UjZpVXNqRGU4Z1ZtM3A4aHcyR25DTnNnOFgxZk94RjEybGVtQ1M0N20wamNYUFBHWnlNOTJCNU9QdDJQbndtcDkzbkVzQWhITjYtUW1TQkVQN2lYcnJR?oc=5"
+          "title": "IG Defence’s Indigenous T-SHUL BEAM Counter-UAS System Demonstrated at Indian Air Force Dronathan 2026",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/ig-defences-indigenous-t-shul-beam-counter-uas-system-demonstrated-at-indian-air-force-dronathan-2026/"
         },
         {
-          "title": "Learning to Live With a Nuclear North Korea",
-          "source_name": "Foreign Affairs Nuclear Proliferation",
-          "url": "https://www.foreignaffairs.com/podcasts/learning-live-nuclear-north-korea"
+          "title": "Paper Planes of the Indian Air Force",
+          "source_name": "Alpha Defense RSS",
+          "url": "https://alphadefense.in/2026/08/24/paper-planes-of-the-indian-air-force/"
         },
         {
-          "title": "North Korea Commissions Second in Class Destroyer",
+          "title": "Absolute Battlefield Dominance: India’s New 12 GHz C-UAS System Signals a New Era of Drone Warfare",
+          "source_name": "Defence Capital RSS",
+          "url": "https://defencecapital.in/2026/06/28/absolute-battlefield-dominance-indias-new-12-ghz-c-uas-system-signals-a-new-era-of-drone-warfare/"
+        },
+        {
+          "title": "Report to Congress on U.S. Air Force Fighter Force Structure",
           "source_name": "USNI News (U.S. Naval Institute)",
-          "url": "https://news.usni.org/2026/09/08/north-korea-commissions-second-in-class-destroyer"
+          "url": "https://news.usni.org/2026/09/07/report-to-congress-on-u-s-air-force-fighter-force-structure"
         },
         {
-          "title": "What Role Does Denuclearization Have in North Korea-US Dialogue Today?",
-          "source_name": "The Diplomat Asia-Pacific Defense",
-          "url": "https://thediplomat.com/2026/09/what-role-does-denuclearization-have-in-north-korea-us-dialogue-today/"
+          "title": "Air Force Eyes New-Build F-16s to Boost Fighter Force",
+          "source_name": "Air & Space Forces Magazine",
+          "url": "https://www.airandspaceforces.com/air-force-eyes-new-build-f-16s-to-boost-fighter-force/"
         },
         {
-          "title": "Russia Is Helping Supercharge North Korea\u2019s Military Drones",
-          "source_name": "The Diplomat Asia-Pacific Defense",
-          "url": "https://thediplomat.com/2026/09/russia-is-helping-supercharge-north-koreas-military-drones/"
+          "title": "The Only Air Force Fighter Pilot in Congress Wants ‘Wingmen to Come Join Me’",
+          "source_name": "Air & Space Forces Magazine",
+          "url": "https://www.airandspaceforces.com/the-only-air-force-fighter-pilot-in-congress-wants-wingmen-to-come-join-me/"
         },
         {
-          "title": "North Korea Denuclearization Digest",
-          "source_name": "Arms Control Association",
-          "url": "https://www.armscontrol.org/blogs/north-korea-denuclearization-digest"
+          "title": "F-35 proved combat readiness during Middle East deployments, Air Force officials say",
+          "source_name": "Defense News RSS",
+          "url": "https://www.defensenews.com/air/2026/09/15/f-35-proved-combat-readiness-during-middle-east-deployments-air-force-officials-say/"
         },
         {
-          "title": "North Korea Tests Missiles, Attack Drones on Island in Sea of Japan",
-          "source_name": "USNI News (U.S. Naval Institute)",
-          "url": "https://news.usni.org/2026/09/14/north-korea-tests-missiles-attack-drones-on-island-in-sea-of-japan"
+          "title": "US Air Force secretary reveals deployment of on-orbit space control weapons",
+          "source_name": "Defense News RSS",
+          "url": "https://www.defensenews.com/news/your-military/2026/09/14/us-air-force-secretary-reveals-deployment-of-on-orbit-space-control-weapons/"
+        },
+        {
+          "title": "Reforming India’s Defence Procurement: Defence Acquisition Procedure 2026",
+          "source_name": "IADNews Indian Aerospace & Defence RSS",
+          "url": "https://iadnews.in/reforming-indias-defence-procurement-defence-acquisition-procedure-2026/"
+        },
+        {
+          "title": "HQ-17AE Air Defence System: Pakistan, Range and Specifications",
+          "source_name": "Quwa Defence News",
+          "url": "https://quwa.org/pakistan/air-defence-pk/hq-17ae-air-defence-system-pakistan-range-and-specifications/"
+        },
+        {
+          "title": "Indian defence forces to get emergency powers to acquire critical weapon systems through fast-track route",
+          "source_name": "Defence Update India RSS",
+          "url": "https://defenceupdate.in/indian-defence-forces-to-get-emergency-powers-to-acquire-critical-weapon-systems-through-fast-track-route/"
         }
       ],
-      "source_headline": "North Korea says US-led arms buildup justifies expanding nuclear force",
-      "source_name": "Reuters World News",
-      "source_url": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxQNU0zRU9hZ181OVZyTUp5OFNoY2NmUGlmZ2o0dGhXU3dKSG5oeC0wU1dpSEY3OHZtTkVDODNBUEhkcUl5XzVyWUlGNnlHdkV6VXBDSHV4QW8wbC0tZkxJV2xuS21QVjFmaGd6OHNhV0xhVTZTZHBmakdvTWQ1UjZpVXNqRGU4Z1ZtM3A4aHcyR25DTnNnOFgxZk94RjEybGVtQ1M0N20wamNYUFBHWnlNOTJCNU9QdDJQbndtcDkzbkVzQWhITjYtUW1TQkVQN2lYcnJR?oc=5",
+      "source_headline": "IG Defence’s Indigenous T-SHUL BEAM Counter-UAS System Demonstrated at Indian Air Force Dronathan 2026",
+      "source_name": "IDRW RSS Feed",
+      "source_url": "https://idrw.org/ig-defences-indigenous-t-shul-beam-counter-uas-system-demonstrated-at-indian-air-force-dronathan-2026/",
       "sample_tweets": [
-        "[Reuters China | @ReutersChina | 44m] Korea 's vice defence minister said on Thursday that a growing U.S.-led military buildup and what he called an expanding nuclear nuclear forces. North Korea says US-led arms buildup justifies expanding nuclear force 1.1K",
-        "[Polymarket | @Polymarket | 4h] JUST IN: Korea nuclear arsenal, citing the U.S. buildup as justification. 50K",
-        "[Reuters | @Reuters | 55m] Korea says US-led buildup justifies expanding nuclear force reut.rs/3Vfrkzy North Korea says US-led arms buildup justifies expanding nuclear force 27K",
-        "[Global War Desk | @GlobalNewsHQI | 54m] \ud83d\udea8\ud83c\uddf0\ud83c\uddf5 BREAKING: Korea nuclear weapons. nuclear arsenal is essential to its security.",
-        "[Al Jazeera Breaking News | @AJENews | 5h] BREAKING: Korea 's Vice Defence Minister Kim Kang Il said that a US nuclear forces and that Pyongyang would continue expanding its defensive nuclear deterrent. \ud83d\udd34 More on",
-        "[Global War Desk | @GlobalNewsHQI | 54m] \ud83d\udea8\ud83c\uddf0\ud83c\uddf5 BREAKING: Korea nuclear weapons.",
-        "[Al Jazeera Breaking News | @AJENews | 5h] BREAKING: Korea 's Vice Defence Minister Kim Kang Il said that a US nuclear forces and that Pyongyang would continue expanding its defensive nuclear deterrent. \ud83d\udd34 More on 22K",
-        "[NewsForce | @Newsforce | 3h] \ud83c\uddf0\ud83c\uddf5 Korea nuclear arsenal, blaming the U.S. military buildup in the region for forcing Pyongyang to strengthen its deterrent. Vice Defense Minister Kim Kang Il said Korea sees growing U.S.-led nuclear and submarine cooperation as a",
-        "[RKM | @rkmtimes | 1h] NEW\ud83c\uddf0\ud83c\uddf5\ud83c\uddef\ud83c\uddf5\ud83c\uddfa\ud83c\uddf8\ud83c\uddf7\ud83c\uddfa\ud83d\udd25U.S. building more nuclear capable Air defense systems to counter Korea \u2019s potential nuclear missiles. - Korea says, US Is expanding nuclear forces as it continued buildups near Korea and Sea of Japan.",
-        "[China pulse \ud83c\udde8\ud83c\uddf3 | @Eng_china5 | 18h] Korea Raises the Nuclear Response Threshold Against Washington: nuclear forces law, including nuclear response options. The warning came after",
-        "[US Homeland Security News | @defense_civil25 | 1h] Commentary account \ud83d\udea8Alert: Korea nuclear arsenal, citing the U.S. massive buildup as justification! \u201c Korea will be a nuclear 1.5K",
-        "[Global Surveillance | @Globalsurv | 13h] \ud83c\uddf0\ud83c\uddf5\ud83c\uddfa\ud83c\uddf2\ud83c\uddf0\ud83c\uddf7 Korea nuclear Korea Weapons of Mass Destruction talks.",
-        "[Global Surveillance | @Globalsurv | 13h] \ud83c\uddf0\ud83c\uddf5\ud83c\uddfa\ud83c\uddf2\ud83c\uddf0\ud83c\uddf7 Korea nuclear Korea Weapons of Mass Destruction talks. Korea Defense Ministry Spokesperson condemned last Thursday's South Korea-US talks on responding to Pyongyang's Weapons Of Mass Destruction. US and South held",
-        "[Anadolu English | @anadoluagency | 30m] Critics, however, fear that the proposed revision may leave the government with fewer measures to prevent illegal activities, such as unauthorized remittances to Korea",
-        "[Aleksey The Great \ud83c\uddf7\ud83c\uddfa\ud83c\udf96 | @aleksthgrt | 18h] \ud83d\udea8BREAKING NEWS Korea US Korea with use of nuclear weapons.\ud83c\uddf0\ud83c\uddf5\ud83d\ude80\u2622\ufe0f\ud83d\udd25 \u25aa\ufe0f |scroll element (horizontal 0%)",
-        "[Aleksey The Great \ud83c\uddf7\ud83c\uddfa\ud83c\udf96 | @aleksthgrt | 18h] \ud83d\udea8BREAKING NEWS Korea US Korea with use of nuclear weapons.\ud83c\uddf0\ud83c\uddf5\ud83d\ude80\u2622\ufe0f\ud83d\udd25 \u25aa\ufe0f Korea \u2019s Defense Ministry stated that nuclear weapons could be used if the country's security is threatened. \u25aa\ufe0f Pyongyang accused Washington and Seoul of intensifying",
-        "[Insider Paper | @TheInsiderPaper | 6h] Kim Jong Un\u2019s sister says only \u2018idiots\u2019 believe Korea 18K",
-        "[WORLD NEWS | @_MAGA_NEWS_ | 18h] JUST NOW: Korea \u2019s defense ministry threatens of potential nuclear Korea and the US over continued defense policies. |scroll element| (horizontal 0%)",
-        "[WORLD NEWS | @_MAGA_NEWS_ | 18h] JUST NOW: Korea \u2019s defense ministry threatens of potential nuclear Korea and the US over continued defense policies. |scroll element| (horizontal 0%) 0:08 0:05 11K",
-        "[Institute for the Study of War | @TheStudyofWar | 13h] NEW: Korea conducted a missile and drone exercise on September 12 that used four different types of munitions in a single strike exercise, indicating that Korea is increasingly looking to integrate various types of munitions and systems into its long-range strike",
-        "[Wolf Brief | @wolfbrief_ | Sep 10] Sep 10 Nuclear watchdog IAEA decries build up of nuclear weapons in CROWD-PHOBIC DPRK In a report published late last month, the International Atomic Energy Agency (IAEA) said Pyongyang had also begun operating an expanded annex at another enrichment site. These findings point to a"
+        "[UK Defence Journal | @UKDefJournal | Sep 10] Sep 10 Equipment that would not survive the war in Ukraine has no place in the British armed forces, Minister for Defence Readiness and Industry"
       ]
     },
     {
       "label": "Pakistan Extends Airspace Ban for Indian Aircraft Until October 24",
-      "category": "politics",
-      "boolean_query": "pakistan india airspace ban",
+      "category": "diplomacy",
+      "boolean_query": "pakistan india airspace ban extension",
       "terms": [
-        "Pakistan India airspace ban extension",
-        "Indian aircraft Pakistan airspace ban",
         "Pakistan extends India airspace ban",
-        "India-Pakistan airspace restrictions",
-        "Pakistan India airspace restrictions",
-        "Indian aircraft Pakistan airspace",
-        "Pakistan India airspace policy",
-        "Airspace ban India Pakistan 2026",
-        "India-Pakistan airspace conflict",
-        "Pakistan India airspace restrictions 2026"
+        "India Pakistan airspace restrictions",
+        "Pakistan India diplomatic tension",
+        "Airspace ban India Pakistan",
+        "Pakistan India military relations",
+        "India Pakistan airspace conflict",
+        "Pakistan India border tensions",
+        "Airspace restrictions India Pakistan",
+        "Pakistan India diplomatic dispute",
+        "India Pakistan airspace policy"
       ],
       "sources": [
         {
@@ -578,77 +740,21 @@
       ],
       "source_headline": "Ban on Indian aircraft using Pakistani airspace extended until Oct 24",
       "source_name": "Dawn",
-      "source_url": "https://www.dawn.com/news/2030359",
-      "sample_tweets": [
-        "[Adil Soomro | @RealAdilSoomro | 3h] During a routine PAF patrol an Indian aircraft approached the international airspace . Pakistani side flight remained normal. Indian side a course change was reported. The same pattern has been seen before \ud83c\uddf5\ud83c\uddf0\u2708\ufe0f",
-        "[Pacific Wire | @JMChyno | 46s] Indian and Pakistani naval ships have collided in the Arabian Sea. Each country has summoned each other's top diplomat, with meetings in Islamabad and Delhi. The incident occurred on Tuesday, with both sides blaming the other and accusing it of violating the 1991 bilateral",
-        "[Express 24/7 | @Express247PK | 15h] NO ENTRY! Pakistan Airspace Ban On Indian Aircraft #Pakistan #India #PakistanIndia #AirspaceBan #IndianAircraft #PakistanAirspace #PakistanAviation",
-        "[Express 24/7 | @Express247PK | 15h] NO ENTRY! Pakistan Airspace Ban On Indian Aircraft #Pakistan #India #PakistanIndia #AirspaceBan #IndianAircraft #PakistanAirspace #PakistanAviation 0:25",
-        "[Zard si Gana | @ZardSi | Sep 11] Sep 11 \ud83c\uddf5\ud83c\uddf0 Pakistan Air Force Exposes Indian Air Force Failures! \u201cWe blocked India \u2019s networks, hacked their satellites, opened dams, knocked out electricity & disrupted their SATCOM links in space. India will never forget the last year war and its humiliation. 18K",
-        "[Zard si Gana | @ZardSi | Sep 11] Sep 11 \ud83c\uddf5\ud83c\uddf0 Pakistan Air Force Exposes Indian Air Force Failures! \u201cWe blocked India \u2019s networks, hacked their satellites, opened dams, knocked out electricity & disrupted their SATCOM links in space. India will never forget the last year war and its humiliation.",
-        "[WION | @WIONews | 16m] #WIONNewspoint India slams Pak-China boundary joint commission External Affairs Ministry rejects the Pakistan India says there is no boundary between Pakistan and China",
-        "[Naya Daur Videos | @nayadaurpk_urdu | 12h] Pakistan -China Divide Indian Territory? Pakistan Rejects Israel Match | Another Indian Jet Down, 7-0",
-        "[WION | @WIONews | 16m] #WIONNewspoint India slams Pak-China boundary joint commission External Affairs Ministry rejects the 1.2K",
-        "[Naya Daur Videos | @nayadaurpk_urdu | 12h] Pakistan -China Divide Indian Territory? Pakistan Rejects Israel Match | Another Indian Jet Down, 7-0 16:20",
-        "[T.M | @BlueMist911 | 10h] \ud835\udde3\ud835\uddd4\ud835\uddde\ud835\udddc\ud835\udde6\ud835\udde7\ud835\uddd4\ud835\udde1 \ud835\udde6\ud835\udde8\ud835\udde0\ud835\udde0\ud835\udde2\ud835\udde1\ud835\udde6 \ud835\udddc\ud835\udde1\ud835\uddd7\ud835\udddc\ud835\uddd4\ud835\udde1 \ud835\uddd8\ud835\udde1\ud835\udde9\ud835\udde2\ud835\uddec \ud835\udde2\ud835\udde9\ud835\uddd8\ud835\udde5 \ud835\udde5\ud835\uddd8\ud835\uddd6\ud835\uddde\ud835\udddf\ud835\uddd8\ud835\udde6\ud835\udde6 \ud835\udde1\ud835\uddd4\ud835\udde9\ud835\uddd4\ud835\udddf \ud835\udde3\ud835\udde5\ud835\udde2\ud835\udde9\ud835\udde2\ud835\uddd6\ud835\uddd4\ud835\udde7\ud835\udddc\ud835\udde2\ud835\udde1 \ud835\udddc\ud835\udde1 \ud835\uddd4\ud835\udde5\ud835\uddd4\ud835\uddd5\ud835\udddc\ud835\uddd4\ud835\udde1 \ud835\udde6\ud835\uddd8\ud835\uddd4 \ud83c\uddf5\ud83c\uddf0\u2694\ufe0f\ud83c\uddee\ud83c\uddf3 #Pakistan has officially summoned the Charge d'Affaires of the Indian High Commission in Islamabad over a dangerous naval",
-        "[Sang-e-Meel News | @sangemeelnews | 18h] Pakistan airspace ban on Indian aircraft by another month, now running until October 24. The move, confirmed through a fresh Notam from the Pakistan Airports Authority, keeps Indian carriers locked out of both the Karachi and Lahore flight zones. The",
-        "[News IQ | @NewsIQEng | 13h] BREAKING: Pakistan airspace ban on Indian aircraft until October 24, 2026. The PAA\u2019s NOTAM applies to Indian-registered aircraft, Indian airlines/operators and military flights across the Karachi and Lahore FIRs."
-      ]
+      "source_url": "https://www.dawn.com/news/2030359"
     },
     {
-      "label": "US Considers Selling 2000-Pound Bombs to Israel Amid Legal Concerns",
-      "category": "diplomacy",
-      "boolean_query": "us israel 2000-pound bombs sale",
-      "terms": [
-        "US 2000-pound bombs sale to Israel",
-        "Gregory Meeks opposes 2000-pound bombs for Israel",
-        "US-Israel bomb sale legal concerns",
-        "2000-pound bombs Israel approval",
-        "US military bomb sale to Israel",
-        "Gregory Meeks Israel bomb sale",
-        "US-Israel defense procurement 2000-pound bombs",
-        "2000-pound bombs international law concerns",
-        "US-Israel military cooperation bombs",
-        "2000-pound bombs sale Israel approval"
-      ],
-      "sources": [
-        {
-          "title": "Trump admin. approves sending 2,000-pound bombs to Israel in upcoming weapons deal",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/international/trump-admin-approves-sending-2000-pound-bombs-to-israel-in-upcoming-weapons-deal/article71470869.ece"
-        },
-        {
-          "title": "[Idrees Ali | @idreesali114 | 11h] U.S. Representative Gregory Meeks, the top Democrat on the House of Representatives Foreign Affairs Commi",
-          "source_name": "X.com (Idrees Ali (Reuters Pentagon))",
-          "url": "https://x.com/Idrees Ali (Reuters Pentagon)"
-        },
-        {
-          "title": "Israel\u2019s SPICE 1000 bombs can soon drop from F-35 fighters",
-          "source_name": "Defense News RSS",
-          "url": "https://www.defensenews.com/global/mideast-africa/2026/09/16/israels-spice-1000-bombs-can-soon-drop-from-f-35-fighters/"
-        }
-      ],
-      "source_headline": "Trump admin. approves sending 2,000-pound bombs to Israel in upcoming weapons deal",
-      "source_name": "The Hindu International",
-      "source_url": "https://www.thehindu.com/news/international/trump-admin-approves-sending-2000-pound-bombs-to-israel-in-upcoming-weapons-deal/article71470869.ece",
-      "sample_tweets": [
-        "[Idrees Ali | @idreesali114 | 11h] U.S. Representative Gregory Meeks, the top Democrat on the House of Representatives Foreign Affairs Committee, said he would not support the sale of 2,000-pound bombs to Israel over concerns the munitions would not be used in accordance with international law."
-      ]
-    },
-    {
-      "label": "Indian Army Chief Dhiraj Seth Begins Three-Day Russia Visit to Strengthen Defense Ties",
+      "label": "Indian Army Chief Dhiraj Seth Begins Russia Visit to Strengthen Defense Ties",
       "category": "defense",
-      "boolean_query": "india army chief russia visit",
+      "boolean_query": "india army chief dhiraj seth russia",
       "terms": [
         "Indian Army Chief Dhiraj Seth Russia visit",
-        "Dhiraj Seth Russia defense ties",
-        "India-Russia military cooperation",
-        "Army Chief Dhiraj Seth Russia",
-        "India-Russia defense collaboration",
-        "Dhiraj Seth Russia military visit",
-        "Indian Army Chief Russia visit",
+        "Dhiraj Seth Russia military ties",
+        "India Russia defense collaboration",
+        "Indian Army Chief Russia meeting",
         "Dhiraj Seth Russia defense talks",
-        "India-Russia military relations 2026"
+        "India Russia military relations",
+        "Indian Army Chief Russia visit",
+        "Dhiraj Seth Russia defense strategy"
       ],
       "sources": [
         {
@@ -662,19 +768,19 @@
           "url": "https://www.indiandefensenews.in/2026/09/india-russia-defence-partnership.html"
         },
         {
-          "title": "Army chief Dhiraj Seth heads to Russia amid push to deepen defence ties",
-          "source_name": "The Hindu International",
-          "url": "https://www.thehindu.com/news/national/army-chief-dhiraj-seth-heads-to-russia-amid-push-to-deepen-defence-ties/article71468886.ece"
-        },
-        {
           "title": "General Dhiraj Seth Takes Over as Indian Army Chief, First From Armoured Corps in 32 Years",
           "source_name": "Defence Capital RSS",
           "url": "https://defencecapital.in/2026/06/30/general-dhiraj-seth-takes-over-as-indian-army-chief-first-from-armoured-corps-in-32-years/"
         },
         {
-          "title": "The Half-Front and The Indian Army",
-          "source_name": "IADNews Indian Aerospace & Defence RSS",
-          "url": "https://iadnews.in/the-half-front-and-the-indian-army/"
+          "title": "Iran’s Araghchi, Pakistan army chief discuss regional developments as US-Iran talks stall",
+          "source_name": "Al Arabiya English",
+          "url": "https://english.alarabiya.net/News/middle-east/2026/09/17/iran-s-araghchi-pakistan-army-chief-discuss-regional-developments-as-usiran-talks-stall"
+        },
+        {
+          "title": "EU chief calls for new hybrid response protocol, increased defense ties to non-members",
+          "source_name": "Breaking Defense RSS",
+          "url": "https://breakingdefense.com/2026/09/eu-chief-calls-for-new-hybrid-response-protocol-increased-defense-ties-to-non-members/"
         },
         {
           "title": "Indigenous Zorawar Tanks Protection Suite Development Pushes Indian Army Induction to 2029: Reports",
@@ -682,9 +788,9 @@
           "url": "https://defencecapital.in/2026/06/12/indigenous-zorawar-tanks-protection-suite-development-pushes-indian-army-induction-to-2029-reports/"
         },
         {
-          "title": "EU chief calls for new hybrid response protocol, increased defense ties to non-members",
-          "source_name": "Breaking Defense RSS",
-          "url": "https://breakingdefense.com/2026/09/eu-chief-calls-for-new-hybrid-response-protocol-increased-defense-ties-to-non-members/"
+          "title": "The Half-Front and The Indian Army",
+          "source_name": "IADNews Indian Aerospace & Defence RSS",
+          "url": "https://iadnews.in/the-half-front-and-the-indian-army/"
         },
         {
           "title": "SMPP Delivers 106 Jet-Based Kamikaze Drones to Indian Army, Boosts Deep-Strike Capability",
@@ -702,145 +808,41 @@
       "source_url": "https://idrw.org/army-chief-general-dhiraj-seth-begins-three-day-russia-visit-to-strengthen-defence-ties/"
     },
     {
-      "label": "Bharat Forge & Pratt & Whitney Partner for DRDO UAV Program",
+      "label": "DRDO Showcases Indigenous OptoSAR Technology at BRICS 2026",
       "category": "defense",
-      "boolean_query": "bharat forge pratt whitteny drdo uav",
+      "boolean_query": "drdo brics 2026 optosar tech",
       "terms": [
-        "Bharat Forge Pratt Whitney DRDO UAV",
-        "DRDO UAV engine integration",
-        "Bharat Forge-Pratt Whitney partnership",
-        "DRDO UAV program collaboration",
-        "UAV engine integration DRDO",
-        "Bharat Forge DRDO UAV project",
-        "Pratt Whitney DRDO UAV",
-        "DRDO UAV engine development",
-        "Bharat Forge-Pratt Whitney UAV",
-        "DRDO UAV propulsion system"
+        "DRDO OptoSAR technology BRICS 2026",
+        "Indias OptoSAR showcased BRICS",
+        "DRDO indigenous tech BRICS 2026",
+        "OptoSAR satellite imaging DRDO",
+        "BRICS 2026 defense tech showcase",
+        "DRDO OptoSAR satellite imaging",
+        "Indias OptoSAR BRICS 2026",
+        "DRDO BRICS 2026 defense display",
+        "OptoSAR technology India BRICS",
+        "DRDO satellite imaging tech BRICS"
       ],
       "sources": [
         {
-          "title": "Bharat Forge & Pratt & Whitney Partner for DRDO UAV Program",
+          "title": "GalaxEye Showcases OptoSAR Technology at BRICS 2026",
+          "source_name": "IDRW RSS Feed",
+          "url": "https://idrw.org/india-us-troops-demonstrate-m777-shoot-and-scoot-drills/"
+        },
+        {
+          "title": "DRDO Showcases Indigenous Weapons at AAD 2026 in Africa",
           "source_name": "IDRW India Category",
-          "url": "https://idrw.org/bharat-forge-pratt-whitney-partner-for-drdo-uav-program/#respond"
+          "url": "https://idrw.org/drdo-showcases-indigenous-weapons-at-aad-2026-in-africa/#respond"
         },
-        {
-          "title": "Bharat Forge, Pratt & Whitney Canada Partner to Evaluate Engine Integration for DRDO HALE UAV",
-          "source_name": "Defence.in Forum & News",
-          "url": "https://defence.in/"
-        },
-        {
-          "title": "Bharat Forge And Pratt & Whitney-Canada To IntegrateTurboprop Engines For India's HALE UAVs",
-          "source_name": "Indian Defence News RSS",
-          "url": "https://www.indiandefensenews.in/2026/09/bharat-forge-and-pratt-whitney-partner.html"
-        }
-      ],
-      "source_headline": "Bharat Forge & Pratt & Whitney Partner for DRDO UAV Program",
-      "source_name": "IDRW India Category",
-      "source_url": "https://idrw.org/bharat-forge-pratt-whitney-partner-for-drdo-uav-program/#respond"
-    },
-    {
-      "label": "India's DRDO Showcases Indigenous Weapons at Africa Aerospace and Defence Expo",
-      "category": "defense",
-      "boolean_query": "drdo africa expo indigenous weapons",
-      "terms": [
-        "DRDO Africa aerospace expo 2026",
-        "Indias indigenous weapons showcase",
-        "DRDO Africa expo defense tech",
-        "Indian defense systems Africa expo",
-        "DRDO Africa expo 2026 showcase",
-        "Indigenous weapons Africa expo",
-        "DRDO Africa defense expo 2026",
-        "Indias defense tech Africa expo",
-        "DRDO Africa expo indigenous systems",
-        "Indian weapons showcase Africa 2026"
-      ],
-      "sources": [
         {
           "title": "DRDO Showcases Indigenous Defence Systems At Africa Aerospace And Defence Expo 2026",
           "source_name": "Indian Defence News RSS",
           "url": "https://www.indiandefensenews.in/2026/09/drdo-showcases-indigenous-defence.html"
-        },
-        {
-          "title": "DRDO Showcases Indigenous Weapons at AAD 2026 in Africa",
-          "source_name": "IDRW RSS Feed",
-          "url": "https://idrw.org/drdo-showcases-indigenous-weapons-at-aad-2026-in-africa/"
-        },
-        {
-          "title": "DRDO Highlights India's Indigenous Defence Innovations at the 2026 Africa Aerospace and Defence Expo in South Africa",
-          "source_name": "Defence.in Forum & News",
-          "url": "https://defence.in/"
-        },
-        {
-          "title": "Indian defence forces to get emergency powers to acquire critical weapon systems through fast-track route",
-          "source_name": "Defence Update India RSS",
-          "url": "https://defenceupdate.in/indian-defence-forces-to-get-emergency-powers-to-acquire-critical-weapon-systems-through-fast-track-route/"
         }
       ],
-      "source_headline": "DRDO Showcases Indigenous Defence Systems At Africa Aerospace And Defence Expo 2026",
-      "source_name": "Indian Defence News RSS",
-      "source_url": "https://www.indiandefensenews.in/2026/09/drdo-showcases-indigenous-defence.html"
-    },
-    {
-      "label": "US Military Adapts to Autonomous Systems as Caine Warns of 'Hunted' Formations",
-      "category": "defense",
-      "boolean_query": "us military autonomous systems caine",
-      "terms": [
-        "US military autonomous systems adaptation",
-        "Caine US military AI warfare",
-        "Autonomous systems military strategy",
-        "US military hunted formations AI",
-        "Caine US military modernization",
-        "Autonomous systems battlefield impact",
-        "US military AI warfare readiness",
-        "Caine US military future warfare",
-        "Autonomous systems military formations",
-        "US military AI tracking systems"
-      ],
-      "sources": [
-        {
-          "title": "US military must adapt as formations will be \u2018hunted\u2019 by autonomous systems, Caine says",
-          "source_name": "Defense News RSS",
-          "url": "https://www.defensenews.com/news/your-military/2026/09/16/us-military-must-adapt-as-formations-will-be-hunted-by-autonomous-systems-caine-says/"
-        }
-      ],
-      "source_headline": "US military must adapt as formations will be \u2018hunted\u2019 by autonomous systems, Caine says",
-      "source_name": "Defense News RSS",
-      "source_url": "https://www.defensenews.com/news/your-military/2026/09/16/us-military-must-adapt-as-formations-will-be-hunted-by-autonomous-systems-caine-says/",
-      "sample_tweets": [
-        "[Idrees Ali | @idreesali114 | 15h] The Houthis clearly have capable surface to air systems, which have brought down a number of U.S. military drones in recent years. Quote IRNA News Agency \u262b"
-      ]
-    },
-    {
-      "label": "IAEA Awards Recognize Excellence in Nuclear Innovation",
-      "category": "economic",
-      "boolean_query": "iaea nuclear innovation awards",
-      "terms": [
-        "IAEA nuclear innovation awards 2026",
-        "Nuclear innovation IAEA awards",
-        "IAEA excellence in nuclear tech",
-        "Nuclear innovation awards IAEA",
-        "IAEA nuclear awards 2026",
-        "Nuclear innovation recognition IAEA",
-        "IAEA awards nuclear research",
-        "Nuclear innovation IAEA 2026",
-        "IAEA nuclear awards excellence",
-        "Nuclear innovation IAEA recognition"
-      ],
-      "sources": [
-        {
-          "title": "Third IAEA ISOP Innovation Awards Recognize Excellence in Nuclear Innovation",
-          "source_name": "IAEA News Centre",
-          "url": "http://www.iaea.org/newscenter/news/third-iaea-isop-innovation-awards-recognize-excellence-in-nuclear-innovation"
-        },
-        {
-          "title": "Meet the Winners of the IAEA Innovations in Nuclear Fuel Supply Chain Challenge",
-          "source_name": "IAEA News Centre",
-          "url": "http://www.iaea.org/newscenter/news/meet-the-winners-of-the-iaea-innovations-in-nuclear-fuel-supply-chain-challenge"
-        }
-      ],
-      "source_headline": "Third IAEA ISOP Innovation Awards Recognize Excellence in Nuclear Innovation",
-      "source_name": "IAEA News Centre",
-      "source_url": "http://www.iaea.org/newscenter/news/third-iaea-isop-innovation-awards-recognize-excellence-in-nuclear-innovation"
+      "source_headline": "GalaxEye Showcases OptoSAR Technology at BRICS 2026",
+      "source_name": "IDRW RSS Feed",
+      "source_url": "https://idrw.org/india-us-troops-demonstrate-m777-shoot-and-scoot-drills/"
     }
   ]
 }

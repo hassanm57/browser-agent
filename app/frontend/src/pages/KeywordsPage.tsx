@@ -2,6 +2,25 @@ import { useState, useEffect } from "react";
 import type { KeywordsData, KeywordTopicItem, TopicSourceReference } from "../types";
 import { Tags, Plus, X, Trash2, Download, Check, Copy, ExternalLink, Globe, Newspaper, Flame } from "lucide-react";
 
+function XLogoIcon(props: { className?: string }) {
+  return (
+    <svg className={props.className || "w-3 h-3 fill-current shrink-0"} viewBox="0 0 24 24">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+function GoogleLogoIcon(props: { className?: string }) {
+  return (
+    <svg className={props.className || "w-3 h-3 shrink-0"} viewBox="0 0 24 24">
+      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.35 24 12 24z" />
+      <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z" />
+      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
+    </svg>
+  );
+}
+
 interface KeywordsPageProps {
   keywordsData: KeywordsData | null;
   onSaveKeywords: (updatedData: KeywordsData) => void;
@@ -9,6 +28,7 @@ interface KeywordsPageProps {
 }
 
 export function KeywordsPage(props: KeywordsPageProps) {
+
   // State for which topic is currently adding a keyword
   const [topicAddingKeywordIndex, setTopicAddingKeywordIndex] = useState<number | null>(null);
   const [newKeywordInputText, setNewKeywordInputText] = useState("");
@@ -429,12 +449,12 @@ export function KeywordsPage(props: KeywordsPageProps) {
               </span>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
               <button
                 onClick={function () {
                   navigator.clipboard.writeText(topicItem.boolean_query || "");
                 }}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                 title="Copy Boolean query"
               >
                 <Copy className="w-3 h-3" />
@@ -444,13 +464,24 @@ export function KeywordsPage(props: KeywordsPageProps) {
                 href={"https://x.com/search?q=" + encodeURIComponent(topicItem.boolean_query) + "&f=live"}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-500/10 border border-blue-500/30 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-neutral-900 hover:bg-black text-white dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-100 border border-neutral-700/60 shadow-xs transition-all cursor-pointer"
                 title="Search Latest on X.com"
               >
-                <ExternalLink className="w-3 h-3" />
-                <span>Test on X (&f=live)</span>
+                <XLogoIcon className="w-2.5 h-2.5 fill-current shrink-0" />
+                <span>Test on X</span>
+              </a>
+              <a
+                href={"https://www.google.com/search?q=" + encodeURIComponent(topicItem.boolean_query) + "&tbm=nws"}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-700 hover:border-blue-400 dark:hover:border-blue-400 shadow-xs transition-all cursor-pointer"
+                title="Search Google News section"
+              >
+                <GoogleLogoIcon className="w-2.5 h-2.5 shrink-0" />
+                <span>Test on Google</span>
               </a>
             </div>
+
           </div>
         ) : null}
 

@@ -193,6 +193,24 @@ async def run_single_country_pipeline(
     news_sources_intel_dictionary: Dict[str, List[str]] = {}
     headline_sources_metadata_map: Dict[str, Dict[str, str]] = {}
 
+    # Step 1A: Extract top 10 articles and summaries from Google News search tabs (Latest, Pakistan, India) via browser-agent
+    await log_and_record("STEP", "Extracting top 10 headlines and summaries from Google News tabs via browser-agent...")
+    is_headless_setting = settings_dictionary.get("headless_mode", "true") == "true"
+    use_real_chrome_setting = settings_dictionary.get("use_real_chrome", "true") == "true"
+    try:
+        google_intel_dictionary, google_metadata_map = await trends.extract_google_news_sources(
+            should_use_real_chrome=use_real_chrome_setting,
+            is_headless=is_headless_setting,
+            log_callback_function=log_and_record
+        )
+        for category_name_key, headlines_for_category in google_intel_dictionary.items():
+            news_sources_intel_dictionary[category_name_key] = headlines_for_category
+        for headline_key, metadata_value in google_metadata_map.items():
+            headline_sources_metadata_map[headline_key] = metadata_value
+        await log_and_record("SUCCESS", f"Extracted {len(google_metadata_map)} articles across Google News tabs (Latest, Pakistan, India).")
+    except Exception as google_news_extraction_error:
+        await log_and_record("WARN", f"Google News browser extraction warning: {str(google_news_extraction_error)}")
+
     for source_entry in configured_sources_list:
         if cancellation_event.is_set():
             break
@@ -225,6 +243,7 @@ async def run_single_country_pipeline(
                     for item_element in xml_root.findall(".//item"):
                         title_element = item_element.find("title")
                         link_element = item_element.find("link")
+                        desc_element = item_element.find("description")
                         if title_element is not None and title_element.text:
                             clean_title = trends.clean_dom_tags_and_markdown(title_element.text)
                             if len(clean_title) > 15 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
@@ -232,10 +251,14 @@ async def run_single_country_pipeline(
                                 article_link = source_url
                                 if link_element is not None and link_element.text and len(link_element.text.strip()) > 0:
                                     article_link = link_element.text.strip()
+                                summary_snippet_text = ""
+                                if desc_element is not None and desc_element.text:
+                                    summary_snippet_text = trends.clean_dom_tags_and_markdown(desc_element.text)
                                 headline_sources_metadata_map[clean_title] = {
                                     "source_name": source_name,
                                     "headline": clean_title,
-                                    "url": article_link
+                                    "url": article_link,
+                                    "summary": summary_snippet_text
                                 }
             else:
                 response = trends.requests.get(source_url, timeout=12, headers=desktop_browser_headers)
@@ -365,16 +388,21 @@ async def run_single_country_pipeline(
                         for dawn_item in dawn_xml_root.findall(".//item"):
                             dawn_title = dawn_item.find("title")
                             dawn_link = dawn_item.find("link")
+                            dawn_desc = dawn_item.find("description")
                             if dawn_title is not None and dawn_title.text:
                                 dawn_clean_title = trends.clean_dom_tags_and_markdown(dawn_title.text)
                                 if len(dawn_clean_title) > 15 and not trends.is_bot_challenge_text(dawn_clean_title):
                                     if dawn_clean_title not in headlines_for_source:
                                         headlines_for_source.append(dawn_clean_title)
                                         d_url = dawn_link.text.strip() if (dawn_link is not None and dawn_link.text) else source_url
+                                        dawn_summary_text = ""
+                                        if dawn_desc is not None and dawn_desc.text:
+                                            dawn_summary_text = trends.clean_dom_tags_and_markdown(dawn_desc.text)
                                         headline_sources_metadata_map[dawn_clean_title] = {
                                             "source_name": "Dawn News",
                                             "headline": dawn_clean_title,
-                                            "url": d_url
+                                            "url": d_url,
+                                            "summary": dawn_summary_text
                                         }
                         if len(headlines_for_source) > 0:
                             await log_and_record("SUCCESS", f"Dawn RSS fallback harvested {len(headlines_for_source)} clean headlines!")
@@ -707,7 +735,8 @@ async def run_single_country_pipeline(
                 endpoint_url,
                 model_name,
                 settings_dictionary.get("vllm_api_key", "EMPTY"),
-                timeout_seconds
+                timeout_seconds,
+                headline_sources_metadata_map
             )
             await log_and_record("SUCCESS", f"LLM synthesis generated {len(synthesized_topics_list)} hot trending story rows with context-rich keywords and Boolean queries.")
             # Correlate synthesized topics with their exact news source headlines and direct URLs
@@ -861,7 +890,11 @@ async def run_single_country_pipeline(
     # Build detailed story clusters enriched with direct URLs for deep analysis
     enriched_story_clusters_list = []
     if trends.SKLEARN_AVAILABLE and len(news_sources_intel_dictionary) > 0:
-        raw_story_clusters = trends.group_headlines_into_story_clusters(news_sources_intel_dictionary, similarity_threshold=0.25)
+        raw_story_clusters = trends.group_headlines_into_story_clusters(
+            news_sources_intel_dictionary,
+            similarity_threshold=0.25,
+            headline_sources_metadata_map=headline_sources_metadata_map
+        )
         for cluster_entry in raw_story_clusters:
             cluster_articles_list = []
             for single_headline in cluster_entry.get("headlines", []):
@@ -869,7 +902,8 @@ async def run_single_country_pipeline(
                 cluster_articles_list.append({
                     "headline": single_headline,
                     "source_name": meta_item.get("source_name", "Unknown"),
-                    "url": meta_item.get("url", "")
+                    "url": meta_item.get("url", ""),
+                    "summary": meta_item.get("summary", "")
                 })
             enriched_story_clusters_list.append({
                 "cluster_id": cluster_entry.get("cluster_id"),

@@ -1379,6 +1379,259 @@ async def create_resilient_browser_instance(
     return browser_instance
 
 
+GOOGLE_NEWS_SEARCH_FEEDS_CONFIG = [
+    {
+        "category_key": "Google News - Latest",
+        "display_name": "Latest News",
+        "search_url": "https://www.google.com/search?q=latest+news&sca_esv=a9d93d3da37a6f94&hl=en&biw=1470&bih=835&tbm=nws&sxsrf=APpeQnsFDhOZBdXEloxdBKqUriusiVsSIg%3A1789622382543&ei=bnirat3lILOuhbIPgtq0-Ak&ved=0ahUKEwjd1JLz7vSWAxUzV0EAHQItDZ8Q4dUDCA0&uact=5&oq=latest+news&gs_lp=Egxnd3Mtd2l6LW5ld3MiC2xhdGVzdCBuZXdzMgoQABiABBiKBRhDMgsQABiABBiKBRiRAjIQEAAYgAQYigUYQxixAxiDATIREAAYgAQYigUYkQIYsQMYgwEyChAAGIAEGIoFGEMyChAAGIAEGIoFGEMyChAAGIAEGIoFGEMyChAAGIAEGIoFGEMyChAAGIAEGIoFGEMyChAAGIAEGIoFGENIhQ5Q6gNYug1wAHgAkAEAmAHsAaAB-RKqAQQyLTExuAEDyAEA-AEBmAILoAKnE8ICBRAAGIAEwgIGEAAYFhgewgIIEAAYFhgeGArCAggQABiABBixA8ICCxAAGIAEGLEDGIMBmAMAiAYBkgcEMi0xMaAH5UCyBwQyLTExuAenE8IHBTAuNi41yAcfgAgB&sclient=gws-wiz-news"
+    },
+    {
+        "category_key": "Google News - Pakistan",
+        "display_name": "Pakistan News",
+        "search_url": "https://www.google.com/search?q=pak+news&sca_esv=a9d93d3da37a6f94&hl=en&biw=1470&bih=835&tbm=nws&sxsrf=APpeQnuxE3e6z4aG7uUeL1z5r99H6WqIow%3A1789622616170&ei=WHorat_FNYuNhbIPy-2A6A8&ved=0ahUKEwjfypqN7_SWAxWLRoEAHcs2AP0Q4dUDCA0&uact=5&oq=pak+news&gs_lp=Egxnd3Mtd2l6LW5ld3MiCHBhayBuZXdzMgoQABiABBiKBRhDMgsQABiABBiKBRiRAjIKEAAYgAQYigUYQzIKEAAYgAQYigUYQzIKEAAYgAQYigUYQzIKEAAYgAQYigUYQzIKEAAYgAQYigUYQzIKEAAYgAQYigUYQzIKEAAYgAQYigUYQzIKEAAYgAQYigUYQ0iSElD1BVj-EHABeACQAQCYAeQBoAG0CaoBBTAuNy4xuAEDyAEA-AEBmAIIoAKYC8ICBRAAGIAEwgIGEAAYFhgewgIIEAAYFhgeGArCAgsQABiABBiSAxiKBcICCBAAGIAEGLEDmAMAiAYBkgcDMi42oAfVNg&sclient=gws-wiz-news"
+    },
+    {
+        "category_key": "Google News - India",
+        "display_name": "India News",
+        "search_url": "https://www.google.com/search?q=india+news&sca_esv=a9d93d3da37a6f94&hl=en&biw=1470&bih=835&tbm=nws&sxsrf=APpeQnuxE3e6z4aG7uUeL1z5r99H6WqIow%3A1789622616170&ei=WHorat_FNYuNhbIPy-2A6A8&ved=0ahUKEwjfypqN7_SWAxWLRoEAHcs2AP0Q4dUDCA0&uact=5&oq=india+news&gs_lp=Egxnd3Mtd2l6LW5ld3MiCmluZGlhIG5ld3MyChAAGIAEGIoFGEMyCxAAGIAEGIoFGJECMgUQABiABDIFEAAYgAQyBRAAGIAEMgUQABiABDIFEAAYgAQyBRAAGIAEMgUQABiABDIFEAAYgARIvAhQ6AVY3AZwAHgAkAEAmAGZAaABswaqAQMwLja4AQPIAQD4AQGYAgegApoGwgIIEAAYgAQYsQPCAgsQABiABBixAxiDAZgDAIgGAZIGAzEuNqAHrCA&sclient=gws-wiz-news"
+    }
+]
+
+
+def resolve_google_destination_url(raw_href_string):
+    # Resolves Google search and Google News redirect links (/goto?url=... or /url?q=...)
+    # into the true destination article URL.
+    if raw_href_string is None or len(raw_href_string.strip()) == 0:
+        return ""
+
+    cleaned_href_string = raw_href_string.strip()
+
+    # If it is a google /url?q= redirect parameter
+    if cleaned_href_string.startswith("/url?") or "google.com/url?" in cleaned_href_string:
+        parsed_url = urllib.parse.urlparse(cleaned_href_string)
+        query_parameters = urllib.parse.parse_qs(parsed_url.query)
+        target_destination_url_list = query_parameters.get("q", [])
+        if len(target_destination_url_list) > 0 and len(target_destination_url_list[0]) > 0:
+            return target_destination_url_list[0]
+        url_param_list = query_parameters.get("url", [])
+        if len(url_param_list) > 0 and len(url_param_list[0]) > 0:
+            return url_param_list[0]
+
+    # If it is a google /goto?url= redirect parameter
+    if cleaned_href_string.startswith("/goto?url=") or "google.com/goto?url=" in cleaned_href_string:
+        full_goto_url = urllib.parse.urljoin("https://www.google.com", cleaned_href_string)
+        try:
+            http_headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+            }
+            # Issue a stream GET request with allow_redirects=False to catch the 302 Location header immediately
+            http_response = requests.get(
+                full_goto_url,
+                headers=http_headers,
+                stream=True,
+                allow_redirects=False,
+                timeout=4
+            )
+            redirect_location_header = http_response.headers.get("Location")
+            if redirect_location_header is not None and len(redirect_location_header.strip()) > 0:
+                return redirect_location_header.strip()
+        except Exception:
+            pass
+
+    if cleaned_href_string.startswith("http://") or cleaned_href_string.startswith("https://"):
+        return cleaned_href_string
+
+    return urllib.parse.urljoin("https://www.google.com", cleaned_href_string)
+
+
+async def extract_google_news_sources(
+    browser_instance=None,
+    should_use_real_chrome=True,
+    is_headless=True,
+    log_callback_function=None
+):
+    # Extracts top 10 news headlines, direct article URLs, publisher sources,
+    # and sub-headline summaries from Google News search tabs using browser-agent.
+    # Returns a tuple of (google_news_intel_dictionary, google_headline_metadata_map).
+    google_news_intel_dictionary = {}
+    google_headline_metadata_map = {}
+
+    should_close_browser_at_end = False
+    active_browser = browser_instance
+
+    if active_browser is None:
+        if log_callback_function is not None:
+            await log_callback_function("INFO", "Initializing dedicated browser instance for Google News tab scraping...")
+        active_browser = await create_resilient_browser_instance(
+            is_headless_mode=is_headless,
+            should_use_real_system_profile=should_use_real_chrome,
+            profile_directory_name="agent_profile",
+            log_callback_function=log_callback_function
+        )
+        should_close_browser_at_end = True
+        await active_browser.start()
+
+    try:
+        for feed_config in GOOGLE_NEWS_SEARCH_FEEDS_CONFIG:
+            category_key = feed_config["category_key"]
+            display_name = feed_config["display_name"]
+            search_url = feed_config["search_url"]
+
+            if log_callback_function is not None:
+                await log_callback_function("INFO", f"Navigating to Google News tab for {display_name}...")
+
+            await active_browser.navigate_to(search_url)
+            # Wait for client-side JavaScript rendering of Google News cards
+            await asyncio.sleep(3.5)
+
+            current_browser_page = await active_browser.get_current_page()
+            if current_browser_page is None:
+                continue
+
+            raw_cards_json_string = await current_browser_page.evaluate("""
+                () => {
+                    const heading_elements = Array.from(document.querySelectorAll('div[role="heading"], h3'));
+                    const results_list = [];
+                    const seen_headings = new Set();
+
+                    for (const heading_element of heading_elements) {
+                        const raw_title = (heading_element.innerText || '').trim();
+                        if (raw_title.length < 15 || raw_title.length > 250) {
+                            continue;
+                        }
+                        const lower_title = raw_title.toLowerCase();
+                        if (lower_title.includes('giving feedback') || lower_title.includes('date range') || lower_title.includes('verbatim')) {
+                            continue;
+                        }
+                        if (seen_headings.has(lower_title)) {
+                            continue;
+                        }
+
+                        // Locate parent news card container
+                        let card_container = heading_element;
+                        for (let step = 0; step < 6; step++) {
+                            if (card_container.parentElement) {
+                                card_container = card_container.parentElement;
+                                if (card_container.classList && (
+                                    card_container.classList.contains('WCv1we') ||
+                                    card_container.classList.contains('SoHrBc') ||
+                                    card_container.classList.contains('MjjYud') ||
+                                    card_container.classList.contains('Wlydvd')
+                                )) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Locate link element
+                        const link_element = heading_element.closest('a') || (card_container ? card_container.querySelector('a') : null);
+                        const raw_href = link_element ? (link_element.getAttribute('href') || '') : '';
+
+                        // Extract publisher source name and sub-headline summary
+                        let publisher_name = "";
+                        let summary_snippet = "";
+
+                        if (card_container) {
+                            const raw_lines = (card_container.innerText || '').split('\\n');
+                            const text_lines = [];
+                            for (let line_idx = 0; line_idx < raw_lines.length; line_idx++) {
+                                const stripped = raw_lines[line_idx].trim();
+                                if (stripped.length > 0) {
+                                    text_lines.push(stripped);
+                                }
+                            }
+
+                            for (let line_idx = 0; line_idx < text_lines.length; line_idx++) {
+                                const current_line = text_lines[line_idx];
+
+                                // Determine publisher name from lines before or around the title
+                                if (line_idx === 0 && current_line !== raw_title && current_line.length < 40) {
+                                    let clean_source = current_line.replace(/^[·•\\s]+/, '').trim();
+                                    if (clean_source.toLowerCase() === 'youtube' && text_lines[line_idx + 1] && text_lines[line_idx + 1].includes('·')) {
+                                        clean_source = text_lines[line_idx + 1].replace(/^[·•\\s]+/, '').trim();
+                                    }
+                                    publisher_name = clean_source;
+                                    continue;
+                                }
+
+                                // Determine sub-headline summary snippet
+                                if (current_line !== raw_title && current_line !== publisher_name) {
+                                    if (current_line === '.' || current_line.match(/^\\d+\\s+(minute|hour|day|week|month)s?\\s+ago$/i)) {
+                                        continue;
+                                    }
+                                    if (current_line.length >= 20 && summary_snippet.length === 0) {
+                                        summary_snippet = current_line;
+                                    }
+                                }
+                            }
+                        }
+
+                        seen_headings.add(lower_title);
+                        results_list.push({
+                            "headline": raw_title,
+                            "raw_href": raw_href,
+                            "source_name": publisher_name,
+                            "summary": summary_snippet
+                        });
+
+                        if (results_list.length >= 12) {
+                            break;
+                        }
+                    }
+
+                    return JSON.stringify(results_list);
+                }
+            """)
+
+            extracted_items_list = []
+            if raw_cards_json_string:
+                try:
+                    if isinstance(raw_cards_json_string, str):
+                        extracted_items_list = json.loads(raw_cards_json_string)
+                    else:
+                        extracted_items_list = raw_cards_json_string
+                except Exception:
+                    extracted_items_list = []
+
+            category_headlines_list = []
+            for item_dictionary in extracted_items_list[:10]:
+                headline_text = clean_dom_tags_and_markdown(item_dictionary.get("headline", ""))
+                if len(headline_text) < 15:
+                    continue
+
+                raw_href_value = item_dictionary.get("raw_href", "")
+                resolved_article_url = resolve_google_destination_url(raw_href_value)
+                if len(resolved_article_url) == 0:
+                    resolved_article_url = search_url
+
+                publisher_source_name = item_dictionary.get("source_name", "").strip()
+                if len(publisher_source_name) == 0:
+                    publisher_source_name = category_key
+
+                summary_text = clean_dom_tags_and_markdown(item_dictionary.get("summary", ""))
+
+                category_headlines_list.append(headline_text)
+                google_headline_metadata_map[headline_text] = {
+                    "source_name": publisher_source_name,
+                    "headline": headline_text,
+                    "url": resolved_article_url,
+                    "summary": summary_text
+                }
+
+            google_news_intel_dictionary[category_key] = category_headlines_list
+            if log_callback_function is not None:
+                await log_callback_function("SUCCESS", f"Extracted top {len(category_headlines_list)} articles from Google News ({display_name}).")
+
+    finally:
+        if should_close_browser_at_end and active_browser is not None:
+            try:
+                await active_browser.close()
+            except Exception:
+                pass
+
+    return google_news_intel_dictionary, google_headline_metadata_map
+
+
 
 async def check_is_x_logged_in(browser_instance: Browser) -> bool:
     # Examines the live DOM to see if the user is authenticated on X.com
@@ -2251,7 +2504,7 @@ def is_indian_defence_source_name_or_url(source_name_string, source_url_string="
         "defencecapital", "defence capital", "thediplomat.com/tag/india",
         "diplomat india", "the hindu", "thehindu",
         "indiandefensenews", "indian defence news",
-        "timesofindia", "theweek"
+        "timesofindia", "theweek", "google news - india", "google news (india)", "ndtv"
     ]
     for indicator in indian_indicators_list:
         if indicator in combined_string:
@@ -2676,7 +2929,8 @@ def group_headlines_into_story_clusters(
     news_sources_intel_dictionary,
     similarity_threshold=0.18,
     minimum_cluster_size=1,
-    maximum_cluster_size=15
+    maximum_cluster_size=15,
+    headline_sources_metadata_map=None
 ):
     """
     Groups similar headlines from different sources into "story clusters".
@@ -2690,6 +2944,7 @@ def group_headlines_into_story_clusters(
                               0.30 is intentionally permissive to catch paraphrased headlines.
         minimum_cluster_size: Minimum number of headlines in a cluster (1 = include singles)
         maximum_cluster_size: Maximum headlines per cluster to prevent mega-clusters
+        headline_sources_metadata_map: Optional dict mapping headline -> metadata (including summary)
 
     Returns:
         List of cluster dictionaries, each containing:
@@ -2705,6 +2960,7 @@ def group_headlines_into_story_clusters(
     # Step 1: Flatten all headlines into a single list, tracking which source each came from
     all_headlines_flat_list = []
     all_source_names_flat_list = []
+    all_clustering_texts_list = []
 
     for source_name in news_sources_intel_dictionary:
         headlines_for_this_source = news_sources_intel_dictionary[source_name]
@@ -2714,6 +2970,15 @@ def group_headlines_into_story_clusters(
                 continue
             all_headlines_flat_list.append(headline_text)
             all_source_names_flat_list.append(source_name)
+
+            # Enrich clustering representation with sub-headline summary if available
+            clustering_text = headline_text
+            if headline_sources_metadata_map is not None and headline_text in headline_sources_metadata_map:
+                metadata_entry = headline_sources_metadata_map[headline_text]
+                summary_text = metadata_entry.get("summary", "")
+                if summary_text and len(summary_text.strip()) > 15:
+                    clustering_text = headline_text + " " + summary_text.strip()
+            all_clustering_texts_list.append(clustering_text)
 
     total_headline_count = len(all_headlines_flat_list)
     print(f"    Total headlines to cluster: {total_headline_count}")
@@ -2732,8 +2997,8 @@ def group_headlines_into_story_clusters(
             })
         return single_cluster_list
 
-    # Step 2: Compute the similarity matrix
-    similarity_matrix = compute_headline_similarity_matrix(all_headlines_flat_list)
+    # Step 2: Compute the similarity matrix using enriched headline + summary texts
+    similarity_matrix = compute_headline_similarity_matrix(all_clustering_texts_list)
 
     if similarity_matrix is None:
         # Fallback: return each headline as its own cluster if similarity computation failed
@@ -2935,7 +3200,7 @@ def build_clustered_dossier_sections(
             if is_indian_defence_source_name_or_url(source_name):
                 has_indian_source = True
             clean_source_lower = source_name.lower()
-            if "dawn" in clean_source_lower or "tribune" in clean_source_lower or "quwa" in clean_source_lower or "geo news" in clean_source_lower or "geo tv" in clean_source_lower:
+            if "dawn" in clean_source_lower or "tribune" in clean_source_lower or "quwa" in clean_source_lower or "geo news" in clean_source_lower or "geo tv" in clean_source_lower or "google news - pakistan" in clean_source_lower or "pakistan" in clean_source_lower:
                 has_regional_source = True
 
         # Format the cluster block
@@ -2945,6 +3210,12 @@ def build_clustered_dossier_sections(
             cluster_block_lines = []
             cluster_block_lines.append(f"\n--- WIDELY REPORTED STORY ({headline_count} reports from: {sources_attribution}) ---")
             cluster_block_lines.append(f"• LEAD: {representative}")
+
+            # Include lead article summary if available
+            if headline_sources_metadata_map is not None and representative in headline_sources_metadata_map:
+                lead_summary_text = headline_sources_metadata_map[representative].get("summary", "")
+                if lead_summary_text and len(lead_summary_text.strip()) > 20:
+                    cluster_block_lines.append(f"  SUMMARY: {lead_summary_text.strip()[:180]}")
 
             # Show the other variant headlines from different sources
             for variant_index in range(len(headlines_in_cluster)):
@@ -2960,6 +3231,10 @@ def build_clustered_dossier_sections(
             # Single-source or single-headline cluster: show normally
             source_attribution = source_names_in_cluster[0] if len(source_names_in_cluster) > 0 else "Unknown"
             cluster_block_text = f"\n--- SOURCE: {source_attribution.upper()} ---\n• {representative}"
+            if headline_sources_metadata_map is not None and representative in headline_sources_metadata_map:
+                single_summary_text = headline_sources_metadata_map[representative].get("summary", "")
+                if single_summary_text and len(single_summary_text.strip()) > 20:
+                    cluster_block_text = cluster_block_text + f"\n  SUMMARY: {single_summary_text.strip()[:180]}"
 
         # Route to the appropriate section
         if has_indian_source:
@@ -2976,11 +3251,11 @@ def build_clustered_dossier_sections(
     }
 
 
-def compute_similarity_score_for_correlation(topic_text, headline_text):
+def compute_similarity_score_for_correlation(topic_text, headline_text, summary_text=""):
     """
     Computes a TF-IDF cosine similarity score between a topic description
-    and a single headline. Used by correlate_topics_with_sources to improve
-    matching accuracy beyond simple word overlap.
+    and a single headline (optionally enriched with its summary snippet).
+    Used by correlate_topics_with_sources to improve matching accuracy beyond simple word overlap.
 
     Returns a float between 0.0 and 1.0.
     """
@@ -2988,7 +3263,12 @@ def compute_similarity_score_for_correlation(topic_text, headline_text):
         return 0.0
 
     cleaned_topic = clean_headline_text_for_similarity(topic_text)
-    cleaned_headline = clean_headline_text_for_similarity(headline_text)
+
+    headline_content_to_compare = headline_text
+    if summary_text is not None and len(summary_text.strip()) > 10:
+        headline_content_to_compare = headline_text + " " + summary_text.strip()
+
+    cleaned_headline = clean_headline_text_for_similarity(headline_content_to_compare)
 
     if len(cleaned_topic) < 3 or len(cleaned_headline) < 3:
         return 0.0
@@ -3179,19 +3459,51 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                     has_bigram_match = True
                     break
 
+            # Extract summary snippet if available
+            article_summary_text = metadata_dictionary.get("summary", "")
+
+            # Match label keywords against summary words for additional confidence
+            matched_summary_tokens_count = 0
+            if article_summary_text and len(article_summary_text.strip()) > 10:
+                clean_summary_string = clean_headline_text_for_similarity(article_summary_text)
+                summary_words_list = clean_summary_string.split()
+                for label_word in label_keywords_list:
+                    matched_in_summary = False
+                    for summary_word in summary_words_list:
+                        if label_word == summary_word:
+                            matched_in_summary = True
+                            break
+                        elif len(label_word) >= 4 and len(summary_word) >= 4:
+                            prefix_length = min(min(len(label_word), len(summary_word)), 4)
+                            if label_word[:prefix_length] == summary_word[:prefix_length]:
+                                if label_word.startswith(summary_word) or summary_word.startswith(label_word):
+                                    matched_in_summary = True
+                                    break
+                    if matched_in_summary:
+                        matched_summary_tokens_count = matched_summary_tokens_count + 1
+
             # Compute TF-IDF cosine similarity between the full topic description
-            # and the headline. This catches semantic matches that word overlap misses,
+            # and the headline + summary snippet. This catches semantic matches that word overlap misses,
             # like when a headline uses synonyms or different phrasing for the same story.
             topic_full_text = topic_label_string + " " + " ".join(topic_terms_list)
-            embedding_similarity = compute_similarity_score_for_correlation(topic_full_text, headline_text)
+            embedding_similarity = compute_similarity_score_for_correlation(
+                topic_full_text,
+                headline_text,
+                summary_text=article_summary_text
+            )
+
+            # Check if summary matches provide additional token confidence
+            effective_tokens_count = matched_label_tokens_count
+            if matched_label_tokens_count < minimum_required_tokens and matched_summary_tokens_count >= 2:
+                effective_tokens_count = matched_label_tokens_count + 1
 
             # Decide whether to skip this headline based on BOTH word overlap AND embedding similarity
-            word_overlap_is_insufficient = (matched_label_tokens_count < minimum_required_tokens and not has_bigram_match)
+            word_overlap_is_insufficient = (effective_tokens_count < minimum_required_tokens and not has_bigram_match)
             embedding_says_related = (embedding_similarity >= 0.18)
 
             # For substantive topic labels (>= 5 keywords), matching only 1 or 2 tokens
             # with low semantic similarity represents broad or unrelated op-eds
-            if matched_label_tokens_count < minimum_required_tokens and not embedding_says_related:
+            if effective_tokens_count < minimum_required_tokens and not embedding_says_related:
                 continue
 
             if word_overlap_is_insufficient and not embedding_says_related:
@@ -3202,6 +3514,10 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
 
             if has_bigram_match:
                 relevance_score = relevance_score + 15
+
+            # Add bonus for summary keyword matches
+            if matched_summary_tokens_count >= 2:
+                relevance_score = relevance_score + (matched_summary_tokens_count * 2)
 
             # Add term keywords bonus
             for term_word in term_keywords_list:
@@ -3233,7 +3549,8 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                     "url": article_url,
                     "embedding_similarity": embedding_similarity,
                     "matched_tokens": matched_label_tokens_count,
-                    "has_bigram": has_bigram_match
+                    "has_bigram": has_bigram_match,
+                    "matched_summary_tokens": matched_summary_tokens_count
                 })
 
         # Step 2: Check X tweets if available
@@ -3261,7 +3578,8 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                                 "url": tweet_url,
                                 "embedding_similarity": 0.0,
                                 "matched_tokens": tweet_matched_tokens,
-                                "has_bigram": False
+                                "has_bigram": False,
+                                "matched_summary_tokens": 0
                             })
 
         # Sort candidates descending by score using procedural bubble sort
@@ -3285,13 +3603,14 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
             for candidate_item in scored_candidates_list:
                 passes_score_threshold = candidate_item["score"] >= score_cutoff
                 # Semantic safety net: if an article has strong semantic similarity
-                # and matches key event tokens or a bigram, keep it even if its score is slightly below cutoff
+                # and matches key event tokens, bigrams, or summary tokens, keep it even if slightly below cutoff
                 candidate_embedding_similarity = candidate_item.get("embedding_similarity", 0.0)
                 candidate_matched_tokens = candidate_item.get("matched_tokens", 0)
                 candidate_has_bigram = candidate_item.get("has_bigram", False)
+                candidate_summary_tokens = candidate_item.get("matched_summary_tokens", 0)
                 passes_semantic_safety = (
                     candidate_embedding_similarity >= 0.20
-                    and (candidate_matched_tokens >= 3 or candidate_has_bigram)
+                    and (candidate_matched_tokens >= 3 or candidate_has_bigram or candidate_summary_tokens >= 2)
                 )
 
                 if passes_score_threshold or passes_semantic_safety:
@@ -3677,7 +3996,8 @@ def synthesize_topics_from_news_and_trends(
     vllm_endpoint_override=None,
     model_name_override=None,
     api_key_override=None,
-    timeout_seconds_override=300
+    timeout_seconds_override=300,
+    headline_sources_metadata_map=None
 ):
     # This function synthesizes exactly 15 strategic topics directly from authoritative news headlines,
     # enriched by verified defense correspondent & OSINT reporting and live social trends observed on X,
@@ -3724,13 +4044,15 @@ def synthesize_topics_from_news_and_trends(
     if SKLEARN_AVAILABLE and len(news_sources_intel_dictionary) > 0:
         story_clusters_list = group_headlines_into_story_clusters(
             news_sources_intel_dictionary,
-            similarity_threshold=0.18
+            similarity_threshold=0.18,
+            headline_sources_metadata_map=headline_sources_metadata_map
         )
 
         # Build dossier sections from the clusters
         clustered_sections = build_clustered_dossier_sections(
             story_clusters_list,
-            news_sources_intel_dictionary
+            news_sources_intel_dictionary,
+            headline_sources_metadata_map=headline_sources_metadata_map
         )
 
         global_news_sections = clustered_sections["clustered_global_sections"]
@@ -4098,7 +4420,7 @@ Remember: Respond ONLY with a valid, clean JSON array of 13 objects adhering str
     # Enforce that at least 2 topics originate from Geo TV / Pakistani regional sources.
     # Geo TV front page carries the most trending Pakistani and regional stories,
     # and the user requires these to always appear in the output.
-    geo_regional_source_indicators = ["geo tv", "geo news", "dawn", "tribune", "quwa"]
+    geo_regional_source_indicators = ["geo tv", "geo news", "dawn", "tribune", "quwa", "google news - pakistan", "google news (pakistan)"]
 
     def is_geo_or_regional_topic(topic):
         """Check if a topic's label or terms mention content from Geo/regional sources."""

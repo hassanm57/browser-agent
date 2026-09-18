@@ -437,12 +437,12 @@ export function KeywordsPage(props: KeywordsPageProps) {
           </div>
         </div>
 
-        {/* News-Derived Boolean Query Banner */}
+        {/* News-Derived Query Banner */}
         {topicItem.boolean_query ? (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2.5 rounded-md bg-muted/40 border border-border/80">
             <div className="flex items-center gap-2 overflow-hidden">
               <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0">
-                Boolean Query
+                Query
               </span>
               <span className="text-xs font-mono text-foreground truncate select-all">
                 {topicItem.boolean_query}
@@ -455,7 +455,7 @@ export function KeywordsPage(props: KeywordsPageProps) {
                   navigator.clipboard.writeText(topicItem.boolean_query || "");
                 }}
                 className="flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                title="Copy Boolean query"
+                title="Copy query"
               >
                 <Copy className="w-3 h-3" />
                 <span>Copy</span>

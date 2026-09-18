@@ -5571,7 +5571,7 @@ def run_country_hot_news_pipeline():
         topic_terms = current_topic_item.get("terms", [])
 
         print(f"{topic_index + 1}. [{topic_category.upper()}] {topic_label} ({len(topic_terms)} keywords)")
-        print(f"   Boolean Query: {topic_boolean_query}")
+        print(f"   Query: {topic_boolean_query}")
         print(f"   Keywords: {', '.join(topic_terms[:8])}...")
         print("")
 

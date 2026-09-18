@@ -62,7 +62,7 @@ export function PipelinePage(props: PipelinePageProps) {
   const PIPELINE_PHASES = [
     { id: "news_sources", name: "News Intel", desc: "17 Ground Truth Feeds", icon: Globe },
     { id: "x_accounts", name: "Correspondent X", desc: "Pentagon & OSINT Feeds", icon: Flame },
-    { id: "llm_synthesis", name: "Query Synthesis", desc: "Boolean Query Engine", icon: Cpu },
+    { id: "llm_synthesis", name: "Query Synthesis", desc: "Query Engine", icon: Cpu },
     { id: "x_mining", name: "X.com Mining", desc: "Explore & Live Tweets", icon: MessageSquare },
     { id: "done", name: "15 Keywords", desc: "Intelligence Export", icon: CheckCircle2 }
   ];

@@ -781,7 +781,7 @@ async def run_single_country_pipeline(
             encoded_query = urllib.parse.quote(current_mining_query)
             search_url = f"https://x.com/search?q={encoded_query}"
 
-            await log_and_record("BROWSER", f"[Boolean Query {query_index + 1}/{len(queries_to_mine_list)}] Mining Top tweets for: {current_mining_query}")
+            await log_and_record("BROWSER", f"[Query {query_index + 1}/{len(queries_to_mine_list)}] Mining Top tweets for: {current_mining_query}")
             try:
                 await browser_instance.navigate_to(search_url)
                 await asyncio.sleep(4)
@@ -842,7 +842,7 @@ async def run_single_country_pipeline(
                     except Exception:
                         pass
 
-                await log_and_record("SUCCESS", f"Captured {len(collected_tweets_for_query)} fresh tweets for Boolean query: {current_mining_query}")
+                await log_and_record("SUCCESS", f"Captured {len(collected_tweets_for_query)} fresh tweets for query: {current_mining_query}")
                 x_native_intel_dictionary["sample_tweets_by_trend"][current_mining_query] = collected_tweets_for_query[:25]
             except Exception as query_scrape_error:
                 await log_and_record("WARN", f"Notice: Error mining query '{current_mining_query}': {str(query_scrape_error)}")

@@ -69,23 +69,23 @@
       "boolean_query": "un us iran war crimes",
       "terms": [
         "UN war crimes Iran US strikes",
-        "UN fact-finding Iran US",
-        "US military strikes Iran school",
+        "UN fact-finding Iran",
         "UN Iran war crimes",
-        "US Iran conflict legal violations",
         "UN mission finds grounds sports centre",
-        "UN mission finds grounds"
+        "UN mission finds grounds",
+        "finds grounds to believe",
+        "mission finds grounds to believe"
       ],
       "sources": [
-        {
-          "title": "UN mission finds grounds to believe US committed war crimes in Iran with strikes on school, sports centre",
-          "source_name": "Dawn News",
-          "url": "https://www.dawn.com/news/2030616/un-mission-finds-grounds-to-believe-us-committed-war-crimes-in-iran-with-strikes-on-school-sports-centre"
-        },
         {
           "title": "UN mission finds grounds to believe US committed war crimes in Iran",
           "source_name": "Geo TV World",
           "url": "https://www.geo.tv/latest/682501-un-mission-finds-grounds-to-believe-us-committed-war-crimes-in-iran"
+        },
+        {
+          "title": "UN mission finds grounds to believe US committed war crimes in Iran with strikes on school, sports centre",
+          "source_name": "Dawn News",
+          "url": "https://www.dawn.com/news/2030616/un-mission-finds-grounds-to-believe-us-committed-war-crimes-in-iran-with-strikes-on-school-sports-centre"
         },
         {
           "title": "UN experts say grounds to believe US committed war crimes in Iran strikes",
@@ -98,9 +98,9 @@
           "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34564"
         }
       ],
-      "source_headline": "UN mission finds grounds to believe US committed war crimes in Iran with strikes on school, sports centre",
-      "source_name": "Dawn News",
-      "source_url": "https://www.dawn.com/news/2030616/un-mission-finds-grounds-to-believe-us-committed-war-crimes-in-iran-with-strikes-on-school-sports-centre",
+      "source_headline": "UN mission finds grounds to believe US committed war crimes in Iran",
+      "source_name": "Geo TV World",
+      "source_url": "https://www.geo.tv/latest/682501-un-mission-finds-grounds-to-believe-us-committed-war-crimes-in-iran",
       "sample_tweets": [
         "[Reuters | @Reuters | 20h] UN mission finds grounds to believe US committed war in Iran , and Tehran against humanity reut.rs/4rpbYok UN mission finds grounds to believe US committed war crimes in Iran, and Tehran crimes against... 48K",
         "[Megatron | @Megatron_ron | 18h] BREAKING: 🇺🇸🇺🇳 The UN has officially accused the United States of committing war CRIMES in Iran They claim they have found “reasonable grounds” to believe the United States committed war in two strikes in Iran where many children were killed 1.7K 17K 63K 716K",
@@ -143,51 +143,6 @@
           "title": "South Korea's Lee says will not deploy military to get involved in Middle East conflict",
           "source_name": "Reuters World News",
           "url": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNcHVWWW80X2pnalBXQzRpRlpIQnNiNGt0V1o3Q01OME0tSjg2X0ltaENaUjBXZ2NUWVFnLVRQUTNvRzBHdUh3am9SNExYc3RuQmtxdjkyeGNnMzRvOGdFeUxyTG83bUlEU2NJQ3FCb3ZhR1hjRFEzal84X0pDUW9KWUMtVElRYmI1VWljLTN3ZnNJNkNMLVVyR25DUWI0SmMwQkpqQzRGRUlnMFlSS0RObkRTaTBCRzVwZDN0QjJLUlNDTU96ZDhPb2RSWWtXNEcz?oc=5"
-        },
-        {
-          "title": "F-35 proved combat readiness during Middle East deployments, Air Force officials say",
-          "source_name": "Defense News RSS",
-          "url": "https://www.defensenews.com/air/2026/09/15/f-35-proved-combat-readiness-during-middle-east-deployments-air-force-officials-say/"
-        },
-        {
-          "title": "Trump Scales Back U.S.-South Korean Military Exercises",
-          "source_name": "Arms Control Association",
-          "url": "https://www.armscontrol.org/act/2026-09/news/trump-scales-back-us-south-korean-military-exercises"
-        },
-        {
-          "title": "South Korea Embraces the Silk Road Spirit With Central Asian Leaders",
-          "source_name": "The Diplomat Asia-Pacific Defense",
-          "url": "https://thediplomat.com/2026/09/south-korea-embraces-the-silk-road-spirit-with-central-asian-leaders/"
-        },
-        {
-          "title": "Why the South Korea-US Alliance Needs the Dark Eagle",
-          "source_name": "The Diplomat Asia-Pacific Defense",
-          "url": "https://thediplomat.com/2026/09/why-the-south-korea-us-alliance-needs-the-dark-eagle/"
-        },
-        {
-          "title": "South Korea Rolls Out First Production RQ-105K: Seoul’s First Strategic-Grade UAV Takes Shape",
-          "source_name": "Alpha Defense RSS",
-          "url": "https://alphadefense.in/2026/07/19/south-korea-rolls-out-first-production-rq-105k-seouls-first-strategic-grade-uav-takes-shape-2/"
-        },
-        {
-          "title": "The Impossible Middle East",
-          "source_name": "Foreign Affairs War & Strategy",
-          "url": "https://www.foreignaffairs.com/middle-east/impossible-middle-east"
-        },
-        {
-          "title": "America Must Let Go of the Middle East",
-          "source_name": "Foreign Affairs War & Strategy",
-          "url": "https://www.foreignaffairs.com/united-states/america-must-let-go-middle-east"
-        },
-        {
-          "title": "The End of the American Middle East",
-          "source_name": "Foreign Affairs War & Strategy",
-          "url": "https://www.foreignaffairs.com/united-states/end-american-middle-east-iran-marc-lynch"
-        },
-        {
-          "title": "Middle East and North Africa",
-          "source_name": "SIPRI Recent Research & News",
-          "url": "https://www.sipri.org/research/conflict-peace-and-security/middle-east-and-north-africa"
         }
       ],
       "is_live_breaking_banner": true,
@@ -285,12 +240,12 @@
       "boolean_query": "india us russia oil tariffs",
       "terms": [
         "India US Russia oil sanctions",
-        "US House Russia sanctions bill",
         "India energy security concerns",
         "India-Russia energy partnership",
-        "US India trade tensions",
         "India faces 100 tariff threat",
-        "India faces 100 tariff threat Russian oil"
+        "India faces 100 tariff threat Russian oil",
+        "India faces 100 tariff threat US House vote",
+        "Indian faces 100 submarine"
       ],
       "sources": [
         {
@@ -299,19 +254,14 @@
           "url": "https://www.bbc.co.uk/news/articles/c3lyrn4p870yo?at_medium=RSS&at_campaign=rss"
         },
         {
-          "title": "US House Clears Russia Sanctions Bill After Senate, Tariff Threat Over India’s Energy Trade Looms",
-          "source_name": "Indian Defence News RSS",
-          "url": "https://www.indiandefensenews.in/2026/09/us-house-clears-russia-sanctions-bill.html"
-        },
-        {
           "title": "India warns new US tariffs over Russian oil could hit ties, vows to protect energy security",
           "source_name": "Geo TV World",
           "url": "https://www.geo.tv/latest/682447-india-warns-new-us-tariffs-over-russian-oil-could-hit-ties-vows-to-protect-energy-security"
         },
         {
-          "title": "US Russia Sanctions Bill: India Vows to Protect Energy Security",
-          "source_name": "IDRW RSS Feed",
-          "url": "https://idrw.org/us-russia-sanctions-bill-india-vows-to-protect-energy-security/"
+          "title": "US House Clears Russia Sanctions Bill After Senate, Tariff Threat Over India’s Energy Trade Looms",
+          "source_name": "Indian Defence News RSS",
+          "url": "https://www.indiandefensenews.in/2026/09/us-house-clears-russia-sanctions-bill.html"
         }
       ],
       "source_headline": "India faces 100% tariff threat over Russian oil after US House vote",
@@ -391,44 +341,24 @@
       "category": "defense",
       "boolean_query": "us f-35 sale saudi arabia",
       "terms": [
-        "US F-35 Lightning II sale to Saudi Arabia",
         "Lockheed Martin F-35 contract Saudi Arabia",
-        "US defense exports to Saudi Arabia",
         "Saudi Arabia F-35 procurement 2026",
-        "US State Department F-35 approval",
-        "One killed state TV",
-        "One killed two injured"
+        "clears way for 24",
+        "way for 24 billion",
+        "clears way for 24 billion",
+        "way for 24 billion fighter",
+        "clears way for 24 billion fighter"
       ],
       "sources": [
         {
-          "title": "One killed, two injured in drone interception in Saudi Arabia's Taif governorate, says state TV",
-          "source_name": "Geo TV Liveblog",
-          "url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34556"
-        },
-        {
-          "title": "Parsing Trump’s Decision to (Maybe) Give Uranium Enrichment to Saudi Arabia",
-          "source_name": "War on the Rocks Strategy & Defense",
-          "url": "https://warontherocks.com/parsing-trumps-decision-to-maybe-give-uranium-enrichment-to-saudi-arabia/"
-        },
-        {
-          "title": "Pakistan 'will go to any extent' to defend Saudi Arabia: DG ISPR",
-          "source_name": "The Express Tribune",
-          "url": "https://tribune.com.pk/story/2629939/pakistan-will-go-to-any-extent-to-defend-saudi-arabia-dg-ispr"
-        },
-        {
-          "title": "[OSINTdefender | @sentdefender | 6h] The U.S. State Department has approved a possible $24.3 billion sale of 48 F-35A Lightning II fighters ",
-          "source_name": "X.com (OSINTdefender (Global Conflicts))",
-          "url": "https://x.com/OSINTdefender (Global Conflicts)"
-        },
-        {
-          "title": "Security 17 September 2026 US Department of State approves possible sales of UH-60L Blackhawk helicopters to Argentina",
-          "source_name": "Janes All Defence News",
-          "url": "https://www.janes.com/defence-intelligence-insights/defence-news/security/us-department-of-state-approves-possible-sales-of-uh-60l-blackhawk-helicopters-to-argentina"
+          "title": "US clears way for $24.3 billion fighter jet sale to Saudi Arabia",
+          "source_name": "Reuters World News",
+          "url": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxONTlQX01aWTdhM21Pc2N5Q3hWVDFSbTM1WFhhTjBadHptcmg1RGRnWkZhakttQjVWMWI1cGU4WkE1Nmp0b1lBVlpDMktBMzdKZjJ6RGtxOGF3TmlpVjQyZDVoMmg0MGlENFJsVEpwOXdtc2F5NXBHZ1RPYUhMODBFcnhuTlV5SUNteXlGUWVwWnZLVEVXM1lrNENJREptVEtnZnhGdlAzc3pTMk0zUmtiSFRIdzkzeDRRX1gxRWt6SHRLanhmLVNEbDd3YlNsRkdiOV9JeS1DNWpwaDQ?oc=5"
         }
       ],
-      "source_headline": "One killed, two injured in drone interception in Saudi Arabia's Taif governorate, says state TV",
-      "source_name": "Geo TV Liveblog",
-      "source_url": "https://www.geo.tv/liveblog/israeliran-war-live-updates#story34556",
+      "source_headline": "US clears way for $24.3 billion fighter jet sale to Saudi Arabia",
+      "source_name": "Reuters World News",
+      "source_url": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxONTlQX01aWTdhM21Pc2N5Q3hWVDFSbTM1WFhhTjBadHptcmg1RGRnWkZhakttQjVWMWI1cGU4WkE1Nmp0b1lBVlpDMktBMzdKZjJ6RGtxOGF3TmlpVjQyZDVoMmg0MGlENFJsVEpwOXdtc2F5NXBHZ1RPYUhMODBFcnhuTlV5SUNteXlGUWVwWnZLVEVXM1lrNENJREptVEtnZnhGdlAzc3pTMk0zUmtiSFRIdzkzeDRRX1gxRWt6SHRLanhmLVNEbDd3YlNsRkdiOV9JeS1DNWpwaDQ?oc=5",
       "sample_tweets": [
         "[U.S. Embassy Riyadh | @USAinKSA | 8h] The U.S. Department of State has made a determination approving a possible foreign military sale to the Kingdom of Saudi Arabia for their purchase of Lightning II Joint Strike Fighter and related equipment. The estimated total cost is $24.3 billion. This proposed sale will",
         "[RT Intl | @RT_on_X | 10h] US approves potential $24.3 BILLION sale to Saudi Arabia Deal includes 48 fighter jets in what would be the country’s FIRST-EVER purchase 0:10 14K",
@@ -458,61 +388,17 @@
       ]
     },
     {
-      "label": "Pakistan-US Drone Deal Sparks Regional Tensions",
-      "category": "defense",
-      "boolean_query": "pakistan us drone deal",
-      "terms": [
-        "Pakistan Powerus drone contract",
-        "US drone firm linked to Trump",
-        "Pakistan Army drone procurement",
-        "US-Saudi-Pakistan defense ties",
-        "Trump sons drone company",
-        "Pak Army Signs Drone",
-        "Army Signs Drone Deal"
-      ],
-      "sources": [
-        {
-          "title": "Pak Army Signs Drone Deal With US Firm Linked To Trump's Sons: Report",
-          "source_name": "NDTV",
-          "url": "https://www.ndtv.com/world-news/pakistan-army-signs-drone-deal-with-us-firm-linked-to-donald-trumps-sons-report-12061234"
-        },
-        {
-          "title": "US drone maker Powerus says it signed MoU with Pakistan Army, gets initial order",
-          "source_name": "Dawn News",
-          "url": "https://www.dawn.com/news/2030619/us-drone-maker-powerus-says-it-signed-mou-with-pakistan-army-gets-initial-order"
-        },
-        {
-          "title": "Powerus Wins Pakistan Ministry of Defence Drone Order and MoU",
-          "source_name": "Quwa Defence News",
-          "url": "https://quwa.org/pakistan-defence-news/powerus-wins-pakistan-ministry-of-defence-drone-order-and-mou/"
-        },
-        {
-          "title": "ASELSAN ŞAHİN: Pakistan’s 40 mm Counter-Drone System",
-          "source_name": "Quwa Defence News",
-          "url": "https://quwa.org/pakistan/air-defence-pk/aselsan-sahin-pakistans-40-mm-counter-drone-system/"
-        },
-        {
-          "title": "Pakistan-Oman Maritime Deal Signals Gwadar’s Expanding Regional Relevance",
-          "source_name": "The Diplomat Asia-Pacific Defense",
-          "url": "https://thediplomat.com/2026/09/pakistan-oman-maritime-deal-signals-gwadars-expanding-regional-relevance/"
-        }
-      ],
-      "source_headline": "Pak Army Signs Drone Deal With US Firm Linked To Trump's Sons: Report",
-      "source_name": "NDTV",
-      "source_url": "https://www.ndtv.com/world-news/pakistan-army-signs-drone-deal-with-us-firm-linked-to-donald-trumps-sons-report-12061234"
-    },
-    {
       "label": "F-16 Crashes in Michigan During Training Exercise",
       "category": "defense",
       "boolean_query": "f-16 crashes during training exercise in michigan",
       "terms": [
-        "US Air Force F-16 crash Michigan",
         "Michigan F-16 pilot ejection",
         "Texas Air National Guard crash",
         "F-16 training accident",
-        "US military aircraft crash",
-        "F-16 Crashes During Training Exercise in Michigan",
-        "F-16 Crashes During Training Pilot Ejects"
+        "F-16 Crashes During Training Pilot Ejects",
+        "F-16 Crashes During Training",
+        "Crashes During Training Exercise",
+        "F-16 Crashes During Training Exercise in Michigan"
       ],
       "sources": [
         {
@@ -564,16 +450,6 @@
           "url": "https://www.aljazeera.com/news/2026/9/16/india-summons-pakistani-diplomat-after-incident-in-arabian-sea"
         },
         {
-          "title": "India May Need Tighter Naval ROE After Hunain Incident",
-          "source_name": "IDRW RSS Feed",
-          "url": "https://idrw.org/india-may-need-tighter-naval-roe-after-hunain-incident/"
-        },
-        {
-          "title": "Indian, Pakistani Naval Vessels Collide in Arabian Sea, Prompting Diplomatic Tensions",
-          "source_name": "The Diplomat Asia-Pacific Defense",
-          "url": "https://thediplomat.com/2026/09/indian-pakistani-naval-vessels-collide-in-arabian-sea-prompting-diplomatic-tensions/"
-        },
-        {
           "title": "Pakistani Warship PNS Hunain Suffers Heavy Damage After Collision With Indian Navy Vessel In Arabian Sea: Report",
           "source_name": "Indian Defence News RSS",
           "url": "https://www.indiandefensenews.in/2026/09/pakistani-warship-pns-hunain-suffers.html"
@@ -588,13 +464,13 @@
       "category": "defense",
       "boolean_query": "us navy blackbeard hypersonic",
       "terms": [
-        "US Navy Blackbeard missile contract",
         "Castelion hypersonic weapon development",
-        "US hypersonic missile program",
         "Blackbeard missile carrier integration",
-        "US Navy hypersonic test program",
         "Awards 200M for Blackbeard",
-        "200M for Blackbeard Hypersonic"
+        "200M for Blackbeard Hypersonic",
+        "Hypersonic Missile for Carrier",
+        "Missile for Carrier Fighters",
+        "Navy Awards 200M for Blackbeard"
       ],
       "sources": [
         {
@@ -640,11 +516,6 @@
           "title": "HAL Seals Deal With KNDS For 126 THL20 Turrets To Boost Light Combat Helicopter Prachand Firepower",
           "source_name": "Indian Defence News RSS",
           "url": "https://www.indiandefensenews.in/2026/09/hal-seals-deal-with-knds-for-126-thl20.html"
-        },
-        {
-          "title": "KNDS to Deliver 126 Lightweight THL20 20mm Cannon Turrets for India’s High Altitude LCH Prachand Fleet",
-          "source_name": "Defence.in Forum & News",
-          "url": "https://defence.in/"
         }
       ],
       "source_headline": "KNDS THL20 Turrets Selected For India’s New Light Combat Helicopter Program",
@@ -681,17 +552,41 @@
       "source_url": "https://defence.in/"
     },
     {
+      "label": "Pakistan-US Drone Deal Sparks Regional Tensions",
+      "category": "defense",
+      "boolean_query": "pakistan us drone deal",
+      "terms": [
+        "Pakistan Powerus drone contract",
+        "Pakistan Army drone procurement",
+        "Trump sons drone company",
+        "Pak Army Signs Drone",
+        "Army Signs Drone Deal",
+        "Pak Army Signs Drone Deal",
+        "Drone Deal With US Firm"
+      ],
+      "sources": [
+        {
+          "title": "Pak Army Signs Drone Deal With US Firm Linked To Trump's Sons: Report",
+          "source_name": "NDTV",
+          "url": "https://www.ndtv.com/world-news/pakistan-army-signs-drone-deal-with-us-firm-linked-to-donald-trumps-sons-report-12061234"
+        }
+      ],
+      "source_headline": "Pak Army Signs Drone Deal With US Firm Linked To Trump's Sons: Report",
+      "source_name": "NDTV",
+      "source_url": "https://www.ndtv.com/world-news/pakistan-army-signs-drone-deal-with-us-firm-linked-to-donald-trumps-sons-report-12061234"
+    },
+    {
       "label": "US-Saudi Civil Nuclear Cooperation Agreement Under Scrutiny",
       "category": "economic",
       "boolean_query": "us us-saudi civil nuclear deal",
       "terms": [
-        "US-Saudi civil nuclear deal",
         "Kelsey Davenport nuclear FAQs",
         "Saudi nuclear energy program",
-        "US nuclear export to Saudi Arabia",
         "Nuclear proliferation risks",
         "Saudi Agreement for Civil",
-        "Agreement for Civil Nuclear"
+        "Agreement for Civil Nuclear",
+        "Civil Nuclear Cooperation Answers",
+        "Saudi Agreement for Civil Nuclear"
       ],
       "sources": [
         {
@@ -703,16 +598,6 @@
           "title": "The U.S.-Saudi Agreement for Civil Nuclear Cooperation: Answers to FAQs",
           "source_name": "Arms Control Association",
           "url": "https://www.armscontrol.org/"
-        },
-        {
-          "title": "The Real U.S.-Saudi Nuclear Deal Is Better Than We Thought",
-          "source_name": "War on the Rocks Strategy & Defense",
-          "url": "https://warontherocks.com/the-real-u-s-saudi-nuclear-deal-is-better-than-we-thought/"
-        },
-        {
-          "title": "Why Trump’s Israel Normalization Demand May Kill the Saudi Nuclear Deal",
-          "source_name": "War on the Rocks Strategy & Defense",
-          "url": "https://warontherocks.com/why-trumps-israel-normalization-demand-may-kill-the-saudi-nuclear-deal/"
         }
       ],
       "source_headline": "The U.S.-Saudi Agreement for Civil Nuclear Cooperation: Answers to FAQs By Kelsey Davenport",

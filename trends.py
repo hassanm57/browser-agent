@@ -755,7 +755,7 @@ ENTERTAINMENT_SPORTS_NOISE = [
     "americana awards", "film festival", "red carpet", "billboard",
 
     # Gossip, personal life, lifestyle & viral trivia
-    "birthday", "hbd", "sale", "discount", "fashion", "gaming", "game", "gamer", "esports",
+    "birthday", "hbd", "clearance sale", "flash sale", "discount", "fashion", "gaming", "game", "gamer", "esports",
     "horoscope", "astrology", "zodiac", "comedy", "comedian", "meme",
     "dating", "breakup", "break up", "divorce", "fiancé", "fiance", "fiancée",
     "wedding", "married", "marriage", "surrogate", "fatherhood", "motherhood",
@@ -4180,12 +4180,26 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
             if (len(word) >= 3 or word.isdigit()) and word not in stop_words_list:
                 label_keywords_list.append(word)
 
+        # Define country and region names that are purely geographic entities
+        # Matching only a geographic bigram does not mean an article is about the same event
+        generic_geographic_bigrams_set = {
+            "middle east", "south korea", "saudi arabia", "united states",
+            "central asia", "north africa", "asia pacific", "arabian sea",
+            "north korea", "united kingdom", "persian gulf", "red sea"
+        }
+
         # Build 2-word phrases from adjacent words in label for phrase matching
-        label_bigrams_list = []
+        # Only combine non-numeric words so currency amounts like $24.3 do not form bogus bigrams like "3 billion"
+        label_action_bigrams_list = []
+        label_all_bigrams_list = []
         for word_index in range(len(label_keywords_list) - 1):
             first_word = label_keywords_list[word_index]
             second_word = label_keywords_list[word_index + 1]
-            label_bigrams_list.append(first_word + " " + second_word)
+            if not first_word.isdigit() and not second_word.isdigit():
+                constructed_bigram = first_word + " " + second_word
+                label_all_bigrams_list.append(constructed_bigram)
+                if constructed_bigram not in generic_geographic_bigrams_set:
+                    label_action_bigrams_list.append(constructed_bigram)
 
         # Extract significant words from terms
         term_keywords_list = []
@@ -4235,10 +4249,17 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
             elif len(label_keywords_list) < 3:
                 minimum_required_tokens = 1
 
-            has_bigram_match = False
-            for bigram in label_bigrams_list:
-                if bigram in clean_headline_string:
-                    has_bigram_match = True
+            # Check for action bigram matches and generic bigram matches
+            has_action_bigram_match = False
+            for action_bigram in label_action_bigrams_list:
+                if action_bigram in clean_headline_string:
+                    has_action_bigram_match = True
+                    break
+
+            has_any_bigram_match = False
+            for any_bigram in label_all_bigrams_list:
+                if any_bigram in clean_headline_string:
+                    has_any_bigram_match = True
                     break
 
             # Extract summary snippet if available
@@ -4291,12 +4312,13 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                     effective_tokens_count = effective_tokens_count + 1
 
             # Decide whether to skip this headline based on BOTH word overlap AND embedding similarity
-            word_overlap_is_insufficient = (effective_tokens_count < minimum_required_tokens and not has_bigram_match)
-            embedding_says_related = (embedding_similarity >= 0.14)
+            # Only action bigrams (not pure geographic country bigrams) bypass the minimum required tokens
+            word_overlap_is_insufficient = (effective_tokens_count < minimum_required_tokens and not has_action_bigram_match)
+            embedding_says_related = (embedding_similarity >= 0.20)
 
             # For substantive topic labels (>= 5 keywords), matching only 1 or 2 tokens
             # with low semantic similarity represents broad or unrelated op-eds
-            if effective_tokens_count < minimum_required_tokens and not embedding_says_related:
+            if effective_tokens_count < minimum_required_tokens and not has_action_bigram_match and not embedding_says_related:
                 continue
 
             if word_overlap_is_insufficient and not embedding_says_related:
@@ -4305,8 +4327,11 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
 
             relevance_score = matched_label_tokens_count * 5
 
-            if has_bigram_match:
+            # Action bigrams give a strong 15-point signal, while geographic bigrams give a modest 5 points
+            if has_action_bigram_match:
                 relevance_score = relevance_score + 15
+            elif has_any_bigram_match:
+                relevance_score = relevance_score + 5
 
             # Add bonus for summary keyword matches
             if matched_summary_tokens_count >= 2:
@@ -4342,7 +4367,8 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                     "url": article_url,
                     "embedding_similarity": embedding_similarity,
                     "matched_tokens": matched_label_tokens_count,
-                    "has_bigram": has_bigram_match,
+                    "has_action_bigram": has_action_bigram_match,
+                    "has_any_bigram": has_any_bigram_match,
                     "matched_summary_tokens": matched_summary_tokens_count
                 })
 
@@ -4371,7 +4397,8 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                                 "url": tweet_url,
                                 "embedding_similarity": 0.0,
                                 "matched_tokens": tweet_matched_tokens,
-                                "has_bigram": False,
+                                "has_action_bigram": False,
+                                "has_any_bigram": False,
                                 "matched_summary_tokens": 0
                             })
 
@@ -4387,24 +4414,19 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
         final_matched_sources_list = []
         if len(scored_candidates_list) > 0:
             highest_score = scored_candidates_list[0]["score"]
-            # Dynamic relative cutoff: 40% of top score, capped at 26.0 to prevent
-            # long verbatim headlines from unfairly raising the bar above concise wire reports
-            score_cutoff = min(highest_score * 0.40, 26.0)
-            if score_cutoff < 12.0:
-                score_cutoff = 12.0
+            # Dynamic relative cutoff: 45% of top score with a minimum floor of 18.0
+            # Removed the 26.0 ceiling so high-scoring labels don't artificially let noise in
+            score_cutoff = max(highest_score * 0.45, 18.0)
 
             for candidate_item in scored_candidates_list:
                 passes_score_threshold = candidate_item["score"] >= score_cutoff
                 # Semantic safety net: if an article has strong semantic similarity
-                # and matches key event tokens, bigrams, or summary tokens, keep it even if slightly below cutoff
+                # and matches key event tokens, keep it even if slightly below cutoff
                 candidate_embedding_similarity = candidate_item.get("embedding_similarity", 0.0)
                 candidate_matched_tokens = candidate_item.get("matched_tokens", 0)
-                candidate_has_bigram = candidate_item.get("has_bigram", False)
-                candidate_summary_tokens = candidate_item.get("matched_summary_tokens", 0)
                 passes_semantic_safety = (
-                    (candidate_embedding_similarity >= 0.13 and candidate_matched_tokens >= 3)
-                    or (candidate_matched_tokens >= 3 and (candidate_has_bigram or candidate_summary_tokens >= 2))
-                    or (candidate_embedding_similarity >= 0.18 and candidate_matched_tokens >= 2)
+                    (candidate_embedding_similarity >= 0.14 and candidate_matched_tokens >= 3)
+                    or (candidate_embedding_similarity >= 0.28 and candidate_matched_tokens >= 2)
                 )
 
                 if passes_score_threshold or passes_semantic_safety:

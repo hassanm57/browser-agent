@@ -209,7 +209,9 @@ DANGLING_TRAILING_WORDS_SET = {
     "single", "joint", "total", "major", "time", "been",
     "could", "would", "should", "might", "will", "can", "may", "new", "also",
     "says", "urges", "claims", "hopes", "signals", "seeks",
-    "russian", "chinese", "indian", "pakistani", "american"
+    "russian", "chinese", "indian", "pakistani", "american",
+    "it", "they", "them", "he", "she", "we", "us", "him", "her", "our", "me", "you",
+    "get", "got", "deploy", "middle", "involved"
 }
 
 DANGLING_LEADING_WORDS_SET = {
@@ -217,7 +219,9 @@ DANGLING_LEADING_WORDS_SET = {
     "between", "from", "that", "which", "amid", "into", "about", "could", "would",
     "should", "will", "can", "also", "after", "before", "during", "without", "within",
     "says", "warns", "claims", "urges", "amidst", "because", "while", "when",
-    "the", "a", "an"
+    "the", "a", "an",
+    "it", "they", "he", "she", "we", "its", "their",
+    "get", "got", "involved"
 }
 
 GENERIC_BUZZWORD_PATTERNS_LIST = [
@@ -266,6 +270,9 @@ def strip_dangling_leading_words(text_string):
     while len(words_list) > 0:
         first_word_cleaned = re.sub(r'[^a-zA-Z]', '', words_list[0]).lower()
         if first_word_cleaned in DANGLING_LEADING_WORDS_SET:
+            # Preserve modal 'will' if directly followed by negation 'not' (e.g. 'will not deploy')
+            if first_word_cleaned == "will" and len(words_list) > 1 and re.sub(r'[^a-zA-Z]', '', words_list[1]).lower() == "not":
+                break
             words_list.pop(0)
         else:
             break
@@ -331,7 +338,20 @@ def is_incomplete_stub_keyword(term_string):
         r'\b(could\s+impact|would\s+impact|will\s+impact)\s*$',
         r'\b(new\s+us)\s*$',
         r'^(oil\s+could)\b',
-        r'\b(of|in|to|for|with|by|on|at|between|from|about)\s*$'
+        r'\b(of|in|to|for|with|by|on|at|between|from|about)\s*$',
+        # Trailing or leading unanchored pronouns
+        r'\b(it|they|them|he|she|we|us|him|her|you|me|its|their)\s*$',
+        r'^(it|they|he|she|we|us|him|her)\b',
+        # Incomplete auxiliary or infinitive phrases
+        r'\b(to\s+get|to\s+deploy|says\s+it|will\s+not|not\s+to|to\s+be)\s*$',
+        r'\b(says\s+it|says\s+that)\b',
+        r'\b(says|warns|claims|urges|confirms|vows|rules\s+out)\s*$',
+        r'^(says|warns|claims|urges|confirms|vows|rules\s+out)\b',
+        # Dangling incomplete entity pieces
+        r'\bmiddle\s*$',
+        # Cut-off verbs without object or subject
+        r'\b(deploy|get|involved)\s*$',
+        r'^(deploy|get|involved)\b'
     ]
     for pattern in action_stub_patterns:
         if re.search(pattern, lower_term) is not None:
@@ -3158,8 +3178,13 @@ def extract_key_phrases_from_headline(headline_text):
         if len(cleaned_quote_item) >= 3 and not is_generic_fluff_term(cleaned_quote_item):
             quoted_phrases_list.append(cleaned_quote_item)
 
-    # 2. Split headline into natural clauses by punctuation and major clause markers (do not split internal hyphens)
-    raw_clauses_list = re.split(r'\s+[-–—]\s+|[;,]|\bas\b|\bamid\b|\bwhile\b|\bafter\b|\bwhen\b|\bbecause\b|\bover\b|\bahead of\b|\bfollowing\b|\bdespite\b', base_headline_text, flags=re.IGNORECASE)
+    # 2. Split headline into natural clauses by punctuation, attribution verbs, and major clause markers (do not split internal hyphens)
+    split_pattern = (
+        r'\s+[-–—:]\s+|[;,]|\bas\b|\bamid\b|\bwhile\b|\bafter\b|\bwhen\b|\bbecause\b|\bover\b|\bahead of\b|\bfollowing\b|\bdespite\b'
+        r'|\bsays\s+(?:that\s+|it\s+)?|\bwarns\s+(?:that\s+)?|\bclaims\s+(?:that\s+)?|\bconfirms\s+(?:that\s+)?|\bvows\s+(?:to\s+)?|\brules\s+out\b'
+        r'|\bto\s+get\s+involved\s+in\b|\bto\s+intervene\s+in\b|\bin\s+order\s+to\b'
+    )
+    raw_clauses_list = re.split(split_pattern, base_headline_text, flags=re.IGNORECASE)
     cleaned_clauses_list = []
     for raw_clause_item in raw_clauses_list:
         clause_string = raw_clause_item.strip().strip("'\"")
@@ -3196,6 +3221,11 @@ def extract_key_phrases_from_headline(headline_text):
         clean_candidate_string = strip_dangling_trailing_words(cleaned_candidate)
         clause_words_list = clean_candidate_string.split()
         if 4 <= len(clause_words_list) <= 9:
+            # Anchor check: ensure clause has at least one capitalized entity or contains the primary subject
+            has_entity_anchor = any(word_token[0].isupper() for word_token in clause_words_list if len(word_token) >= 2)
+            has_subject_anchor = len(primary_subject_string) > 0 and (primary_subject_string.lower() in clean_candidate_string.lower())
+            if not (has_entity_anchor or has_subject_anchor):
+                continue
             if not is_incomplete_stub_keyword(clean_candidate_string) and not is_generic_fluff_term(clean_candidate_string):
                 is_already_present = False
                 for existing_phrase in generated_phrases_list:
@@ -3242,13 +3272,13 @@ def extract_key_phrases_from_headline(headline_text):
                         if not is_already_present:
                             generated_phrases_list.append(cleaned_speaker_item)
 
-    # Strategy D: Combine primary subject with secondary clause key elements
+    # Strategy D: Combine primary subject with secondary and subsequent clauses
     if len(cleaned_clauses_list) >= 2 and len(primary_subject_string) > 0:
         for secondary_clause_index in range(1, len(cleaned_clauses_list)):
             secondary_clause_item = cleaned_clauses_list[secondary_clause_index]
-            secondary_words_list = secondary_clause_item.split()
-            secondary_snippet = " ".join(secondary_words_list[:3])
-            combined_clause_string = primary_subject_string + " " + secondary_snippet
+            
+            # 1. Combine subject with the complete secondary clause
+            combined_clause_string = primary_subject_string + " " + secondary_clause_item
             clean_clause_combination = strip_dangling_trailing_words(combined_clause_string)
             clause_combination_words_list = clean_clause_combination.split()
             if 4 <= len(clause_combination_words_list) <= 9:
@@ -3260,6 +3290,75 @@ def extract_key_phrases_from_headline(headline_text):
                             break
                     if not is_already_present:
                         generated_phrases_list.append(clean_clause_combination)
+            elif len(clause_combination_words_list) > 9:
+                secondary_words_list = secondary_clause_item.split()
+                secondary_snippet = " ".join(secondary_words_list[:4])
+                combined_snippet = primary_subject_string + " " + secondary_snippet
+                clean_snippet = strip_dangling_trailing_words(combined_snippet)
+                snippet_words = clean_snippet.split()
+                if 4 <= len(snippet_words) <= 9 and not is_incomplete_stub_keyword(clean_snippet) and not is_generic_fluff_term(clean_snippet):
+                    is_already_present = False
+                    for existing_phrase in generated_phrases_list:
+                        if clean_snippet.lower() == existing_phrase.lower():
+                            is_already_present = True
+                            break
+                    if not is_already_present:
+                        generated_phrases_list.append(clean_snippet)
+
+        # 2. When there are 3 or more clauses, synthesize multi-clause combinations (Subject + Action + Context)
+        if len(cleaned_clauses_list) >= 3:
+            action_clause_text = cleaned_clauses_list[1]
+            context_clause_text = cleaned_clauses_list[2]
+
+            # Short context without category noun (conflict, war, crisis, tensions, issues)
+            short_context_text = re.sub(r'\s+(conflict|war|crisis|tensions?|issues?|row|spat)$', '', context_clause_text, flags=re.IGNORECASE).strip()
+            context_variants_list = [context_clause_text]
+            if len(short_context_text) > 0 and short_context_text.lower() != context_clause_text.lower():
+                context_variants_list.append(short_context_text)
+
+            # Combine subject + action + context variants
+            for ctx_variant in context_variants_list:
+                full_multi_clause_text = primary_subject_string + " " + action_clause_text + " " + ctx_variant
+                clean_multi_clause = strip_dangling_trailing_words(full_multi_clause_text)
+                multi_words = clean_multi_clause.split()
+                if 4 <= len(multi_words) <= 9:
+                    if not is_incomplete_stub_keyword(clean_multi_clause) and not is_generic_fluff_term(clean_multi_clause):
+                        if clean_multi_clause.lower() not in [p.lower() for p in generated_phrases_list]:
+                            generated_phrases_list.append(clean_multi_clause)
+
+            # Combine subject + core action without leading modal + context variants
+            action_core_text = re.sub(r'^(will\s+not|not|will|to)\s+', '', action_clause_text, flags=re.IGNORECASE).strip()
+            if len(action_core_text) > 0 and action_core_text.lower() != action_clause_text.lower():
+                for ctx_variant in context_variants_list:
+                    core_action_combo = primary_subject_string + " " + action_core_text + " " + ctx_variant
+                    clean_core_combo = strip_dangling_trailing_words(core_action_combo)
+                    core_words = clean_core_combo.split()
+                    if 4 <= len(core_words) <= 9:
+                        if not is_incomplete_stub_keyword(clean_core_combo) and not is_generic_fluff_term(clean_core_combo):
+                            if clean_core_combo.lower() not in [p.lower() for p in generated_phrases_list]:
+                                generated_phrases_list.append(clean_core_combo)
+
+                    # Also try with explicit negation "not" if action had negation
+                    if "not" in action_clause_text.lower():
+                        negated_action_combo = primary_subject_string + " not " + action_core_text + " " + ctx_variant
+                        clean_neg_combo = strip_dangling_trailing_words(negated_action_combo)
+                        neg_words = clean_neg_combo.split()
+                        if 4 <= len(neg_words) <= 9:
+                            if not is_incomplete_stub_keyword(clean_neg_combo) and not is_generic_fluff_term(clean_neg_combo):
+                                if clean_neg_combo.lower() not in [p.lower() for p in generated_phrases_list]:
+                                    generated_phrases_list.append(clean_neg_combo)
+
+            # Combine subject + individual action nouns/verbs + context
+            for action_word in action_clause_text.split():
+                clean_action_word = action_word.strip().lower()
+                if len(clean_action_word) >= 4 and clean_action_word not in DANGLING_LEADING_WORDS_SET and clean_action_word not in DANGLING_TRAILING_WORDS_SET:
+                    single_action_combo = primary_subject_string + " " + clean_action_word + " " + context_clause_text
+                    clean_single_combo = strip_dangling_trailing_words(single_action_combo)
+                    single_words = clean_single_combo.split()
+                    if 4 <= len(single_words) <= 9:
+                        if not is_incomplete_stub_keyword(clean_single_combo) and not is_generic_fluff_term(clean_single_combo):
+                            if clean_single_combo.lower() not in [p.lower() for p in generated_phrases_list]:
+                                generated_phrases_list.append(clean_single_combo)
 
     # Strategy E: Distill key actors and specific military designations into complete 3-5 word query phrases
     weapon_regex_matches = re.findall(r'\b[A-Za-z]{1,6}[\s\-]?[0-9]{1,4}[A-Za-z]{0,3}\b', base_headline_text)
@@ -3295,6 +3394,8 @@ def extract_key_phrases_from_headline(headline_text):
             clean_word for clean_word in re.sub(r'[^a-zA-Z0-9\s\-]', ' ', base_headline_text).split()
             if len(clean_word) >= 2
         ]
+        # Identify key subject words to anchor sliding window
+        subject_anchor_words = [w.lower() for w in primary_subject_string.split() if len(w) >= 3]
         if len(raw_words_list) >= 4:
             for window_size in [4, 5, 6, 7]:
                 for start_word_index in range(len(raw_words_list) - window_size + 1):
@@ -3304,7 +3405,11 @@ def extract_key_phrases_from_headline(headline_text):
                     clean_window_phrase = clean_and_sanitize_keyword_phrase(clean_window_phrase)
                     window_words = clean_window_phrase.split()
                     if 4 <= len(window_words) <= 10:
-                        if not is_incomplete_stub_keyword(clean_window_phrase) and not is_generic_fluff_term(clean_window_phrase):
+                        # Must contain at least one subject anchor word if subject is known
+                        has_subject_anchor = True
+                        if len(subject_anchor_words) > 0:
+                            has_subject_anchor = any(anc in clean_window_phrase.lower() for anc in subject_anchor_words)
+                        if has_subject_anchor and not is_incomplete_stub_keyword(clean_window_phrase) and not is_generic_fluff_term(clean_window_phrase):
                             if clean_window_phrase.lower() != base_headline_text.lower():
                                 is_already_present = False
                                 for existing_phrase in generated_phrases_list:
@@ -3336,7 +3441,10 @@ def extract_key_phrases_from_headline(headline_text):
                     thematic_keywords_list.append(cleaned_token)
 
         if len(capitalized_entities_list) >= 2 and len(thematic_keywords_list) >= 1:
-            lead_entities_string = " ".join(capitalized_entities_list[:3])
+            if len(primary_subject_string) > 0:
+                lead_entities_string = primary_subject_string
+            else:
+                lead_entities_string = " ".join(capitalized_entities_list[:2])
             for thematic_word in thematic_keywords_list:
                 for second_thematic in thematic_keywords_list:
                     if thematic_word != second_thematic:
@@ -4376,8 +4484,8 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
             if not is_duplicate and len(clean_term_str) >= 2:
                 updated_terms.append(clean_term_str)
 
-        # Ensure at least 8 keywords by extracting crisp distilled phrases from the primary source headline only if needed
-        if len(updated_terms) < 8:
+        # Ensure 5 to 7 keywords by extracting crisp distilled phrases from the primary source headline only if needed
+        if len(updated_terms) < 7:
             headline_phrases = extract_key_phrases_from_headline(primary_source_headline)
             for phrase in headline_phrases:
                 phrase_clean = clean_and_sanitize_keyword_phrase(phrase)
@@ -4403,11 +4511,11 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                         break
                 if not is_duplicate and len(phrase_clean) >= 3:
                     updated_terms.append(phrase_clean)
-                if len(updated_terms) >= 8:
+                if len(updated_terms) >= 7:
                     break
 
-        # If still under 8 keywords, extract phrases from the topic label
-        if len(updated_terms) < 8:
+        # If still under 7 keywords, extract phrases from the topic label
+        if len(updated_terms) < 7:
             label_phrases = extract_key_phrases_from_headline(topic_item.get("label", ""))
             for phrase in label_phrases:
                 phrase_clean = clean_and_sanitize_keyword_phrase(phrase)
@@ -4433,10 +4541,10 @@ def correlate_topics_with_sources(topics_list, headline_sources_metadata_map, cu
                         break
                 if not is_duplicate and len(phrase_clean) >= 3:
                     updated_terms.append(phrase_clean)
-                if len(updated_terms) >= 8:
+                if len(updated_terms) >= 7:
                     break
 
-        topic_item["terms"] = updated_terms[:12]
+        topic_item["terms"] = updated_terms[:7]
 
         # Re-evaluate and refine boolean query with buzzwords from headline and updated terms
         # so searching on X.com or Google will reliably surface the exact news story

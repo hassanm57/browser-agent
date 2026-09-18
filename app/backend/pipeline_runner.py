@@ -269,37 +269,54 @@ async def run_single_country_pipeline(
         await log_and_record("INFO", f"Fetching {source_name} ({source_type.upper()})...")
         try:
             headlines_for_source = []
-            if source_type == "rss":
+            if "reuters.com" in source_url.lower() or "reuters" in source_name.lower():
+                await log_and_record("INFO", f"Harvesting breaking and world headlines directly from Reuters ({source_url})...")
+                reuters_records_list = trends.extract_reuters_headlines_and_articles(source_url)
+                for r_record_index in range(len(reuters_records_list)):
+                    single_record = reuters_records_list[r_record_index]
+                    r_headline = single_record.get("headline", "")
+                    r_url = single_record.get("url", source_url)
+                    if r_headline and r_headline not in headlines_for_source and len(headlines_for_source) < 20:
+                        headlines_for_source.append(r_headline)
+                        headline_sources_metadata_map[r_headline] = {
+                            "source_name": "Reuters World News",
+                            "headline": r_headline,
+                            "url": r_url
+                        }
+                if len(headlines_for_source) > 0:
+                    await log_and_record("SUCCESS", f"Reuters harvested {len(headlines_for_source)} breaking headlines with direct articles!")
+            elif source_type == "rss":
+                # Parse RSS XML feed
                 response = trends.requests.get(source_url, timeout=12, headers=desktop_browser_headers)
                 if response.status_code == 200:
                     xml_root = trends.ElementTree.fromstring(response.content)
-                    for item_element in xml_root.findall(".//item"):
-                        title_element = item_element.find("title")
-                        link_element = item_element.find("link")
-                        desc_element = item_element.find("description")
-                        if title_element is not None and title_element.text:
-                            clean_title = trends.clean_dom_tags_and_markdown(title_element.text)
-                            if len(clean_title) > 15 and not trends.is_bot_challenge_text(clean_title) and clean_title not in headlines_for_source:
-                                # Immediately reject entertainment, sports, and celebrity gossip noise
-                                if trends.is_entertainment_or_lifestyle_noise(clean_title):
-                                    continue
-                                # For general wire feeds, require strategic defense/geopolitical relevance
-                                if not trends.is_specialized_defense_domain(source_url) and not trends.is_strategic_or_defense_trend(clean_title):
-                                    continue
-
-                                headlines_for_source.append(clean_title)
-                                article_link = source_url
-                                if link_element is not None and link_element.text and len(link_element.text.strip()) > 0:
-                                    article_link = link_element.text.strip()
-                                summary_snippet_text = ""
-                                if desc_element is not None and desc_element.text:
-                                    summary_snippet_text = trends.clean_dom_tags_and_markdown(desc_element.text)
-                                headline_sources_metadata_map[clean_title] = {
-                                    "source_name": source_name,
-                                    "headline": clean_title,
-                                    "url": article_link,
-                                    "summary": summary_snippet_text
-                                }
+                    channel_element = xml_root.find("channel")
+                    if channel_element is not None:
+                        for feed_item in channel_element.findall("item"):
+                            title_element = feed_item.find("title")
+                            link_element = feed_item.find("link")
+                            desc_element = feed_item.find("description")
+                            if title_element is not None and title_element.text:
+                                clean_title = trends.clean_dom_tags_and_markdown(title_element.text)
+                                if len(clean_title) > 10 and not trends.is_bot_challenge_text(clean_title):
+                                    if trends.is_entertainment_or_lifestyle_noise(clean_title):
+                                        continue
+                                    if not trends.is_specialized_defense_domain(source_url) and not trends.is_strategic_or_defense_trend(clean_title):
+                                        continue
+                                    if clean_title not in headlines_for_source and len(headlines_for_source) < 20:
+                                        headlines_for_source.append(clean_title)
+                                        article_link = source_url
+                                        if link_element is not None and link_element.text and len(link_element.text.strip()) > 0:
+                                            article_link = link_element.text.strip()
+                                        summary_snippet_text = ""
+                                        if desc_element is not None and desc_element.text:
+                                            summary_snippet_text = trends.clean_dom_tags_and_markdown(desc_element.text)
+                                        headline_sources_metadata_map[clean_title] = {
+                                            "source_name": source_name,
+                                            "headline": clean_title,
+                                            "url": article_link,
+                                            "summary": summary_snippet_text
+                                        }
             else:
                 response = trends.requests.get(source_url, timeout=12, headers=desktop_browser_headers)
                 if response.status_code == 200:
@@ -355,34 +372,26 @@ async def run_single_country_pipeline(
                                     "url": article_link
                                 }
 
-            # Fallback 1: If zero headlines extracted and source is Reuters, attempt verified Reuters RSS wire
-            if len(headlines_for_source) == 0 and "reuters.com" in source_url:
-                await log_and_record("INFO", "Reuters web restricted. Attempting Reuters verified RSS wire feed...")
+            # Fallback 1: If zero headlines extracted and source is Reuters, attempt verified Reuters extractor
+            if len(headlines_for_source) == 0 and ("reuters.com" in source_url.lower() or "reuters" in source_name.lower()):
+                await log_and_record("INFO", "Reuters headlines empty. Attempting Reuters verified Arc news sitemap and breaking feeds...")
                 try:
-                    reuters_feed_url = "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en"
-                    reuters_response = trends.requests.get(reuters_feed_url, timeout=12, headers=desktop_browser_headers)
-                    if reuters_response.status_code == 200:
-                        reuters_xml_root = trends.ElementTree.fromstring(reuters_response.content)
-                        for r_item in reuters_xml_root.findall(".//item"):
-                            r_title = r_item.find("title")
-                            r_link = r_item.find("link")
-                            if r_title is not None and r_title.text:
-                                clean_r_title = trends.clean_dom_tags_and_markdown(r_title.text)
-                                if clean_r_title.endswith("- Reuters"):
-                                    clean_r_title = clean_r_title[:-9].strip()
-                                if len(clean_r_title) > 15 and not trends.is_bot_challenge_text(clean_r_title):
-                                    if clean_r_title not in headlines_for_source and len(headlines_for_source) < 20:
-                                        headlines_for_source.append(clean_r_title)
-                                        r_url = r_link.text.strip() if (r_link is not None and r_link.text) else source_url
-                                        headline_sources_metadata_map[clean_r_title] = {
-                                            "source_name": "Reuters World News",
-                                            "headline": clean_r_title,
-                                            "url": r_url
-                                        }
-                        if len(headlines_for_source) > 0:
-                            await log_and_record("SUCCESS", f"Reuters RSS wire harvested {len(headlines_for_source)} clean headlines!")
+                    reuters_records_list = trends.extract_reuters_headlines_and_articles(source_url)
+                    for r_record_index in range(len(reuters_records_list)):
+                        single_record = reuters_records_list[r_record_index]
+                        r_headline = single_record.get("headline", "")
+                        r_url = single_record.get("url", source_url)
+                        if r_headline and r_headline not in headlines_for_source and len(headlines_for_source) < 20:
+                            headlines_for_source.append(r_headline)
+                            headline_sources_metadata_map[r_headline] = {
+                                "source_name": "Reuters World News",
+                                "headline": r_headline,
+                                "url": r_url
+                            }
+                    if len(headlines_for_source) > 0:
+                        await log_and_record("SUCCESS", f"Reuters harvested {len(headlines_for_source)} clean headlines with direct articles!")
                 except Exception as reuters_err:
-                    await log_and_record("WARN", f"Reuters RSS wire error: {str(reuters_err)}")
+                    await log_and_record("WARN", f"Reuters extractor error: {str(reuters_err)}")
 
             # Fallback 2: If zero headlines extracted and source is Dawn News, attempt official RSS feed fallback
             if len(headlines_for_source) == 0 and "dawn.com" in source_url:

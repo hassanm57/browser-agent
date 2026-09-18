@@ -486,6 +486,221 @@ def clean_headline_for_search_term(raw_headline_text):
     return cleaned_term.strip()
 
 
+def extract_reuters_headlines_and_articles(reuters_target_url="https://www.reuters.com/"):
+    # Procedurally extracts breaking and world news headlines from Reuters
+    # Direct HTML scraping of reuters.com is blocked with HTTP 401 Datadome bot challenge
+    # We query the official Arc Publishing real-time news sitemap hosted directly on reuters.com
+    # This provides exact direct canonical article URLs and the latest breaking headlines
+    # If fewer than 5 headlines are returned, we supplement with Google News Reuters World and Breaking feeds
+    extracted_reuters_records_list = []
+    seen_reuters_headlines_set = set()
+
+    request_headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    }
+
+    # Step 1: Query official Reuters Arc publishing news sitemap for real-time breaking articles
+    arc_sitemap_url = "https://www.reuters.com/arc/outboundfeeds/news-sitemap/?outputType=xml"
+    try:
+        sitemap_response = requests.get(arc_sitemap_url, headers=request_headers, timeout=12)
+        if sitemap_response.status_code == 200:
+            xml_namespaces = {
+                "sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9",
+                "news": "http://www.google.com/schemas/sitemap-news/0.9"
+            }
+            sitemap_root = ElementTree.fromstring(sitemap_response.content)
+            url_elements_list = sitemap_root.findall("sitemap:url", xml_namespaces)
+
+            # Pass 1: Extract breaking world news and defense stories (highest editorial relevance)
+            for url_element_index in range(len(url_elements_list)):
+                url_element = url_elements_list[url_element_index]
+                loc_element = url_element.find("sitemap:loc", xml_namespaces)
+                news_element = url_element.find("news:news", xml_namespaces)
+                if loc_element is None or news_element is None:
+                    continue
+
+                article_canonical_url = ""
+                if loc_element.text:
+                    article_canonical_url = loc_element.text.strip()
+
+                title_element = news_element.find("news:title", xml_namespaces)
+                raw_title_text = ""
+                if title_element is not None and title_element.text:
+                    raw_title_text = title_element.text.strip()
+
+                publication_date_element = news_element.find("news:publication_date", xml_namespaces)
+                publication_date_text = ""
+                if publication_date_element is not None and publication_date_element.text:
+                    publication_date_text = publication_date_element.text.strip()
+
+                language_element = news_element.find("news:publication/news:language", xml_namespaces)
+                language_code = "en"
+                if language_element is not None and language_element.text:
+                    language_code = language_element.text.strip()
+
+                # Skip non-English editions
+                if language_code != "en":
+                    continue
+
+                non_english_prefixes = ["/de/", "/es/", "/fr/", "/ja/", "/it/", "/pt/", "/zh/"]
+                is_non_english_path = False
+                for prefix_index in range(len(non_english_prefixes)):
+                    single_prefix = non_english_prefixes[prefix_index]
+                    if single_prefix in article_canonical_url:
+                        is_non_english_path = True
+                        break
+                if is_non_english_path:
+                    continue
+
+                # Skip non-news entertainment and lifestyle sections
+                ignored_sections = ["/sports/", "/lifestyle/", "/entertainment/"]
+                is_ignored_section = False
+                for section_index in range(len(ignored_sections)):
+                    single_section = ignored_sections[section_index]
+                    if single_section in article_canonical_url:
+                        is_ignored_section = True
+                        break
+                if is_ignored_section:
+                    continue
+
+                cleaned_headline = clean_dom_tags_and_markdown(raw_title_text)
+                if cleaned_headline.endswith("- Reuters"):
+                    cleaned_headline = cleaned_headline[:-9].strip()
+
+                if len(cleaned_headline) < 20 or is_bot_challenge_text(cleaned_headline):
+                    continue
+                if is_entertainment_or_lifestyle_noise(cleaned_headline):
+                    continue
+
+                is_world_or_defense = ("/world/" in article_canonical_url) or ("/aerospace-defense/" in article_canonical_url) or is_strategic_or_defense_trend(cleaned_headline)
+
+                if is_world_or_defense and cleaned_headline not in seen_reuters_headlines_set:
+                    seen_reuters_headlines_set.add(cleaned_headline)
+                    extracted_reuters_records_list.append({
+                        "headline": cleaned_headline,
+                        "url": article_canonical_url,
+                        "source_name": "Reuters World News",
+                        "publication_date": publication_date_text
+                    })
+                    if len(extracted_reuters_records_list) >= 20:
+                        break
+
+            # Pass 2: If fewer than 15 headlines collected, fill with other breaking headlines from the wire
+            if len(extracted_reuters_records_list) < 15:
+                for url_element_index in range(len(url_elements_list)):
+                    url_element = url_elements_list[url_element_index]
+                    loc_element = url_element.find("sitemap:loc", xml_namespaces)
+                    news_element = url_element.find("news:news", xml_namespaces)
+                    if loc_element is None or news_element is None:
+                        continue
+
+                    article_canonical_url = ""
+                    if loc_element.text:
+                        article_canonical_url = loc_element.text.strip()
+
+                    title_element = news_element.find("news:title", xml_namespaces)
+                    raw_title_text = ""
+                    if title_element is not None and title_element.text:
+                        raw_title_text = title_element.text.strip()
+
+                    publication_date_element = news_element.find("news:publication_date", xml_namespaces)
+                    publication_date_text = ""
+                    if publication_date_element is not None and publication_date_element.text:
+                        publication_date_text = publication_date_element.text.strip()
+
+                    language_element = news_element.find("news:publication/news:language", xml_namespaces)
+                    language_code = "en"
+                    if language_element is not None and language_element.text:
+                        language_code = language_element.text.strip()
+
+                    if language_code != "en":
+                        continue
+
+                    non_english_prefixes = ["/de/", "/es/", "/fr/", "/ja/", "/it/", "/pt/", "/zh/"]
+                    is_non_english_path = False
+                    for prefix_index in range(len(non_english_prefixes)):
+                        single_prefix = non_english_prefixes[prefix_index]
+                        if single_prefix in article_canonical_url:
+                            is_non_english_path = True
+                            break
+                    if is_non_english_path:
+                        continue
+
+                    ignored_sections = ["/sports/", "/lifestyle/", "/entertainment/"]
+                    is_ignored_section = False
+                    for section_index in range(len(ignored_sections)):
+                        single_section = ignored_sections[section_index]
+                        if single_section in article_canonical_url:
+                            is_ignored_section = True
+                            break
+                    if is_ignored_section:
+                        continue
+
+                    cleaned_headline = clean_dom_tags_and_markdown(raw_title_text)
+                    if cleaned_headline.endswith("- Reuters"):
+                        cleaned_headline = cleaned_headline[:-9].strip()
+
+                    if len(cleaned_headline) < 20 or is_bot_challenge_text(cleaned_headline):
+                        continue
+                    if is_entertainment_or_lifestyle_noise(cleaned_headline):
+                        continue
+
+                    if cleaned_headline not in seen_reuters_headlines_set:
+                        seen_reuters_headlines_set.add(cleaned_headline)
+                        extracted_reuters_records_list.append({
+                            "headline": cleaned_headline,
+                            "url": article_canonical_url,
+                            "source_name": "Reuters World News",
+                            "publication_date": publication_date_text
+                        })
+                        if len(extracted_reuters_records_list) >= 20:
+                            break
+    except Exception as sitemap_error:
+        print(f"        -> [Reuters Arc Sitemap Notice] Failed to fetch sitemap: {sitemap_error}")
+
+    # Step 2: Fallback to Google News Reuters RSS search feeds if Arc sitemap returned fewer than 5 headlines
+    if len(extracted_reuters_records_list) < 5:
+        fallback_search_feeds = [
+            "https://news.google.com/rss/search?q=site:reuters.com/world+when:1d&hl=en-US&gl=US&ceid=US:en",
+            "https://news.google.com/rss/search?q=site:reuters.com+breaking&hl=en-US&gl=US&ceid=US:en"
+        ]
+        for feed_index in range(len(fallback_search_feeds)):
+            single_feed_url = fallback_search_feeds[feed_index]
+            try:
+                feed_response = requests.get(single_feed_url, headers=request_headers, timeout=12)
+                if feed_response.status_code == 200:
+                    feed_xml_root = ElementTree.fromstring(feed_response.content)
+                    feed_items_list = feed_xml_root.findall(".//item")
+                    for feed_item_index in range(len(feed_items_list)):
+                        current_feed_item = feed_items_list[feed_item_index]
+                        item_title_element = current_feed_item.find("title")
+                        item_link_element = current_feed_item.find("link")
+                        if item_title_element is not None and item_title_element.text:
+                            clean_item_title = clean_dom_tags_and_markdown(item_title_element.text)
+                            if clean_item_title.endswith("- Reuters"):
+                                clean_item_title = clean_item_title[:-9].strip()
+                            if len(clean_item_title) > 20 and not is_bot_challenge_text(clean_item_title):
+                                if not is_entertainment_or_lifestyle_noise(clean_item_title):
+                                    if clean_item_title not in seen_reuters_headlines_set:
+                                        seen_reuters_headlines_set.add(clean_item_title)
+                                        article_url = reuters_target_url
+                                        if item_link_element is not None and item_link_element.text:
+                                            article_url = item_link_element.text.strip()
+                                        extracted_reuters_records_list.append({
+                                            "headline": clean_item_title,
+                                            "url": article_url,
+                                            "source_name": "Reuters World News",
+                                            "publication_date": ""
+                                        })
+                                        if len(extracted_reuters_records_list) >= 20:
+                                            break
+            except Exception as feed_error:
+                print(f"        -> [Reuters Search Feed Notice] Could not fetch fallback feed: {feed_error}")
+
+    return extracted_reuters_records_list
+
+
 def fetch_headlines_from_configured_sources(sources_list):
     # This function processes each source defined in sources.json dynamically
     # It supports both 'rss' feed parsing and 'web' HTML scraping
@@ -513,7 +728,15 @@ def fetch_headlines_from_configured_sources(sources_list):
         extracted_headlines_list = []
 
         try:
-            if source_type == "rss":
+            # Specialized handler for Reuters (direct HTML blocked with 401 Datadome)
+            if "reuters.com" in source_url.lower() or "reuters" in source_name.lower():
+                reuters_records_list = extract_reuters_headlines_and_articles(source_url)
+                for record_index in range(len(reuters_records_list)):
+                    single_record = reuters_records_list[record_index]
+                    single_headline = single_record.get("headline", "")
+                    if single_headline and single_headline not in extracted_headlines_list and len(extracted_headlines_list) < 20:
+                        extracted_headlines_list.append(single_headline)
+            elif source_type == "rss":
                 # Parse RSS XML feed
                 http_response_object = requests.get(source_url, headers=request_headers_dictionary, timeout=12)
                 xml_root_element = ElementTree.fromstring(http_response_object.content)
@@ -583,30 +806,20 @@ def fetch_headlines_from_configured_sources(sources_list):
         except Exception as fetch_error:
             print(f"        -> Notice: Failed to fetch {source_name}: {fetch_error}")
 
-        # Fallback 1: If zero headlines from Reuters, use verified Reuters RSS wire
-        if len(extracted_headlines_list) == 0 and "reuters.com" in source_url:
-            print("        -> Reuters web blocked or empty. Attempting Reuters verified RSS wire feed...")
+        # Fallback 1: If zero headlines from Reuters, use verified Reuters extractor
+        if len(extracted_headlines_list) == 0 and ("reuters.com" in source_url.lower() or "reuters" in source_name.lower()):
+            print("        -> Reuters headlines empty. Attempting Reuters verified Arc news sitemap and breaking feed...")
             try:
-                reuters_feed_url = "https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en"
-                reuters_response = requests.get(reuters_feed_url, headers=request_headers_dictionary, timeout=12)
-                reuters_root = ElementTree.fromstring(reuters_response.content)
-                reuters_channel = reuters_root.find("channel")
-                if reuters_channel is not None:
-                    reuters_items = reuters_channel.findall("item")
-                    for item_idx in range(len(reuters_items)):
-                        r_item = reuters_items[item_idx]
-                        r_title = r_item.find("title")
-                        if r_title is not None and r_title.text:
-                            clean_r_title = r_title.text.strip()
-                            if clean_r_title.endswith("- Reuters"):
-                                clean_r_title = clean_r_title[:-9].strip()
-                            if len(clean_r_title) > 15 and not is_bot_challenge_text(clean_r_title):
-                                if clean_r_title not in extracted_headlines_list and len(extracted_headlines_list) < 20:
-                                    extracted_headlines_list.append(clean_r_title)
-                    if len(extracted_headlines_list) > 0:
-                        print(f"        -> [Reuters RSS Fallback SUCCESS] Harvested {len(extracted_headlines_list)} clean headlines.")
+                reuters_records_list = extract_reuters_headlines_and_articles(source_url)
+                for record_index in range(len(reuters_records_list)):
+                    single_record = reuters_records_list[record_index]
+                    single_headline = single_record.get("headline", "")
+                    if single_headline and single_headline not in extracted_headlines_list and len(extracted_headlines_list) < 20:
+                        extracted_headlines_list.append(single_headline)
+                if len(extracted_headlines_list) > 0:
+                    print(f"        -> [Reuters Extractor SUCCESS] Harvested {len(extracted_headlines_list)} clean headlines.")
             except Exception as reuters_error:
-                print(f"        -> [Reuters RSS Fallback Notice] Could not fetch Reuters RSS: {reuters_error}")
+                print(f"        -> [Reuters Extractor Notice] Could not extract Reuters headlines: {reuters_error}")
 
         # Fallback 2: If zero headlines were extracted and this is Dawn News, use Dawn's official RSS feed
         if len(extracted_headlines_list) == 0 and "dawn.com" in source_url:
